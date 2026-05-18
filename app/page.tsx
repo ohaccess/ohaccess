@@ -1,65 +1,218 @@
-import Image from "next/image";
+'use client'
+import { useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 
 export default function Home() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLogin, setIsLogin] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setMessage('')
+    
+    try {
+      if (isLogin) {
+        // Use Supabase directly on client side
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        })
+        
+        if (error) {
+          setMessage(error.message)
+        } else if (data.session) {
+          window.location.href = '/dashboard'
+        }
+      } else {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/dashboard`
+          }
+        })
+        
+        if (error) {
+          setMessage(error.message)
+        } else {
+          // Create profile
+          if (data.user) {
+            await supabase.from('profiles').insert({
+              id: data.user.id,
+              email: email,
+              tier: 'free'
+            })
+          }
+          setMessage('Account created! You can now sign in.')
+          setIsLogin(true)
+        }
+      }
+    } catch {
+      setMessage('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main style={{
+      minHeight: '100vh',
+      background: '#f5f5f7',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: "'Plus Jakarta Sans', sans-serif"
+    }}>
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+      
+      <div style={{
+        background: 'white',
+        borderRadius: '22px',
+        border: '1px solid #d1d1d6',
+        padding: '40px',
+        width: '100%',
+        maxWidth: '400px',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.06)'
+      }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{
+            fontSize: '28px',
+            fontWeight: '200',
+            color: '#1d1d1f',
+            letterSpacing: '-0.5px'
+          }}>
+            oh<span style={{ fontWeight: '700' }}>ACCESS</span>
+          </div>
+          <div style={{ fontSize: '13px', color: '#6e6e73', marginTop: '4px' }}>
+            {isLogin ? 'Sign in to your account' : 'Create your account'}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '11px',
+              fontWeight: '600',
+              color: '#6e6e73',
+              textTransform: 'uppercase',
+              letterSpacing: '0.6px',
+              marginBottom: '6px'
+            }}>
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="david@ohaccess.com"
+              required
+              style={{
+                width: '100%',
+                background: '#f5f5f7',
+                border: '1px solid #d1d1d6',
+                borderRadius: '9px',
+                padding: '10px 12px',
+                fontSize: '14px',
+                color: '#1d1d1f',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '11px',
+              fontWeight: '600',
+              color: '#6e6e73',
+              textTransform: 'uppercase',
+              letterSpacing: '0.6px',
+              marginBottom: '6px'
+            }}>
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              style={{
+                width: '100%',
+                background: '#f5f5f7',
+                border: '1px solid #d1d1d6',
+                borderRadius: '9px',
+                padding: '10px 12px',
+                fontSize: '14px',
+                color: '#1d1d1f',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+
+          {message && (
+            <div style={{
+              background: message.includes('created') ? '#e8f9ee' : '#fff0f0',
+              color: message.includes('created') ? '#1a7a3c' : '#cc0000',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              marginBottom: '16px'
+            }}>
+              {message}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              background: '#1d1d1f',
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '13px',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              opacity: loading ? 0.7 : 1
+            }}
           >
-            Documentation
-          </a>
+            {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
+          </button>
+        </form>
+
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <button
+            onClick={() => { setIsLogin(!isLogin); setMessage('') }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#0071e3',
+              fontSize: '13px',
+              cursor: 'pointer',
+              fontFamily: "'Plus Jakarta Sans', sans-serif"
+            }}
+          >
+            {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+          </button>
         </div>
-      </main>
-    </div>
-  );
+      </div>
+    </main>
+  )
 }
