@@ -15,6 +15,8 @@ export default function Dashboard() {
   const [selectedOH, setSelectedOH] = useState<any>(null)
   const [view, setView] = useState<'dashboard' | 'new' | 'settings'>('dashboard')
   const [loading, setLoading] = useState(true)
+  const [showCal, setShowCal] = useState(false)
+  const [calDate, setCalDate] = useState(new Date())
   const [form, setForm] = useState({
     property_address: '',
     listing_price: '',
@@ -30,15 +32,17 @@ export default function Dashboard() {
   const primaryColor = profile?.primary_color || '#1d1d1f'
   const accentColor = profile?.accent_color || '#0071e3'
 
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+  const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+  const DOW = ['Su','Mo','Tu','We','Th','Fr','Sa']
+
   useEffect(() => {
     checkUser()
   }, [])
 
-const checkUser = async () => {
+  const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession()
-    
     if (!session) {
-      // Try to refresh the session
       const { data: refreshData } = await supabase.auth.refreshSession()
       if (!refreshData.session) {
         window.location.href = '/'
@@ -50,7 +54,6 @@ const checkUser = async () => {
       setLoading(false)
       return
     }
-    
     setUser(session.user)
     await loadProfile(session.user.id)
     await loadOpenHouses(session.user.id)
@@ -91,8 +94,16 @@ const checkUser = async () => {
   }
 
   const generateCodeWord = () => {
-    const words = ['KEYSTONE', 'MERIDIAN', 'HAVEN', 'OAKWOOD', 'SOLSTICE', 'STERLING', 'COMPASS', 'AURORA', 'HORIZON', 'CYPRESS', 'MAGNOLIA', 'WILLOW', 'SUMMIT', 'HARBOR', 'CRESTVIEW']
+    const words = ['KEYSTONE','MERIDIAN','HAVEN','OAKWOOD','SOLSTICE','STERLING','COMPASS','AURORA','HORIZON','CYPRESS','MAGNOLIA','WILLOW','SUMMIT','HARBOR','CRESTVIEW']
     return words[Math.floor(Math.random() * words.length)]
+  }
+
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, '').substring(0, 10)
+    if (digits.length === 0) return ''
+    if (digits.length <= 3) return `(${digits}`
+    if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`
+    return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
   }
 
   const createOpenHouse = async () => {
@@ -100,7 +111,6 @@ const checkUser = async () => {
       alert('Please fill in at least the property address and code word.')
       return
     }
-
     const { data, error } = await supabase
       .from('open_houses')
       .insert({
@@ -117,13 +127,10 @@ const checkUser = async () => {
         status: 'active'
       })
       .select()
-
     if (error) {
-      console.error('Error creating open house:', error)
       alert('Error saving: ' + error.message)
       return
     }
-
     if (data) {
       await loadOpenHouses(user.id)
       setView('dashboard')
@@ -134,23 +141,19 @@ const checkUser = async () => {
       })
     }
   }
+
   const toggleVerified = async (visitorId: string, current: boolean) => {
-    await supabase
-      .from('visitors')
-      .update({ verified: !current })
-      .eq('id', visitorId)
-    setVisitors(visitors.map(v =>
-      v.id === visitorId ? { ...v, verified: !current } : v
-    ))
+    await supabase.from('visitors').update({ verified: !current }).eq('id', visitorId)
+    setVisitors(visitors.map(v => v.id === visitorId ? { ...v, verified: !current } : v))
   }
 
   const exportCSV = () => {
-    const isPro = ['pro', 'team', 'brokerage'].includes(profile?.tier || 'free')
+    const isPro = ['pro','team','brokerage'].includes(profile?.tier || 'free')
     if (!isPro) {
-      alert('CSV export is available on Pro plan and above. Please upgrade to export visitor data.')
+      alert('CSV export is available on Pro plan and above.')
       return
     }
-    const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Timeline', 'Registered', 'Verified']
+    const headers = ['First Name','Last Name','Email','Phone','Timeline','Registered','Verified']
     const rows = visitors.map(v => [
       v.first_name, v.last_name, v.email, v.phone,
       v.purchasing_timeline,
@@ -206,6 +209,9 @@ const checkUser = async () => {
     letterSpacing: '0.6px', marginBottom: '5px'
   }
 
+  const firstDay = new Date(calDate.getFullYear(), calDate.getMonth(), 1).getDay()
+  const daysInMonth = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0).getDate()
+
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f7', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -216,29 +222,12 @@ const checkUser = async () => {
           oh<span style={{ fontWeight: '700' }}>ACCESS</span>
         </div>
         <div style={{ display: 'flex', gap: '4px' }}>
-          {['dashboard', 'new', 'settings'].map(v => (
-            <button
-              key={v}
-              onClick={() => setView(v as any)}
-              style={{
-                background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent',
-                border: 'none', color: view === v ? 'white' : 'rgba(255,255,255,0.6)',
-                padding: '6px 14px', borderRadius: '8px', cursor: 'pointer',
-                fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px',
-                fontWeight: view === v ? '600' : '400'
-              }}
-            >
+          {(['dashboard', 'new', 'settings'] as const).map(v => (
+            <button key={v} onClick={() => setView(v)} style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: view === v ? 'white' : 'rgba(255,255,255,0.6)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
               {v === 'dashboard' ? 'Dashboard' : v === 'new' ? 'New Open House' : 'Settings'}
             </button>
           ))}
-          <button
-            onClick={signOut}
-            style={{
-              background: 'transparent', border: '1px solid rgba(255,255,255,0.3)',
-              color: 'rgba(255,255,255,0.7)', padding: '6px 14px', borderRadius: '8px',
-              cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px'
-            }}
-          >
+          <button onClick={signOut} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.7)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px' }}>
             Sign out
           </button>
         </div>
@@ -252,7 +241,6 @@ const checkUser = async () => {
             <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Dashboard</div>
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Real-time visitor log and open house management.</div>
 
-            {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
               {[
                 { label: 'Active Open Houses', value: openHouses.filter(oh => oh.status === 'active').length },
@@ -266,13 +254,9 @@ const checkUser = async () => {
               ))}
             </div>
 
-            {/* Open house list */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
               <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f' }}>Your open houses</div>
-              <button
-                onClick={() => setView('new')}
-                style={{ background: accentColor, color: 'white', border: 'none', padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
+              <button onClick={() => setView('new')} style={{ background: accentColor, color: 'white', border: 'none', padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 + New open house
               </button>
             </div>
@@ -284,50 +268,30 @@ const checkUser = async () => {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
                 {openHouses.map(oh => (
-                  <div
-                    key={oh.id}
-                    onClick={async () => { setSelectedOH(oh); await loadVisitors(oh.id) }}
-                    style={{
-                      background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentColor : '#d1d1d6'}`,
-                      borderRadius: '18px', padding: '14px 18px', display: 'flex',
-                      alignItems: 'center', gap: '14px', cursor: 'pointer'
-                    }}
-                  >
+                  <div key={oh.id} onClick={async () => { setSelectedOH(oh); await loadVisitors(oh.id) }} style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentColor : '#d1d1d6'}`, borderRadius: '18px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: oh.status === 'active' ? accentColor : '#aeaeb2', flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>{oh.property_address}</div>
-                      <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>
-                        {oh.open_house_date} · {oh.open_house_hours} · Code: <strong>{oh.code_word}</strong>
-                      </div>
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#6e6e73' }}>
-                      {oh.id === selectedOH?.id ? `${visitors.length} registered` : ''}
+                      <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>{oh.open_house_date} · {oh.open_house_hours} · Code: <strong>{oh.code_word}</strong></div>
                     </div>
                     {oh.status === 'active' && (
                       <div style={{ background: '#e8f9ee', color: '#1a7a3c', fontSize: '11px', fontWeight: '600', padding: '3px 9px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#30d158' }} />
-                        Live
+                        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#30d158' }} />Live
                       </div>
                     )}
                     <div style={{ fontSize: '11px', color: accentColor, fontWeight: '600' }}>
-                      QR: /register/{oh.id}
+                      /register/{oh.id}
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Visitor log */}
             {selectedOH && (
               <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>
-                    Visitor log — {selectedOH.property_address}
-                  </div>
-                  <button
-                    onClick={exportCSV}
-                    style={{ background: primaryColor, color: 'white', border: 'none', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                  >
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Visitor log — {selectedOH.property_address}</div>
+                  <button onClick={exportCSV} style={{ background: primaryColor, color: 'white', border: 'none', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                     Export CSV
                   </button>
                 </div>
@@ -340,7 +304,7 @@ const checkUser = async () => {
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                       <thead>
                         <tr>
-                          {['Name', 'Phone', 'Email', 'Timeline', 'Time', 'Verified'].map(h => (
+                          {['Name','Phone','Email','Timeline','Time','Verified'].map(h => (
                             <th key={h} style={{ textAlign: 'left', padding: '8px 10px', fontSize: '11px', fontWeight: '600', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid #d1d1d6' }}>{h}</th>
                           ))}
                         </tr>
@@ -348,23 +312,13 @@ const checkUser = async () => {
                       <tbody>
                         {visitors.map((v, i) => (
                           <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                            <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7' }}>{v.first_name} {v.last_name}</td>
+                            <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73' }}>{v.first_name} {v.last_name}</td>
                             <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73' }}>{v.phone}</td>
                             <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73' }}>{v.email}</td>
                             <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
-                            <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>
-                              {new Date(v.registered_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </td>
+                            <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{new Date(v.registered_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                             <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7' }}>
-                              <button
-                                onClick={() => toggleVerified(v.id, v.verified)}
-                                style={{
-                                  background: v.verified ? '#30d158' : primaryColor,
-                                  color: 'white', border: 'none', borderRadius: '6px',
-                                  padding: '4px 10px', fontSize: '11px', fontWeight: '600',
-                                  cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif"
-                                }}
-                              >
+                              <button onClick={() => toggleVerified(v.id, v.verified)} style={{ background: v.verified ? '#30d158' : primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                                 {v.verified ? '✓ Verified' : 'Mark verified'}
                               </button>
                             </td>
@@ -386,9 +340,7 @@ const checkUser = async () => {
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Set up your listing and generate your QR code.</div>
 
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
-                Property details
-              </div>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Property details</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Property Address</label>
@@ -410,9 +362,49 @@ const checkUser = async () => {
                   <label style={labelStyle}>Bathrooms</label>
                   <input style={inputStyle} type="text" placeholder="3" value={form.bathrooms} onChange={e => setForm({ ...form, bathrooms: e.target.value })} />
                 </div>
-                <div>
+                <div style={{ position: 'relative' }}>
                   <label style={labelStyle}>Open House Date</label>
-                  <input style={inputStyle} type="text" placeholder="Saturday, June 14, 2026" value={form.open_house_date} onChange={e => setForm({ ...form, open_house_date: e.target.value })} />
+                  <input
+                    style={{ ...inputStyle, cursor: 'pointer' }}
+                    type="text"
+                    placeholder="Select a date"
+                    value={form.open_house_date}
+                    readOnly
+                    onClick={() => setShowCal(!showCal)}
+                  />
+                  {showCal && (
+                    <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 100, background: 'white', border: '1px solid #d1d1d6', borderRadius: '18px', padding: '14px', width: '242px', boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                        <button onClick={() => setCalDate(new Date(calDate.getFullYear(), calDate.getMonth()-1, 1))} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '7px', padding: '4px 10px', cursor: 'pointer', fontSize: '15px', fontWeight: '600' }}>‹</button>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>{MONTHS[calDate.getMonth()]} {calDate.getFullYear()}</span>
+                        <button onClick={() => setCalDate(new Date(calDate.getFullYear(), calDate.getMonth()+1, 1))} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '7px', padding: '4px 10px', cursor: 'pointer', fontSize: '15px', fontWeight: '600' }}>›</button>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
+                        {DOW.map(d => (
+                          <div key={d} style={{ fontSize: '10px', fontWeight: '600', color: '#aeaeb2', textAlign: 'center', padding: '3px 0' }}>{d}</div>
+                        ))}
+                        {Array.from({ length: firstDay }).map((_, i) => <div key={`e-${i}`} />)}
+                        {Array.from({ length: daysInMonth }).map((_, i) => {
+                          const day = i + 1
+                          return (
+                            <div
+                              key={day}
+                              onClick={() => {
+                                const d = new Date(calDate.getFullYear(), calDate.getMonth(), day)
+                                setForm({ ...form, open_house_date: `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${day}, ${d.getFullYear()}` })
+                                setShowCal(false)
+                              }}
+                              style={{ fontSize: '12px', textAlign: 'center', padding: '5px 2px', borderRadius: '6px', cursor: 'pointer', color: '#1d1d1f' }}
+                              onMouseEnter={e => (e.currentTarget.style.background = '#e8e8ed')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                            >
+                              {day}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={labelStyle}>Open House Hours</label>
@@ -426,36 +418,21 @@ const checkUser = async () => {
             </div>
 
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
-                Access code word
-              </div>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Access code word</div>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
                   <label style={labelStyle}>Code Word</label>
                   <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. MAGNOLIA" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
                 </div>
-                <button
-                  onClick={() => setForm({ ...form, code_word: generateCodeWord() })}
-                  style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
-                >
+                <button onClick={() => setForm({ ...form, code_word: generateCodeWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                   ✦ Auto-generate
                 </button>
               </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button
-                onClick={() => setView('dashboard')}
-                style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={createOpenHouse}
-                style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
-                ✓ Save open house
-              </button>
+              <button onClick={() => setView('dashboard')} style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cancel</button>
+              <button onClick={createOpenHouse} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>✓ Save open house</button>
             </div>
           </>
         )}
@@ -467,27 +444,30 @@ const checkUser = async () => {
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Manage your profile and preferences.</div>
 
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
-                Agent profile
-              </div>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agent profile</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {[
-                  { label: 'Full Name', key: 'full_name', placeholder: 'Sarah Connelly' },
-                  { label: 'Brokerage', key: 'brokerage', placeholder: 'Premier Realty Group' },
-                  { label: 'Phone', key: 'phone', placeholder: '(214) 555-0182' },
-                  { label: 'License Number', key: 'license_number', placeholder: 'TX-123456' },
-                ].map(field => (
-                  <div key={field.key}>
-                    <label style={labelStyle}>{field.label}</label>
-                    <input
-                      style={inputStyle}
-                      type="text"
-                      placeholder={field.placeholder}
-                      value={profile?.[field.key] || ''}
-                      onChange={e => setProfile({ ...profile, [field.key]: e.target.value })}
-                    />
-                  </div>
-                ))}
+                <div>
+                  <label style={labelStyle}>Full Name</label>
+                  <input style={inputStyle} type="text" placeholder="David Sheehan" value={profile?.full_name || ''} onChange={e => setProfile({ ...profile, full_name: e.target.value })} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Brokerage</label>
+                  <input style={inputStyle} type="text" placeholder="Reflect Real Estate" value={profile?.brokerage || ''} onChange={e => setProfile({ ...profile, brokerage: e.target.value })} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Phone</label>
+                  <input
+                    style={inputStyle}
+                    type="tel"
+                    placeholder="(214) 449-1822"
+                    value={profile?.phone || ''}
+                    onChange={e => setProfile({ ...profile, phone: formatPhone(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>License Number</label>
+                  <input style={inputStyle} type="text" placeholder="TX-123456" value={profile?.license_number || ''} onChange={e => setProfile({ ...profile, license_number: e.target.value })} />
+                </div>
               </div>
             </div>
 
