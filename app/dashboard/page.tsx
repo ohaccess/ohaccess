@@ -45,7 +45,7 @@ export default function Dashboard() {
     if (!session) {
       const { data: refreshData } = await supabase.auth.refreshSession()
       if (!refreshData.session) {
-        window.location.href = '/'
+        window.location.href = '/login'
         return
       }
       setUser(refreshData.session.user)
@@ -171,7 +171,7 @@ export default function Dashboard() {
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    window.location.href = '/'
+    window.location.href = '/login'
   }
 
   const getTimelineBadge = (timeline: string) => {
