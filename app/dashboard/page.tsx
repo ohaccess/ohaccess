@@ -279,9 +279,37 @@ export default function Dashboard() {
                         <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#30d158' }} />Live
                       </div>
                     )}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <div style={{ fontSize: '11px', color: accentColor, fontWeight: '600' }}>
-                      /register/{oh.id}
+                      /register/{oh.id.slice(0,8)}...
                     </div>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        const url = `${window.location.origin}/register/${oh.id}`
+                        const res = await fetch(`/api/qrcode?url=${encodeURIComponent(url)}`)
+                        const blob = await res.blob()
+                        const a = document.createElement('a')
+                        a.href = URL.createObjectURL(blob)
+                        a.download = `ohaccess-qr-${oh.property_address.replace(/\s+/g, '-')}.png`
+                        a.click()
+                      }}
+                      style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
+                    >
+                      ⬇ QR Code
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const url = `${window.location.origin}/register/${oh.id}`
+                        navigator.clipboard.writeText(url)
+                        alert('Registration URL copied to clipboard!')
+                      }}
+                      style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
+                    >
+                      📋 Copy URL
+                    </button>
+                  </div>
                   </div>
                 ))}
               </div>
