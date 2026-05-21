@@ -143,6 +143,14 @@ export default function Login() {
           </button>
         </div>
 
+        {isLogin && (
+          <div style={{ textAlign: 'center', marginTop: '12px' }}>
+            <a href="/reset-password" style={{ color: '#aeaeb2', fontSize: '12px', textDecoration: 'none' }}>
+              Forgot your password?
+            </a>
+          </div>
+        )}
+
         <div style={{ textAlign: 'center', marginTop: '12px' }}>
           <a href="/" style={{ color: '#aeaeb2', fontSize: '12px', textDecoration: 'none' }}>← Back to ohaccess.com</a>
         </div>

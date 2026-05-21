@@ -122,9 +122,14 @@ export default function Contact() {
               {[
                 { range: '11–100 agents', price: '$11/agent/mo', note: 'Contact us' },
                 { range: '101–500 agents', price: '$10/agent/mo', note: 'Contact us' },
-                { range: '501–1,000 agents', price: '$8/agent/mo', note: 'Contact us' },
-                { range: '1,001–5,000 agents', price: '$6/agent/mo', note: 'Negotiable' },
-                { range: '5,001+ agents', price: '$4/agent/mo', note: 'Negotiable' },
+                { range: '501–1,000 agents', price: '$9/agent/mo', note: 'Contact us' },
+                { range: '1,001–5,000 agents', price: '$8/agent/mo', note: 'Negotiable' },
+                { range: '5,001-10K agents', price: '$7/agent/mo', note: 'Negotiable' },
+                { range: '10K+-25k agents', price: '$5/agent/mo', note: 'Negotiable' },
+                { range: '25K+-50K agents', price: '$4/agent/mo', note: 'Negotiable' },
+                { range: '50K+-100K agents', price: '$3/agent/mo', note: 'Negotiable' },
+                { range: '100K+ agents', price: '$2/agent/mo', note: 'Negotiable' },
+                
               ].map((row, i) => (
                 <div key={row.range} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 5 ? '1px solid #e5e5ea' : 'none', fontSize: '13px', gap: '8px' }}>
                   <span style={{ color: '#1d1d1f', fontWeight: '500', flex: 1 }}>{row.range}</span>
@@ -187,9 +192,13 @@ export default function Contact() {
                       <option value="">Select agent count</option>
                       <option value="11-100">11–100 agents ($11/agent/mo)</option>
                       <option value="101-500">101–500 agents ($10/agent/mo)</option>
-                      <option value="501-1000">501–1,000 agents ($8/agent/mo)</option>
-                      <option value="1001-5000">1,001–5,000 agents ($6/agent/mo)</option>
-                      <option value="5001+">5,001+ agents ($4/agent/mo)</option>
+                      <option value="501-1000">501–1,000 agents ($9/agent/mo)</option>
+                      <option value="1001-5000">1,001–5,000 agents ($8/agent/mo)</option>
+                      <option value="5001-10K">5,001-10K agents ($7/agent/mo)</option>
+                      <option value="10K+-25K">10K+-25K agents ($5/agent/mo)</option>
+                      <option value="25K+-50K">25K+-50K agents ($4/agent/mo)</option>
+                      <option value="50K+-100K">50K+-100K agents ($3/agent/mo)</option>
+                      <option value="100K+">100K+ agents ($2/agent/mo)</option>
                     </select>
                   </div>
 

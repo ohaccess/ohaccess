@@ -9,7 +9,7 @@ export async function POST(request: Request) {
 
     await resend.emails.send({
       from: 'ohACCESS Contact <noreply@mail.ohaccess.com>',
-      to: 'david.sheehan@ohaccess.com',
+      to: 'sales@ohaccess.com',
       replyTo: email,
       subject: `🏢 Brokerage inquiry — ${brokerage} (${agentCount} agents)`,
       html: `
