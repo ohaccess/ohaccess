@@ -49,7 +49,7 @@ export default function Home() {
           <a href="#how-it-works">How it works</a>
           <a href="#pricing">Pricing</a>
           <Link href="/login" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', textDecoration: 'none' }}>Sign in</Link>
-          <Link href="/login" style={{ background: '#c9963a', color: '#1d1d1f', padding: '8px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
+          <Link href="/login?signup=true" style={{ background: '#c9963a', color: '#1d1d1f', padding: '8px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
             Get started free
           </Link>
         </div>
@@ -67,7 +67,7 @@ export default function Home() {
           <a href="#how-it-works" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>How it works</a>
           <a href="#pricing" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>Pricing</a>
           <Link href="/login" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>Sign in</Link>
-          <Link href="/login" onClick={() => setMenuOpen(false)} style={{ background: '#c9963a', color: '#1d1d1f', padding: '12px 20px', borderRadius: '8px', fontSize: '15px', fontWeight: '700', textDecoration: 'none', textAlign: 'center' }}>
+          <Link href="/login?signup=true" onClick={() => setMenuOpen(false)} style={{ background: '#c9963a', color: '#1d1d1f', padding: '12px 20px', borderRadius: '8px', fontSize: '15px', fontWeight: '700', textDecoration: 'none', textAlign: 'center' }}>
             Get started free
           </Link>
         </div>
@@ -87,7 +87,7 @@ export default function Home() {
             ohACCESS verifies every open house visitor&apos;s contact information in real time — via a code word sent to their phone and email. Fake info? No code. No entry.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', padding: '0 16px' }}>
-            <Link href="/login" style={{ background: '#c9963a', color: '#1d1d1f', padding: '16px 32px', borderRadius: '12px', textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '340px', lineHeight: '1.4' }}>
+            <Link href="/login?signup=true" style={{ background: '#c9963a', color: '#1d1d1f', padding: '16px 32px', borderRadius: '12px', textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '340px', lineHeight: '1.4' }}>
               <span style={{ fontSize: '17px', fontWeight: '700' }}>Start free</span>
               <span style={{ fontSize: '13px', fontWeight: '500', opacity: 0.8 }}>50 visitor registrations on us</span>
             </Link>
@@ -265,7 +265,7 @@ export default function Home() {
                     <span style={{ color: '#30d158', fontWeight: '700', flexShrink: 0 }}>✓</span>{f}
                   </div>
                 ))}
-                <Link href={tier.name === 'Brokerage' ? '/contact' : '/login'} style={{ display: 'block', textAlign: 'center', marginTop: '20px', padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: '700', textDecoration: 'none', background: tier.featured ? '#c9963a' : '#1d1d1f', color: tier.featured ? '#1d1d1f' : 'white' }}>
+                <Link href={tier.name === 'Brokerage' ? '/contact' : tier.name === 'Trial' ? '/login?signup=true' : '/login?signup=true'} style={{ display: 'block', textAlign: 'center', marginTop: '20px', padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: '700', textDecoration: 'none', background: tier.featured ? '#c9963a' : '#1d1d1f', color: tier.featured ? '#1d1d1f' : 'white' }}>
                   {tier.cta}
                 </Link>
               </div>
@@ -283,7 +283,7 @@ export default function Home() {
           <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.6)', marginBottom: '32px', lineHeight: '1.6' }}>
             Get 50 full Pro visitor registrations completely free — then just $15/month.
           </p>
-          <Link href="/login" style={{ display: 'inline-block', background: '#c9963a', color: '#1d1d1f', padding: '16px 40px', borderRadius: '12px', fontSize: '16px', fontWeight: '700', textDecoration: 'none' }}>
+          <Link href="/login?signup=true" style={{ display: 'inline-block', background: '#c9963a', color: '#1d1d1f', padding: '16px 40px', borderRadius: '12px', fontSize: '16px', fontWeight: '700', textDecoration: 'none' }}>
             Get started free →
           </Link>
         </div>
