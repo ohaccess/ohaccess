@@ -257,8 +257,6 @@ export default function Dashboard() {
   }
 
   const exportCSV = () => {
-    const isPro = ['pro','team','brokerage'].includes(profile?.tier || 'free')
-    if (!isPro) { alert('CSV export is available on Pro plan and above.'); return }
     const headers = ['First Name','Last Name','Email','Phone','Timeline','Registered','Verified']
     const rows = visitors.map(v => [v.first_name, v.last_name, v.email, v.phone, v.purchasing_timeline, new Date(v.registered_at).toLocaleString(), v.verified ? 'Yes' : 'No'])
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
