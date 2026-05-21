@@ -316,28 +316,25 @@ export default function RegisterPage({ params }: { params: Promise<{ id: string 
         ) : (
           /* Success screen */
           <div style={{ textAlign: 'center', padding: '32px 20px' }}>
-            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#e8f9ee', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px' }}>
               ✓
             </div>
             <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>
-              You&apos;re in!
+              Thank you!
             </div>
-            <p style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>
-              Show this code at the door to gain access.
-            </p>
-            <div style={{ fontSize: '28px', fontWeight: '700', letterSpacing: '4px', color: '#1d1d1f', background: '#f5f5f7', border: '1px dashed #d1d1d6', borderRadius: '12px', padding: '14px 20px', display: 'inline-block', marginBottom: '16px' }}>
-              {codeWord}
+            <div style={{ fontSize: '14px', color: '#6e6e73', background: '#f5f5f7', borderRadius: '12px', padding: '14px 20px', marginBottom: '16px', lineHeight: '1.6' }}>
+              Your access code has been sent to your phone and email. <br/><br/>Check your messages and present or mention the codeword to the host at the door to gain access.
             </div>
-            <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '14px' }}>
+            <div style={{ fontSize: '15px', color: '#6e6e73', marginBottom: '14px' }}>
               {openHouse.property_address}<br />
               {openHouse.open_house_date} · {openHouse.open_house_hours}
             </div>
-            <div style={{ fontSize: '12px', color: '#30d158', fontWeight: '600' }}>
-              ✓ Your code was sent to your phone and email
-            </div>
-            <div style={{ fontSize: '12px', color: '#30d158', fontWeight: '600', marginTop: '4px' }}>
-              ✓ Agent has been notified of your arrival
-            </div>
+            <div style={{ fontSize: '12px', color: accentColor, fontWeight: '600' }}>
+                ✓ Your code was sent to your phone and email.
+              </div>
+              <div style={{ fontSize: '12px', color: accentColor, fontWeight: '600', marginTop: '4px' }}>
+                ✓ Agent has been notified of your arrival.
+              </div>
           </div>
         )}
       </div>
