@@ -138,8 +138,8 @@ export async function POST(request: Request) {
 
             <!-- Agent card -->
             <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
-              <div style="display: flex; align-items: center; gap: 16px;">
-                ${agent?.headshot_url ? `<img src="${agent.headshot_url}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #d1d1d6;" />` : ''}
+              <div style="display: flex; align-items: center; gap: 0;">
+                ${agent?.headshot_url ? `<img src="${agent.headshot_url}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #d1d1d6;margin-right:20px;" />` : ''}
                 <div>
                   <div style="font-size: 14px; font-weight: 700; color: #1d1d1f;">${agent?.full_name || 'Your Agent'}</div>
                   <div style="font-size: 12px; color: #6e6e73;">${agent?.brokerage || ''}</div>
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
                   ${agent?.phone ? `<div style="font-size: 12px; color: #6e6e73;">${agent.phone}</div>` : ''}
                 </div>
               </div>
-              ${agent?.logo_url ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; text-align: center;"><img src="${agent.logo_url}" style="max-height:36px;max-width:400px;object-fit:contain;" /></div>` : ''}
+              ${agent?.logo_url ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; text-align: center;"><img src="${agent.logo_url}" style="max-height:80px;max-width:100%;width:100%;object-fit:contain;" /></div>` : ''}
             </div>
 
             <!-- Footer -->

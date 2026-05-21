@@ -21,15 +21,21 @@ export default function Dashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [savedSettings, setSavedSettings] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [form, setForm] = useState({
-    property_address: '',
+    street_address: '',
+    address_2: '',
+    city: '',
+    state: '',
+    zip_code: '',
     listing_price: '',
     bedrooms: '',
     bathrooms: '',
     square_footage: '',
-    description: '',
     open_house_date: '',
     open_house_hours: '',
+    listing_url: '',
     code_word: ''
   })
 
@@ -91,81 +97,142 @@ export default function Dashboard() {
   }
 
   const resetForm = () => setForm({
-    property_address: '', listing_price: '', bedrooms: '',
-    bathrooms: '', square_footage: '', description: '',
-    open_house_date: '', open_house_hours: '', code_word: ''
+    street_address: '', address_2: '', city: '', state: '', zip_code: '',
+    listing_price: '', bedrooms: '', bathrooms: '',
+    square_footage: '', open_house_date: '',
+    open_house_hours: '', listing_url: '', code_word: ''
   })
 
-  const createOpenHouse = async () => {
-    if (!form.property_address || !form.code_word) { alert('Please fill in at least the property address and code word.'); return }
+  const getAddressSuggestions = (value: string) => {
+    if (!(window as any).google || value.length < 3) {
+      setShowSuggestions(false)
+      return
+    }
+    const service = new (window as any).google.maps.places.AutocompleteService()
+    service.getPlacePredictions({
+      input: value,
+      types: ['address'],
+      componentRestrictions: { country: 'us' }
+    }, (predictions: any[], status: string) => {
+      if (status === 'OK' && predictions) {
+        setAddressSuggestions(predictions)
+        setShowSuggestions(true)
+      } else {
+        setShowSuggestions(false)
+      }
+    })
+  }
 
-    // Check trial usage
+  const selectAddress = (placeId: string) => {
+    const geocoder = new (window as any).google.maps.Geocoder()
+    geocoder.geocode({ placeId }, (results: any[], status: string) => {
+      if (status === 'OK' && results[0]) {
+        const components = results[0].address_components
+        let streetNumber = ''
+        let route = ''
+        let city = ''
+        let state = ''
+        let zip = ''
+        components.forEach((c: any) => {
+          if (c.types.includes('street_number')) streetNumber = c.long_name
+          if (c.types.includes('route')) route = c.long_name
+          if (c.types.includes('locality')) city = c.long_name
+          if (c.types.includes('administrative_area_level_1')) state = c.short_name
+          if (c.types.includes('postal_code')) zip = c.long_name
+        })
+        setForm(prev => ({
+          ...prev,
+          street_address: `${streetNumber} ${route}`.trim(),
+          city,
+          state,
+          zip_code: zip
+        }))
+        setShowSuggestions(false)
+        setAddressSuggestions([])
+      }
+    })
+  }
+
+  const createOpenHouse = async () => {
+    if (!form.street_address || !form.city || !form.state || !form.code_word) {
+      alert('Please fill in the street address, city, state, and code word.')
+      return
+    }
     const tier = profile?.tier || 'free'
     const isPaidTier = ['pro', 'team', 'brokerage'].includes(tier)
-
     if (!isPaidTier) {
       const { count } = await supabase
         .from('visitors')
         .select('*', { count: 'exact', head: true })
         .eq('agent_id', user.id)
-      
       if ((count || 0) >= 50) {
         alert('You have used all 50 of your free trial visitor registrations. Please upgrade to Pro to continue.')
         return
       }
     }
-
+    const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
     const { data, error } = await supabase.from('open_houses').insert({
       agent_id: user.id,
-      property_address: form.property_address,
+      property_address: fullAddress,
+      street_address: form.street_address,
+      address_2: form.address_2,
+      city: form.city,
+      state: form.state,
+      zip_code: form.zip_code,
       listing_price: form.listing_price,
       bedrooms: form.bedrooms,
       bathrooms: form.bathrooms,
       square_footage: form.square_footage,
-      description: form.description,
       open_house_date: form.open_house_date,
       open_house_hours: form.open_house_hours,
+      listing_url: form.listing_url,
       code_word: form.code_word,
       status: 'active'
     }).select()
-
     if (error) { alert('Error saving: ' + error.message); return }
-
-    if (data) {
-      // Increment usage counter for free tier
-      await loadOpenHouses(user.id)
-      setView('dashboard')
-      resetForm()
-    }
+    if (data) { await loadOpenHouses(user.id); setView('dashboard'); resetForm() }
   }
 
   const startEdit = (oh: any) => {
     setEditingOH(oh)
     setForm({
-      property_address: oh.property_address || '',
+      street_address: oh.street_address || '',
+      address_2: oh.address_2 || '',
+      city: oh.city || '',
+      state: oh.state || '',
+      zip_code: oh.zip_code || '',
       listing_price: oh.listing_price || '',
       bedrooms: oh.bedrooms || '',
       bathrooms: oh.bathrooms || '',
       square_footage: oh.square_footage || '',
-      description: oh.description || '',
       open_house_date: oh.open_house_date || '',
       open_house_hours: oh.open_house_hours || '',
+      listing_url: oh.listing_url || '',
       code_word: oh.code_word || ''
     })
     setView('new')
   }
 
   const updateOpenHouse = async () => {
-    if (!form.property_address || !form.code_word) { alert('Please fill in at least the property address and code word.'); return }
+    if (!form.street_address || !form.city || !form.state || !form.code_word) {
+      alert('Please fill in the street address, city, state, and code word.')
+      return
+    }
+    const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
     const { error } = await supabase.from('open_houses').update({
-      property_address: form.property_address,
+      property_address: fullAddress,
+      street_address: form.street_address,
+      address_2: form.address_2,
+      city: form.city,
+      state: form.state,
+      zip_code: form.zip_code,
       listing_price: form.listing_price,
       bedrooms: form.bedrooms,
       bathrooms: form.bathrooms,
       square_footage: form.square_footage,
-      description: form.description,
       open_house_date: form.open_house_date,
       open_house_hours: form.open_house_hours,
+      listing_url: form.listing_url,
       code_word: form.code_word,
     }).eq('id', editingOH.id)
     if (error) { alert('Error updating: ' + error.message); return }
@@ -215,6 +282,7 @@ export default function Dashboard() {
       logo_url: profile?.logo_url,
       primary_color: profile?.primary_color,
       accent_color: profile?.accent_color,
+      landing_page_url: profile?.landing_page_url,
     }).eq('id', user.id)
     if (error) { alert('Error saving: ' + error.message); return }
     setSavedSettings(true)
@@ -252,14 +320,13 @@ export default function Dashboard() {
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f7', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+      <script src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&v=weekly&libraries=places`} async defer />
 
       {/* Topbar */}
       <div style={{ background: primaryColor, padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '52px' }}>
         <div style={{ fontSize: '20px', fontWeight: '200', color: 'white', letterSpacing: '-0.5px' }}>
           oh<span style={{ fontWeight: '700' }}>ACCESS</span>
         </div>
-
-        {/* Desktop nav */}
         <div style={{ display: 'flex', gap: '4px' }} className="dash-nav-desktop">
           {(['dashboard', 'new', 'settings'] as const).map(v => (
             <button key={v} onClick={() => { setView(v); if (v !== 'new') setEditingOH(null) }} style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: view === v ? 'white' : 'rgba(255,255,255,0.6)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
@@ -270,18 +337,11 @@ export default function Dashboard() {
             Sign out
           </button>
         </div>
-
-        {/* Mobile hamburger */}
-        <button
-          className="dash-nav-mobile"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          style={{ background: 'none', border: 'none', color: 'white', fontSize: '22px', cursor: 'pointer', padding: '4px 8px' }}
-        >
+        <button className="dash-nav-mobile" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'none', border: 'none', color: 'white', fontSize: '22px', cursor: 'pointer', padding: '4px 8px' }}>
           {mobileMenuOpen ? '✕' : '☰'}
         </button>
       </div>
 
-      {/* Mobile dropdown */}
       {mobileMenuOpen && (
         <div style={{ background: primaryColor, borderTop: '1px solid rgba(255,255,255,0.1)', padding: '8px 16px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {(['dashboard', 'new', 'settings'] as const).map(v => (
@@ -314,7 +374,6 @@ export default function Dashboard() {
             <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Dashboard</div>
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>Real-time visitor log and open house management.</div>
 
-            {/* Trial banner */}
             {!['pro','team','brokerage'].includes(profile?.tier || 'free') && (
               <TrialBanner agentId={user?.id} supabase={supabase} accentColor={accentColor} />
             )}
@@ -360,9 +419,7 @@ export default function Dashboard() {
                         </div>
                       )}
                     </div>
-                    {/* Action buttons — full width below on all screens */}
-                    <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'nowrap' }}
-                      onClick={e => e.stopPropagation()}>
+                    <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'nowrap' }} onClick={e => e.stopPropagation()}>
                       <button onClick={async (e) => {
                         e.stopPropagation()
                         const url = `${window.location.origin}/register/${oh.id}`
@@ -401,7 +458,7 @@ export default function Dashboard() {
                       <thead>
                         <tr>
                           {['Name','Phone','Email','Timeline','Time','✓'].map(h => (
-                            <th key={h} style={{ textAlign: 'left', padding: '8px 8px', fontSize: '10px', fontWeight: '600', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid #d1d1d6', whiteSpace: 'nowrap' }}>{h}</th>
+                            <th key={h} style={{ textAlign: 'left', padding: '8px', fontSize: '10px', fontWeight: '600', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid #d1d1d6', whiteSpace: 'nowrap' }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -438,9 +495,54 @@ export default function Dashboard() {
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Property details</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Property Address</label>
-                  <input style={inputStyle} type="text" placeholder="123 Magnolia Lane, Dallas TX" value={form.property_address} onChange={e => setForm({ ...form, property_address: e.target.value })} />
+
+                {/* Street address with autocomplete */}
+                <div style={{ position: 'relative' }}>
+                  <label style={labelStyle}>Street Address <span style={{ color: '#ff3b30' }}>*</span></label>
+                  <input
+                    style={inputStyle}
+                    type="text"
+                    placeholder="Start typing address..."
+                    value={form.street_address}
+                    onChange={e => {
+                      setForm({ ...form, street_address: e.target.value })
+                      getAddressSuggestions(e.target.value)
+                    }}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  />
+                  {showSuggestions && addressSuggestions.length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1px solid #d1d1d6', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 200, overflow: 'hidden', marginTop: '4px' }}>
+                      {addressSuggestions.map((s: any) => (
+                        <div
+                          key={s.place_id}
+                          onMouseDown={() => selectAddress(s.place_id)}
+                          style={{ padding: '10px 14px', fontSize: '13px', color: '#1d1d1f', cursor: 'pointer', borderBottom: '1px solid #f2f2f7' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f7')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'white')}
+                        >
+                          <div style={{ fontWeight: '600' }}>{s.structured_formatting?.main_text}</div>
+                          <div style={{ fontSize: '11px', color: '#6e6e73' }}>{s.structured_formatting?.secondary_text}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Unit / Suite / Apt</label>
+                  <input style={inputStyle} type="text" placeholder="Unit 4B" value={form.address_2} onChange={e => setForm({ ...form, address_2: e.target.value })} />
+                </div>
+                <div>
+                  <label style={labelStyle}>City <span style={{ color: '#ff3b30' }}>*</span></label>
+                  <input style={inputStyle} type="text" placeholder="Auto-filled" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} />
+                </div>
+                <div>
+                  <label style={labelStyle}>State <span style={{ color: '#ff3b30' }}>*</span></label>
+                  <input style={inputStyle} type="text" placeholder="Auto-filled" value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Zip Code</label>
+                  <input style={inputStyle} type="text" placeholder="Auto-filled" value={form.zip_code} onChange={e => setForm({ ...form, zip_code: e.target.value })} />
                 </div>
                 <div>
                   <label style={labelStyle}>Listing Price</label>
@@ -489,9 +591,9 @@ export default function Dashboard() {
                   <label style={labelStyle}>Open House Hours</label>
                   <input style={inputStyle} type="text" placeholder="1:00 PM – 4:00 PM" value={form.open_house_hours} onChange={e => setForm({ ...form, open_house_hours: e.target.value })} />
                 </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Description</label>
-                  <textarea style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} placeholder="Beautiful home with..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+                <div>
+                  <label style={labelStyle}>Listing URL (your site, Zillow, Realtor)</label>
+                  <input style={inputStyle} type="url" placeholder="https://yourbrokerage.com/listing" value={form.listing_url} onChange={e => setForm({ ...form, listing_url: e.target.value })} />
                 </div>
               </div>
             </div>
@@ -501,7 +603,7 @@ export default function Dashboard() {
               <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
                   <label style={labelStyle}>Code Word</label>
-                  <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. MAGNOLIA" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
+                  <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. KEYSTONE" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
                 </div>
                 <button onClick={() => setForm({ ...form, code_word: generateCodeWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                   ✦ Auto-generate
@@ -524,7 +626,6 @@ export default function Dashboard() {
             <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Account settings</div>
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Manage your profile, branding, and preferences.</div>
 
-            {/* Agent profile */}
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agent profile</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -555,11 +656,18 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Branding */}
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Branding & photos</div>
-              <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px' }}>Paste direct image URLs ending in .jpg or .png. Headshot and logo appear in visitor emails.<strong style={{ color: '#1d1d1f' }}> Tip: Upload your photo to <a href="https://imgur.com" target="_blank" style={{ color: '#0071e3' }}>imgur.com</a> for a reliable direct link.</strong></div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px' }}>
+                Paste direct image URLs ending in .jpg or .png. Headshot and logo appear in visitor emails.
+                <strong style={{ color: '#1d1d1f' }}> Tip: Upload your photo to <a href="https://imgur.com" target="_blank" style={{ color: '#0071e3' }}>imgur.com</a> for a reliable direct link.</strong>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+                <div>
+                  <label style={labelStyle}>Agent Landing Page URL</label>
+                  <input style={inputStyle} type="url" placeholder="https://yourwebsite.com/bio" value={profile?.landing_page_url || ''} onChange={e => setProfile({ ...profile, landing_page_url: e.target.value })} />
+                  <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '4px' }}>Your bio page, Instagram, or Linktree. Appears in visitor emails and texts.</div>
+                </div>
                 <div>
                   <label style={labelStyle}>Agent Headshot URL</label>
                   <input style={inputStyle} type="url" placeholder="https://yoursite.com/headshot.jpg" value={profile?.headshot_url || ''} onChange={e => setProfile({ ...profile, headshot_url: e.target.value })} />
@@ -593,7 +701,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Brand colors */}
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Brand colors</div>
               <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px' }}>Applied to your visitor registration form and email header.</div>
@@ -631,7 +738,6 @@ export default function Dashboard() {
 
       </div>
 
-      {/* DELETE CONFIRMATION */}
       {deleteConfirm && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', borderRadius: '22px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
@@ -651,6 +757,7 @@ export default function Dashboard() {
     </div>
   )
 }
+
 function TrialBanner({ agentId, supabase, accentColor }: { agentId: string, supabase: any, accentColor: string }) {
   const [count, setCount] = useState<number>(0)
   const [loaded, setLoaded] = useState(false)
