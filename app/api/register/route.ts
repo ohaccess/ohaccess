@@ -187,13 +187,13 @@ export async function POST(request: Request) {
               🕒 ${openHouse.open_house_hours}<br/>
               🛏 ${openHouse.bedrooms || '—'} bed · 🛁 ${openHouse.bathrooms || '—'} bath · 📐 ${openHouse.square_footage || '—'} sq ft <br/>
               💰 ${openHouse.listing_price || '—'}<br/>
-              ${listingShortUrl ? `📝<a href="${listingShortUrl}" style="color: #0071e3; font-weight: 600; font-size: 13px;">Full listing details </a>` : ''}
+              ${listingShortUrl ? `📝 <a href="${listingShortUrl}" style="color: #0071e3; font-weight: 600; font-size: 13px;">Full listing details </a>` : ''}
             </div>
 
             <!-- Agent card -->
             <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
               <div style="display: flex; align-items: center;">
-                ${agent?.headshot_url ? `<img src="${agent.headshot_url}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #d1d1d6;margin-right:20px;" />` : ''}
+                ${agent?.headshot_url ? `<img src="${agent.headshot_url}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #d1d1d6;margin-right:20px;" />` : ''}
                 <div>
                   <div style="font-size: 14px; font-weight: 700; color: #1d1d1f;">${agent?.full_name || 'Your Agent'}</div>
                   <div style="font-size: 12px; color: #6e6e73;">${agent?.brokerage || ''}</div>

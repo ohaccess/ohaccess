@@ -162,7 +162,7 @@ export default function RegisterPage({ params }: { params: Promise<{ id: string 
                 {openHouse.property_address}
               </div>
               <div style={{ fontSize: '12px', color: '#6e6e73' }}>
-                {openHouse.bedrooms}bd · {openHouse.bathrooms}ba · {openHouse.square_footage} · {openHouse.listing_price}
+                {openHouse.bedrooms} bed · {openHouse.bathrooms} bath · {openHouse.square_footage} sq ft · {openHouse.listing_price}
               </div>
               <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>
                 {openHouse.open_house_date} · {openHouse.open_house_hours} · {agent?.full_name}
