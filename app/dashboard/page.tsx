@@ -17,6 +17,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showCal, setShowCal] = useState(false)
   const [calDate, setCalDate] = useState(new Date())
+  const [editingOH, setEditingOH] = useState<any>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [form, setForm] = useState({
     property_address: '',
     listing_price: '',
@@ -36,18 +38,13 @@ export default function Dashboard() {
   const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
   const DOW = ['Su','Mo','Tu','We','Th','Fr','Sa']
 
-  useEffect(() => {
-    checkUser()
-  }, [])
+  useEffect(() => { checkUser() }, [])
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
       const { data: refreshData } = await supabase.auth.refreshSession()
-      if (!refreshData.session) {
-        window.location.href = '/login'
-        return
-      }
+      if (!refreshData.session) { window.location.href = '/login'; return }
       setUser(refreshData.session.user)
       await loadProfile(refreshData.session.user.id)
       await loadOpenHouses(refreshData.session.user.id)
@@ -61,35 +58,20 @@ export default function Dashboard() {
   }
 
   const loadProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
     if (data) setProfile(data)
   }
 
   const loadOpenHouses = async (userId: string) => {
-    const { data } = await supabase
-      .from('open_houses')
-      .select('*')
-      .eq('agent_id', userId)
-      .order('created_at', { ascending: false })
+    const { data } = await supabase.from('open_houses').select('*').eq('agent_id', userId).order('created_at', { ascending: false })
     if (data) {
       setOpenHouses(data)
-      if (data.length > 0) {
-        setSelectedOH(data[0])
-        await loadVisitors(data[0].id)
-      }
+      if (data.length > 0) { setSelectedOH(data[0]); await loadVisitors(data[0].id) }
     }
   }
 
   const loadVisitors = async (openHouseId: string) => {
-    const { data } = await supabase
-      .from('visitors')
-      .select('*')
-      .eq('open_house_id', openHouseId)
-      .order('registered_at', { ascending: false })
+    const { data } = await supabase.from('visitors').select('*').eq('open_house_id', openHouseId).order('registered_at', { ascending: false })
     if (data) setVisitors(data)
   }
 
@@ -107,39 +89,71 @@ export default function Dashboard() {
   }
 
   const createOpenHouse = async () => {
-    if (!form.property_address || !form.code_word) {
-      alert('Please fill in at least the property address and code word.')
-      return
-    }
-    const { data, error } = await supabase
-      .from('open_houses')
-      .insert({
-        agent_id: user.id,
-        property_address: form.property_address,
-        listing_price: form.listing_price,
-        bedrooms: form.bedrooms,
-        bathrooms: form.bathrooms,
-        square_footage: form.square_footage,
-        description: form.description,
-        open_house_date: form.open_house_date,
-        open_house_hours: form.open_house_hours,
-        code_word: form.code_word,
-        status: 'active'
-      })
-      .select()
-    if (error) {
-      alert('Error saving: ' + error.message)
-      return
-    }
+    if (!form.property_address || !form.code_word) { alert('Please fill in at least the property address and code word.'); return }
+    const { data, error } = await supabase.from('open_houses').insert({
+      agent_id: user.id,
+      property_address: form.property_address,
+      listing_price: form.listing_price,
+      bedrooms: form.bedrooms,
+      bathrooms: form.bathrooms,
+      square_footage: form.square_footage,
+      description: form.description,
+      open_house_date: form.open_house_date,
+      open_house_hours: form.open_house_hours,
+      code_word: form.code_word,
+      status: 'active'
+    }).select()
+    if (error) { alert('Error saving: ' + error.message); return }
     if (data) {
       await loadOpenHouses(user.id)
       setView('dashboard')
-      setForm({
-        property_address: '', listing_price: '', bedrooms: '',
-        bathrooms: '', square_footage: '', description: '',
-        open_house_date: '', open_house_hours: '', code_word: ''
-      })
+      setForm({ property_address: '', listing_price: '', bedrooms: '', bathrooms: '', square_footage: '', description: '', open_house_date: '', open_house_hours: '', code_word: '' })
     }
+  }
+
+  const startEdit = (oh: any) => {
+    setEditingOH(oh)
+    setForm({
+      property_address: oh.property_address || '',
+      listing_price: oh.listing_price || '',
+      bedrooms: oh.bedrooms || '',
+      bathrooms: oh.bathrooms || '',
+      square_footage: oh.square_footage || '',
+      description: oh.description || '',
+      open_house_date: oh.open_house_date || '',
+      open_house_hours: oh.open_house_hours || '',
+      code_word: oh.code_word || ''
+    })
+    setView('new')
+  }
+
+  const updateOpenHouse = async () => {
+    if (!form.property_address || !form.code_word) { alert('Please fill in at least the property address and code word.'); return }
+    const { error } = await supabase.from('open_houses').update({
+      property_address: form.property_address,
+      listing_price: form.listing_price,
+      bedrooms: form.bedrooms,
+      bathrooms: form.bathrooms,
+      square_footage: form.square_footage,
+      description: form.description,
+      open_house_date: form.open_house_date,
+      open_house_hours: form.open_house_hours,
+      code_word: form.code_word,
+    }).eq('id', editingOH.id)
+    if (error) { alert('Error updating: ' + error.message); return }
+    setEditingOH(null)
+    await loadOpenHouses(user.id)
+    setView('dashboard')
+    setForm({ property_address: '', listing_price: '', bedrooms: '', bathrooms: '', square_footage: '', description: '', open_house_date: '', open_house_hours: '', code_word: '' })
+  }
+
+  const deleteOpenHouse = async (ohId: string) => {
+    await supabase.from('visitors').delete().eq('open_house_id', ohId)
+    await supabase.from('open_houses').delete().eq('id', ohId)
+    setDeleteConfirm(null)
+    setSelectedOH(null)
+    setVisitors([])
+    await loadOpenHouses(user.id)
   }
 
   const toggleVerified = async (visitorId: string, current: boolean) => {
@@ -149,17 +163,9 @@ export default function Dashboard() {
 
   const exportCSV = () => {
     const isPro = ['pro','team','brokerage'].includes(profile?.tier || 'free')
-    if (!isPro) {
-      alert('CSV export is available on Pro plan and above.')
-      return
-    }
+    if (!isPro) { alert('CSV export is available on Pro plan and above.'); return }
     const headers = ['First Name','Last Name','Email','Phone','Timeline','Registered','Verified']
-    const rows = visitors.map(v => [
-      v.first_name, v.last_name, v.email, v.phone,
-      v.purchasing_timeline,
-      new Date(v.registered_at).toLocaleString(),
-      v.verified ? 'Yes' : 'No'
-    ])
+    const rows = visitors.map(v => [v.first_name, v.last_name, v.email, v.phone, v.purchasing_timeline, new Date(v.registered_at).toLocaleString(), v.verified ? 'Yes' : 'No'])
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
@@ -183,11 +189,7 @@ export default function Dashboard() {
       '12+ Months': { bg: '#f2f2f7', color: '#555' }
     }
     const c = colors[timeline] || { bg: '#f2f2f7', color: '#555' }
-    return (
-      <span style={{ background: c.bg, color: c.color, padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
-        {timeline}
-      </span>
-    )
+    return <span style={{ background: c.bg, color: c.color, padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>{timeline}</span>
   }
 
   if (loading) return (
@@ -196,19 +198,8 @@ export default function Dashboard() {
     </div>
   )
 
-  const inputStyle = {
-    width: '100%', background: '#f5f5f7', border: '1px solid #d1d1d6',
-    borderRadius: '9px', padding: '9px 12px', fontSize: '13px',
-    color: '#1d1d1f', outline: 'none', boxSizing: 'border-box' as const,
-    fontFamily: "'Plus Jakarta Sans', sans-serif"
-  }
-
-  const labelStyle = {
-    display: 'block' as const, fontSize: '11px', fontWeight: '600' as const,
-    color: '#6e6e73', textTransform: 'uppercase' as const,
-    letterSpacing: '0.6px', marginBottom: '5px'
-  }
-
+  const inputStyle = { width: '100%', background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '9px', padding: '9px 12px', fontSize: '13px', color: '#1d1d1f', outline: 'none', boxSizing: 'border-box' as const, fontFamily: "'Plus Jakarta Sans', sans-serif" }
+  const labelStyle = { display: 'block' as const, fontSize: '11px', fontWeight: '600' as const, color: '#6e6e73', textTransform: 'uppercase' as const, letterSpacing: '0.6px', marginBottom: '5px' }
   const firstDay = new Date(calDate.getFullYear(), calDate.getMonth(), 1).getDay()
   const daysInMonth = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0).getDate()
 
@@ -223,7 +214,7 @@ export default function Dashboard() {
         </div>
         <div style={{ display: 'flex', gap: '4px' }}>
           {(['dashboard', 'new', 'settings'] as const).map(v => (
-            <button key={v} onClick={() => setView(v)} style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: view === v ? 'white' : 'rgba(255,255,255,0.6)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
+            <button key={v} onClick={() => { setView(v); if (v !== 'new') { setEditingOH(null) } }} style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: view === v ? 'white' : 'rgba(255,255,255,0.6)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
               {v === 'dashboard' ? 'Dashboard' : v === 'new' ? 'New Open House' : 'Settings'}
             </button>
           ))}
@@ -241,6 +232,7 @@ export default function Dashboard() {
             <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Dashboard</div>
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Real-time visitor log and open house management.</div>
 
+            {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
               {[
                 { label: 'Active Open Houses', value: openHouses.filter(oh => oh.status === 'active').length },
@@ -254,9 +246,10 @@ export default function Dashboard() {
               ))}
             </div>
 
+            {/* Open house list */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
               <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f' }}>Your open houses</div>
-              <button onClick={() => setView('new')} style={{ background: accentColor, color: 'white', border: 'none', padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <button onClick={() => { setEditingOH(null); setForm({ property_address: '', listing_price: '', bedrooms: '', bathrooms: '', square_footage: '', description: '', open_house_date: '', open_house_hours: '', code_word: '' }); setView('new') }} style={{ background: accentColor, color: 'white', border: 'none', padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 + New open house
               </button>
             </div>
@@ -268,7 +261,8 @@ export default function Dashboard() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
                 {openHouses.map(oh => (
-                  <div key={oh.id} onClick={async () => { setSelectedOH(oh); await loadVisitors(oh.id) }} style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentColor : '#d1d1d6'}`, borderRadius: '18px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
+                  <div key={oh.id} style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentColor : '#d1d1d6'}`, borderRadius: '18px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}
+                    onClick={async () => { setSelectedOH(oh); await loadVisitors(oh.id) }}>
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: oh.status === 'active' ? accentColor : '#aeaeb2', flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>{oh.property_address}</div>
@@ -279,54 +273,52 @@ export default function Dashboard() {
                         <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#30d158' }} />Live
                       </div>
                     )}
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <div style={{ fontSize: '11px', color: accentColor, fontWeight: '600' }}>
-                      /register/{oh.id.slice(0,8)}...
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation()
+                          const url = `${window.location.origin}/register/${oh.id}`
+                          const res = await fetch(`/api/qrcode?url=${encodeURIComponent(url)}`)
+                          const blob = await res.blob()
+                          const a = document.createElement('a')
+                          a.href = URL.createObjectURL(blob)
+                          a.download = `ohaccess-qr-${oh.property_address.replace(/\s+/g, '-')}.png`
+                          a.click()
+                        }}
+                        style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
+                      >⬇ QR</button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const url = `${window.location.origin}/register/${oh.id}`
+                          navigator.clipboard.writeText(url)
+                          alert('Registration URL copied!')
+                        }}
+                        style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
+                      >📋 Copy</button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); startEdit(oh) }}
+                        style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
+                      >✏️ Edit</button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }}
+                        style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
+                      >🗑 Delete</button>
                     </div>
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation()
-                        const url = `${window.location.origin}/register/${oh.id}`
-                        const res = await fetch(`/api/qrcode?url=${encodeURIComponent(url)}`)
-                        const blob = await res.blob()
-                        const a = document.createElement('a')
-                        a.href = URL.createObjectURL(blob)
-                        a.download = `ohaccess-qr-${oh.property_address.replace(/\s+/g, '-')}.png`
-                        a.click()
-                      }}
-                      style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
-                    >
-                      ⬇ QR Code
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        const url = `${window.location.origin}/register/${oh.id}`
-                        navigator.clipboard.writeText(url)
-                        alert('Registration URL copied to clipboard!')
-                      }}
-                      style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
-                    >
-                      📋 Copy URL
-                    </button>
-                  </div>
                   </div>
                 ))}
               </div>
             )}
 
+            {/* Visitor log */}
             {selectedOH && (
               <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Visitor log — {selectedOH.property_address}</div>
-                  <button onClick={exportCSV} style={{ background: primaryColor, color: 'white', border: 'none', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    Export CSV
-                  </button>
+                  <button onClick={exportCSV} style={{ background: primaryColor, color: 'white', border: 'none', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
                 </div>
                 {visitors.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: '#6e6e73', padding: '20px', fontSize: '13px' }}>
-                    No visitors yet. Share your QR code to get started!
-                  </div>
+                  <div style={{ textAlign: 'center', color: '#6e6e73', padding: '20px', fontSize: '13px' }}>No visitors yet. Share your QR code to get started!</div>
                 ) : (
                   <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
@@ -361,11 +353,11 @@ export default function Dashboard() {
           </>
         )}
 
-        {/* NEW OPEN HOUSE VIEW */}
+        {/* NEW / EDIT OPEN HOUSE VIEW */}
         {view === 'new' && (
           <>
-            <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>New open house</div>
-            <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Set up your listing and generate your QR code.</div>
+            <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>{editingOH ? 'Edit open house' : 'New open house'}</div>
+            <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>{editingOH ? 'Update your listing details.' : 'Set up your listing and generate your QR code.'}</div>
 
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Property details</div>
@@ -392,14 +384,7 @@ export default function Dashboard() {
                 </div>
                 <div style={{ position: 'relative' }}>
                   <label style={labelStyle}>Open House Date</label>
-                  <input
-                    style={{ ...inputStyle, cursor: 'pointer' }}
-                    type="text"
-                    placeholder="Select a date"
-                    value={form.open_house_date}
-                    readOnly
-                    onClick={() => setShowCal(!showCal)}
-                  />
+                  <input style={{ ...inputStyle, cursor: 'pointer' }} type="text" placeholder="Select a date" value={form.open_house_date} readOnly onClick={() => setShowCal(!showCal)} />
                   {showCal && (
                     <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 100, background: 'white', border: '1px solid #d1d1d6', borderRadius: '18px', padding: '14px', width: '242px', boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -408,26 +393,16 @@ export default function Dashboard() {
                         <button onClick={() => setCalDate(new Date(calDate.getFullYear(), calDate.getMonth()+1, 1))} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '7px', padding: '4px 10px', cursor: 'pointer', fontSize: '15px', fontWeight: '600' }}>›</button>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
-                        {DOW.map(d => (
-                          <div key={d} style={{ fontSize: '10px', fontWeight: '600', color: '#aeaeb2', textAlign: 'center', padding: '3px 0' }}>{d}</div>
-                        ))}
+                        {DOW.map(d => <div key={d} style={{ fontSize: '10px', fontWeight: '600', color: '#aeaeb2', textAlign: 'center', padding: '3px 0' }}>{d}</div>)}
                         {Array.from({ length: firstDay }).map((_, i) => <div key={`e-${i}`} />)}
                         {Array.from({ length: daysInMonth }).map((_, i) => {
                           const day = i + 1
                           return (
-                            <div
-                              key={day}
-                              onClick={() => {
-                                const d = new Date(calDate.getFullYear(), calDate.getMonth(), day)
-                                setForm({ ...form, open_house_date: `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${day}, ${d.getFullYear()}` })
-                                setShowCal(false)
-                              }}
+                            <div key={day} onClick={() => { const d = new Date(calDate.getFullYear(), calDate.getMonth(), day); setForm({ ...form, open_house_date: `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${day}, ${d.getFullYear()}` }); setShowCal(false) }}
                               style={{ fontSize: '12px', textAlign: 'center', padding: '5px 2px', borderRadius: '6px', cursor: 'pointer', color: '#1d1d1f' }}
                               onMouseEnter={e => (e.currentTarget.style.background = '#e8e8ed')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                            >
-                              {day}
-                            </div>
+                            >{day}</div>
                           )
                         })}
                       </div>
@@ -459,8 +434,10 @@ export default function Dashboard() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button onClick={() => setView('dashboard')} style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cancel</button>
-              <button onClick={createOpenHouse} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>✓ Save open house</button>
+              <button onClick={() => { setView('dashboard'); setEditingOH(null); setForm({ property_address: '', listing_price: '', bedrooms: '', bathrooms: '', square_footage: '', description: '', open_house_date: '', open_house_hours: '', code_word: '' }) }} style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cancel</button>
+              <button onClick={editingOH ? updateOpenHouse : createOpenHouse} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                {editingOH ? '✓ Update open house' : '✓ Save open house'}
+              </button>
             </div>
           </>
         )}
@@ -476,21 +453,15 @@ export default function Dashboard() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={labelStyle}>Full Name</label>
-                  <input style={inputStyle} type="text" placeholder="David Sheehan" value={profile?.full_name || ''} onChange={e => setProfile({ ...profile, full_name: e.target.value })} />
+                  <input style={inputStyle} type="text" placeholder="Sarah Connelly" value={profile?.full_name || ''} onChange={e => setProfile({ ...profile, full_name: e.target.value })} />
                 </div>
                 <div>
                   <label style={labelStyle}>Brokerage</label>
-                  <input style={inputStyle} type="text" placeholder="Reflect Real Estate" value={profile?.brokerage || ''} onChange={e => setProfile({ ...profile, brokerage: e.target.value })} />
+                  <input style={inputStyle} type="text" placeholder="Premier Realty Group" value={profile?.brokerage || ''} onChange={e => setProfile({ ...profile, brokerage: e.target.value })} />
                 </div>
                 <div>
                   <label style={labelStyle}>Phone</label>
-                  <input
-                    style={inputStyle}
-                    type="tel"
-                    placeholder="(214) 449-1822"
-                    value={profile?.phone || ''}
-                    onChange={e => setProfile({ ...profile, phone: formatPhone(e.target.value) })}
-                  />
+                  <input style={inputStyle} type="tel" placeholder="(214) 555-0182" value={profile?.phone || ''} onChange={e => setProfile({ ...profile, phone: formatPhone(e.target.value) })} />
                 </div>
                 <div>
                   <label style={labelStyle}>License Number</label>
@@ -517,7 +488,30 @@ export default function Dashboard() {
             </div>
           </>
         )}
+
       </div>
+
+      {/* DELETE CONFIRMATION */}
+      {deleteConfirm && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: '22px', padding: '32px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <div style={{ fontSize: '40px', marginBottom: '16px' }}>🗑</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Delete this open house?</div>
+            <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px', lineHeight: '1.6' }}>
+              This will permanently delete the open house and all visitor records. This action cannot be undone.
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button onClick={() => setDeleteConfirm(null)} style={{ padding: '10px 24px', background: '#f5f5f7', color: '#1d1d1f', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                Cancel
+              </button>
+              <button onClick={() => deleteOpenHouse(deleteConfirm)} style={{ padding: '10px 24px', background: '#cc0000', color: 'white', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                Yes, delete it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

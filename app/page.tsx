@@ -183,7 +183,7 @@ export default function Home()
             }}
           >
             {b === 'monthly' ? 'Monthly' : b === 'annual' ? 'Annual' : '2 Years'}
-            {b === 'annual' && <span style={{ marginLeft: '6px', background: '#30d158', color: 'white', fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>2 FREE</span>}
+            {b === 'annual' && <span style={{ marginLeft: '6px', background: '#30d158', color: 'white', fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>2 months FREE</span>}
             {b === '2year' && <span style={{ marginLeft: '6px', background: '#c9963a', color: '#1d1d1f', fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>50% OFF</span>}
           </button>
         ))}
