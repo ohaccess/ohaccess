@@ -87,10 +87,11 @@ export default function Home() {
             ohACCESS verifies every open house visitor&apos;s contact information in real time — via a code word sent to their phone and email. Fake info? No code. No entry.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', padding: '0 16px' }}>
-            <Link href="/login" style={{ background: '#c9963a', color: '#1d1d1f', padding: '16px 32px', borderRadius: '12px', fontSize: '16px', fontWeight: '700', textDecoration: 'none', display: 'block', width: '100%', maxWidth: '340px', textAlign: 'center' }}>
-              Start free — 50 visitor registrations on us
+            <Link href="/login" style={{ background: '#c9963a', color: '#1d1d1f', padding: '16px 32px', borderRadius: '12px', textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '340px', lineHeight: '1.4' }}>
+              <span style={{ fontSize: '17px', fontWeight: '700' }}>Start free</span>
+              <span style={{ fontSize: '13px', fontWeight: '500', opacity: 0.8 }}>50 visitor registrations on us</span>
             </Link>
-            <a href="#how-it-works" style={{ background: 'rgba(255,255,255,0.1)', color: 'white', padding: '16px 32px', borderRadius: '12px', fontSize: '16px', fontWeight: '600', textDecoration: 'none', display: 'block', width: '100%', maxWidth: '340px', textAlign: 'center' }}>
+            <a href="#how-it-works" style={{ background: 'rgba(255,255,255,0.1)', color: 'white', padding: '16px 32px', borderRadius: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '340px', fontSize: '16px', fontWeight: '600', textAlign: 'center' as const }}>
               See how it works
             </a>
           </div>
