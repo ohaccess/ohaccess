@@ -97,6 +97,23 @@ export default function Dashboard() {
 
   const createOpenHouse = async () => {
     if (!form.property_address || !form.code_word) { alert('Please fill in at least the property address and code word.'); return }
+
+    // Check trial usage
+    const tier = profile?.tier || 'free'
+    const isPaidTier = ['pro', 'team', 'brokerage'].includes(tier)
+
+    if (!isPaidTier) {
+      const { count } = await supabase
+        .from('visitors')
+        .select('*', { count: 'exact', head: true })
+        .eq('agent_id', user.id)
+      
+      if ((count || 0) >= 50) {
+        alert('You have used all 50 of your free trial visitor registrations. Please upgrade to Pro to continue.')
+        return
+      }
+    }
+
     const { data, error } = await supabase.from('open_houses').insert({
       agent_id: user.id,
       property_address: form.property_address,
@@ -110,8 +127,15 @@ export default function Dashboard() {
       code_word: form.code_word,
       status: 'active'
     }).select()
+
     if (error) { alert('Error saving: ' + error.message); return }
-    if (data) { await loadOpenHouses(user.id); setView('dashboard'); resetForm() }
+
+    if (data) {
+      // Increment usage counter for free tier
+      await loadOpenHouses(user.id)
+      setView('dashboard')
+      resetForm()
+    }
   }
 
   const startEdit = (oh: any) => {
@@ -251,7 +275,12 @@ export default function Dashboard() {
         {view === 'dashboard' && (
           <>
             <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Dashboard</div>
-            <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Real-time visitor log and open house management.</div>
+            <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>Real-time visitor log and open house management.</div>
+
+            {/* Trial banner */}
+            {!['pro','team','brokerage'].includes(profile?.tier || 'free') && (
+              <TrialBanner agentId={user?.id} supabase={supabase} accentColor={accentColor} />
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
               {[
@@ -578,6 +607,71 @@ export default function Dashboard() {
         </div>
       )}
 
+    </div>
+  )
+}
+function TrialBanner({ agentId, supabase, accentColor }: { agentId: string, supabase: any, accentColor: string }) {
+  const [count, setCount] = useState<number>(0)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    const load = async () => {
+      const { count: c } = await supabase
+        .from('visitors')
+        .select('*', { count: 'exact', head: true })
+        .eq('agent_id', agentId)
+      setCount(c || 0)
+      setLoaded(true)
+    }
+    if (agentId) load()
+  }, [agentId])
+
+  if (!loaded) return null
+
+  const remaining = Math.max(0, 50 - count)
+  const isExpired = count >= 50
+  const isWarning = count >= 35
+
+  return (
+    <div style={{
+      background: isExpired ? '#fff0f0' : isWarning ? '#fff9e0' : '#e8f9ee',
+      border: `1px solid ${isExpired ? '#ffcccc' : isWarning ? '#ffe066' : '#b2f0c8'}`,
+      borderRadius: '12px',
+      padding: '12px 16px',
+      marginBottom: '20px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '12px'
+    }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f' }}>
+          {isExpired
+            ? '⚠️ Your free trial has ended'
+            : `✓ Free trial — ${remaining} of 50 visitor registrations remaining`
+          }
+        </div>
+        <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>
+          {isExpired
+            ? 'Upgrade to Pro to continue receiving visitor registrations.'
+            : isWarning
+            ? 'Running low! Upgrade to Pro for unlimited registrations.'
+            : 'Full Pro features included during your trial. No credit card required.'}
+        </div>
+      </div>
+      <a href="/#pricing" style={{
+        background: '#1d1d1f',
+        color: 'white',
+        padding: '7px 16px',
+        borderRadius: '8px',
+        fontSize: '12px',
+        fontWeight: '700',
+        textDecoration: 'none',
+        whiteSpace: 'nowrap',
+        flexShrink: 0
+      }}>
+        {isExpired ? 'Upgrade now →' : 'View plans'}
+      </a>
     </div>
   )
 }

@@ -74,6 +74,20 @@ export async function POST(request: Request) {
     const agentTier = agent?.tier || 'free'
     const isPro = ['pro', 'team', 'brokerage'].includes(agentTier)
 
+    // Block trial users who have exceeded 50 registrations
+    if (!isPro) {
+      const { count } = await supabase
+        .from('visitors')
+        .select('*', { count: 'exact', head: true })
+        .eq('agent_id', openHouse.agent_id)
+
+      if ((count || 0) > 50) {
+        return NextResponse.json({
+          error: 'This agent has exceeded their free trial limit. Please ask them to upgrade to Pro at ohaccess.com'
+        }, { status: 403 })
+      }
+    }
+    
     console.log('Attempting to send visitor SMS to:', phone)
 
     // ① VISITOR SMS
@@ -118,7 +132,7 @@ export async function POST(request: Request) {
               <strong style="color: #1d1d1f;">${address}</strong><br/>
               📅 ${openHouse.open_house_date}<br/>
               🕒 ${openHouse.open_house_hours}<br/>
-              🛏 ${openHouse.bedrooms || '—'}bed · 🛁 ${openHouse.bathrooms || '—'}bath · 📏 ${openHouse.square_footage || '—'}<br/>
+              🛏 ${openHouse.bedrooms || '—'}bed · 🛁 ${openHouse.bathrooms || '—'}bath · 📐 ${openHouse.square_footage || '—'}<br/>
               💰 ${openHouse.listing_price || '—'}
             </div>
 
