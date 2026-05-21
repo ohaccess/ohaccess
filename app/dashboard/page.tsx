@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [editingOH, setEditingOH] = useState<any>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [savedSettings, setSavedSettings] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [form, setForm] = useState({
     property_address: '',
     listing_price: '',
@@ -257,7 +258,9 @@ export default function Dashboard() {
         <div style={{ fontSize: '20px', fontWeight: '200', color: 'white', letterSpacing: '-0.5px' }}>
           oh<span style={{ fontWeight: '700' }}>ACCESS</span>
         </div>
-        <div style={{ display: 'flex', gap: '4px' }}>
+
+        {/* Desktop nav */}
+        <div style={{ display: 'flex', gap: '4px' }} className="dash-nav-desktop">
           {(['dashboard', 'new', 'settings'] as const).map(v => (
             <button key={v} onClick={() => { setView(v); if (v !== 'new') setEditingOH(null) }} style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: view === v ? 'white' : 'rgba(255,255,255,0.6)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
               {v === 'dashboard' ? 'Dashboard' : v === 'new' ? 'New Open House' : 'Settings'}
@@ -267,7 +270,41 @@ export default function Dashboard() {
             Sign out
           </button>
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          className="dash-nav-mobile"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{ background: 'none', border: 'none', color: 'white', fontSize: '22px', cursor: 'pointer', padding: '4px 8px' }}
+        >
+          {mobileMenuOpen ? '✕' : '☰'}
+        </button>
       </div>
+
+      {/* Mobile dropdown */}
+      {mobileMenuOpen && (
+        <div style={{ background: primaryColor, borderTop: '1px solid rgba(255,255,255,0.1)', padding: '8px 16px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {(['dashboard', 'new', 'settings'] as const).map(v => (
+            <button key={v} onClick={() => { setView(v); if (v !== 'new') setEditingOH(null); setMobileMenuOpen(false) }}
+              style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: 'white', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px', fontWeight: view === v ? '600' : '400', textAlign: 'left' as const }}>
+              {v === 'dashboard' ? '📊 Dashboard' : v === 'new' ? '＋ New Open House' : '⚙️ Settings'}
+            </button>
+          ))}
+          <button onClick={() => { signOut(); setMobileMenuOpen(false) }}
+            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.7)', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px', textAlign: 'left' as const, marginTop: '4px' }}>
+            Sign out
+          </button>
+        </div>
+      )}
+
+      <style>{`
+        .dash-nav-desktop { display: flex; }
+        .dash-nav-mobile { display: none; }
+        @media (max-width: 768px) {
+          .dash-nav-desktop { display: none !important; }
+          .dash-nav-mobile { display: block !important; }
+        }
+      `}</style>
 
       <div style={{ padding: '28px' }}>
 
@@ -309,19 +346,23 @@ export default function Dashboard() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
                 {openHouses.map(oh => (
-                  <div key={oh.id} style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentColor : '#d1d1d6'}`, borderRadius: '18px', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}
+                  <div key={oh.id} style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentColor : '#d1d1d6'}`, borderRadius: '18px', padding: '14px 18px', cursor: 'pointer' }}
                     onClick={async () => { setSelectedOH(oh); await loadVisitors(oh.id) }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: oh.status === 'active' ? accentColor : '#aeaeb2', flexShrink: 0 }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>{oh.property_address}</div>
-                      <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>{oh.open_house_date} · {oh.open_house_hours} · Code: <strong>{oh.code_word}</strong></div>
-                    </div>
-                    {oh.status === 'active' && (
-                      <div style={{ background: '#e8f9ee', color: '#1a7a3c', fontSize: '11px', fontWeight: '600', padding: '3px 9px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#30d158' }} />Live
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: oh.status === 'active' ? accentColor : '#aeaeb2', flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{oh.property_address}</div>
+                        <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>{oh.open_house_date} · {oh.open_house_hours} · Code: <strong>{oh.code_word}</strong></div>
                       </div>
-                    )}
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      {oh.status === 'active' && (
+                        <div style={{ background: '#e8f9ee', color: '#1a7a3c', fontSize: '11px', fontWeight: '600', padding: '3px 9px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                          <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#30d158' }} />Live
+                        </div>
+                      )}
+                    </div>
+                    {/* Action buttons — full width below on all screens */}
+                    <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'nowrap' }}
+                      onClick={e => e.stopPropagation()}>
                       <button onClick={async (e) => {
                         e.stopPropagation()
                         const url = `${window.location.origin}/register/${oh.id}`
@@ -331,15 +372,15 @@ export default function Dashboard() {
                         a.href = URL.createObjectURL(blob)
                         a.download = `ohaccess-qr-${oh.property_address.replace(/\s+/g, '-')}.png`
                         a.click()
-                      }} style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⬇ QR</button>
+                      }} style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⬇ QR Code</button>
                       <button onClick={(e) => {
                         e.stopPropagation()
                         const url = `${window.location.origin}/register/${oh.id}`
                         navigator.clipboard.writeText(url)
                         alert('Registration URL copied!')
-                      }} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy</button>
-                      <button onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
-                      <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }} style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🗑 Delete</button>
+                      }} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
+                      <button onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
+                      <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }} style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🗑 Delete</button>
                     </div>
                   </div>
                 ))}
@@ -355,26 +396,26 @@ export default function Dashboard() {
                 {visitors.length === 0 ? (
                   <div style={{ textAlign: 'center', color: '#6e6e73', padding: '20px', fontSize: '13px' }}>No visitors yet. Share your QR code to get started!</div>
                 ) : (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', minWidth: '500px' }}>
                       <thead>
                         <tr>
-                          {['Name','Phone','Email','Timeline','Time','Verified'].map(h => (
-                            <th key={h} style={{ textAlign: 'left', padding: '8px 10px', fontSize: '11px', fontWeight: '600', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid #d1d1d6' }}>{h}</th>
+                          {['Name','Phone','Email','Timeline','Time','✓'].map(h => (
+                            <th key={h} style={{ textAlign: 'left', padding: '8px 8px', fontSize: '10px', fontWeight: '600', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid #d1d1d6', whiteSpace: 'nowrap' }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {visitors.map((v, i) => (
                           <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                            <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73' }}>{v.first_name} {v.last_name}</td>
-                            <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73' }}>{v.phone}</td>
-                            <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73' }}>{v.email}</td>
-                            <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
-                            <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{new Date(v.registered_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                            <td style={{ padding: '10px', borderBottom: '1px solid #f2f2f7' }}>
-                              <button onClick={() => toggleVerified(v.id, v.verified)} style={{ background: v.verified ? '#30d158' : primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                                {v.verified ? '✓ Verified' : 'Mark verified'}
+                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.first_name} {v.last_name}</td>
+                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}</td>
+                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.email}</td>
+                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
+                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{new Date(v.registered_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
+                              <button onClick={() => toggleVerified(v.id, v.verified)} style={{ background: v.verified ? '#30d158' : primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+                                {v.verified ? '✓' : 'Verify'}
                               </button>
                             </td>
                           </tr>
@@ -518,7 +559,7 @@ export default function Dashboard() {
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Branding & photos</div>
               <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px' }}>Paste direct image URLs ending in .jpg or .png. Headshot and logo appear in visitor emails.<strong style={{ color: '#1d1d1f' }}> Tip: Upload your photo to <a href="https://imgur.com" target="_blank" style={{ color: '#0071e3' }}>imgur.com</a> for a reliable direct link.</strong></div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
                 <div>
                   <label style={labelStyle}>Agent Headshot URL</label>
                   <input style={inputStyle} type="url" placeholder="https://yoursite.com/headshot.jpg" value={profile?.headshot_url || ''} onChange={e => setProfile({ ...profile, headshot_url: e.target.value })} />
