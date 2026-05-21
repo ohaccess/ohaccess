@@ -203,7 +203,7 @@ export default function Home() {
               {(['monthly', 'annual', '2year'] as const).map(b => (
                 <button key={b} onClick={() => setBilling(b)} style={{ padding: '8px 12px', borderRadius: '9px', border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: '600', background: billing === b ? '#1d1d1f' : 'transparent', color: billing === b ? 'white' : '#6e6e73' }}>
                   {b === 'monthly' ? 'Monthly' : b === 'annual' ? 'Annual' : '2 Years'}
-                  {b === 'annual' && <span style={{ marginLeft: '6px', background: '#30d158', color: 'white', fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>2 FREE</span>}
+                  {b === 'annual' && <span style={{ marginLeft: '6px', background: '#30d158', color: 'white', fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>2 MOS FREE</span>}
                   {b === '2year' && <span style={{ marginLeft: '6px', background: '#c9963a', color: '#1d1d1f', fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>50% OFF</span>}
                 </button>
               ))}
