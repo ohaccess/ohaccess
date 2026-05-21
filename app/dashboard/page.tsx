@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [calDate, setCalDate] = useState(new Date())
   const [editingOH, setEditingOH] = useState<any>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [savedSettings, setSavedSettings] = useState(false)
   const [form, setForm] = useState({
     property_address: '',
     listing_price: '',
@@ -76,7 +77,7 @@ export default function Dashboard() {
   }
 
   const generateCodeWord = () => {
-    const words = ['KEYSTONE','MERIDIAN','HAVEN','OAKWOOD','SOLSTICE','STERLING','COMPASS','AURORA','HORIZON','CYPRESS','MAGNOLIA','WILLOW','SUMMIT','HARBOR','CRESTVIEW']
+    const words = ['KEYSTONE','MERIDIAN','HAVEN','OAKWOOD','SOLSTICE','STERLING','REFLECT','AURORA','HORIZON','CYPRESS','EXPLORE','WILLOW','SUMMIT','HARBOR','CRESTVIEW']
     return words[Math.floor(Math.random() * words.length)]
   }
 
@@ -87,6 +88,12 @@ export default function Dashboard() {
     if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`
     return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
   }
+
+  const resetForm = () => setForm({
+    property_address: '', listing_price: '', bedrooms: '',
+    bathrooms: '', square_footage: '', description: '',
+    open_house_date: '', open_house_hours: '', code_word: ''
+  })
 
   const createOpenHouse = async () => {
     if (!form.property_address || !form.code_word) { alert('Please fill in at least the property address and code word.'); return }
@@ -104,11 +111,7 @@ export default function Dashboard() {
       status: 'active'
     }).select()
     if (error) { alert('Error saving: ' + error.message); return }
-    if (data) {
-      await loadOpenHouses(user.id)
-      setView('dashboard')
-      setForm({ property_address: '', listing_price: '', bedrooms: '', bathrooms: '', square_footage: '', description: '', open_house_date: '', open_house_hours: '', code_word: '' })
-    }
+    if (data) { await loadOpenHouses(user.id); setView('dashboard'); resetForm() }
   }
 
   const startEdit = (oh: any) => {
@@ -144,7 +147,7 @@ export default function Dashboard() {
     setEditingOH(null)
     await loadOpenHouses(user.id)
     setView('dashboard')
-    setForm({ property_address: '', listing_price: '', bedrooms: '', bathrooms: '', square_footage: '', description: '', open_house_date: '', open_house_hours: '', code_word: '' })
+    resetForm()
   }
 
   const deleteOpenHouse = async (ohId: string) => {
@@ -173,6 +176,24 @@ export default function Dashboard() {
     a.href = url
     a.download = `${selectedOH?.property_address}-visitors.csv`
     a.click()
+  }
+
+  const saveSettings = async () => {
+    const { error } = await supabase.from('profiles').update({
+      full_name: profile?.full_name,
+      brokerage: profile?.brokerage,
+      phone: profile?.phone,
+      display_email: profile?.display_email,
+      license_number: profile?.license_number,
+      state: profile?.state,
+      headshot_url: profile?.headshot_url,
+      logo_url: profile?.logo_url,
+      primary_color: profile?.primary_color,
+      accent_color: profile?.accent_color,
+    }).eq('id', user.id)
+    if (error) { alert('Error saving: ' + error.message); return }
+    setSavedSettings(true)
+    setTimeout(() => setSavedSettings(false), 3000)
   }
 
   const signOut = async () => {
@@ -214,7 +235,7 @@ export default function Dashboard() {
         </div>
         <div style={{ display: 'flex', gap: '4px' }}>
           {(['dashboard', 'new', 'settings'] as const).map(v => (
-            <button key={v} onClick={() => { setView(v); if (v !== 'new') { setEditingOH(null) } }} style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: view === v ? 'white' : 'rgba(255,255,255,0.6)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
+            <button key={v} onClick={() => { setView(v); if (v !== 'new') setEditingOH(null) }} style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: view === v ? 'white' : 'rgba(255,255,255,0.6)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
               {v === 'dashboard' ? 'Dashboard' : v === 'new' ? 'New Open House' : 'Settings'}
             </button>
           ))}
@@ -232,7 +253,6 @@ export default function Dashboard() {
             <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Dashboard</div>
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Real-time visitor log and open house management.</div>
 
-            {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
               {[
                 { label: 'Active Open Houses', value: openHouses.filter(oh => oh.status === 'active').length },
@@ -246,10 +266,9 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Open house list */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
               <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f' }}>Your open houses</div>
-              <button onClick={() => { setEditingOH(null); setForm({ property_address: '', listing_price: '', bedrooms: '', bathrooms: '', square_footage: '', description: '', open_house_date: '', open_house_hours: '', code_word: '' }); setView('new') }} style={{ background: accentColor, color: 'white', border: 'none', padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <button onClick={() => { setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: 'white', border: 'none', padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 + New open house
               </button>
             </div>
@@ -274,43 +293,30 @@ export default function Dashboard() {
                       </div>
                     )}
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation()
-                          const url = `${window.location.origin}/register/${oh.id}`
-                          const res = await fetch(`/api/qrcode?url=${encodeURIComponent(url)}`)
-                          const blob = await res.blob()
-                          const a = document.createElement('a')
-                          a.href = URL.createObjectURL(blob)
-                          a.download = `ohaccess-qr-${oh.property_address.replace(/\s+/g, '-')}.png`
-                          a.click()
-                        }}
-                        style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
-                      >⬇ QR</button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          const url = `${window.location.origin}/register/${oh.id}`
-                          navigator.clipboard.writeText(url)
-                          alert('Registration URL copied!')
-                        }}
-                        style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
-                      >📋 Copy</button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); startEdit(oh) }}
-                        style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
-                      >✏️ Edit</button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }}
-                        style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
-                      >🗑 Delete</button>
+                      <button onClick={async (e) => {
+                        e.stopPropagation()
+                        const url = `${window.location.origin}/register/${oh.id}`
+                        const res = await fetch(`/api/qrcode?url=${encodeURIComponent(url)}`)
+                        const blob = await res.blob()
+                        const a = document.createElement('a')
+                        a.href = URL.createObjectURL(blob)
+                        a.download = `ohaccess-qr-${oh.property_address.replace(/\s+/g, '-')}.png`
+                        a.click()
+                      }} style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⬇ QR</button>
+                      <button onClick={(e) => {
+                        e.stopPropagation()
+                        const url = `${window.location.origin}/register/${oh.id}`
+                        navigator.clipboard.writeText(url)
+                        alert('Registration URL copied!')
+                      }} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy</button>
+                      <button onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
+                      <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }} style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🗑 Delete</button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Visitor log */}
             {selectedOH && (
               <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
@@ -434,7 +440,7 @@ export default function Dashboard() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button onClick={() => { setView('dashboard'); setEditingOH(null); setForm({ property_address: '', listing_price: '', bedrooms: '', bathrooms: '', square_footage: '', description: '', open_house_date: '', open_house_hours: '', code_word: '' }) }} style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cancel</button>
+              <button onClick={() => { setView('dashboard'); setEditingOH(null); resetForm() }} style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cancel</button>
               <button onClick={editingOH ? updateOpenHouse : createOpenHouse} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 {editingOH ? '✓ Update open house' : '✓ Save open house'}
               </button>
@@ -446,8 +452,9 @@ export default function Dashboard() {
         {view === 'settings' && (
           <>
             <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Account settings</div>
-            <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Manage your profile and preferences.</div>
+            <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Manage your profile, branding, and preferences.</div>
 
+            {/* Agent profile */}
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agent profile</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -460,6 +467,10 @@ export default function Dashboard() {
                   <input style={inputStyle} type="text" placeholder="Premier Realty Group" value={profile?.brokerage || ''} onChange={e => setProfile({ ...profile, brokerage: e.target.value })} />
                 </div>
                 <div>
+                  <label style={labelStyle}>Display Email (shown to visitors)</label>
+                  <input style={inputStyle} type="email" placeholder="sarah@premierre.com" value={profile?.display_email || ''} onChange={e => setProfile({ ...profile, display_email: e.target.value })} />
+                </div>
+                <div>
                   <label style={labelStyle}>Phone</label>
                   <input style={inputStyle} type="tel" placeholder="(214) 555-0182" value={profile?.phone || ''} onChange={e => setProfile({ ...profile, phone: formatPhone(e.target.value) })} />
                 </div>
@@ -467,22 +478,81 @@ export default function Dashboard() {
                   <label style={labelStyle}>License Number</label>
                   <input style={inputStyle} type="text" placeholder="TX-123456" value={profile?.license_number || ''} onChange={e => setProfile({ ...profile, license_number: e.target.value })} />
                 </div>
+                <div>
+                  <label style={labelStyle}>State</label>
+                  <input style={inputStyle} type="text" placeholder="TX" value={profile?.state || ''} onChange={e => setProfile({ ...profile, state: e.target.value })} />
+                </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                onClick={async () => {
-                  await supabase.from('profiles').update({
-                    full_name: profile?.full_name,
-                    brokerage: profile?.brokerage,
-                    phone: profile?.phone,
-                    license_number: profile?.license_number,
-                  }).eq('id', user.id)
-                  alert('Settings saved!')
-                }}
-                style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
+            {/* Branding */}
+            <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Branding & photos</div>
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px' }}>Paste direct image URLs ending in .jpg or .png. Headshot and logo appear in visitor emails.<strong style={{ color: '#1d1d1f' }}> Tip: Upload your photo to <a href="https://imgur.com" target="_blank" style={{ color: '#0071e3' }}>imgur.com</a> for a reliable direct link.</strong></div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={labelStyle}>Agent Headshot URL</label>
+                  <input style={inputStyle} type="url" placeholder="https://yoursite.com/headshot.jpg" value={profile?.headshot_url || ''} onChange={e => setProfile({ ...profile, headshot_url: e.target.value })} />
+                  {profile?.headshot_url && (
+                    <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <img src={profile.headshot_url} alt="Headshot" style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #d1d1d6' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                      <span style={{ fontSize: '11px', color: '#30d158', fontWeight: '600' }}>✓ Preview loaded</span>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label style={labelStyle}>Logo URL (Brokerage or Team)</label>
+                  <input style={inputStyle} type="url" placeholder="https://yoursite.com/logo.png" value={profile?.logo_url || ''} onChange={e => setProfile({ ...profile, logo_url: e.target.value })} />
+                  {profile?.logo_url && (
+                    <div style={{ marginTop: '8px', background: '#f5f5f7', borderRadius: '8px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '52px', border: '1px solid #d1d1d6' }}>
+                      <img
+                        src={profile.logo_url}
+                        alt="Logo preview"
+                        style={{ maxHeight: '72px', maxWidth: '180px', objectFit: 'contain', display: 'block' }}
+                        onLoad={e => { (e.target as HTMLImageElement).style.display = 'block' }}
+                        onError={e => {
+                          const el = e.target as HTMLImageElement
+                          el.style.display = 'none'
+                          const parent = el.parentElement
+                          if (parent) parent.innerHTML = '<span style="font-size:11px;color:#cc0000;">⚠️ Image could not load — check URL</span>'
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Brand colors */}
+            <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Brand colors</div>
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px' }}>Applied to your visitor registration form and email header.</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={labelStyle}>Primary Color</label>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <input type="color" value={profile?.primary_color || '#1d1d1f'} onChange={e => setProfile({ ...profile, primary_color: e.target.value })} style={{ width: '48px', height: '38px', border: '1px solid #d1d1d6', borderRadius: '8px', cursor: 'pointer', padding: '2px' }} />
+                    <input style={{ ...inputStyle, flex: 1 }} type="text" placeholder="#1d1d1f" value={profile?.primary_color || '#1d1d1f'} onChange={e => setProfile({ ...profile, primary_color: e.target.value })} />
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Accent Color</label>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <input type="color" value={profile?.accent_color || '#0071e3'} onChange={e => setProfile({ ...profile, accent_color: e.target.value })} style={{ width: '48px', height: '38px', border: '1px solid #d1d1d6', borderRadius: '8px', cursor: 'pointer', padding: '2px' }} />
+                    <input style={{ ...inputStyle, flex: 1 }} type="text" placeholder="#0071e3" value={profile?.accent_color || '#0071e3'} onChange={e => setProfile({ ...profile, accent_color: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginTop: '14px', padding: '12px 16px', background: '#f5f5f7', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ fontSize: '12px', color: '#6e6e73' }}>Preview:</div>
+                <div style={{ background: profile?.primary_color || '#1d1d1f', color: 'white', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>oh<strong>ACCESS</strong></div>
+                <div style={{ background: profile?.accent_color || '#0071e3', color: 'white', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>Button</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
+              {savedSettings && <span style={{ fontSize: '13px', color: '#30d158', fontWeight: '600' }}>✓ Settings saved!</span>}
+              <button onClick={saveSettings} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 ✓ Save settings
               </button>
             </div>
@@ -501,12 +571,8 @@ export default function Dashboard() {
               This will permanently delete the open house and all visitor records. This action cannot be undone.
             </div>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <button onClick={() => setDeleteConfirm(null)} style={{ padding: '10px 24px', background: '#f5f5f7', color: '#1d1d1f', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                Cancel
-              </button>
-              <button onClick={() => deleteOpenHouse(deleteConfirm)} style={{ padding: '10px 24px', background: '#cc0000', color: 'white', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                Yes, delete it
-              </button>
+              <button onClick={() => setDeleteConfirm(null)} style={{ padding: '10px 24px', background: '#f5f5f7', color: '#1d1d1f', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cancel</button>
+              <button onClick={() => deleteOpenHouse(deleteConfirm)} style={{ padding: '10px 24px', background: '#cc0000', color: 'white', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Yes, delete it</button>
             </div>
           </div>
         </div>
