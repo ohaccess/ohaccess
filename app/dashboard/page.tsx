@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [savedSettings, setSavedSettings] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [qrModal, setQrModal] = useState<any>(null)
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [form, setForm] = useState({
@@ -423,11 +424,13 @@ export default function Dashboard() {
                         const url = `${window.location.origin}/register/${oh.id}`
                         const res = await fetch(`/api/qrcode?url=${encodeURIComponent(url)}`)
                         const blob = await res.blob()
-                        const a = document.createElement('a')
-                        a.href = URL.createObjectURL(blob)
-                        a.download = `ohaccess-qr-${oh.property_address.replace(/\s+/g, '-')}.png`
-                        a.click()
-                      }} style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⬇ QR Code</button>
+                        const dataUrl = await new Promise<string>(resolve => {
+                          const reader = new FileReader()
+                          reader.onload = () => resolve(reader.result as string)
+                          reader.readAsDataURL(blob)
+                        })
+                        setQrModal({ oh, url, dataUrl, blob })
+                      }} style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📱 QR Code</button>
                       <button onClick={(e) => {
                         e.stopPropagation()
                         const url = `${window.location.origin}/register/${oh.id}`
@@ -735,6 +738,74 @@ export default function Dashboard() {
         )}
 
       </div>
+{/* QR CODE MODAL */}
+      {qrModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px' }}
+          onClick={() => setQrModal(null)}>
+          <div style={{ background: 'white', borderRadius: '24px', padding: '28px', maxWidth: '380px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', textAlign: 'center' }}
+            onClick={e => e.stopPropagation()}>
+            
+            {/* Header */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#1d1d1f', marginBottom: '3px' }}>
+                {qrModal.oh.street_address || qrModal.oh.property_address}
+              </div>
+              <div style={{ fontSize: '13px', color: '#6e6e73' }}>
+                {qrModal.oh.open_house_date} · {qrModal.oh.open_house_hours}
+              </div>
+            </div>
+
+            {/* QR Code */}
+            <div style={{ background: '#f5f5f7', borderRadius: '16px', padding: '20px', marginBottom: '20px', display: 'inline-block' }}>
+              <img src={qrModal.dataUrl} alt="QR Code" style={{ width: '200px', height: '200px', display: 'block' }} />
+            </div>
+
+            <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '20px' }}>
+              Visitors scan this code to register and receive their access code
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button onClick={() => {
+                const a = document.createElement('a')
+                a.href = qrModal.dataUrl
+                a.download = `ohaccess-qr-${qrModal.oh.property_address.replace(/\s+/g, '-')}.png`
+                a.click()
+              }} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                📥 Download PNG
+              </button>
+
+              <button onClick={() => {
+                navigator.clipboard.writeText(qrModal.url)
+                alert('Registration URL copied!')
+              }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                📋 Copy registration URL
+              </button>
+
+              {navigator.share && (
+                <button onClick={async () => {
+                  try {
+                    const file = new File([qrModal.blob], `ohaccess-qr.png`, { type: 'image/png' })
+                    await navigator.share({
+                      title: `ohACCESS QR — ${qrModal.oh.street_address || qrModal.oh.property_address}`,
+                      text: `Scan to register for the open house at ${qrModal.oh.property_address}`,
+                      files: [file]
+                    })
+                  } catch (err) {
+                    console.log('Share cancelled')
+                  }
+                }} style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  📤 Share QR Code
+                </button>
+              )}
+
+              <button onClick={() => setQrModal(null)} style={{ background: 'none', border: 'none', color: '#aeaeb2', fontSize: '13px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '4px' }}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {deleteConfirm && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
