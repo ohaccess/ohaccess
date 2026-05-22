@@ -20,7 +20,177 @@ export default function RegisterPage({ params }: { params: Promise<{ id: string 
     lastName: '',
     email: '',
     phone: ''
-  })
+  }
+)
+function ExpiredOpenHouse() {
+  const [form, setForm] = useState({ name: '', email: '', phone: '', zip: '' })
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [errors, setErrors] = useState<any>({})
+
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, '').substring(0, 10)
+    if (digits.length === 0) return ''
+    if (digits.length <= 3) return `(${digits}`
+    if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`
+    return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
+  }
+
+  const handleSubmit = async () => {
+    const newErrors: any = {}
+    if (!form.name.trim()) newErrors.name = 'Please enter your name'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email)) newErrors.email = 'Please enter a valid email'
+    if (form.phone.replace(/\D/g, '').length !== 10) newErrors.phone = 'Please enter a valid phone number'
+    if (!form.zip.trim()) newErrors.zip = 'Please enter your zip code'
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return }
+
+    setSubmitting(true)
+    try {
+      await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          brokerage: `Buyer Lead — Zip: ${form.zip}`,
+          agentCount: 'N/A',
+          message: `Buyer lead from expired QR code. Name: ${form.name}, Email: ${form.email}, Phone: ${form.phone}, Zip: ${form.zip}`
+        })
+      })
+      setSubmitted(true)
+    } catch {
+      alert('Something went wrong. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const inputStyle = {
+    width: '100%',
+    background: '#f5f5f7',
+    border: '1px solid #d1d1d6',
+    borderRadius: '9px',
+    padding: '10px 12px',
+    fontSize: '14px',
+    color: '#1d1d1f',
+    outline: 'none',
+    boxSizing: 'border-box' as const,
+    fontFamily: "'Plus Jakarta Sans', sans-serif"
+  }
+
+  const labelStyle = {
+    display: 'block' as const,
+    fontSize: '11px',
+    fontWeight: '600' as const,
+    color: '#6e6e73',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+    marginBottom: '5px',
+    marginTop: '12px'
+  }
+
+  return (
+    <main style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '24px' }}>
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+      <div style={{ background: 'white', borderRadius: '22px', border: '1px solid #d1d1d6', padding: '32px 28px', maxWidth: '380px', width: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <div style={{ fontSize: '22px', fontWeight: '200', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '16px' }}>
+            oh<span style={{ fontWeight: '700' }}>ACCESS</span>
+          </div>
+          <div style={{ fontSize: '36px', marginBottom: '12px' }}>🏠</div>
+          <div style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>
+            This open house has ended
+          </div>
+          <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6' }}>
+            But your home search doesn't have to. Leave your info and we'll connect you with a local agent who can help.
+          </div>
+        </div>
+
+        {!submitted ? (
+          <>
+            <div>
+              <label style={labelStyle}>Your Name <span style={{ color: '#ff3b30' }}>*</span></label>
+              <input
+                style={{ ...inputStyle, border: errors.name ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
+                type="text"
+                placeholder="First and last name"
+                value={form.name}
+                onChange={e => { setForm({ ...form, name: e.target.value }); setErrors({ ...errors, name: null }) }}
+              />
+              {errors.name && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.name}</div>}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Email Address <span style={{ color: '#ff3b30' }}>*</span></label>
+              <input
+                style={{ ...inputStyle, border: errors.email ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
+                type="email"
+                placeholder="you@email.com"
+                value={form.email}
+                onChange={e => { setForm({ ...form, email: e.target.value }); setErrors({ ...errors, email: null }) }}
+              />
+              {errors.email && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.email}</div>}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Phone Number <span style={{ color: '#ff3b30' }}>*</span></label>
+              <input
+                style={{ ...inputStyle, border: errors.phone ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
+                type="tel"
+                placeholder="(000) 000-0000"
+                value={form.phone}
+                onChange={e => { setForm({ ...form, phone: formatPhone(e.target.value) }); setErrors({ ...errors, phone: null }) }}
+              />
+              {errors.phone && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.phone}</div>}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Zip Code <span style={{ color: '#ff3b30' }}>*</span></label>
+              <input
+                style={{ ...inputStyle, border: errors.zip ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
+                type="text"
+                placeholder="75201"
+                value={form.zip}
+                onChange={e => { setForm({ ...form, zip: e.target.value }); setErrors({ ...errors, zip: null }) }}
+                maxLength={5}
+              />
+              {errors.zip && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.zip}</div>}
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              style={{ display: 'block', width: '100%', marginTop: '20px', padding: '14px', background: '#1d1d1f', color: 'white', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '700', cursor: submitting ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: submitting ? 0.7 : 1 }}
+            >
+              {submitting ? 'Submitting...' : 'Connect me with an agent →'}
+            </button>
+
+            <div style={{ marginTop: '12px', fontSize: '11px', color: '#aeaeb2', textAlign: 'center', lineHeight: '1.6' }}>
+              By submitting you agree to be contacted by a licensed real estate agent.
+            </div>
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '16px 0' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#1d1d1f', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '24px' }}>
+              ✓
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>
+              You're on the list!
+            </div>
+            <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6' }}>
+              A local agent will be in touch shortly to help with your home search.
+            </div>
+            <a href="https://ohaccess.com" style={{ display: 'inline-block', marginTop: '20px', color: '#6e6e73', fontSize: '12px', textDecoration: 'none' }}>
+              Powered by ohACCESS
+            </a>
+          </div>
+        )}
+      </div>
+    </main>
+  )
+}
   const [errors, setErrors] = useState<any>({})
 
   useEffect(() => {
@@ -102,11 +272,7 @@ export default function RegisterPage({ params }: { params: Promise<{ id: string 
     </main>
   )
 
-  if (!openHouse) return (
-    <main style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      <div style={{ fontSize: '16px', color: '#6e6e73' }}>Open house not found.</div>
-    </main>
-  )
+  if (!openHouse) return <ExpiredOpenHouse />
 
   const agent = openHouse.profiles
   const primaryColor = agent?.primary_color || '#1d1d1f'
