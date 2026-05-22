@@ -105,10 +105,11 @@ export default function Dashboard() {
   })
 
   const getAddressSuggestions = (value: string) => {
-    if (!(window as any).google || value.length < 3) {
+      if (value.length < 3) { setShowSuggestions(false); return }
+      if (!(window as any).google?.maps?.places) {
       setShowSuggestions(false)
       return
-    }
+    }<script src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&v=weekly&libraries=places`} async defer />
     const service = new (window as any).google.maps.places.AutocompleteService()
     service.getPlacePredictions({
       input: value,
@@ -319,7 +320,7 @@ export default function Dashboard() {
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f7', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
-      <script src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&v=weekly&libraries=places`} async defer />
+      <script src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&v=weekly&libraries=places&callback=Function.prototype`} async defer />
 
       {/* Topbar */}
       <div style={{ background: primaryColor, padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '52px' }}>
