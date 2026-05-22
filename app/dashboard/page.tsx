@@ -114,56 +114,40 @@ export default function Dashboard() {
     open_house_hours: '', listing_url: '', code_word: ''
   })
 
-  const getAddressSuggestions = (value: string) => {
-      if (value.length < 3) { setShowSuggestions(false); return }
-      if (!(window as any).google?.maps?.places) {
-      setShowSuggestions(false)
-      return
-    }
-    
-    const service = new (window as any).google.maps.places.AutocompleteService()
-    service.getPlacePredictions({
-      input: value,
-      types: ['address'],
-      componentRestrictions: { country: 'us' }
-    }, (predictions: any[], status: string) => {
-      if (status === 'OK' && predictions) {
-        setAddressSuggestions(predictions)
+  const getAddressSuggestions = async (value: string) => {
+    if (value.length < 3) { setShowSuggestions(false); return }
+    try {
+      const res = await fetch(`/api/places?input=${encodeURIComponent(value)}`)
+      const data = await res.json()
+      if (data.predictions && data.predictions.length > 0) {
+        setAddressSuggestions(data.predictions)
         setShowSuggestions(true)
       } else {
         setShowSuggestions(false)
       }
-    })
+    } catch {
+      setShowSuggestions(false)
+    }
   }
 
-  const selectAddress = (placeId: string) => {
-    const geocoder = new (window as any).google.maps.Geocoder()
-    geocoder.geocode({ placeId }, (results: any[], status: string) => {
-      if (status === 'OK' && results[0]) {
-        const components = results[0].address_components
-        let streetNumber = ''
-        let route = ''
-        let city = ''
-        let state = ''
-        let zip = ''
-        components.forEach((c: any) => {
-          if (c.types.includes('street_number')) streetNumber = c.long_name
-          if (c.types.includes('route')) route = c.long_name
-          if (c.types.includes('locality')) city = c.long_name
-          if (c.types.includes('administrative_area_level_1')) state = c.short_name
-          if (c.types.includes('postal_code')) zip = c.long_name
-        })
+  const selectAddress = async (placeId: string) => {
+    try {
+      const res = await fetch(`/api/places?placeId=${placeId}`)
+      const data = await res.json()
+      if (data.street) {
         setForm(prev => ({
           ...prev,
-          street_address: `${streetNumber} ${route}`.trim(),
-          city,
-          state,
-          zip_code: zip
+          street_address: data.street,
+          city: data.city,
+          state: data.state,
+          zip_code: data.zip
         }))
-        setShowSuggestions(false)
-        setAddressSuggestions([])
       }
-    })
+      setShowSuggestions(false)
+      setAddressSuggestions([])
+    } catch {
+      setShowSuggestions(false)
+    }
   }
 
   const createOpenHouse = async () => {
