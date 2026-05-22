@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing input or placeId' }, { status: 400 })
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
+    const apiKey = process.env.GOOGLE_MAPS_SERVER_KEY
 
   // Get place details by placeId (for autofilling address fields)
   if (placeId) {
