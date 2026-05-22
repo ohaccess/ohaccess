@@ -45,7 +45,7 @@ function LoginForm() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/login?confirmed=true`
+          emailRedirectTo: `https://ohaccess.com/login?confirmed=true`
         }
       })
       if (error) {
