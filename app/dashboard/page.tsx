@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import Script from 'next/script'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -320,7 +321,7 @@ export default function Dashboard() {
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f7', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
-      <script src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&v=weekly&libraries=places&callback=Function.prototype`} async defer />
+      <Script src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&v=weekly&libraries=places`} strategy="beforeInteractive"/>
 
       {/* Topbar */}
       <div style={{ background: primaryColor, padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '52px' }}>
