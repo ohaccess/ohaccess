@@ -1,6 +1,5 @@
 'use client'
 import { useState, useEffect } from 'react'
-import Script from 'next/script'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -68,9 +67,19 @@ export default function Dashboard() {
   }
 
   const loadProfile = async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
-    if (data) setProfile(data)
-  }
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+      if (data) {
+        setProfile(data)
+      } else {
+        // Auto-create profile if it doesn't exist
+        const { data: newProfile } = await supabase
+          .from('profiles')
+          .insert({ id: userId, email: (await supabase.auth.getUser()).data.user?.email })
+          .select()
+          .single()
+        if (newProfile) setProfile(newProfile)
+      }
+    }
 
   const loadOpenHouses = async (userId: string) => {
     const { data } = await supabase.from('open_houses').select('*').eq('agent_id', userId).order('created_at', { ascending: false })
@@ -110,7 +119,8 @@ export default function Dashboard() {
       if (!(window as any).google?.maps?.places) {
       setShowSuggestions(false)
       return
-    }<script src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&v=weekly&libraries=places`} async defer />
+    }
+    
     const service = new (window as any).google.maps.places.AutocompleteService()
     service.getPlacePredictions({
       input: value,
