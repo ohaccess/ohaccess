@@ -1,6 +1,25 @@
 import { NextResponse } from 'next/server'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { getAuthenticatedUser } from '@/lib/auth'
+
+type AddressComponent = {
+  long_name: string
+  short_name: string
+  types: string[]
+}
 
 export async function GET(request: Request) {
+  const user = await getAuthenticatedUser(request)
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const ip = getClientIp(request)
+  const limit = await checkRateLimit(`ip:${ip}`, 'places', 120, 3600)
+  if (!limit.allowed) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
   const { searchParams } = new URL(request.url)
   const input = searchParams.get('input')
   const placeId = searchParams.get('placeId')
@@ -9,24 +28,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing input or placeId' }, { status: 400 })
   }
 
-    const apiKey = process.env.GOOGLE_MAPS_SERVER_KEY
+  const apiKey = process.env.GOOGLE_MAPS_SERVER_KEY
 
-  // Get place details by placeId (for autofilling address fields)
   if (placeId) {
     const res = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?place_id=${placeId}&key=${apiKey}`
+      `https://maps.googleapis.com/maps/api/geocode/json?place_id=${encodeURIComponent(placeId)}&key=${apiKey}`
     )
     const data = await res.json()
     if (data.status !== 'OK') {
       return NextResponse.json({ error: 'Geocoding failed' }, { status: 500 })
     }
-    const components = data.results[0].address_components
+    const components: AddressComponent[] = data.results[0].address_components
     let streetNumber = ''
     let route = ''
     let city = ''
     let state = ''
     let zip = ''
-    components.forEach((c: any) => {
+    components.forEach((c) => {
       if (c.types.includes('street_number')) streetNumber = c.long_name
       if (c.types.includes('route')) route = c.long_name
       if (c.types.includes('locality')) city = c.long_name
@@ -41,7 +59,6 @@ export async function GET(request: Request) {
     })
   }
 
-  // Get autocomplete suggestions by input
   const res = await fetch(
     `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input!)}&types=address&components=country:us&key=${apiKey}`
   )

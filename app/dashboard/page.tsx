@@ -120,10 +120,17 @@ export default function Dashboard() {
     open_house_hours: '', listing_url: '', code_word: ''
   })
 
+  const authHeaders = async (): Promise<HeadersInit> => {
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+  }
+
   const getAddressSuggestions = async (value: string) => {
     if (value.length < 3) { setShowSuggestions(false); return }
     try {
-      const res = await fetch(`/api/places?input=${encodeURIComponent(value)}`)
+      const res = await fetch(`/api/places?input=${encodeURIComponent(value)}`, {
+        headers: await authHeaders()
+      })
       const data = await res.json()
       if (data.predictions && data.predictions.length > 0) {
         setAddressSuggestions(data.predictions)
@@ -138,7 +145,9 @@ export default function Dashboard() {
 
   const selectAddress = async (placeId: string) => {
     try {
-      const res = await fetch(`/api/places?placeId=${placeId}`)
+      const res = await fetch(`/api/places?placeId=${placeId}`, {
+        headers: await authHeaders()
+      })
       const data = await res.json()
       if (data.street) {
         setForm(prev => ({

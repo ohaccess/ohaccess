@@ -13,7 +13,6 @@ export default function RegisterPage({ params }: { params: Promise<{ id: string 
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [codeWord, setCodeWord] = useState('')
   const [selectedTimeline, setSelectedTimeline] = useState('')
   const [form, setForm] = useState({
     firstName: '',
@@ -254,7 +253,6 @@ function ExpiredOpenHouse() {
       })
       const data = await res.json()
       if (data.success) {
-        setCodeWord(data.codeWord)
         setSubmitted(true)
       } else {
         setErrors({ submit: data.error || 'Something went wrong. Please try again.' })
