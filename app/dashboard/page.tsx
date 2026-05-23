@@ -332,6 +332,9 @@ export default function Dashboard() {
               {v === 'dashboard' ? 'Dashboard' : v === 'new' ? 'New Open House' : 'Settings'}
             </button>
           ))}
+          <a href="/resources" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textDecoration: 'none', padding: '6px 14px' }}>
+              Resources
+            </a>
           <button onClick={signOut} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.7)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px' }}>
             Sign out
           </button>
@@ -349,6 +352,10 @@ export default function Dashboard() {
               {v === 'dashboard' ? '📊 Dashboard' : v === 'new' ? '＋ New Open House' : '⚙️ Settings'}
             </button>
           ))}
+          <a href="/resources" onClick={() => setMobileMenuOpen(false)}
+            style={{ color: 'white', padding: '10px 14px', borderRadius: '8px', fontSize: '14px', fontWeight: '400', textDecoration: 'none', display: 'block' }}>
+            📚 Resources
+          </a>
           <button onClick={() => { signOut(); setMobileMenuOpen(false) }}
             style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.7)', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px', textAlign: 'left' as const, marginTop: '4px' }}>
             Sign out
