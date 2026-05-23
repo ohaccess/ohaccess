@@ -4,6 +4,17 @@ import Link from 'next/link'
 export default function Resources() {
   return (
     <main style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#ffffff', color: '#1d1d1f', minHeight: '100vh' }}>
+      <style>{`
+        * { box-sizing: border-box; }
+        .resources-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+        .tips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+        .resources-header h1 { font-size: 36px; }
+        @media (max-width: 768px) {
+          .resources-grid { grid-template-columns: 1fr; }
+          .tips-grid { grid-template-columns: 1fr; }
+          .resources-header h1 { font-size: 26px; }
+        }
+      `}</style>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
 
       {/* NAV */}
@@ -18,14 +29,14 @@ export default function Resources() {
         </Link>
       </nav>
 
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '48px 24px' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 16px' }}>
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
           <div style={{ display: 'inline-block', background: 'rgba(201,150,58,0.1)', border: '1px solid rgba(201,150,58,0.3)', borderRadius: '20px', padding: '6px 16px', fontSize: '13px', color: '#c9963a', fontWeight: '600', marginBottom: '16px' }}>
             Agent Resources
           </div>
-          <h1 style={{ fontSize: '36px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '12px' }}>
+          <h1 className="resources-header" style={{ fontSize: '36px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '12px' }}>
             Everything you need to run a great open house
           </h1>
           <p style={{ fontSize: '16px', color: '#6e6e73', maxWidth: '560px', margin: '0 auto', lineHeight: '1.6' }}>
@@ -42,7 +53,7 @@ export default function Resources() {
             Print-ready welcome signs to display at your open house entrance. Visitors scan the QR code to register and receive their access code.
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+          <div className="resources-grid">
 
             {/* Template 1 */}
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
@@ -92,9 +103,9 @@ export default function Resources() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
-              { step: '1', title: 'Create your open house in the dashboard', body: 'Enter the property address, date, hours, and listing URL. Choose or auto-generate a code word.' },
-              { step: '2', title: 'Download and print your QR code', body: 'Click "QR Code" on your open house card. Download the PNG and print it — or display it on your phone or tablet at the door.' },
-              { step: '3', title: 'Set up your welcome sign', body: 'Use one of the Canva templates above. Add your QR code to the sign and print it. Place it at the entrance where visitors will see it immediately.' },
+              { step: '1', title: 'Create your open house in the dashboard', body: 'Enter the property address, date, hours, and listing URL. Create or auto-generate a code word.' },
+              { step: '2', title: 'Download and print your QR code', body: 'Click "QR Code" on your open house card. Download the PNG, add it to the Canva template or your own custom sign. Print enough copies for each entry.' },
+              { step: '3', title: 'Set up your welcome sign', body: 'Use a pedestal sign holder and display the QR code with instructions prominetly before the entrance.' },
               { step: '4', title: 'Greet visitors at the door', body: 'Ask visitors for their code word as they arrive. Only visitors who registered with real contact info will have received the code.' },
               { step: '5', title: 'Review your visitor log', body: 'After the open house, check your dashboard for the full verified visitor log. Export to CSV and import into your CRM.' },
             ].map(item => (
@@ -119,14 +130,14 @@ export default function Resources() {
           <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
             Get the most out of ohACCESS at every open house.
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          <div className="tips-grid">
             {[
-              { emoji: '📱', title: 'Use your phone as the sign', body: 'No printer? Display the QR code on your phone or tablet screen at the entrance.' },
+              { emoji: '🪧', title: 'Use a pedestal sign stand', body: 'Prominently display the QR code with instructions on a pedestal sign holder well before the entrance.' },
               { emoji: '🔗', title: 'Add your listing URL', body: 'Include a link to the full listing so visitors can review details before and after the open house.' },
+              { emoji: '🏷️', title: 'Choose a memorable code word', body: 'Pick a code word related to the property — like ACREAGE or LAKEHOUSE. Easier for visitors to remember.' },
+              { emoji: '👤', title: 'Add your landing page URL', body: 'Add your bio page, website, or Instagram in Settings so every visitor email includes a link to your profile.' },
+              { emoji: '🔔', title: 'Watch for agent alerts', body: 'You receive an instant SMS when a visitor registers — so you know who\'s coming before they reach the door.' },
               { emoji: '📊', title: 'Export after every open house', body: 'Export your visitor log to CSV immediately after and import into your CRM while leads are fresh.' },
-              { emoji: '🏷️', title: 'Choose a memorable code word', body: 'Pick a code word related to the property — like MAGNOLIA or OAKWOOD. Easier for visitors to remember.' },
-              { emoji: '👤', title: 'Add your landing page URL', body: 'Add your Linktree, website, or bio page in Settings so every visitor email includes a link to your profile.' },
-              { emoji: '🔔', title: 'Watch for agent alerts', body: 'On Pro you get an instant SMS when a visitor registers — so you know who\'s coming before they reach the door.' },
             ].map(tip => (
               <div key={tip.title} style={{ background: 'white', borderRadius: '14px', border: '1px solid #d1d1d6', padding: '16px' }}>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>{tip.emoji}</div>
