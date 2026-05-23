@@ -39,6 +39,7 @@ export default function Dashboard() {
     listing_url: '',
     code_word: ''
   })
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
 
   const primaryColor = profile?.primary_color || '#1d1d1f'
   const accentColor = profile?.accent_color || '#0071e3'
@@ -46,6 +47,11 @@ export default function Dashboard() {
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
   const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
   const DOW = ['Su','Mo','Tu','We','Th','Fr','Sa']
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3000)
+  }
 
   useEffect(() => { checkUser() }, [])
 
@@ -152,7 +158,7 @@ export default function Dashboard() {
 
   const createOpenHouse = async () => {
     if (!form.street_address || !form.city || !form.state || !form.code_word) {
-      alert('Please fill in the street address, city, state, and code word.')
+      showToast('Please fill in the street address, city, state, and code word.')
       return
     }
     const tier = profile?.tier || 'free'
@@ -163,7 +169,7 @@ export default function Dashboard() {
         .select('*', { count: 'exact', head: true })
         .eq('agent_id', user.id)
       if ((count || 0) >= 50) {
-        alert('You have used all 50 of your free trial visitor registrations. Please upgrade to Pro to continue.')
+        showToast('You have used all 50 of your free trial visitor registrations. Please upgrade to Pro to continue.')
         return
       }
     }
@@ -186,7 +192,7 @@ export default function Dashboard() {
       code_word: form.code_word,
       status: 'active'
     }).select()
-    if (error) { alert('Error saving: ' + error.message); return }
+    if (error) { showToast('Error saving: ' + error.message); return }
     if (data) { await loadOpenHouses(user.id); setView('dashboard'); resetForm() }
   }
 
@@ -212,7 +218,7 @@ export default function Dashboard() {
 
   const updateOpenHouse = async () => {
     if (!form.street_address || !form.city || !form.state || !form.code_word) {
-      alert('Please fill in the street address, city, state, and code word.')
+      showToast('Please fill in the street address, city, state, and code word.')
       return
     }
     const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
@@ -232,7 +238,7 @@ export default function Dashboard() {
       listing_url: form.listing_url,
       code_word: form.code_word,
     }).eq('id', editingOH.id)
-    if (error) { alert('Error updating: ' + error.message); return }
+    if (error) { showToast('Error updating: ' + error.message); return }
     setEditingOH(null)
     await loadOpenHouses(user.id)
     setView('dashboard')
@@ -279,9 +285,8 @@ export default function Dashboard() {
       accent_color: profile?.accent_color,
       landing_page_url: profile?.landing_page_url,
     }).eq('id', user.id)
-    if (error) { alert('Error saving: ' + error.message); return }
-    setSavedSettings(true)
-    setTimeout(() => setSavedSettings(false), 3000)
+    if (error) { showToast('Error saving: ' + error.message); return }
+    showToast('Settings saved!')
   }
 
   const signOut = async () => {
@@ -358,6 +363,10 @@ export default function Dashboard() {
           .dash-nav-desktop { display: none !important; }
           .dash-nav-mobile { display: block !important; }
         }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
       `}</style>
 
       <div style={{ padding: '28px' }}>
@@ -430,7 +439,7 @@ export default function Dashboard() {
                         e.stopPropagation()
                         const url = `${window.location.origin}/register/${oh.id}`
                         navigator.clipboard.writeText(url)
-                        alert('Registration URL copied!')
+                        showToast('Registration URL copied!')
                       }} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
                       <button onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
                       <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }} style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🗑 Delete</button>
@@ -724,7 +733,6 @@ export default function Dashboard() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
-              {savedSettings && <span style={{ fontSize: '13px', color: '#30d158', fontWeight: '600' }}>✓ Settings saved!</span>}
               <button onClick={saveSettings} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 ✓ Save settings
               </button>
@@ -772,7 +780,7 @@ export default function Dashboard() {
 
               <button onClick={() => {
                 navigator.clipboard.writeText(qrModal.url)
-                alert('Registration URL copied!')
+                showToast('Registration URL copied!')
               }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 📋 Copy registration URL
               </button>
@@ -799,6 +807,31 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* TOAST */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: toast.type === 'success' ? '#1d1d1f' : '#cc0000',
+          color: 'white',
+          padding: '12px 24px',
+          borderRadius: '12px',
+          fontSize: '14px',
+          fontWeight: '600',
+          zIndex: 2000,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          whiteSpace: 'nowrap',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          {toast.type === 'success' ? '✓' : '⚠️'} {toast.message}
         </div>
       )}
 
