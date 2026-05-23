@@ -597,7 +597,7 @@ export default function Dashboard() {
                   <input style={inputStyle} type="text" placeholder="1:00 PM – 4:00 PM" value={form.open_house_hours} onChange={e => setForm({ ...form, open_house_hours: e.target.value })} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Listing URL (your site, Zillow, Realtor)</label>
+                  <label style={labelStyle}>Listing URL (your site, Zill*w, H*omes)</label>
                   <input style={inputStyle} type="url" placeholder="https://yourbrokerage.com/listing" value={form.listing_url} onChange={e => setForm({ ...form, listing_url: e.target.value })} />
                 </div>
               </div>
