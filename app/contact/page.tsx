@@ -123,12 +123,12 @@ export default function Contact() {
                 { range: '11–100 agents', price: '$11/agent/mo', note: 'Contact us' },
                 { range: '101–500 agents', price: '$10/agent/mo', note: 'Contact us' },
                 { range: '501–1,000 agents', price: '$9/agent/mo', note: 'Contact us' },
-                { range: '1,001–5,000 agents', price: '$8/agent/mo', note: 'Negotiable' },
-                { range: '5,001-10K agents', price: '$7/agent/mo', note: 'Negotiable' },
-                { range: '10K+-25k agents', price: '$5/agent/mo', note: 'Negotiable' },
-                { range: '25K+-50K agents', price: '$4/agent/mo', note: 'Negotiable' },
-                { range: '50K+-100K agents', price: '$3/agent/mo', note: 'Negotiable' },
-                { range: '100K+ agents', price: '$2/agent/mo', note: 'Negotiable' },
+                { range: '1,001–5,000 agents', price: '$8/agent/mo', note: 'Contact us' },
+                { range: '5,001-10K agents', price: '$7/agent/mo', note: 'Contact us' },
+                { range: '10K+-25k agents', price: '$5/agent/mo', note: 'Contact us' },
+                { range: '25K+-50K agents', price: '$4/agent/mo', note: 'Contact us' },
+                { range: '50K+-100K agents', price: '$3/agent/mo', note: 'Contact us' },
+                { range: '100K+ agents', price: '$2/agent/mo', note: 'Contact us' },
                 
               ].map((row, i) => (
                 <div key={row.range} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 5 ? '1px solid #e5e5ea' : 'none', fontSize: '13px', gap: '8px' }}>
