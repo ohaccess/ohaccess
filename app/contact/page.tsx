@@ -125,10 +125,7 @@ export default function Contact() {
                 { range: '501–1,000 agents', price: '$9/agent/mo', note: 'Contact us' },
                 { range: '1,001–5,000 agents', price: '$8/agent/mo', note: 'Contact us' },
                 { range: '5,001-10K agents', price: '$7/agent/mo', note: 'Contact us' },
-                { range: '10K+-25k agents', price: '$5/agent/mo', note: 'Contact us' },
-                { range: '25K+-50K agents', price: '$4/agent/mo', note: 'Contact us' },
-                { range: '50K+-100K agents', price: '$3/agent/mo', note: 'Contact us' },
-                { range: '100K+ agents', price: '$2/agent/mo', note: 'Contact us' },
+                { range: '10K or more agents', price: 'Custom', note: 'Contact us' },
                 
               ].map((row, i) => (
                 <div key={row.range} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 5 ? '1px solid #e5e5ea' : 'none', fontSize: '13px', gap: '8px' }}>
@@ -195,10 +192,7 @@ export default function Contact() {
                       <option value="501-1000">501–1,000 agents ($9/agent/mo)</option>
                       <option value="1001-5000">1,001–5,000 agents ($8/agent/mo)</option>
                       <option value="5001-10K">5,001-10K agents ($7/agent/mo)</option>
-                      <option value="10K+-25K">10K+-25K agents ($5/agent/mo)</option>
-                      <option value="25K+-50K">25K+-50K agents ($4/agent/mo)</option>
-                      <option value="50K+-100K">50K+-100K agents ($3/agent/mo)</option>
-                      <option value="100K+">100K+ agents ($2/agent/mo)</option>
+                      <option value="10K+">10K or more agents (Custom)</option>
                     </select>
                   </div>
 
