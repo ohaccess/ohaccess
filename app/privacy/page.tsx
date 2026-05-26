@@ -19,19 +19,35 @@ export default function Privacy() {
         <div style={{ marginBottom: '40px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#6e6e73', marginBottom: '8px' }}>ohACCESS Legal</div>
           <h1 style={{ fontSize: '40px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '8px' }}>Privacy Policy</h1>
-          <div style={{ fontSize: '13px', color: '#6e6e73' }}>Effective Date: June 1, 2026 · Last Updated: June 1, 2026 · ohaccess.com</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73' }}>Applies to both open house visitors and ohACCESS account holders · Effective Date: June 1, 2026 · ohaccess.com</div>
         </div>
 
         {/* Tab links */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '40px' }}>
-          <a href="/terms" style={{ padding: '8px 18px', borderRadius: '8px', background: '#f5f5f7', color: '#1d1d1f', fontSize: '13px', fontWeight: '600', textDecoration: 'none', border: '1px solid #d1d1d6' }}>Terms of Service</a>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <a href="/terms" style={{ padding: '8px 18px', borderRadius: '8px', background: '#f5f5f7', color: '#1d1d1f', fontSize: '13px', fontWeight: '600', textDecoration: 'none', border: '1px solid #d1d1d6' }}>Visitor Terms</a>
+          <a href="/subscriber-terms" style={{ padding: '8px 18px', borderRadius: '8px', background: '#f5f5f7', color: '#1d1d1f', fontSize: '13px', fontWeight: '600', textDecoration: 'none', border: '1px solid #d1d1d6' }}>Subscriber Terms</a>
           <a href="/privacy" style={{ padding: '8px 18px', borderRadius: '8px', background: '#1d1d1f', color: 'white', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>Privacy Policy</a>
+        </div>
+
+        {/* v1 draft notice */}
+        <div style={{ background: '#fffbeb', border: '1px solid #f59e0b', borderRadius: '10px', padding: '14px 18px', marginBottom: '40px', fontSize: '13px', color: '#78350f', lineHeight: '1.6' }}>
+          <strong>Notice:</strong> This Privacy Policy is a v1 draft pending review by a qualified Texas attorney. Material provisions may be refined following legal review.
         </div>
 
         <div style={{ fontSize: '14px', lineHeight: '1.8', color: '#3a3a3c' }}>
 
           <Section title="1. Introduction">
-            ohACCESS, LLC (&quot;ohACCESS,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates ohaccess.com and provides a QR-code-based open house visitor verification platform. This Privacy Policy explains how we collect, use, share, and protect personal information from visitors who register at open houses powered by ohACCESS, as well as from real estate agents and brokerages who use our platform. By using ohACCESS, you agree to the practices described in this Privacy Policy.
+            <p>ohACCESS, LLC (&quot;ohACCESS,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), a Texas limited liability company, operates ohaccess.com and provides a QR-code-based open house visitor verification platform. This Privacy Policy explains how we collect, use, share, and protect personal information from two distinct groups of people:</p>
+            <ul style={{ paddingLeft: '24px', marginTop: '10px' }}>
+              <li style={{ marginBottom: '6px' }}><strong>Open House Visitors</strong> — individuals who register at an open house through an ohACCESS-powered form</li>
+              <li><strong>Subscribers</strong> — real estate agents, teams, and brokerages who hold an ohACCESS account</li>
+            </ul>
+            <p style={{ marginTop: '12px' }}>Sections that apply specifically to one group are clearly labeled. Where a section is unlabeled, it applies to both. By using ohACCESS in either capacity, you agree to the practices described here.</p>
+          </Section>
+
+          <Section title="1A. Our Role: Controller vs. Processor">
+            <p>For most data covered by this Policy, ohACCESS is the &quot;controller&quot; (or &quot;business&quot; under the CCPA) — meaning we determine why and how the data is processed. This includes data about Subscribers themselves and operational metadata about the Service.</p>
+            <p style={{ marginTop: '10px' }}>For <strong>Visitor data collected through a Subscriber&apos;s open house registrations</strong>, ohACCESS acts as a &quot;processor&quot; (or &quot;service provider&quot;) on behalf of the Subscriber, who is the controller of that data. The Subscriber is primarily responsible for honoring Visitor data subject requests; ohACCESS will reasonably assist as described in our <a href="/subscriber-terms" style={{ color: '#0071e3', textDecoration: 'underline' }}>Subscriber Terms of Service</a>.</p>
           </Section>
 
           <Section title="2. Information We Collect">
@@ -45,13 +61,16 @@ export default function Privacy() {
               <li style={{ marginBottom: '8px' }}>Device type and browser information (collected automatically)</li>
               <li style={{ marginBottom: '8px' }}>IP address (collected automatically)</li>
             </ul>
-            <p><strong>From Real Estate Agents:</strong></p>
+            <p><strong>From Subscribers (real estate agents, teams, and brokerages):</strong></p>
             <ul style={{ paddingLeft: '24px', marginTop: '8px', marginBottom: '12px' }}>
-              <li style={{ marginBottom: '8px' }}>Name, email address, phone number</li>
-              <li style={{ marginBottom: '8px' }}>Brokerage name and license number</li>
-              <li style={{ marginBottom: '8px' }}>Profile photo and business assets (if uploaded)</li>
-              <li style={{ marginBottom: '8px' }}>Billing and payment information (processed securely by Stripe)</li>
-              <li style={{ marginBottom: '8px' }}>Open house listing details</li>
+              <li style={{ marginBottom: '8px' }}>Account identity: full name, email address, phone number, password (stored hashed)</li>
+              <li style={{ marginBottom: '8px' }}>Profile information: brokerage name, license number, profile photo, business logo, branding colors, contact details displayed to Visitors</li>
+              <li style={{ marginBottom: '8px' }}>Open house listing details (address, dates, hours, price, property attributes)</li>
+              <li style={{ marginBottom: '8px' }}>Team/brokerage relationships (if applicable): brokerage you belong to, role within that brokerage, agents on your roster</li>
+              <li style={{ marginBottom: '8px' }}>Billing and payment information: card last-4, billing address, subscription plan, payment history (full card numbers are handled exclusively by Stripe and never touch ohACCESS servers)</li>
+              <li style={{ marginBottom: '8px' }}>Communications you send through the Service: SMS and email content generated for Visitors, plus delivery status from Twilio and Resend</li>
+              <li style={{ marginBottom: '8px' }}>Usage data: pages viewed, features used, open houses created, visitors verified, login timestamps, IP address, device type, browser information</li>
+              <li style={{ marginBottom: '8px' }}>Support correspondence: any messages you send to support@ohaccess.com or legal@ohaccess.com</li>
             </ul>
           </Section>
 
@@ -66,27 +85,40 @@ export default function Privacy() {
               <li style={{ marginBottom: '8px' }}>Improve the ohACCESS platform and user experience</li>
               <li style={{ marginBottom: '8px' }}>Comply with legal obligations</li>
             </ul>
-            <p><strong>For Real Estate Agents, we use your information to:</strong></p>
+            <p><strong>For Subscribers, we use your information to:</strong></p>
             <ul style={{ paddingLeft: '24px', marginTop: '8px', marginBottom: '12px' }}>
-              <li style={{ marginBottom: '8px' }}>Provide and maintain the ohACCESS platform</li>
-              <li style={{ marginBottom: '8px' }}>Process subscription payments</li>
-              <li style={{ marginBottom: '8px' }}>Send platform notifications and updates</li>
-              <li style={{ marginBottom: '8px' }}>Provide customer support</li>
+              <li style={{ marginBottom: '8px' }}>Provide, operate, and maintain the Service</li>
+              <li style={{ marginBottom: '8px' }}>Authenticate you and secure your account</li>
+              <li style={{ marginBottom: '8px' }}>Process subscription payments and send billing notices</li>
+              <li style={{ marginBottom: '8px' }}>Generate Visitor-facing emails and SMS messages using your brand assets and contact info</li>
+              <li style={{ marginBottom: '8px' }}>Send service notifications, security alerts, and product updates</li>
+              <li style={{ marginBottom: '8px' }}>Provide customer support and respond to inquiries</li>
+              <li style={{ marginBottom: '8px' }}>Detect, prevent, and respond to fraud, abuse, security incidents, and violations of our Subscriber Terms</li>
+              <li style={{ marginBottom: '8px' }}>Generate aggregate, anonymized analytics about platform usage</li>
+              <li style={{ marginBottom: '8px' }}>Comply with legal, tax, and regulatory obligations</li>
             </ul>
+          </Section>
+
+          <Section title="3A. Subscriber Visibility Within Teams and Brokerages">
+            <p>If you are a Subscriber and you join (or are added to) a Team or Brokerage account, the brokerage administrator(s) of that account will have visibility into your activity within the Service, including: the open houses you create, the Visitors who register at your open houses, your branding assets (which may be overridden by brokerage-level branding), and your account status (active, invited, suspended).</p>
+            <p style={{ marginTop: '10px' }}>Brokerage administrators do <strong>not</strong> have access to: your password or authentication credentials, your private support correspondence with ohACCESS, your personal billing details (if you have an individual Subscription that predates joining the brokerage), or activity outside the Service.</p>
+            <p style={{ marginTop: '10px' }}>If your brokerage account is closed or you are removed from the brokerage, you will be notified by email, your individual account will be preserved, and you will be prompted to select a personal Subscription plan to continue using the Service.</p>
           </Section>
 
           <Section title="4. Data Sharing with Third Parties">
             <p>ohACCESS shares visitor data with the following categories of third parties:</p>
             <p style={{ marginTop: '12px' }}><strong>Hosting Agents and Brokerages:</strong> The real estate agent and their affiliated brokerage receive your full registration record including name, email, phone, purchasing timeline, and timestamp.</p>
             <p style={{ marginTop: '12px' }}><strong>Authorized Business Partners:</strong> With your express written consent provided through the registration form, ohACCESS may share your contact information and purchasing intent data with authorized third-party business partners including mortgage lenders, title companies, real estate attorneys, home inspectors, moving companies, home warranty providers, homeowner&apos;s insurance providers, and other real estate transaction service providers. These partners may contact you independently regarding their products and services.</p>
-            <p style={{ marginTop: '12px' }}><strong>Service Providers:</strong> ohACCESS uses the following service providers who process data on our behalf:</p>
+            <p style={{ marginTop: '12px' }}><strong>Service Providers (Sub-processors):</strong> ohACCESS uses the following service providers who process data on our behalf. Each is bound by data protection terms substantially similar to those in this Policy:</p>
             <ul style={{ paddingLeft: '24px', marginTop: '8px', marginBottom: '12px' }}>
-              <li style={{ marginBottom: '8px' }}><strong>Twilio</strong> — SMS delivery</li>
-              <li style={{ marginBottom: '8px' }}><strong>Resend</strong> — Email delivery</li>
-              <li style={{ marginBottom: '8px' }}><strong>Supabase</strong> — Secure database storage</li>
-              <li style={{ marginBottom: '8px' }}><strong>Stripe</strong> — Payment processing</li>
-              <li style={{ marginBottom: '8px' }}><strong>Vercel</strong> — Platform hosting</li>
+              <li style={{ marginBottom: '8px' }}><strong>Supabase, Inc.</strong> — Secure database storage and authentication</li>
+              <li style={{ marginBottom: '8px' }}><strong>Twilio Inc.</strong> — SMS delivery</li>
+              <li style={{ marginBottom: '8px' }}><strong>Resend, Inc.</strong> — Email delivery</li>
+              <li style={{ marginBottom: '8px' }}><strong>Stripe, Inc.</strong> — Payment processing (Stripe is responsible for the security of full payment card data)</li>
+              <li style={{ marginBottom: '8px' }}><strong>Vercel, Inc.</strong> — Platform hosting</li>
+              <li style={{ marginBottom: '8px' }}><strong>Google LLC (Maps Platform)</strong> — Address autocomplete and geocoding for Subscriber listing entry</li>
             </ul>
+            <p style={{ marginTop: '8px' }}>We will provide reasonable advance notice of any new sub-processor that materially processes personal data.</p>
             <p><strong>Legal Requirements:</strong> We may disclose your information if required by law, court order, or governmental authority.</p>
             <p style={{ marginTop: '12px' }}><strong>We do not sell your personal information to data brokers or unaffiliated third parties for their independent marketing purposes.</strong> All third-party sharing is limited to authorized business partners in the real estate transaction ecosystem as described above and consented to through the registration form.</p>
           </Section>
@@ -103,11 +135,13 @@ export default function Privacy() {
               <li style={{ marginBottom: '8px' }}><strong>Access:</strong> Request a copy of the personal information we hold about you</li>
               <li style={{ marginBottom: '8px' }}><strong>Correction:</strong> Request correction of inaccurate information</li>
               <li style={{ marginBottom: '8px' }}><strong>Deletion:</strong> Request deletion of your personal information</li>
+              <li style={{ marginBottom: '8px' }}><strong>Portability:</strong> Request an export of your data in a structured, machine-readable format</li>
               <li style={{ marginBottom: '8px' }}><strong>Opt-out of third-party sharing:</strong> Email privacy@ohaccess.com with subject &quot;Opt Out of Third-Party Sharing&quot;</li>
-              <li style={{ marginBottom: '8px' }}><strong>Opt-out of marketing communications:</strong> See opt-out instructions in the Terms of Service</li>
+              <li style={{ marginBottom: '8px' }}><strong>Opt-out of marketing communications:</strong> See opt-out instructions in the Visitor Terms of Service</li>
               <li style={{ marginBottom: '8px' }}><strong>Complaint:</strong> Lodge a complaint with your state&apos;s consumer protection authority</li>
             </ul>
             <p>To exercise any of these rights, contact us at privacy@ohaccess.com. We will respond within 30 days.</p>
+            <p style={{ marginTop: '10px' }}><strong>Subscribers</strong> can additionally exercise most of these rights directly through their account dashboard (data export via CSV, profile updates, account closure). For Visitor data held in your Subscriber account, you are the controller and must process Visitor requests directly; ohACCESS will assist upon written request.</p>
           </Section>
 
           <Section title="7. California Privacy Rights (CCPA)">
@@ -151,8 +185,9 @@ export default function Privacy() {
         <div style={{ fontSize: '20px', fontWeight: '200', color: 'white', letterSpacing: '-0.5px', marginBottom: '16px' }}>
           oh<span style={{ fontWeight: '700' }}>ACCESS</span>
         </div>
-        <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', marginBottom: '24px' }}>
-          <a href="/terms" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Terms of Service</a>
+        <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <a href="/terms" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Visitor Terms</a>
+          <a href="/subscriber-terms" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Subscriber Terms</a>
           <a href="/privacy" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Privacy Policy</a>
           <a href="mailto:privacy@ohaccess.com" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Contact</a>
         </div>

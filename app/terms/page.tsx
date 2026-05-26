@@ -18,13 +18,15 @@ export default function Terms() {
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 40px' }}>
         <div style={{ marginBottom: '40px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#6e6e73', marginBottom: '8px' }}>ohACCESS Legal</div>
-          <h1 style={{ fontSize: '40px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '8px' }}>Terms of Service</h1>
-          <div style={{ fontSize: '13px', color: '#6e6e73' }}>Effective Date: June 1, 2026 · Last Updated: June 1, 2026 · ohaccess.com</div>
+          <h1 style={{ fontSize: '40px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '8px' }}>Visitor Terms of Service</h1>
+          <div style={{ fontSize: '13px', color: '#6e6e73' }}>For individuals registering at an open house · Effective Date: June 1, 2026 · ohaccess.com</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73', marginTop: '8px' }}>If you are a real estate agent, team, or brokerage holding an ohACCESS account, see the <a href="/subscriber-terms" style={{ color: '#0071e3', textDecoration: 'underline' }}>Subscriber Terms of Service</a>.</div>
         </div>
 
         {/* Tab links */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '40px' }}>
-          <a href="/terms" style={{ padding: '8px 18px', borderRadius: '8px', background: '#1d1d1f', color: 'white', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>Terms of Service</a>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '40px', flexWrap: 'wrap' }}>
+          <a href="/terms" style={{ padding: '8px 18px', borderRadius: '8px', background: '#1d1d1f', color: 'white', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>Visitor Terms</a>
+          <a href="/subscriber-terms" style={{ padding: '8px 18px', borderRadius: '8px', background: '#f5f5f7', color: '#1d1d1f', fontSize: '13px', fontWeight: '600', textDecoration: 'none', border: '1px solid #d1d1d6' }}>Subscriber Terms</a>
           <a href="/privacy" style={{ padding: '8px 18px', borderRadius: '8px', background: '#f5f5f7', color: '#1d1d1f', fontSize: '13px', fontWeight: '600', textDecoration: 'none', border: '1px solid #d1d1d6' }}>Privacy Policy</a>
         </div>
 
@@ -129,8 +131,9 @@ export default function Terms() {
         <div style={{ fontSize: '20px', fontWeight: '200', color: 'white', letterSpacing: '-0.5px', marginBottom: '16px' }}>
           oh<span style={{ fontWeight: '700' }}>ACCESS</span>
         </div>
-        <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', marginBottom: '24px' }}>
-          <a href="/terms" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Terms of Service</a>
+        <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <a href="/terms" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Visitor Terms</a>
+          <a href="/subscriber-terms" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Subscriber Terms</a>
           <a href="/privacy" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Privacy Policy</a>
           <a href="mailto:privacy@ohaccess.com" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Contact</a>
         </div>

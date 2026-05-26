@@ -19,6 +19,7 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [confirmed, setConfirmed] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   useEffect(() => {
     if (searchParams.get('signup') === 'true') setIsLogin(false)
@@ -27,9 +28,15 @@ function LoginForm() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
     setMessage('')
+
+    if (!isLogin && !agreedToTerms) {
+      setError('Please agree to the Subscriber Terms of Service and Privacy Policy to continue.')
+      return
+    }
+
+    setLoading(true)
 
     if (isLogin) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -183,6 +190,20 @@ function LoginForm() {
                   </button>
                 </div>
               </div>
+
+              {!isLogin && (
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '16px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.5', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={e => setAgreedToTerms(e.target.checked)}
+                    style={{ marginTop: '2px', cursor: 'pointer', flexShrink: 0 }}
+                  />
+                  <span>
+                    I agree to the <a href="/subscriber-terms" target="_blank" rel="noopener noreferrer" style={{ color: '#0071e3', textDecoration: 'underline' }}>Subscriber Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#0071e3', textDecoration: 'underline' }}>Privacy Policy</a>.
+                  </span>
+                </label>
+              )}
 
               {error && (
                 <div style={{ background: '#fff0f0', color: '#cc0000', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', lineHeight: '1.5' }}>
