@@ -197,7 +197,7 @@ export default function Home() {
       <section id="pricing" className="section-pad" style={{ background: 'white' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <h2 className="section-title">Plans & pricing</h2>
+            <h2 className="section-title">Plans & Pricing</h2>
             <p style={{ fontSize: '16px', color: '#6e6e73', marginBottom: '28px' }}>Start free. Scale as your business grows.</p>
             <div className="billing-toggle">
               {(['monthly', 'annual', '2year'] as const).map(b => (
