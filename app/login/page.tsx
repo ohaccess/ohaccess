@@ -111,11 +111,22 @@ function LoginForm() {
         confirmUrl.searchParams.set('plan', planParam!)
         confirmUrl.searchParams.set('interval', intervalParam!)
       }
+      // Pull the referral source from the cookie set by RefCapture (if any)
+      // and stash it on the auth user. This survives the email-confirmation
+      // hop even when the confirm link opens in a different browser.
+      const refCookie = typeof document !== 'undefined'
+        ? document.cookie.split('; ').find((c) => c.startsWith('ohaccess_ref='))
+        : undefined
+      const referralSource = refCookie
+        ? decodeURIComponent(refCookie.split('=')[1] || '')
+        : null
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: confirmUrl.toString(),
+          data: referralSource ? { referral_source: referralSource } : undefined,
         }
       })
       if (error) {

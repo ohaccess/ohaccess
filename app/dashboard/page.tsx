@@ -95,10 +95,34 @@ export default function Dashboard() {
       if (data) {
         setProfile(data)
       } else {
-        // Auto-create profile if it doesn't exist
+        // Auto-create profile if it doesn't exist. Pull the referral source
+        // from auth user_metadata first (set at signup, survives email
+        // confirmation across browsers); fall back to the cookie for OAuth
+        // or same-session flows.
+        const { data: userData } = await supabase.auth.getUser()
+        const metaRef =
+          (userData.user?.user_metadata?.referral_source as string | undefined) ||
+          null
+        const refCookie = document.cookie
+          .split('; ')
+          .find((c) => c.startsWith('ohaccess_ref='))
+        const cookieRef = refCookie
+          ? decodeURIComponent(refCookie.split('=')[1] || '')
+          : null
+        const referralSource = metaRef || cookieRef
+
+        const insertRow: Record<string, unknown> = {
+          id: userId,
+          email: userData.user?.email,
+        }
+        if (referralSource) {
+          insertRow.referral_source = referralSource
+          insertRow.referral_source_first_seen_at = new Date().toISOString()
+        }
+
         const { data: newProfile } = await supabase
           .from('profiles')
-          .insert({ id: userId, email: (await supabase.auth.getUser()).data.user?.email })
+          .insert(insertRow)
           .select()
           .single()
         if (newProfile) setProfile(newProfile)
