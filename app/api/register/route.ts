@@ -265,7 +265,8 @@ export async function POST(request: Request) {
             <div style="margin-top: 16px; padding: 12px; background: #f5f5f7; border-radius: 8px; font-size: 11px; color: #6e6e73; text-align: center; line-height: 1.6;">
               By registering you agreed to the ohACCESS Terms of Service.<br/>
               You consent to be contacted by the listing agent.<br/>
-              Reply STOP to any text to opt out · <a href="https://ohaccess.com/privacy" style="color: #6e6e73;">Privacy Policy</a>
+              Reply STOP to any text to opt out · <a href="https://ohaccess.com/privacy" style="color: #6e6e73;">Privacy Policy</a><br/>
+              <em style="color: #6e6e73;">Heads up: opting out blocks access codes for all future ohACCESS open houses.</em>
             </div>
           </div>
         </div>
