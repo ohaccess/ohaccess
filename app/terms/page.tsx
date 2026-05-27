@@ -19,7 +19,7 @@ export default function Terms() {
         <div style={{ marginBottom: '40px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#6e6e73', marginBottom: '8px' }}>ohACCESS Legal</div>
           <h1 style={{ fontSize: '40px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '8px' }}>Visitor Terms of Service</h1>
-          <div style={{ fontSize: '13px', color: '#6e6e73' }}>For individuals registering at an open house · Version 1.1 · Effective Date: June 1, 2026 · ohaccess.com</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73' }}>For individuals registering at an open house · Version 1.2 · Effective Date: June 1, 2026 · ohaccess.com</div>
           <div style={{ fontSize: '13px', color: '#6e6e73', marginTop: '8px' }}>If you are a real estate agent, team, or brokerage holding an ohACCESS account, see the <a href="/subscriber-terms" style={{ color: '#0071e3', textDecoration: 'underline' }}>Subscriber Terms of Service</a>.</div>
         </div>
 
@@ -32,13 +32,19 @@ export default function Terms() {
 
         {/* draft notice */}
         <div style={{ background: '#fffbeb', border: '1px solid #f59e0b', borderRadius: '10px', padding: '14px 18px', marginBottom: '40px', fontSize: '13px', color: '#78350f', lineHeight: '1.6' }}>
-          <strong>Notice:</strong> Version 1.1 is a self-drafted update strengthening the Limitation of Liability, Indemnification, and Class Action Waiver provisions. It is pending formal review by a qualified Texas attorney.
+          <strong>Notice:</strong> Version 1.2 adds Section 1A (&quot;Your Alternative to Acceptance&quot;) describing the private-showing-with-a-buyer&apos;s-agent alternative. Earlier v1.1 strengthening of the Limitation of Liability, Indemnification, and Class Action Waiver provisions remains in effect. Pending formal review by a qualified Texas attorney.
         </div>
 
         <div style={{ fontSize: '14px', lineHeight: '1.8', color: '#3a3a3c' }}>
 
           <Section title="1. Acceptance of Terms">
             By submitting the open house registration form on any ohACCESS-powered page, you (&quot;Visitor&quot;) agree to be bound by these Terms of Service. If you do not agree, do not submit the form. Your submission constitutes a legally binding agreement between you and ohACCESS, LLC (&quot;ohACCESS,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), and between you and the real estate agent or brokerage hosting the open house (&quot;Agent&quot;). These Terms apply each time you register for any open house through the ohACCESS platform, regardless of location or hosting agent.
+          </Section>
+
+          <Section title="1A. Your Alternative to Acceptance">
+            <p>If you do not wish to provide the consent described in Section 2 or otherwise agree to these Terms, you are not required to do so. You are equally free to view this listing — or any other listed property — through other means available under applicable real estate practice rules.</p>
+            <p style={{ marginTop: '10px' }}>In particular, you may schedule a private showing of this or any other listed property with a licensed real estate buyer&apos;s agent of your own choosing. Pursuant to the National Association of REALTORS&reg; (NAR) policy changes that took effect on August 17, 2024 in connection with the settlement of <em>In re Real Estate Commission Antitrust Litigation</em> (Burnett v. NAR), an MLS-Participant buyer&apos;s agent must enter into a written buyer representation agreement with you before showing you a home. Most buyer&apos;s agents can prepare such an agreement at the time of showing, and the agreement&apos;s terms — including compensation — are negotiable between you and the agent you select.</p>
+            <p style={{ marginTop: '10px' }}>Acceptance of these Terms and use of the ohACCESS registration flow is required <strong>only</strong> as a condition of attending an open house through the ohACCESS platform. It is not a precondition to viewing this or any other listed property by any other lawful means, and choosing not to register here in no way limits your access to the broader real estate market, your right to engage the buyer&apos;s agent of your choice, or your right to view this specific property at a future open house or by private appointment.</p>
           </Section>
 
           <Section title="2. Express Written Consent to Be Contacted">

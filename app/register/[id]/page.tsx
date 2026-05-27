@@ -476,6 +476,12 @@ function ExpiredOpenHouse() {
               </a>.<br /><br />
               You consent to be contacted by the listing agent via phone, text, and email regarding this and other properties.
             </div>
+
+            {/* Alternative to acceptance — preserves the validity of consent
+                by giving the visitor an obvious, named alternative path. */}
+            <div style={{ marginTop: '10px', padding: '12px 14px', background: '#fdfaf3', borderRadius: '10px', fontSize: '11px', color: '#6e6e73', lineHeight: '1.65', textAlign: 'center', border: '1px solid #ead9ad' }}>
+              <strong style={{ color: '#1d1d1f' }}>Prefer not to register?</strong> You&apos;re welcome to schedule a private showing of this — or any — listed property with the buyer&apos;s agent of your choice. Under NAR rules effective August&nbsp;17,&nbsp;2024, you&apos;ll need a written buyer representation agreement with that agent before they can show you the home; most agents can prepare one on the spot. ohACCESS registration is required only to attend today&apos;s open house.
+            </div>
           </>
         ) : (
           /* Success screen */
