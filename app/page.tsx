@@ -6,6 +6,18 @@ export default function Home() {
   const [billing, setBilling] = useState<'monthly' | 'annual' | '2year'>('monthly')
   const [menuOpen, setMenuOpen] = useState(false)
 
+  const billingToInterval = { monthly: 'month', annual: 'year', '2year': 'two_year_prepay' } as const
+
+  // CTA destination per tier. Pro routes through /login with checkout params
+  // so the login page can hand off to Stripe Checkout after signup/signin.
+  // Team is gated on the brokerage-account flow (not built yet) — sales path only.
+  const ctaHref = (tierName: string): string => {
+    if (tierName === 'Brokerage') return '/contact'
+    if (tierName === 'Trial') return '/login?signup=true'
+    if (tierName === 'Team') return '/contact'
+    return `/login?signup=true&plan=pro&interval=${billingToInterval[billing]}`
+  }
+
   return (
     <main style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#ffffff', color: '#1d1d1f', overflowX: 'hidden' }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -265,7 +277,7 @@ export default function Home() {
                     <span style={{ color: '#30d158', fontWeight: '700', flexShrink: 0 }}>✓</span>{f}
                   </div>
                 ))}
-                <Link href={tier.name === 'Brokerage' ? '/contact' : tier.name === 'Trial' ? '/login?signup=true' : '/login?signup=true'} style={{ display: 'block', textAlign: 'center', marginTop: '20px', padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: '700', textDecoration: 'none', background: tier.featured ? '#c9963a' : '#1d1d1f', color: tier.featured ? '#1d1d1f' : 'white' }}>
+                <Link href={ctaHref(tier.name)} style={{ display: 'block', textAlign: 'center', marginTop: '20px', padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: '700', textDecoration: 'none', background: tier.featured ? '#c9963a' : '#1d1d1f', color: tier.featured ? '#1d1d1f' : 'white' }}>
                   {tier.cta}
                 </Link>
               </div>

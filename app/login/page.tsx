@@ -21,9 +21,62 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
+  // Read pricing-CTA params: plan=pro&interval=month|year|two_year_prepay.
+  const planParam = searchParams.get('plan')
+  const intervalParam = searchParams.get('interval')
+  const hasCheckoutIntent = planParam === 'pro' && !!intervalParam
+
+  // After login succeeds, either start Stripe Checkout (if user came from a pricing CTA)
+  // or send them to the dashboard as usual.
+  const proceedAfterAuth = async () => {
+    if (!hasCheckoutIntent) {
+      window.location.href = '/dashboard'
+      return
+    }
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = '/dashboard'
+      return
+    }
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ tier: planParam, interval: intervalParam }),
+      })
+      const json = await res.json()
+      if (res.ok && json.url) {
+        window.location.href = json.url
+        return
+      }
+      setError(json.error || 'Could not start checkout. Redirecting to dashboard.')
+      setTimeout(() => { window.location.href = '/dashboard' }, 1500)
+    } catch {
+      window.location.href = '/dashboard'
+    }
+  }
+
   useEffect(() => {
     if (searchParams.get('signup') === 'true') setIsLogin(false)
     if (searchParams.get('confirmed') === 'true') setConfirmed(true)
+
+    // If the user is already logged in and arrived with checkout intent,
+    // skip the form and go straight to Stripe. If the stored refresh token
+    // is stale, clear it and let the user re-authenticate via the form
+    // instead of surfacing an unhandled rejection.
+    if (hasCheckoutIntent) {
+      supabase.auth.getSession()
+        .then(({ data: { session } }) => {
+          if (session?.user?.email_confirmed_at) proceedAfterAuth()
+        })
+        .catch(async () => {
+          try { await supabase.auth.signOut() } catch {}
+        })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -46,14 +99,23 @@ function LoginForm() {
         setError('Please confirm your email address before signing in. Check your inbox for the confirmation link.')
         await supabase.auth.signOut()
       } else {
-        window.location.href = '/dashboard'
+        await proceedAfterAuth()
+        return
       }
     } else {
+      // Preserve plan/interval through email-confirmation roundtrip so checkout
+      // can resume after the user clicks the confirm link and signs in.
+      const confirmUrl = new URL('https://ohaccess.com/login')
+      confirmUrl.searchParams.set('confirmed', 'true')
+      if (hasCheckoutIntent) {
+        confirmUrl.searchParams.set('plan', planParam!)
+        confirmUrl.searchParams.set('interval', intervalParam!)
+      }
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `https://ohaccess.com/login?confirmed=true`
+          emailRedirectTo: confirmUrl.toString(),
         }
       })
       if (error) {

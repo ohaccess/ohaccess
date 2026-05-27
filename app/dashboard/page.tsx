@@ -55,6 +55,24 @@ export default function Dashboard() {
 
   useEffect(() => { checkUser() }, [])
 
+  // Honor ?view= and ?checkout= params from Stripe redirects and pricing CTAs.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const v = params.get('view')
+    if (v === 'settings' || v === 'new' || v === 'dashboard') setView(v)
+    const checkout = params.get('checkout')
+    if (checkout === 'success') {
+      showToast('Subscription activated — welcome to Pro!')
+    } else if (checkout === 'cancel') {
+      showToast('Checkout canceled. You can upgrade anytime from settings.', 'error')
+    }
+    if (v || checkout) {
+      // Clean the URL so refresh doesn't re-fire the toast.
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
+
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
@@ -647,6 +665,13 @@ export default function Dashboard() {
             <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Account settings</div>
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Manage your profile, branding, and preferences.</div>
 
+            <SubscriptionSection
+              profile={profile}
+              agentId={user?.id}
+              supabase={supabase}
+              showToast={showToast}
+            />
+
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agent profile</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -920,7 +945,7 @@ function TrialBanner({ agentId, supabase, accentColor }: { agentId: string, supa
             : 'Full Pro features included during your trial. No credit card required.'}
         </div>
       </div>
-      <a href="/#pricing" style={{
+      <a href="/dashboard?view=settings" style={{
         background: '#1d1d1f',
         color: 'white',
         padding: '7px 16px',
@@ -933,6 +958,167 @@ function TrialBanner({ agentId, supabase, accentColor }: { agentId: string, supa
       }}>
         {isExpired ? 'Upgrade now →' : 'View plans'}
       </a>
+    </div>
+  )
+}
+
+const PRO_PLANS = [
+  { interval: 'month',           label: 'Monthly',  price: '$15/mo',     sub: '' },
+  { interval: 'year',            label: 'Annual',   price: '$12.50/mo',  sub: 'Billed $150/yr — 2 months free' },
+  { interval: 'two_year_prepay', label: '2 Years*', price: '$7.50/mo',   sub: 'Billed $180 once — 50% off' },
+] as const
+
+function formatPlanDate(iso: string | null | undefined): string {
+  if (!iso) return ''
+  try {
+    return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  } catch { return '' }
+}
+
+function intervalLabel(interval: string | null | undefined): string {
+  if (interval === 'month') return 'Monthly'
+  if (interval === 'year') return 'Annual'
+  if (interval === 'two_year_prepay') return '2-Year Prepay'
+  return ''
+}
+
+function SubscriptionSection({ profile, agentId, supabase, showToast }: {
+  profile: any
+  agentId: string
+  supabase: any
+  showToast: (m: string, t?: 'success' | 'error') => void
+}) {
+  const [visitorCount, setVisitorCount] = useState(0)
+  const [busy, setBusy] = useState<string | null>(null)
+
+  const tier = profile?.tier || 'free'
+  const isFree = tier === 'free'
+  const isPaid = ['pro', 'team', 'brokerage'].includes(tier)
+  const status = profile?.subscription_status as string | null
+  const canceledAt = profile?.subscription_canceled_at as string | null
+  const periodEnd = profile?.current_period_end as string | null
+  const billing = profile?.billing_interval as string | null
+
+  useEffect(() => {
+    if (!isFree || !agentId) return
+    supabase
+      .from('visitors')
+      .select('*', { count: 'exact', head: true })
+      .eq('agent_id', agentId)
+      .then(({ count }: { count: number | null }) => setVisitorCount(count || 0))
+  }, [agentId, isFree, supabase])
+
+  const startCheckout = async (interval: string) => {
+    setBusy(interval)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { showToast('Please sign in again.', 'error'); setBusy(null); return }
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ tier: 'pro', interval }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json.url) {
+        showToast(json.error || 'Could not start checkout.', 'error')
+        setBusy(null)
+        return
+      }
+      window.location.href = json.url
+    } catch (e) {
+      showToast('Could not start checkout.', 'error')
+      setBusy(null)
+    }
+  }
+
+  const openPortal = async () => {
+    setBusy('portal')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { showToast('Please sign in again.', 'error'); setBusy(null); return }
+      const res = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      })
+      const json = await res.json()
+      if (!res.ok || !json.url) {
+        showToast(json.error || 'Could not open billing portal.', 'error')
+        setBusy(null)
+        return
+      }
+      window.location.href = json.url
+    } catch {
+      showToast('Could not open billing portal.', 'error')
+      setBusy(null)
+    }
+  }
+
+  return (
+    <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+      <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Subscription</div>
+
+      {isFree && (
+        <>
+          <div style={{ fontSize: '14px', color: '#1d1d1f', marginBottom: '4px' }}>
+            <strong>Plan:</strong> Free trial
+          </div>
+          <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '18px' }}>
+            {Math.max(0, 50 - visitorCount)} of 50 visitor registrations remaining
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+            {PRO_PLANS.map(plan => (
+              <div key={plan.interval} style={{ border: '1px solid #d1d1d6', borderRadius: '12px', padding: '14px' }}>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                  Pro — {plan.label}
+                </div>
+                <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '2px' }}>{plan.price}</div>
+                <div style={{ fontSize: '11px', color: '#6e6e73', minHeight: '15px', marginBottom: '12px' }}>{plan.sub}</div>
+                <button
+                  onClick={() => startCheckout(plan.interval)}
+                  disabled={busy !== null}
+                  style={{ width: '100%', background: '#1d1d1f', color: 'white', border: 'none', borderRadius: '9px', padding: '9px', fontSize: '13px', fontWeight: '700', cursor: busy ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy ? 0.6 : 1 }}
+                >
+                  {busy === plan.interval ? 'Loading…' : 'Upgrade'}
+                </button>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '10px', fontStyle: 'italic' }}>
+            * 2-year prepay is a founding-member offer available for a limited time.
+          </div>
+        </>
+      )}
+
+      {isPaid && (
+        <>
+          <div style={{ fontSize: '14px', color: '#1d1d1f', marginBottom: '4px' }}>
+            <strong>Plan:</strong> {tier.charAt(0).toUpperCase() + tier.slice(1)}
+            {billing && ` — ${intervalLabel(billing)}`}
+          </div>
+          <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '6px' }}>
+            <strong>Status:</strong> {status === 'past_due'
+              ? <span style={{ color: '#cc0000' }}>Payment failed — please update your card</span>
+              : canceledAt
+              ? `Canceled — access until ${formatPlanDate(periodEnd)}`
+              : status === 'active' || status === 'trialing'
+              ? 'Active'
+              : (status || 'Unknown')}
+          </div>
+          {periodEnd && !canceledAt && status !== 'past_due' && (
+            <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '14px' }}>
+              {billing === 'two_year_prepay' ? <><strong>Access until:</strong> {formatPlanDate(periodEnd)}</> : <><strong>Renews on:</strong> {formatPlanDate(periodEnd)}</>}
+            </div>
+          )}
+          <button
+            onClick={openPortal}
+            disabled={busy !== null}
+            style={{ background: '#1d1d1f', color: 'white', border: 'none', borderRadius: '9px', padding: '10px 18px', fontSize: '13px', fontWeight: '700', cursor: busy ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy ? 0.6 : 1 }}
+          >
+            {busy === 'portal' ? 'Loading…' : 'Manage subscription →'}
+          </button>
+        </>
+      )}
     </div>
   )
 }
