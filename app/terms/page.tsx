@@ -19,15 +19,20 @@ export default function Terms() {
         <div style={{ marginBottom: '40px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#6e6e73', marginBottom: '8px' }}>ohACCESS Legal</div>
           <h1 style={{ fontSize: '40px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '8px' }}>Visitor Terms of Service</h1>
-          <div style={{ fontSize: '13px', color: '#6e6e73' }}>For individuals registering at an open house · Effective Date: June 1, 2026 · ohaccess.com</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73' }}>For individuals registering at an open house · Version 1.1 · Effective Date: June 1, 2026 · ohaccess.com</div>
           <div style={{ fontSize: '13px', color: '#6e6e73', marginTop: '8px' }}>If you are a real estate agent, team, or brokerage holding an ohACCESS account, see the <a href="/subscriber-terms" style={{ color: '#0071e3', textDecoration: 'underline' }}>Subscriber Terms of Service</a>.</div>
         </div>
 
         {/* Tab links */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '40px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
           <a href="/terms" style={{ padding: '8px 18px', borderRadius: '8px', background: '#1d1d1f', color: 'white', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>Visitor Terms</a>
           <a href="/subscriber-terms" style={{ padding: '8px 18px', borderRadius: '8px', background: '#f5f5f7', color: '#1d1d1f', fontSize: '13px', fontWeight: '600', textDecoration: 'none', border: '1px solid #d1d1d6' }}>Subscriber Terms</a>
           <a href="/privacy" style={{ padding: '8px 18px', borderRadius: '8px', background: '#f5f5f7', color: '#1d1d1f', fontSize: '13px', fontWeight: '600', textDecoration: 'none', border: '1px solid #d1d1d6' }}>Privacy Policy</a>
+        </div>
+
+        {/* draft notice */}
+        <div style={{ background: '#fffbeb', border: '1px solid #f59e0b', borderRadius: '10px', padding: '14px 18px', marginBottom: '40px', fontSize: '13px', color: '#78350f', lineHeight: '1.6' }}>
+          <strong>Notice:</strong> Version 1.1 is a self-drafted update strengthening the Limitation of Liability, Indemnification, and Class Action Waiver provisions. It is pending formal review by a qualified Texas attorney.
         </div>
 
         <div style={{ fontSize: '14px', lineHeight: '1.8', color: '#3a3a3c' }}>
@@ -55,7 +60,8 @@ export default function Terms() {
           </Section>
 
           <Section title="5. Data Sharing with Third-Party Partners">
-            <p>By submitting this form, you expressly consent to ohACCESS sharing your registration information — including your name, email address, phone number, purchasing timeline, and open house attendance details — with ohACCESS&apos;s authorized third-party business partners, which may include but are not limited to:</p>
+            <p><strong>Current practice:</strong> ohACCESS does not currently share your registration information with the third-party business partners listed below. The consent you provide in this Section 5 is forward-looking — it permits, but does not require, ohACCESS to engage in such sharing in the future without obtaining additional consent. If and when ohACCESS begins active third-party data sharing, the categories of recipients will be those listed in this Section 5 and no others, and we will update our Privacy Policy and notify subscribers as required by Section 14 of these Terms.</p>
+            <p style={{ marginTop: '12px' }}>By submitting this form, you expressly consent to ohACCESS sharing your registration information — including your name, email address, phone number, purchasing timeline, and open house attendance details — with ohACCESS&apos;s authorized third-party business partners, which may include only:</p>
             <ul style={{ paddingLeft: '24px', marginTop: '12px', marginBottom: '12px' }}>
               <li style={{ marginBottom: '8px' }}>Mortgage lenders and loan originators</li>
               <li style={{ marginBottom: '8px' }}>Title companies and closing attorneys</li>
@@ -66,8 +72,8 @@ export default function Terms() {
               <li style={{ marginBottom: '8px' }}>Homeowner&apos;s insurance providers</li>
               <li style={{ marginBottom: '8px' }}>Other real estate transaction service providers</li>
             </ul>
-            <p>These third-party partners may contact you independently regarding their products and services. ohACCESS is not responsible for the communications or practices of third-party partners. Each third-party partner&apos;s contact with you is governed by their own terms of service and privacy policy.</p>
-            <p style={{ marginTop: '12px' }}><strong>You have the right to opt out of third-party data sharing at any time</strong> by emailing privacy@ohaccess.com with the subject line &quot;Opt Out of Third-Party Sharing.&quot; Opt-out requests will be honored within 10 business days for future sharing. Data already shared with third-party partners prior to your opt-out request cannot be recalled.</p>
+            <p>If such sharing begins, these third-party partners may contact you independently regarding their products and services. ohACCESS is not responsible for the communications or practices of third-party partners. Each third-party partner&apos;s contact with you is governed by their own terms of service and privacy policy.</p>
+            <p style={{ marginTop: '12px' }}><strong>You have the right to opt out of third-party data sharing at any time</strong> by emailing privacy@ohaccess.com with the subject line &quot;Opt Out of Third-Party Sharing,&quot; even before any such sharing has begun. Opt-out requests will be honored within ten (10) business days for future sharing. Data already shared with third-party partners prior to your opt-out request cannot be recalled.</p>
           </Section>
 
           <Section title="6. How to Opt Out of All Communications">
@@ -99,19 +105,24 @@ export default function Terms() {
           </Section>
 
           <Section title="11. Limitation of Liability">
-            ohACCESS shall not be liable for any direct, indirect, incidental, special, exemplary, or consequential damages arising from your use of the platform, your attendance at an open house, any communications you receive from an Agent or third-party partner, or any data sharing authorized by these Terms. Your use of this platform is at your own risk. In no event shall ohACCESS&apos;s total liability to you exceed the amount of $100.
+            <p style={{ textTransform: 'uppercase' as const }}>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, OHACCESS SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION DAMAGES FOR LOSS OF PROFITS, GOODWILL, DATA, OR OTHER INTANGIBLE LOSSES, ARISING FROM YOUR USE OF THE PLATFORM, YOUR ATTENDANCE AT AN OPEN HOUSE, ANY COMMUNICATIONS YOU RECEIVE FROM AN AGENT OR THIRD-PARTY PARTNER, OR ANY DATA SHARING AUTHORIZED BY THESE TERMS, WHETHER BASED IN CONTRACT, TORT, NEGLIGENCE, STRICT LIABILITY, OR OTHERWISE, AND EVEN IF OHACCESS HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</p>
+            <p style={{ marginTop: '10px', textTransform: 'uppercase' as const }}>YOUR USE OF THIS PLATFORM IS AT YOUR OWN RISK. IN NO EVENT SHALL OHACCESS&apos;S TOTAL CUMULATIVE LIABILITY TO YOU EXCEED ONE HUNDRED U.S. DOLLARS ($100).</p>
+            <p style={{ marginTop: '10px' }}>The limitations in this Section 11 apply notwithstanding the failure of essential purpose of any limited remedy.</p>
           </Section>
 
           <Section title="12. Indemnification">
-            You agree to indemnify, defend, and hold harmless ohACCESS, LLC, its officers, directors, employees, agents, and third-party partners from and against any claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys&apos; fees) arising from your use of the platform, your violation of these Terms, or your provision of false or inaccurate information.
+            <p style={{ textTransform: 'uppercase' as const }}>YOU AGREE TO INDEMNIFY, DEFEND, AND HOLD HARMLESS OHACCESS, LLC, ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, AND THIRD-PARTY PARTNERS FROM AND AGAINST ANY AND ALL CLAIMS, DAMAGES, LOSSES, LIABILITIES, COSTS, AND EXPENSES (INCLUDING REASONABLE ATTORNEYS&apos; FEES) ARISING FROM (A) YOUR USE OF THE PLATFORM; (B) YOUR VIOLATION OF THESE TERMS; (C) YOUR PROVISION OF FALSE, INACCURATE, OR THIRD-PARTY CONTACT INFORMATION; OR (D) ANY CLAIM BY A THIRD PARTY ARISING FROM CONTACT INFORMATION YOU SUBMITTED THAT DID NOT BELONG TO YOU.</p>
           </Section>
 
-          <Section title="13. Governing Law & Dispute Resolution">
-            These Terms are governed by the laws of the State of Texas, without regard to conflict of law principles. Any disputes arising under these Terms shall be resolved through binding arbitration in Tarrant County, Texas, under the rules of the American Arbitration Association, except that either party may seek injunctive relief in any court of competent jurisdiction. You waive any right to a jury trial or to participate in a class action lawsuit.
+          <Section title="13. Governing Law, Arbitration & Class Action Waiver">
+            <p><strong>13.1 Governing Law.</strong> These Terms are governed by the laws of the State of Texas, without regard to conflict of law principles.</p>
+            <p style={{ marginTop: '10px' }}><strong>13.2 Binding Arbitration.</strong> Any dispute, claim, or controversy arising out of or relating to these Terms or your use of the platform shall be resolved through final and binding arbitration administered by the American Arbitration Association under its Consumer Arbitration Rules, conducted in Tarrant County, Texas, or remotely by videoconference at the arbitrator&apos;s discretion. The arbitrator&apos;s award shall be binding and may be entered as a judgment in any court of competent jurisdiction. Either party may seek emergency injunctive relief in any court of competent jurisdiction in aid of arbitration.</p>
+            <p style={{ marginTop: '10px', textTransform: 'uppercase' as const }}><strong>13.3 JURY TRIAL WAIVER.</strong> YOU AND OHACCESS EACH KNOWINGLY AND VOLUNTARILY WAIVE ANY RIGHT TO A TRIAL BY JURY FOR ANY DISPUTE ARISING OUT OF OR RELATED TO THESE TERMS OR THE PLATFORM.</p>
+            <p style={{ marginTop: '10px', textTransform: 'uppercase' as const }}><strong>13.4 CLASS ACTION WAIVER.</strong> ALL CLAIMS BETWEEN YOU AND OHACCESS MUST BE BROUGHT IN AN INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED CLASS, COLLECTIVE, CONSOLIDATED, MASS, OR REPRESENTATIVE PROCEEDING. THE ARBITRATOR MAY NOT CONSOLIDATE OR JOIN MORE THAN ONE PERSON&apos;S CLAIMS AND MAY NOT PRESIDE OVER ANY FORM OF REPRESENTATIVE OR CLASS PROCEEDING. IF A COURT DECIDES THAT APPLICABLE LAW PRECLUDES ENFORCEMENT OF ANY OF THIS PARAGRAPH&apos;S LIMITATIONS AS TO A PARTICULAR CLAIM, THEN THAT CLAIM (AND ONLY THAT CLAIM) MUST BE SEVERED FROM THE ARBITRATION AND BROUGHT IN COURT.</p>
           </Section>
 
           <Section title="14. Changes to These Terms">
-            ohACCESS reserves the right to modify these Terms at any time. We will notify registered agents of material changes via email. Continued use of the platform constitutes acceptance of the revised Terms. The effective date at the top of this page reflects the most recent update.
+            ohACCESS reserves the right to modify these Terms at any time. When we make material changes, the updated Terms will be posted at this URL with a new effective date and version number. Continued use of the platform after the effective date constitutes acceptance of the revised Terms. We encourage you to review these Terms periodically.
           </Section>
 
           <Section title="15. Contact Information">

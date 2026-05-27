@@ -19,7 +19,7 @@ export default function Privacy() {
         <div style={{ marginBottom: '40px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#6e6e73', marginBottom: '8px' }}>ohACCESS Legal</div>
           <h1 style={{ fontSize: '40px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '8px' }}>Privacy Policy</h1>
-          <div style={{ fontSize: '13px', color: '#6e6e73' }}>Applies to both open house visitors and ohACCESS account holders · Effective Date: June 1, 2026 · ohaccess.com</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73' }}>Applies to both open house visitors and ohACCESS account holders · Version 1.1 · Effective Date: June 1, 2026 · ohaccess.com</div>
         </div>
 
         {/* Tab links */}
@@ -29,9 +29,9 @@ export default function Privacy() {
           <a href="/privacy" style={{ padding: '8px 18px', borderRadius: '8px', background: '#1d1d1f', color: 'white', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>Privacy Policy</a>
         </div>
 
-        {/* v1 draft notice */}
+        {/* draft notice */}
         <div style={{ background: '#fffbeb', border: '1px solid #f59e0b', borderRadius: '10px', padding: '14px 18px', marginBottom: '40px', fontSize: '13px', color: '#78350f', lineHeight: '1.6' }}>
-          <strong>Notice:</strong> This Privacy Policy is a v1 draft pending review by a qualified Texas attorney. Material provisions may be refined following legal review.
+          <strong>Notice:</strong> Version 1.1 expands the state-privacy-rights section to cover additional US states and clarifies the jurisdictional scope of the Service. It is pending formal review by a qualified Texas attorney.
         </div>
 
         <div style={{ fontSize: '14px', lineHeight: '1.8', color: '#3a3a3c' }}>
@@ -144,8 +144,17 @@ export default function Privacy() {
             <p style={{ marginTop: '10px' }}><strong>Subscribers</strong> can additionally exercise most of these rights directly through their account dashboard (data export via CSV, profile updates, account closure). For Visitor data held in your Subscriber account, you are the controller and must process Visitor requests directly; ohACCESS will assist upon written request.</p>
           </Section>
 
-          <Section title="7. California Privacy Rights (CCPA)">
-            If you are a California resident, you have additional rights under the California Consumer Privacy Act (CCPA). You have the right to know what personal information we collect, use, disclose, and sell. You have the right to delete your personal information. You have the right to opt out of the sale of your personal information. We do not sell personal information to data brokers. However, our sharing of data with authorized business partners as described in Section 4 may constitute a &quot;sale&quot; under California law. To opt out, email privacy@ohaccess.com with subject &quot;California Opt Out.&quot; We will not discriminate against you for exercising your CCPA rights.
+          <Section title="7. State Privacy Rights (US)">
+            <p><strong>7.1 California (CCPA / CPRA).</strong> If you are a California resident, you have the right to know what personal information we collect, use, disclose, and &quot;sell&quot; or &quot;share&quot; (as those terms are defined under the California Consumer Privacy Act as amended by the California Privacy Rights Act); to delete your personal information; to correct inaccurate information; to limit the use of sensitive personal information; and to opt out of the sale or sharing of your personal information. ohACCESS does not sell personal information to data brokers; however, our forward-looking authorization in Section 5 of the Visitor Terms to share data with authorized business partners may, if activated, constitute a &quot;sale&quot; or &quot;share&quot; under California law. To opt out, email privacy@ohaccess.com with subject &quot;California Opt Out.&quot;</p>
+            <p style={{ marginTop: '10px' }}><strong>7.2 Texas (TDPSA).</strong> If you are a Texas resident, you have rights under the Texas Data Privacy and Security Act (effective July 1, 2024), including the rights to confirm processing, access, correct, delete, port, and opt out of targeted advertising, sale, and certain profiling. To exercise these rights, email privacy@ohaccess.com with subject &quot;Texas Privacy Request.&quot;</p>
+            <p style={{ marginTop: '10px' }}><strong>7.3 Other US States.</strong> Residents of Virginia (VCDPA), Colorado (CPA), Connecticut (CTDPA), Utah (UCPA), Oregon (OCPA), Montana (MCDPA), Delaware (DPDPA), Iowa (ICDPA), New Hampshire (NHDPA), New Jersey (NJDPA), Tennessee (TIPA), Indiana (ICDPA), Minnesota (MCDPA), Maryland (MODPA), Nebraska (NDPA), Kentucky (KCDPA), Rhode Island (RIDTPPA), and other states with comprehensive privacy laws may have substantially similar rights. To exercise rights under your state&apos;s law, email privacy@ohaccess.com with the subject line &quot;[State] Privacy Request.&quot; We respond within thirty (30) days (or up to forty-five (45) days where additional time is permitted by the applicable law).</p>
+            <p style={{ marginTop: '10px' }}><strong>7.4 Non-Discrimination.</strong> We will not discriminate against you for exercising any privacy right.</p>
+            <p style={{ marginTop: '10px' }}><strong>7.5 Authorized Agents.</strong> You may designate an authorized agent to submit a request on your behalf. We may require verification of your identity and the agent&apos;s authority.</p>
+            <p style={{ marginTop: '10px' }}><strong>7.6 Appeals.</strong> If we decline a privacy request, you may appeal by replying to our response with the subject line &quot;Appeal.&quot; We will review and respond within sixty (60) days. If your appeal is denied, you may contact your state attorney general.</p>
+          </Section>
+
+          <Section title="7A. Jurisdictional Scope">
+            The Service is intended for use only by individuals and businesses located in the United States. We do not target the Service to residents of the European Economic Area, the United Kingdom, Switzerland, Canada, or other non-US jurisdictions, and we do not represent that the Service complies with GDPR, UK GDPR, PIPEDA, or other non-US data protection laws. If you access the Service from outside the United States, you do so at your own risk and consent to the transfer of your information to the United States for processing.
           </Section>
 
           <Section title="8. Security">

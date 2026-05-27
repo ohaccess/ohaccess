@@ -121,6 +121,16 @@ function LoginForm() {
       if (error) {
         setError(error.message)
       } else {
+        // Record the click-through acceptance for the legal audit trail.
+        // Best-effort; if it fails we still let signup succeed (Supabase
+        // has already accepted the agreement via the required checkbox).
+        try {
+          await fetch('/api/legal/accept', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          })
+        } catch {}
         setMessage('confirmed')
       }
     }
