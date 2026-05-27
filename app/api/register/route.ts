@@ -196,9 +196,12 @@ export async function POST(request: Request) {
       )
     }
 
-    // ① VISITOR SMS — keep under SMS_MAX_LENGTH so Twilio bills 1 segment
+    // ① VISITOR SMS — keep under SMS_MAX_LENGTH where possible so Twilio
+    // bills 1 segment. The "Reply STOP to opt out" line stays in the base
+    // message even if it pushes us to 2 segments for very long addresses —
+    // TCPA opt-out signaling is more important than the marginal cost.
     const smsBody = buildSmsBody(
-      `Your access code for ${streetAddress} is ${codeWord}. Share at door for entry.`,
+      `Your access code for ${streetAddress} is ${codeWord}. Share at door for entry. Reply STOP to opt out.`,
       [
         ...(listingShortUrl ? [{ label: 'Listing', url: listingShortUrl }] : []),
         ...(agentShortUrl ? [{ label: 'Agent', url: agentShortUrl }] : []),
