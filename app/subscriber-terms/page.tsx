@@ -19,7 +19,7 @@ export default function SubscriberTerms() {
         <div style={{ marginBottom: '24px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#6e6e73', marginBottom: '8px' }}>ohACCESS Legal</div>
           <h1 style={{ fontSize: '40px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '8px' }}>Subscriber Terms of Service</h1>
-          <div style={{ fontSize: '13px', color: '#6e6e73' }}>For real estate agents, teams, and brokerages who hold an ohACCESS account · Version 1.1 · Effective Date: June 1, 2026 · ohaccess.com</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73' }}>For real estate agents, teams, and brokerages who hold an ohACCESS account · Version 1.2 · Effective Date: June 1, 2026 · ohaccess.com</div>
         </div>
 
         {/* Tab links */}
@@ -31,7 +31,7 @@ export default function SubscriberTerms() {
 
         {/* draft notice */}
         <div style={{ background: '#fffbeb', border: '1px solid #f59e0b', borderRadius: '10px', padding: '14px 18px', marginBottom: '40px', fontSize: '13px', color: '#78350f', lineHeight: '1.6' }}>
-          <strong>Notice:</strong> Version 1.1 is a self-drafted update strengthening the Acceptable Use, Marketing Compliance, Disclaimer, and Indemnification sections. It is pending formal review by a qualified Texas attorney. ohACCESS subscribers should consider these terms binding upon acceptance; certain provisions may be refined following attorney review and you will be notified of any material change as required by Section 17.
+          <strong>Notice:</strong> Version 1.2 adds an Acceptable Use prohibition (Section 7) on discriminatory access decisions, expressly tying account compliance to the Fair Housing Act and analogous state and local anti-discrimination laws. Earlier v1.1 strengthening of Acceptable Use, Marketing Compliance, Disclaimer, and Indemnification remains in effect. Pending formal review by a qualified Texas attorney. ohACCESS subscribers should consider these terms binding upon acceptance; certain provisions may be refined following attorney review and you will be notified of any material change as required by Section 17.
         </div>
 
         <div style={{ fontSize: '14px', lineHeight: '1.8', color: '#3a3a3c' }}>
@@ -89,6 +89,7 @@ export default function SubscriberTerms() {
               <li style={{ marginBottom: '6px' }}>Circumvent or attempt to circumvent rate limits, authentication, billing, opt-out enforcement, the trial registration cap, or any other technical or contractual restriction;</li>
               <li style={{ marginBottom: '6px' }}>Use the Service to send spam, phishing messages, malware, or any unlawful, fraudulent, defamatory, harassing, threatening, or otherwise harmful content;</li>
               <li style={{ marginBottom: '6px' }}>Use the Service to discriminate against Visitors or to steer Visitors toward or away from properties in violation of the Fair Housing Act, the Equal Credit Opportunity Act, state fair-housing laws, or any other anti-discrimination law;</li>
+              <li style={{ marginBottom: '6px' }}>Refuse, condition, or terminate open-house access for any Visitor on the basis of race, color, national origin, religion, sex (including sexual orientation and gender identity), familial status, disability, age, marital status, source of income, military or veteran status, or any other class protected under federal, state, or local law in the jurisdiction where the property is located. The right of the seller and the hosting Agent to refuse access for legitimate, articulable, non-pretextual security or safety reasons (for example, visibly impaired, armed, or threatening behavior; capacity limits; lawful instruction from law enforcement) is not impaired by this provision. However, the burden of contemporaneously documenting and demonstrating a legitimate, non-pretextual basis for any refusal rests entirely with the Subscriber, and ohACCESS may suspend or terminate the Subscriber Account upon a good-faith determination that access decisions have been made on a prohibited basis. Subscribers are encouraged to retain a brief written record of the date, time, and articulable safety basis for any access refusal;</li>
               <li style={{ marginBottom: '6px' }}>Use the Service to compete with ohACCESS, build a competing product, or benchmark the Service for the benefit of a competitor;</li>
               <li>Permit any individual other than the account holder (or, in the case of Team and Brokerage plans, properly invited team members within the seat limit) to access your account.</li>
             </ul>
