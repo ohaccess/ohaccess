@@ -493,14 +493,17 @@ function ExpiredOpenHouse() {
               Thank you!
             </div>
             <div style={{ fontSize: '14px', color: '#6e6e73', background: '#f5f5f7', borderRadius: '12px', padding: '14px 20px', marginBottom: '16px', lineHeight: '1.6' }}>
-              Your access code has been sent to your phone and email. <br/><br/>Check your messages and present or mention the codeword to the host at the door to gain access.
+Your access code was texted to your phone, with a backup code sent to your email. <br/><br/>At the door, show or mention your text code to the host to gain access.
             </div>
             <div style={{ fontSize: '15px', color: '#6e6e73', marginBottom: '14px' }}>
               {openHouse.property_address}<br />
               {openHouse.open_house_date} · {openHouse.open_house_hours}
             </div>
             <div style={{ fontSize: '12px', color: accentColor, fontWeight: '600' }}>
-                ✓ Your code was sent to your phone and email.
+                ✓ Access code was sent to your phone.
+              </div>
+              <div style={{ fontSize: '12px', color: accentColor, fontWeight: '600', marginTop: '4px' }}>
+                ✓ Backup code was sent to your email.
               </div>
               <div style={{ fontSize: '12px', color: accentColor, fontWeight: '600', marginTop: '4px' }}>
                 ✓ Agent has been notified of your arrival.

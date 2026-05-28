@@ -273,6 +273,7 @@ export default function Dashboard() {
       open_house_hours: form.open_house_hours,
       listing_url: form.listing_url,
       code_word: form.code_word,
+      code_word_email: form.code_word_email,
       status: 'active'
     }).select()
     if (error) { showToast('Error saving: ' + error.message); return }
@@ -295,7 +296,8 @@ export default function Dashboard() {
       open_house_date: oh.open_house_date || '',
       open_house_hours: oh.open_house_hours || '',
       listing_url: oh.listing_url || '',
-      code_word: oh.code_word || ''
+      code_word: oh.code_word || '',
+      code_word_email: oh.code_word_email || ''
     })
     setView('new')
   }
@@ -722,26 +724,32 @@ export default function Dashboard() {
                 Each visitor gets two codes — one by text, one by email. At the door, ask for the <strong>text code</strong> first (a real phone is hard to fake); accept the email code only if their text didn&apos;t arrive.
               </div>
 
-              {/* Text (SMS) code — primary */}
-              <label style={labelStyle}>📱 Text code (SMS) — primary</label>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', marginBottom: '14px' }}>
-                <div style={{ flex: 1 }}>
-                  <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. LOVELY" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
+                {/* Text (SMS) code — primary */}
+                <div style={{ flex: '1 1 240px', minWidth: 0 }}>
+                  <label style={labelStyle}>📱 Text code (SMS) — primary</label>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. LOVELY" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
+                    </div>
+                    <button onClick={() => setForm({ ...form, code_word: generateSmsWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+                      ✦ Auto-generate
+                    </button>
+                  </div>
                 </div>
-                <button onClick={() => setForm({ ...form, code_word: generateSmsWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
-                  ✦ Auto-generate
-                </button>
-              </div>
 
-              {/* Email code — fallback */}
-              <label style={labelStyle}>✉️ Email code — fallback</label>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
-                <div style={{ flex: 1 }}>
-                  <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. TUDOR" value={form.code_word_email} onChange={e => setForm({ ...form, code_word_email: e.target.value.toUpperCase() })} />
+                {/* Email code — fallback */}
+                <div style={{ flex: '1 1 240px', minWidth: 0 }}>
+                  <label style={labelStyle}>✉️ Email code — fallback</label>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. TUDOR" value={form.code_word_email} onChange={e => setForm({ ...form, code_word_email: e.target.value.toUpperCase() })} />
+                    </div>
+                    <button onClick={() => setForm({ ...form, code_word_email: generateEmailWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+                      ✦ Auto-generate
+                    </button>
+                  </div>
                 </div>
-                <button onClick={() => setForm({ ...form, code_word_email: generateEmailWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
-                  ✦ Auto-generate
-                </button>
               </div>
             </div>
 
