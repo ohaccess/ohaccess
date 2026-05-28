@@ -470,11 +470,11 @@ function ExpiredOpenHouse() {
 
             {/* TOS */}
             <div style={{ marginTop: '14px', padding: '12px 14px', background: '#f5f5f7', borderRadius: '10px', fontSize: '11px', color: '#6e6e73', lineHeight: '1.65', textAlign: 'center', border: '1px solid #e5e5ea' }}>
-              By requesting an access code you are agreeing to the{' '}
+              By entering your number and tapping <strong style={{ color: '#1d1d1f' }}>Request Access Code</strong>, you agree to receive a one-time SMS access code from ohACCESS to enter this open house. Message &amp; data rates may apply. Reply STOP to opt out, HELP for help.<br /><br />
+              You also agree to the{' '}
               <a href="/terms" style={{ color: '#1d1d1f', fontWeight: '700', textDecoration: 'underline' }}>
                 ohACCESS Terms of Service & Privacy Policy
-              </a>.<br /><br />
-              You consent to be contacted by the listing agent via phone, text, and email regarding this and other properties.
+              </a>, and consent to be contacted by the listing agent via phone, text, and email about this and other properties.
             </div>
 
             {/* Alternative to acceptance — preserves the validity of consent
