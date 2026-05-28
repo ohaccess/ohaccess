@@ -38,7 +38,8 @@ export default function Dashboard() {
     open_house_date: '',
     open_house_hours: '',
     listing_url: '',
-    code_word: ''
+    code_word: '',
+    code_word_email: ''
   })
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
   const [totalVisitors, setTotalVisitors] = useState<number | null>(null)
@@ -181,10 +182,13 @@ export default function Dashboard() {
     if (data) setVisitors(data)
   }
 
-  const generateCodeWord = () => {
-    const words = ['BESPOKE','BOULEVARD','CELEBRATE','CONDOMINIUM','CRAFTSMAN','DOWNTOWN','ENVISION','EQUITY','FAMILY','GATHER','HAVEN','HIGHRISE','MANSION','MID-CENTURY','MODERN','REFLECT','ROOTS','SANCTUARY','SUBURBAN','THRESHOLD','THRIVE','TOWNSHIP','TUDOR','UPTOWN','VILLAGE']
-    return words[Math.floor(Math.random() * words.length)]
-  }
+  // The SMS (text) code is an adjective; the email code is a home-themed noun.
+  // Two distinct words let the host ask specifically for the harder-to-spoof
+  // TEXT code at the door.
+  const SMS_WORDS = ['BESPOKE','CHARMING','CLASSIC','COZY','ELEGANT','GRAND','HISTORIC','INVITING','LOVELY','LUXE','MODERN','POLISHED','PRISTINE','RADIANT','REFINED','SERENE','SPACIOUS','STATELY','STUNNING','STYLISH','TIMELESS','TRANQUIL','WELCOMING']
+  const EMAIL_WORDS = ['BOULEVARD','BUNGALOW','CONDOMINIUM','COTTAGE','COURTYARD','ELEVATION','ESTATE','GARDEN','HAVEN','HIGHRISE','LOFT','MANOR','MANSION','PENTHOUSE','RESIDENCE','SANCTUARY','TERRACE','TOWNHOUSE','TUDOR','VERANDA','VILLA','VILLAGE']
+  const generateSmsWord = () => SMS_WORDS[Math.floor(Math.random() * SMS_WORDS.length)]
+  const generateEmailWord = () => EMAIL_WORDS[Math.floor(Math.random() * EMAIL_WORDS.length)]
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, '').substring(0, 10)
@@ -198,7 +202,7 @@ export default function Dashboard() {
     street_address: '', address_2: '', city: '', state: '', zip_code: '',
     listing_price: '', bedrooms: '', bathrooms: '',
     square_footage: '', open_house_date: '',
-    open_house_hours: '', listing_url: '', code_word: ''
+    open_house_hours: '', listing_url: '', code_word: '', code_word_email: ''
   })
 
   const authHeaders = async (): Promise<HeadersInit> => {
@@ -248,8 +252,8 @@ export default function Dashboard() {
 
   const createOpenHouse = async () => {
     if (guardLocked()) return
-    if (!form.street_address || !form.city || !form.state || !form.code_word) {
-      showToast('Please fill in the street address, city, state, and code word.')
+    if (!form.street_address || !form.city || !form.state || !form.code_word || !form.code_word_email) {
+      showToast('Please fill in the address, city, state, and both code words (text + email).')
       return
     }
     const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
@@ -298,8 +302,8 @@ export default function Dashboard() {
 
   const updateOpenHouse = async () => {
     if (guardLocked()) return
-    if (!form.street_address || !form.city || !form.state || !form.code_word) {
-      showToast('Please fill in the street address, city, state, and code word.')
+    if (!form.street_address || !form.city || !form.state || !form.code_word || !form.code_word_email) {
+      showToast('Please fill in the address, city, state, and both code words (text + email).')
       return
     }
     const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
@@ -318,6 +322,7 @@ export default function Dashboard() {
       open_house_hours: form.open_house_hours,
       listing_url: form.listing_url,
       code_word: form.code_word,
+      code_word_email: form.code_word_email,
     }).eq('id', editingOH.id)
     if (error) { showToast('Error updating: ' + error.message); return }
     setEditingOH(null)
@@ -520,7 +525,7 @@ export default function Dashboard() {
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: oh.status === 'active' ? accentColor : '#aeaeb2', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{oh.property_address}</div>
-                        <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>{oh.open_house_date} · {oh.open_house_hours} · Code: <strong>{oh.code_word}</strong></div>
+                        <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>{oh.open_house_date} · {oh.open_house_hours} · 📱 <strong>{oh.code_word}</strong> · ✉️ <strong>{oh.code_word_email || oh.code_word}</strong></div>
                       </div>
                       {oh.status === 'active' && (
                         <div style={{ background: '#e8f9ee', color: '#1a7a3c', fontSize: '11px', fontWeight: '600', padding: '3px 9px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
@@ -712,13 +717,29 @@ export default function Dashboard() {
             </div>
 
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Access code word</div>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Access code words</div>
+              <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 16px', lineHeight: '1.5' }}>
+                Each visitor gets two codes — one by text, one by email. At the door, ask for the <strong>text code</strong> first (a real phone is hard to fake); accept the email code only if their text didn&apos;t arrive.
+              </div>
+
+              {/* Text (SMS) code — primary */}
+              <label style={labelStyle}>📱 Text code (SMS) — primary</label>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', marginBottom: '14px' }}>
+                <div style={{ flex: 1 }}>
+                  <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. LOVELY" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
+                </div>
+                <button onClick={() => setForm({ ...form, code_word: generateSmsWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+                  ✦ Auto-generate
+                </button>
+              </div>
+
+              {/* Email code — fallback */}
+              <label style={labelStyle}>✉️ Email code — fallback</label>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Code Word</label>
-                  <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. REFLECT" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
+                  <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. TUDOR" value={form.code_word_email} onChange={e => setForm({ ...form, code_word_email: e.target.value.toUpperCase() })} />
                 </div>
-                <button onClick={() => setForm({ ...form, code_word: generateCodeWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+                <button onClick={() => setForm({ ...form, code_word_email: generateEmailWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                   ✦ Auto-generate
                 </button>
               </div>

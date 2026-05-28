@@ -130,7 +130,10 @@ export async function POST(request: Request) {
     }
 
     const agent = openHouse.profiles
-    const codeWord = openHouse.code_word
+    // Two code words: the SMS (text) word is primary; the email word is a
+    // fallback. Legacy open houses only have code_word, so reuse it for email.
+    const smsCodeWord = openHouse.code_word
+    const emailCodeWord = openHouse.code_word_email || openHouse.code_word
     const streetAddress = openHouse.street_address || openHouse.property_address
     const fullAddress = openHouse.property_address
     const now = new Date().toLocaleString('en-US', {
@@ -201,7 +204,7 @@ export async function POST(request: Request) {
     // message even if it pushes us to 2 segments for very long addresses —
     // TCPA opt-out signaling is more important than the marginal cost.
     const smsBody = buildSmsBody(
-      `Your access code for ${streetAddress} is ${codeWord}. Share at door for entry. Reply STOP to opt out.`,
+      `Your TEXT entry code for ${streetAddress} is ${smsCodeWord}. Show this text at the door. Reply STOP to opt out.`,
       [
         ...(listingShortUrl ? [{ label: 'Listing', url: listingShortUrl }] : []),
         ...(agentShortUrl ? [{ label: 'Agent', url: agentShortUrl }] : []),
@@ -244,7 +247,7 @@ export async function POST(request: Request) {
       from: 'ohACCESS <noreply@mail.ohaccess.com>',
       to: email,
       cc: isPro && agent?.email ? [agent.email] : [],
-      subject: `Your ohACCESS code: ${codeWord}`,
+      subject: `Your ohACCESS email code: ${emailCodeWord}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
           <div style="background: ${headerColor}; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
@@ -253,9 +256,10 @@ export async function POST(request: Request) {
           </div>
           <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px;">
             <div style="background: #f5f5f7; border: 1px dashed #d1d1d6; border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 16px;">
-              <div style="font-size: 11px; color: #6e6e73; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Your Access Codeword</div>
-              <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #1d1d1f;"><q>${escapeHtml(codeWord)}</q></div>
-              <div style="font-size: 12px; color: #6e6e73; margin-top: 8px;">Share codeword with host at the door to gain access.</div>
+              <div style="font-size: 11px; color: #6e6e73; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Your Email Access Code</div>
+              <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #1d1d1f;"><q>${escapeHtml(emailCodeWord)}</q></div>
+              <div style="font-size: 12px; color: #6e6e73; margin-top: 8px;">Share this code with the host at the door to gain access.</div>
+              <div style="font-size: 11px; color: #6e6e73; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e5ea;">📱 We also texted you a separate code. If the host asks for your <strong>text code</strong>, check your phone&apos;s messages.</div>
             </div>
             <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 13px; color: #6e6e73; line-height: 1.8;">
               <strong style="color: #1d1d1f;">${escapeHtml(fullAddress)}</strong><br/>
