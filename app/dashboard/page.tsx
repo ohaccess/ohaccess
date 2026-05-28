@@ -182,7 +182,7 @@ export default function Dashboard() {
   }
 
   const generateCodeWord = () => {
-    const words = ['KEYSTONE','MERIDIAN','HAVEN','OAKWOOD','SOLSTICE','STERLING','REFLECT','AURORA','HORIZON','CYPRESS','EXPLORE','WILLOW','SUMMIT','HARBOR','CRESTVIEW']
+    const words = ['BESPOKE','BOULEVARD','CELEBRATE','CONDOMINIUM','CRAFTSMAN','DOWNTOWN','ENVISION','EQUITY','FAMILY','GATHER','HAVEN','HIGHRISE','MANSION','MID-CENTURY','MODERN','REFLECT','ROOTS','SANCTUARY','SUBURBAN','THRESHOLD','THRIVE','TOWNSHIP','TUDOR','UPTOWN','VILLAGE']
     return words[Math.floor(Math.random() * words.length)]
   }
 
