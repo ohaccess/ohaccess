@@ -1068,11 +1068,42 @@ function TrialBanner({ agentId, supabase, accentColor }: { agentId: string, supa
   )
 }
 
-const PRO_PLANS = [
-  { interval: 'month',           label: 'Monthly',  price: '$15/mo',     sub: '' },
-  { interval: 'year',            label: 'Annual',   price: '$12.50/mo',  sub: 'Billed $150/yr — 2 months free' },
-  { interval: 'two_year_prepay', label: '2 Years*', price: '$7.50/mo',   sub: 'Billed $180 once — 50% off' },
+const BILLING_OPTIONS = [
+  { key: 'month',           label: 'Monthly' },
+  { key: 'year',            label: 'Annual' },
+  { key: 'two_year_prepay', label: '2 Years*' },
 ] as const
+
+type BillingKey = typeof BILLING_OPTIONS[number]['key']
+
+const PLAN_TIERS: {
+  name: string
+  tier: 'pro' | 'team' | 'brokerage'
+  featured: boolean
+  price: Record<BillingKey, string>
+  per: string
+  sub: Record<BillingKey, string>
+  cta: string
+}[] = [
+  {
+    name: 'Pro', tier: 'pro', featured: true,
+    price: { month: '$15', year: '$12.50', two_year_prepay: '$7.50' }, per: '/mo',
+    sub: { month: 'For the active agent', year: '$150/yr — 2 months free', two_year_prepay: '$180 once — 50% off' },
+    cta: 'Upgrade to Pro',
+  },
+  {
+    name: 'Team', tier: 'team', featured: false,
+    price: { month: '$120', year: '$100', two_year_prepay: '$60' }, per: '/mo',
+    sub: { month: 'Up to 10 agents', year: '$1,200/yr — 2 months free', two_year_prepay: '$1,440 once — 50% off' },
+    cta: 'Start Team',
+  },
+  {
+    name: 'Brokerage', tier: 'brokerage', featured: false,
+    price: { month: 'Custom', year: 'Custom', two_year_prepay: 'Custom' }, per: '',
+    sub: { month: 'Custom per-agent pricing', year: 'Custom per-agent pricing', two_year_prepay: 'Custom per-agent pricing' },
+    cta: 'Contact us',
+  },
+]
 
 function formatPlanDate(iso: string | null | undefined): string {
   if (!iso) return ''
@@ -1096,6 +1127,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast }: {
 }) {
   const [visitorCount, setVisitorCount] = useState(0)
   const [busy, setBusy] = useState<string | null>(null)
+  const [planBilling, setPlanBilling] = useState<BillingKey>('month')
 
   const tier = profile?.tier || 'free'
   const isFree = tier === 'free'
@@ -1114,15 +1146,17 @@ function SubscriptionSection({ profile, agentId, supabase, showToast }: {
       .then(({ count }: { count: number | null }) => setVisitorCount(count || 0))
   }, [agentId, isFree, supabase])
 
-  const startCheckout = async (interval: string) => {
-    setBusy(interval)
+  const startCheckout = async (tier: string, interval: string) => {
+    // Brokerage is custom-priced — route to the sales contact form.
+    if (tier === 'brokerage') { window.location.href = '/contact'; return }
+    setBusy(tier)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { showToast('Please sign in again.', 'error'); setBusy(null); return }
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ tier: 'pro', interval }),
+        body: JSON.stringify({ tier, interval }),
       })
       const json = await res.json()
       if (!res.ok || !json.url) {
@@ -1172,20 +1206,34 @@ function SubscriptionSection({ profile, agentId, supabase, showToast }: {
             {Math.max(0, 50 - visitorCount)} of 50 visitor registrations remaining
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-            {PRO_PLANS.map(plan => (
-              <div key={plan.interval} style={{ border: '1px solid #d1d1d6', borderRadius: '12px', padding: '14px' }}>
-                <div style={{ fontSize: '12px', fontWeight: '700', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
-                  Pro — {plan.label}
+          {/* Billing-interval toggle */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'inline-flex', background: '#f5f5f7', borderRadius: '12px', padding: '4px', gap: '2px', maxWidth: '100%', flexWrap: 'wrap' }}>
+              {BILLING_OPTIONS.map(b => (
+                <button key={b.key} onClick={() => setPlanBilling(b.key)} style={{ padding: '8px 14px', borderRadius: '9px', border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: '600', background: planBilling === b.key ? '#1d1d1f' : 'transparent', color: planBilling === b.key ? 'white' : '#6e6e73', whiteSpace: 'nowrap' }}>
+                  {b.label}
+                  {b.key === 'year' && <span style={{ marginLeft: '6px', background: '#30d158', color: 'white', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>2 MOS FREE</span>}
+                  {b.key === 'two_year_prepay' && <span style={{ marginLeft: '6px', background: '#c9963a', color: '#1d1d1f', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>50% OFF</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Plan cards — wrap responsively so they never overflow the panel */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
+            {PLAN_TIERS.map(plan => (
+              <div key={plan.tier} style={{ background: plan.featured ? '#1d1d1f' : 'white', border: plan.featured ? '2px solid #c9963a' : '1px solid #d1d1d6', borderRadius: '14px', padding: '16px 14px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: plan.featured ? 'white' : '#1d1d1f', marginBottom: '4px' }}>{plan.name}</div>
+                <div style={{ fontSize: '26px', fontWeight: '700', color: plan.featured ? '#c9963a' : '#1d1d1f', letterSpacing: '-0.5px', lineHeight: '1.1' }}>
+                  {plan.price[planBilling]}<span style={{ fontSize: '12px', fontWeight: '400', color: plan.featured ? 'rgba(255,255,255,0.5)' : '#6e6e73' }}>{plan.per}</span>
                 </div>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '2px' }}>{plan.price}</div>
-                <div style={{ fontSize: '11px', color: '#6e6e73', minHeight: '15px', marginBottom: '12px' }}>{plan.sub}</div>
+                <div style={{ fontSize: '11px', color: plan.featured ? 'rgba(255,255,255,0.55)' : '#6e6e73', minHeight: '28px', marginTop: '4px', marginBottom: '12px' }}>{plan.sub[planBilling]}</div>
                 <button
-                  onClick={() => startCheckout(plan.interval)}
+                  onClick={() => startCheckout(plan.tier, planBilling)}
                   disabled={busy !== null}
-                  style={{ width: '100%', background: '#1d1d1f', color: 'white', border: 'none', borderRadius: '9px', padding: '9px', fontSize: '13px', fontWeight: '700', cursor: busy ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy ? 0.6 : 1 }}
+                  style={{ marginTop: 'auto', width: '100%', background: plan.featured ? '#c9963a' : '#1d1d1f', color: plan.featured ? '#1d1d1f' : 'white', border: 'none', borderRadius: '9px', padding: '9px', fontSize: '12px', fontWeight: '700', cursor: busy ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy && busy !== plan.tier ? 0.5 : 1 }}
                 >
-                  {busy === plan.interval ? 'Loading…' : 'Upgrade'}
+                  {busy === plan.tier ? 'Loading…' : plan.cta}
                 </button>
               </div>
             ))}
