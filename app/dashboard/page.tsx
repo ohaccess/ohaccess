@@ -716,7 +716,7 @@ export default function Dashboard() {
               <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
                   <label style={labelStyle}>Code Word</label>
-                  <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. SANCTUARY" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
+                  <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. REFLECT" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
                 </div>
                 <button onClick={() => setForm({ ...form, code_word: generateCodeWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                   ✦ Auto-generate
