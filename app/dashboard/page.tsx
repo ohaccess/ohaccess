@@ -41,12 +41,30 @@ export default function Dashboard() {
     code_word: ''
   })
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
+  const [totalVisitors, setTotalVisitors] = useState<number | null>(null)
 
   const primaryColor = profile?.primary_color || '#1d1d1f'
   const accentColor = profile?.accent_color || '#0071e3'
 
   // Team-admin (team-lead) gets a Team tab; everyone else sees the standard nav.
   const isTeamAdmin = profile?.role === 'brokerage_admin'
+  // A non-admin agent who belongs to a team doesn't manage billing — the team
+  // lead does — so they don't see the Subscription section. If they're later
+  // removed (brokerage_id cleared), it reappears.
+  const isTeamMember = !!profile?.brokerage_id && profile?.role !== 'brokerage_admin'
+
+  // Free-tier agents who've used all 50 trial registrations are locked out of
+  // every action until they upgrade. This also catches agents who were removed
+  // from a team (they drop to free) and are already over the cap.
+  const isPaidTier = ['pro', 'team', 'brokerage'].includes(profile?.tier || 'free')
+  const locked = !isPaidTier && (totalVisitors ?? 0) >= 50
+  const guardLocked = (): boolean => {
+    if (locked) {
+      showToast('You’ve used all 50 free registrations. Upgrade to keep using ohACCESS.', 'error')
+      return true
+    }
+    return false
+  }
   const navViews: Array<'dashboard' | 'new' | 'team' | 'settings'> = isTeamAdmin
     ? ['dashboard', 'new', 'team', 'settings']
     : ['dashboard', 'new', 'settings']
@@ -92,13 +110,23 @@ export default function Dashboard() {
       setUser(refreshData.session.user)
       await loadProfile(refreshData.session.user.id)
       await loadOpenHouses(refreshData.session.user.id)
+      await loadVisitorCount(refreshData.session.user.id)
       setLoading(false)
       return
     }
     setUser(session.user)
     await loadProfile(session.user.id)
     await loadOpenHouses(session.user.id)
+    await loadVisitorCount(session.user.id)
     setLoading(false)
+  }
+
+  const loadVisitorCount = async (userId: string) => {
+    const { count } = await supabase
+      .from('visitors')
+      .select('*', { count: 'exact', head: true })
+      .eq('agent_id', userId)
+    setTotalVisitors(count ?? 0)
   }
 
   const loadProfile = async (userId: string) => {
@@ -219,21 +247,10 @@ export default function Dashboard() {
   }
 
   const createOpenHouse = async () => {
+    if (guardLocked()) return
     if (!form.street_address || !form.city || !form.state || !form.code_word) {
       showToast('Please fill in the street address, city, state, and code word.')
       return
-    }
-    const tier = profile?.tier || 'free'
-    const isPaidTier = ['pro', 'team', 'brokerage'].includes(tier)
-    if (!isPaidTier) {
-      const { count } = await supabase
-        .from('visitors')
-        .select('*', { count: 'exact', head: true })
-        .eq('agent_id', user.id)
-      if ((count || 0) >= 50) {
-        showToast('You have used all 50 of your free trial visitor registrations. Please upgrade to Pro to continue.')
-        return
-      }
     }
     const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
     const { data, error } = await supabase.from('open_houses').insert({
@@ -259,6 +276,7 @@ export default function Dashboard() {
   }
 
   const startEdit = (oh: any) => {
+    if (guardLocked()) return
     setEditingOH(oh)
     setForm({
       street_address: oh.street_address || '',
@@ -279,6 +297,7 @@ export default function Dashboard() {
   }
 
   const updateOpenHouse = async () => {
+    if (guardLocked()) return
     if (!form.street_address || !form.city || !form.state || !form.code_word) {
       showToast('Please fill in the street address, city, state, and code word.')
       return
@@ -317,11 +336,13 @@ export default function Dashboard() {
   }
 
   const toggleVerified = async (visitorId: string, current: boolean) => {
+    if (guardLocked()) return
     await supabase.from('visitors').update({ verified: !current }).eq('id', visitorId)
     setVisitors(visitors.map(v => v.id === visitorId ? { ...v, verified: !current } : v))
   }
 
   const exportCSV = () => {
+    if (guardLocked()) return
     const headers = ['First Name','Last Name','Email','Phone','Timeline','Registered','Verified']
     const rows = visitors.map(v => [v.first_name, v.last_name, v.email, v.phone, v.purchasing_timeline, new Date(v.registered_at).toLocaleString(), v.verified ? 'Yes' : 'No'])
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
@@ -440,13 +461,29 @@ export default function Dashboard() {
 
       <div style={{ padding: '28px' }}>
 
+        {/* LOCKED BANNER — free tier over the 50-registration cap. Shown on
+            every view so the agent always sees why actions are disabled. */}
+        {locked && (
+          <div style={{ background: '#fff0f0', border: '1px solid #ffcccc', borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '220px' }}>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: '#cc0000' }}>⚠️ Your free trial has ended</div>
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
+                You&apos;ve used all 50 free visitor registrations. Creating open houses, QR codes, editing, and CSV export are paused. Choose a plan to turn everything back on — your data is safe.
+              </div>
+            </div>
+            <button onClick={() => setView('settings')} style={{ background: '#1d1d1f', color: 'white', border: 'none', padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+              Choose a plan →
+            </button>
+          </div>
+        )}
+
         {/* DASHBOARD VIEW */}
         {view === 'dashboard' && (
           <>
             <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Dashboard</div>
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>Real-time visitor log and open house management.</div>
 
-            {!['pro','team','brokerage'].includes(profile?.tier || 'free') && (
+            {!isPaidTier && !locked && (
               <TrialBanner agentId={user?.id} supabase={supabase} accentColor={accentColor} />
             )}
 
@@ -465,7 +502,7 @@ export default function Dashboard() {
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
               <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f' }}>Your open houses</div>
-              <button onClick={() => { setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: 'white', border: 'none', padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <button disabled={locked} onClick={() => { if (guardLocked()) return; setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: 'white', border: 'none', padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 + New open house
               </button>
             </div>
@@ -492,8 +529,9 @@ export default function Dashboard() {
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'nowrap' }} onClick={e => e.stopPropagation()}>
-                      <button onClick={async (e) => {
+                      <button disabled={locked} onClick={async (e) => {
                         e.stopPropagation()
+                        if (guardLocked()) return
                         const url = `${window.location.origin}/register/${oh.id}`
                         const res = await fetch(`/api/qrcode?url=${encodeURIComponent(url)}`)
                         const blob = await res.blob()
@@ -503,14 +541,15 @@ export default function Dashboard() {
                           reader.readAsDataURL(blob)
                         })
                         setQrModal({ oh, url, dataUrl, blob })
-                      }} style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📱 QR Code</button>
-                      <button onClick={(e) => {
+                      }} style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📱 QR Code</button>
+                      <button disabled={locked} onClick={(e) => {
                         e.stopPropagation()
+                        if (guardLocked()) return
                         const url = `${window.location.origin}/register/${oh.id}`
                         navigator.clipboard.writeText(url)
                         showToast('Registration URL copied!')
-                      }} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
-                      <button onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
+                      }} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
+                      <button disabled={locked} onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
                       <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }} style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🗑 Delete</button>
                     </div>
                   </div>
@@ -522,7 +561,7 @@ export default function Dashboard() {
               <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Visitor log — {selectedOH.property_address}</div>
-                  <button onClick={exportCSV} style={{ background: primaryColor, color: 'white', border: 'none', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
+                  <button disabled={locked} onClick={exportCSV} style={{ background: primaryColor, color: 'white', border: 'none', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
                 </div>
                 {visitors.length === 0 ? (
                   <div style={{ textAlign: 'center', color: '#6e6e73', padding: '20px', fontSize: '13px' }}>No visitors yet. Share your QR code to get started!</div>
@@ -545,7 +584,7 @@ export default function Dashboard() {
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{new Date(v.registered_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
-                              <button onClick={() => toggleVerified(v.id, v.verified)} style={{ background: v.verified ? '#30d158' : primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+                              <button disabled={locked} onClick={() => toggleVerified(v.id, v.verified)} style={{ background: v.verified ? '#30d158' : primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                                 {v.verified ? '✓' : 'Verify'}
                               </button>
                             </td>
@@ -687,7 +726,7 @@ export default function Dashboard() {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
               <button onClick={() => { setView('dashboard'); setEditingOH(null); resetForm() }} style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cancel</button>
-              <button onClick={editingOH ? updateOpenHouse : createOpenHouse} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <button disabled={locked} onClick={editingOH ? updateOpenHouse : createOpenHouse} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 {editingOH ? '✓ Update open house' : '✓ Save open house'}
               </button>
             </div>
@@ -700,12 +739,21 @@ export default function Dashboard() {
             <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Account settings</div>
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Manage your profile, branding, and preferences.</div>
 
-            <SubscriptionSection
-              profile={profile}
-              agentId={user?.id}
-              supabase={supabase}
-              showToast={showToast}
-            />
+            {isTeamMember ? (
+              <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Subscription</div>
+                <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.5' }}>
+                  ✓ You&apos;re covered under your team&apos;s plan. Billing is managed by your team lead — there&apos;s nothing for you to pay.
+                </div>
+              </div>
+            ) : (
+              <SubscriptionSection
+                profile={profile}
+                agentId={user?.id}
+                supabase={supabase}
+                showToast={showToast}
+              />
+            )}
 
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agent profile</div>

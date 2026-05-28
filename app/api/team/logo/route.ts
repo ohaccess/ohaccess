@@ -75,6 +75,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Upload saved but could not update team' }, { status: 500 })
   }
 
+  // Mirror onto member profiles so visitor emails / pages show the team logo.
+  await supabase.from('profiles').update({ logo_url: logoUrl }).eq('brokerage_id', ctx.brokerageId)
+
   return NextResponse.json({ logo_url: logoUrl })
 }
 
@@ -92,6 +95,7 @@ export async function DELETE(request: Request) {
   const paths = [...ALLOWED.values()].map((e) => `${ctx.brokerageId}/logo.${e}`)
   await supabase.storage.from(BUCKET).remove(paths)
   await supabase.from('brokerages').update({ logo_url: null }).eq('id', ctx.brokerageId)
+  await supabase.from('profiles').update({ logo_url: null }).eq('brokerage_id', ctx.brokerageId)
 
   return NextResponse.json({ success: true })
 }

@@ -97,5 +97,16 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Could not save team settings' }, { status: 500 })
   }
 
+  // Mirror the team's colors onto every member's profile so public surfaces
+  // (the visitor registration page, dashboard chrome) reflect team branding.
+  // The brokerages table isn't readable by the anonymous registration page,
+  // but profiles already are — so we denormalize.
+  const colorMirror: Record<string, string> = {}
+  if (update.primary_color) colorMirror.primary_color = update.primary_color
+  if (update.accent_color) colorMirror.accent_color = update.accent_color
+  if (Object.keys(colorMirror).length > 0) {
+    await supabase.from('profiles').update(colorMirror).eq('brokerage_id', ctx.brokerageId)
+  }
+
   return NextResponse.json({ success: true })
 }
