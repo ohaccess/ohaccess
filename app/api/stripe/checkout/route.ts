@@ -29,14 +29,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid tier or interval' }, { status: 400 })
     }
 
-    // Team tier requires the brokerage-account flow; not wired yet.
-    if (tier === 'team') {
-      return NextResponse.json(
-        { error: 'Team plan checkout is not available yet — contact us at /contact' },
-        { status: 400 }
-      )
-    }
-
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, email, full_name, stripe_customer_id, tier, subscription_status')

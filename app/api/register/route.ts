@@ -220,9 +220,25 @@ export async function POST(request: Request) {
     const agentBrokerage = escapeHtml(agent?.brokerage || '')
     const agentDisplayEmail = escapeHtml(agent?.display_email || '')
     const agentPhone = escapeHtml(agent?.phone || '')
-    const headerColor = isHexColor(agent?.primary_color) ? agent.primary_color : '#1d1d1f'
     const headshotUrl = safeUrl(agent?.headshot_url)
-    const logoUrl = safeUrl(agent?.logo_url)
+
+    // Team/brokerage members inherit their team's branding (logo + header
+    // color) instead of their individual settings, so every agent's emails
+    // look consistent. Falls back to the agent's own branding when they
+    // aren't on a team or the team hasn't set those fields.
+    let brandColor = agent?.primary_color
+    let brandLogo = agent?.logo_url
+    if (agent?.brokerage_id) {
+      const { data: brokerage } = await supabase
+        .from('brokerages')
+        .select('primary_color, logo_url')
+        .eq('id', agent.brokerage_id)
+        .maybeSingle()
+      if (brokerage?.primary_color) brandColor = brokerage.primary_color
+      if (brokerage?.logo_url) brandLogo = brokerage.logo_url
+    }
+    const headerColor = isHexColor(brandColor) ? brandColor : '#1d1d1f'
+    const logoUrl = safeUrl(brandLogo)
 
     await resend.emails.send({
       from: 'ohACCESS <noreply@mail.ohaccess.com>',

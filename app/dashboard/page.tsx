@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import TeamAdminPanel from './_components/TeamAdminPanel'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,7 +14,7 @@ export default function Dashboard() {
   const [openHouses, setOpenHouses] = useState<any[]>([])
   const [visitors, setVisitors] = useState<any[]>([])
   const [selectedOH, setSelectedOH] = useState<any>(null)
-  const [view, setView] = useState<'dashboard' | 'new' | 'settings'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'new' | 'settings' | 'team'>('dashboard')
   const [loading, setLoading] = useState(true)
   const [showCal, setShowCal] = useState(false)
   const [calDate, setCalDate] = useState(new Date())
@@ -44,6 +45,16 @@ export default function Dashboard() {
   const primaryColor = profile?.primary_color || '#1d1d1f'
   const accentColor = profile?.accent_color || '#0071e3'
 
+  // Team-admin (team-lead) gets a Team tab; everyone else sees the standard nav.
+  const isTeamAdmin = profile?.role === 'brokerage_admin'
+  const navViews: Array<'dashboard' | 'new' | 'team' | 'settings'> = isTeamAdmin
+    ? ['dashboard', 'new', 'team', 'settings']
+    : ['dashboard', 'new', 'settings']
+  const navLabel = (v: string) =>
+    v === 'dashboard' ? 'Dashboard' : v === 'new' ? 'New Open House' : v === 'team' ? 'Team' : 'Settings'
+  const navLabelMobile = (v: string) =>
+    v === 'dashboard' ? '📊 Dashboard' : v === 'new' ? '＋ New Open House' : v === 'team' ? '👥 Team' : '⚙️ Settings'
+
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
   const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
   const DOW = ['Su','Mo','Tu','We','Th','Fr','Sa']
@@ -60,10 +71,10 @@ export default function Dashboard() {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
     const v = params.get('view')
-    if (v === 'settings' || v === 'new' || v === 'dashboard') setView(v)
+    if (v === 'settings' || v === 'new' || v === 'dashboard' || v === 'team') setView(v)
     const checkout = params.get('checkout')
     if (checkout === 'success') {
-      showToast('Subscription activated — welcome to Pro!')
+      showToast('Subscription activated — welcome aboard!')
     } else if (checkout === 'cancel') {
       showToast('Checkout canceled. You can upgrade anytime from settings.', 'error')
     }
@@ -378,9 +389,9 @@ export default function Dashboard() {
           oh<span style={{ fontWeight: '700' }}>ACCESS</span>
         </div>
         <div style={{ display: 'flex', gap: '4px' }} className="dash-nav-desktop">
-          {(['dashboard', 'new', 'settings'] as const).map(v => (
+          {navViews.map(v => (
             <button key={v} onClick={() => { setView(v); if (v !== 'new') setEditingOH(null) }} style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: view === v ? 'white' : 'rgba(255,255,255,0.6)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
-              {v === 'dashboard' ? 'Dashboard' : v === 'new' ? 'New Open House' : 'Settings'}
+              {navLabel(v)}
             </button>
           ))}
           <a href="/resources" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textDecoration: 'none', padding: '6px 14px' }}>
@@ -397,10 +408,10 @@ export default function Dashboard() {
 
       {mobileMenuOpen && (
         <div style={{ background: primaryColor, borderTop: '1px solid rgba(255,255,255,0.1)', padding: '8px 16px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {(['dashboard', 'new', 'settings'] as const).map(v => (
+          {navViews.map(v => (
             <button key={v} onClick={() => { setView(v); if (v !== 'new') setEditingOH(null); setMobileMenuOpen(false) }}
               style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: 'white', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px', fontWeight: view === v ? '600' : '400', textAlign: 'left' as const }}>
-              {v === 'dashboard' ? '📊 Dashboard' : v === 'new' ? '＋ New Open House' : '⚙️ Settings'}
+              {navLabelMobile(v)}
             </button>
           ))}
           <a href="/resources" onClick={() => setMobileMenuOpen(false)}
@@ -750,52 +761,70 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <label style={labelStyle}>Logo URL (Brokerage or Team)</label>
-                  <input style={inputStyle} type="url" placeholder="https://yoursite.com/logo.png" value={profile?.logo_url || ''} onChange={e => setProfile({ ...profile, logo_url: e.target.value })} />
-                  {profile?.logo_url && (
-                    <div style={{ marginTop: '8px', background: '#f5f5f7', borderRadius: '8px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '52px', border: '1px solid #d1d1d6' }}>
-                      <img
-                        src={profile.logo_url}
-                        alt="Logo preview"
-                        style={{ maxHeight: '72px', maxWidth: '180px', objectFit: 'contain', display: 'block' }}
-                        onLoad={e => { (e.target as HTMLImageElement).style.display = 'block' }}
-                        onError={e => {
-                          const el = e.target as HTMLImageElement
-                          el.style.display = 'none'
-                          const parent = el.parentElement
-                          if (parent) parent.innerHTML = '<span style="font-size:11px;color:#cc0000;">⚠️ Image could not load — check URL</span>'
-                        }}
-                      />
+                  {profile?.brokerage_id ? (
+                    <div style={{ background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '9px', padding: '10px 12px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.5' }}>
+                      🔒 Your team controls the logo.{isTeamAdmin ? ' Manage it in the Team tab.' : ' Contact your team lead to change it.'}
                     </div>
+                  ) : (
+                    <>
+                      <input style={inputStyle} type="url" placeholder="https://yoursite.com/logo.png" value={profile?.logo_url || ''} onChange={e => setProfile({ ...profile, logo_url: e.target.value })} />
+                      {profile?.logo_url && (
+                        <div style={{ marginTop: '8px', background: '#f5f5f7', borderRadius: '8px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '52px', border: '1px solid #d1d1d6' }}>
+                          <img
+                            src={profile.logo_url}
+                            alt="Logo preview"
+                            style={{ maxHeight: '72px', maxWidth: '180px', objectFit: 'contain', display: 'block' }}
+                            onLoad={e => { (e.target as HTMLImageElement).style.display = 'block' }}
+                            onError={e => {
+                              const el = e.target as HTMLImageElement
+                              el.style.display = 'none'
+                              const parent = el.parentElement
+                              if (parent) parent.innerHTML = '<span style="font-size:11px;color:#cc0000;">⚠️ Image could not load — check URL</span>'
+                            }}
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
             </div>
 
-            <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Brand colors</div>
-              <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px' }}>Applied to your visitor registration form and email header.</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={labelStyle}>Primary Color</label>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <input type="color" value={profile?.primary_color || '#1d1d1f'} onChange={e => setProfile({ ...profile, primary_color: e.target.value })} style={{ width: '48px', height: '38px', border: '1px solid #d1d1d6', borderRadius: '8px', cursor: 'pointer', padding: '2px' }} />
-                    <input style={{ ...inputStyle, flex: 1 }} type="text" placeholder="#1d1d1f" value={profile?.primary_color || '#1d1d1f'} onChange={e => setProfile({ ...profile, primary_color: e.target.value })} />
-                  </div>
-                </div>
-                <div>
-                  <label style={labelStyle}>Accent Color</label>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <input type="color" value={profile?.accent_color || '#0071e3'} onChange={e => setProfile({ ...profile, accent_color: e.target.value })} style={{ width: '48px', height: '38px', border: '1px solid #d1d1d6', borderRadius: '8px', cursor: 'pointer', padding: '2px' }} />
-                    <input style={{ ...inputStyle, flex: 1 }} type="text" placeholder="#0071e3" value={profile?.accent_color || '#0071e3'} onChange={e => setProfile({ ...profile, accent_color: e.target.value })} />
-                  </div>
+            {profile?.brokerage_id ? (
+              <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Brand colors</div>
+                <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '12px', lineHeight: '1.5' }}>
+                  🔒 Your team&apos;s colors are applied to your visitor emails.
+                  {isTeamAdmin ? ' Manage your team branding in the Team tab.' : ' Contact your team lead to change them.'}
                 </div>
               </div>
-              <div style={{ marginTop: '14px', padding: '12px 16px', background: '#f5f5f7', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ fontSize: '12px', color: '#6e6e73' }}>Preview:</div>
-                <div style={{ background: profile?.primary_color || '#1d1d1f', color: 'white', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>oh<strong>ACCESS</strong></div>
-                <div style={{ background: profile?.accent_color || '#0071e3', color: 'white', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>Button</div>
+            ) : (
+              <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Brand colors</div>
+                <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px' }}>Applied to your visitor registration form and email header.</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={labelStyle}>Primary Color</label>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <input type="color" value={profile?.primary_color || '#1d1d1f'} onChange={e => setProfile({ ...profile, primary_color: e.target.value })} style={{ width: '48px', height: '38px', border: '1px solid #d1d1d6', borderRadius: '8px', cursor: 'pointer', padding: '2px' }} />
+                      <input style={{ ...inputStyle, flex: 1 }} type="text" placeholder="#1d1d1f" value={profile?.primary_color || '#1d1d1f'} onChange={e => setProfile({ ...profile, primary_color: e.target.value })} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Accent Color</label>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <input type="color" value={profile?.accent_color || '#0071e3'} onChange={e => setProfile({ ...profile, accent_color: e.target.value })} style={{ width: '48px', height: '38px', border: '1px solid #d1d1d6', borderRadius: '8px', cursor: 'pointer', padding: '2px' }} />
+                      <input style={{ ...inputStyle, flex: 1 }} type="text" placeholder="#0071e3" value={profile?.accent_color || '#0071e3'} onChange={e => setProfile({ ...profile, accent_color: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+                <div style={{ marginTop: '14px', padding: '12px 16px', background: '#f5f5f7', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#6e6e73' }}>Preview:</div>
+                  <div style={{ background: profile?.primary_color || '#1d1d1f', color: 'white', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>oh<strong>ACCESS</strong></div>
+                  <div style={{ background: profile?.accent_color || '#0071e3', color: 'white', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>Button</div>
+                </div>
               </div>
-            </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
               <button onClick={saveSettings} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -803,6 +832,11 @@ export default function Dashboard() {
               </button>
             </div>
           </>
+        )}
+
+        {/* TEAM VIEW (team-lead only) */}
+        {view === 'team' && isTeamAdmin && (
+          <TeamAdminPanel supabase={supabase} showToast={showToast} />
         )}
 
       </div>

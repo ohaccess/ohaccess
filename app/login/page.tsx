@@ -21,10 +21,11 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  // Read pricing-CTA params: plan=pro&interval=month|year|two_year_prepay.
+  // Read pricing-CTA params: plan=pro|team & interval=month|year|two_year_prepay.
   const planParam = searchParams.get('plan')
   const intervalParam = searchParams.get('interval')
-  const hasCheckoutIntent = planParam === 'pro' && !!intervalParam
+  const hasCheckoutIntent =
+    (planParam === 'pro' || planParam === 'team') && !!intervalParam
 
   // After login succeeds, either start Stripe Checkout (if user came from a pricing CTA)
   // or send them to the dashboard as usual.

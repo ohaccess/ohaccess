@@ -51,6 +51,21 @@ const PRODUCTS = [
         nickname: 'Pro 2-Year Prepay (founding member, 50% off)' },
     ],
   },
+  {
+    productName: 'ohACCESS Team',
+    description: 'Up to 10 agents, brand customization, team logo. Includes all Pro features.',
+    prices: [
+      { lookup_key: 'ohaccess_team_monthly', envVar: 'STRIPE_PRICE_TEAM_MONTHLY',
+        unit_amount: 12000, recurring: { interval: 'month' },
+        nickname: 'Team Monthly' },
+      { lookup_key: 'ohaccess_team_annual', envVar: 'STRIPE_PRICE_TEAM_ANNUAL',
+        unit_amount: 120000, recurring: { interval: 'year' },
+        nickname: 'Team Annual (2 months free)' },
+      { lookup_key: 'ohaccess_team_2year', envVar: 'STRIPE_PRICE_TEAM_2YEAR',
+        unit_amount: 144000, recurring: null,
+        nickname: 'Team 2-Year Prepay (founding member, 50% off)' },
+    ],
+  },
 ]
 
 // ---- Helpers --------------------------------------------------------------

@@ -8,14 +8,14 @@ export default function Home() {
 
   const billingToInterval = { monthly: 'month', annual: 'year', '2year': 'two_year_prepay' } as const
 
-  // CTA destination per tier. Pro routes through /login with checkout params
-  // so the login page can hand off to Stripe Checkout after signup/signin.
-  // Team is gated on the brokerage-account flow (not built yet) — sales path only.
+  // CTA destination per tier. Pro and Team route through /login with checkout
+  // params so the login page can hand off to Stripe Checkout after signup/signin.
+  // Brokerage stays on the contact-sales path (custom pricing).
   const ctaHref = (tierName: string): string => {
     if (tierName === 'Brokerage') return '/contact'
     if (tierName === 'Trial') return '/login?signup=true'
-    if (tierName === 'Team') return '/contact'
-    return `/login?signup=true&plan=pro&interval=${billingToInterval[billing]}`
+    const plan = tierName === 'Team' ? 'team' : 'pro'
+    return `/login?signup=true&plan=${plan}&interval=${billingToInterval[billing]}`
   }
 
   return (

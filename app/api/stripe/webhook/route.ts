@@ -44,6 +44,71 @@ async function updateProfile(profileId: string, update: ProfileUpdate) {
   }
 }
 
+// Ensure the Team subscriber owns a `brokerages` row and is linked to it
+// as brokerage_admin. Idempotent: if they already own a team brokerage we
+// just return its id. Called after a successful Team checkout.
+async function ensureTeamBrokerage(profileId: string): Promise<string | null> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, brokerage_id, full_name, email')
+    .eq('id', profileId)
+    .single()
+  if (!profile) return null
+
+  if (profile.brokerage_id) {
+    const { data: existing } = await supabase
+      .from('brokerages')
+      .select('id, owner_id, tier')
+      .eq('id', profile.brokerage_id)
+      .maybeSingle()
+    if (existing && existing.owner_id === profileId) {
+      return existing.id
+    }
+  }
+
+  const defaultName =
+    profile.full_name?.trim() ||
+    (profile.email ? `${profile.email.split('@')[0]}'s Team` : 'My Team')
+
+  const { data: brokerage, error: createErr } = await supabase
+    .from('brokerages')
+    .insert({
+      name: defaultName,
+      owner_id: profileId,
+      tier: 'team',
+      seat_limit: 10,
+    })
+    .select('id')
+    .single()
+
+  let brokerageId = brokerage?.id ?? null
+
+  // 23505 = unique violation: a concurrent webhook event already created the
+  // brokerage for this owner. Fetch the winner instead of erroring out.
+  if (createErr) {
+    if ((createErr as { code?: string }).code === '23505') {
+      const { data: existing } = await supabase
+        .from('brokerages')
+        .select('id')
+        .eq('owner_id', profileId)
+        .maybeSingle()
+      brokerageId = existing?.id ?? null
+    } else {
+      console.error('Failed to create brokerage for team subscriber', { profileId, createErr })
+      return null
+    }
+  }
+
+  if (!brokerageId) return null
+
+  await supabase
+    .from('profiles')
+    .update({ brokerage_id: brokerageId, role: 'brokerage_admin' })
+    .eq('id', profileId)
+
+  return brokerageId
+}
+
 function isoOrNull(unixSeconds: number | null | undefined): string | null {
   if (!unixSeconds) return null
   return new Date(unixSeconds * 1000).toISOString()
@@ -86,6 +151,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       subscription_canceled_at: null,
     })
   }
+
+  // Team buyers become owners of a brokerage row (seat_limit 10), so they get
+  // the team-admin dashboard. Idempotent on retry.
+  if (tier === 'team') {
+    await ensureTeamBrokerage(profileId)
+  }
 }
 
 async function handleSubscriptionChange(sub: Stripe.Subscription) {
@@ -112,6 +183,12 @@ async function handleSubscriptionChange(sub: Stripe.Subscription) {
     current_period_end: isoOrNull(sub.items.data[0]?.current_period_end ?? null),
     subscription_canceled_at: sub.canceled_at ? isoOrNull(sub.canceled_at) : null,
   })
+
+  // Belt-and-suspenders: if checkout.session.completed was missed but the
+  // subscription event arrived, still provision the brokerage.
+  if (tier === 'team') {
+    await ensureTeamBrokerage(profileId)
+  }
 }
 
 async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
