@@ -246,7 +246,7 @@ export async function POST(request: Request) {
     await resend.emails.send({
       from: 'ohACCESS <noreply@mail.ohaccess.com>',
       to: email,
-      cc: isPro && agent?.email ? [agent.email] : [],
+      cc: agent?.email ? [agent.email] : [],
       subject: `Your ohACCESS email code: ${emailCodeWord}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
@@ -293,8 +293,10 @@ export async function POST(request: Request) {
       `
     })
 
-    // ③ AGENT SMS ALERT (Pro+ only)
-    if (isPro && agent?.phone) {
+    // ③ AGENT SMS ALERT — sent to every agent (paid or within their trial
+    // cap). The trial limit is enforced above, so reaching here means the
+    // visitor row was allowed; the agent should always be notified.
+    if (agent?.phone) {
       await twilioClient.messages.create({
         body: `ohACCESS Alert: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${phone}, ${email}, Timeline: ${purchasingTimeline}, Time: ${now}`,
         from: process.env.TWILIO_PHONE_NUMBER!,
