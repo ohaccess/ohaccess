@@ -216,7 +216,7 @@ export default function Home() {
                 <button key={b} onClick={() => setBilling(b)} style={{ padding: '8px 12px', borderRadius: '9px', border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: '600', background: billing === b ? '#1d1d1f' : 'transparent', color: billing === b ? 'white' : '#6e6e73' }}>
                   {b === 'monthly' ? 'Monthly' : b === 'annual' ? 'Annual' : '2 Years*'}
                   {b === 'annual' && <span style={{ marginLeft: '6px', background: '#30d158', color: 'white', fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>2 MOS FREE</span>}
-                  {b === '2year' && <span style={{ marginLeft: '6px', background: '#c9963a', color: '#1d1d1f', fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>50% OFF</span>}
+                  {b === '2year' && <span style={{ marginLeft: '6px', background: '#c9963a', color: '#1d1d1f', fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>BEST VALUE</span>}
                 </button>
               ))}
             </div>
@@ -233,17 +233,17 @@ export default function Home() {
                 cta: 'Start free trial', featured: false
               },
               {
-                name: 'Pro', price: { monthly: '$15', annual: '$12.50', '2year': '$7.50' },
+                name: 'Pro', price: { monthly: '$15', annual: '$12.50', '2year': '$10' },
                 per: { monthly: '/mo', annual: '/mo', '2year': '/mo' },
-                sub: { monthly: '', annual: 'Billed $150/yr — 2 months free', '2year': 'Billed $180 — 50% off' },
+                sub: { monthly: '', annual: 'Billed $150/yr — 2 months free', '2year': 'Billed $240 upfront — year 2 is half off' },
                 description: 'For the active agent',
                 features: ['Unlimited open houses', 'Unlimited visitor registrations', 'Instant agent SMS alerts', 'Agent CC on emails', 'QR code download', 'CSV export'],
                 cta: 'Start Pro', featured: true
               },
               {
-                name: 'Team', price: { monthly: '$120', annual: '$100', '2year': '$60' },
+                name: 'Team', price: { monthly: '$120', annual: '$100', '2year': '$80' },
                 per: { monthly: '/mo', annual: '/mo', '2year': '/mo' },
-                sub: { monthly: '', annual: 'Billed $1,200/yr — 2 months free', '2year': 'Billed $1,440 — 50% off' },
+                sub: { monthly: '', annual: 'Billed $1,200/yr — 2 months free', '2year': 'Billed $1,920 upfront — year 2 is half off' },
                 description: 'For teams up to 10 agents',
                 features: ['Unlimited open houses', 'Unlimited visitor registrations', 'Up to 10 agents', 'All Pro features', 'Brand customization', 'Team logo'],
                 cta: 'Start Team', featured: false
