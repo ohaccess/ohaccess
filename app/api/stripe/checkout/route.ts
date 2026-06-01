@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, email, full_name, stripe_customer_id, tier, subscription_status')
+      .select('id, email, full_name, stripe_customer_id, tier, subscription_status, billing_interval, current_period_end')
       .eq('id', user.id)
       .single()
 
@@ -39,10 +39,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
+    // An expired 2-year prepay still reads tier=paid/status=active locally
+    // (it's a one-time payment with no auto-renew), so let those users renew.
+    const twoYearExpired =
+      profile.billing_interval === 'two_year_prepay' &&
+      !!profile.current_period_end &&
+      Date.parse(profile.current_period_end) < Date.now()
+
     // Block double-paying. If they already have an active paid subscription,
     // route them to the customer portal instead of starting a second checkout.
     const activeStatuses = ['active', 'trialing', 'past_due']
-    if (profile.tier !== 'free' && activeStatuses.includes(profile.subscription_status ?? '')) {
+    if (
+      profile.tier !== 'free' &&
+      activeStatuses.includes(profile.subscription_status ?? '') &&
+      !twoYearExpired
+    ) {
       return NextResponse.json(
         { error: 'You already have an active subscription. Manage it from the dashboard.' },
         { status: 409 }

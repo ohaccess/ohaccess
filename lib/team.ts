@@ -15,6 +15,7 @@ export interface BrokerageContext {
   logoUrl: string | null
   primaryColor: string | null
   accentColor: string | null
+  subscriptionStatus: string | null
 }
 
 // Resolve the brokerage a user belongs to and whether they are the admin.
@@ -31,7 +32,7 @@ export async function getBrokerageContext(userId: string): Promise<BrokerageCont
 
   const { data: brokerage } = await supabase
     .from('brokerages')
-    .select('id, name, owner_id, tier, seat_limit, logo_url, primary_color, accent_color')
+    .select('id, name, owner_id, tier, seat_limit, logo_url, primary_color, accent_color, subscription_status')
     .eq('id', profile.brokerage_id)
     .single()
 
@@ -47,6 +48,7 @@ export async function getBrokerageContext(userId: string): Promise<BrokerageCont
     logoUrl: brokerage.logo_url,
     primaryColor: brokerage.primary_color,
     accentColor: brokerage.accent_color,
+    subscriptionStatus: brokerage.subscription_status,
   }
 }
 

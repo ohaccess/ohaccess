@@ -109,6 +109,35 @@ async function ensureTeamBrokerage(profileId: string): Promise<string | null> {
   return brokerageId
 }
 
+// Mirror the team owner's subscription status onto their brokerage row so
+// members can see team billing health (drives the "contact your admin"
+// banner). When the team subscription is terminally gone, cut members loose:
+// drop them to free and unlink from the brokerage — KEEPING their account and
+// all their data so they can start their own plan without reinventing the
+// wheel. The owner's own downgrade is handled by the caller.
+async function propagateTeamStatus(ownerProfileId: string, status: string) {
+  const { data: brokerage } = await supabase
+    .from('brokerages')
+    .select('id')
+    .eq('owner_id', ownerProfileId)
+    .maybeSingle()
+  if (!brokerage) return // not a team owner — nothing to propagate
+
+  await supabase
+    .from('brokerages')
+    .update({ subscription_status: status })
+    .eq('id', brokerage.id)
+
+  const terminal = new Set(['canceled', 'unpaid', 'incomplete_expired'])
+  if (terminal.has(status)) {
+    await supabase
+      .from('profiles')
+      .update({ tier: 'free', brokerage_id: null, role: 'agent' })
+      .eq('brokerage_id', brokerage.id)
+      .neq('id', ownerProfileId)
+  }
+}
+
 function isoOrNull(unixSeconds: number | null | undefined): string | null {
   if (!unixSeconds) return null
   return new Date(unixSeconds * 1000).toISOString()
@@ -175,19 +204,32 @@ async function handleSubscriptionChange(sub: Stripe.Subscription) {
     ? ((sub.metadata?.tier ?? 'pro') as 'pro' | 'team')
     : 'free'
 
+  // A scheduled cancellation (cancel_at_period_end) doesn't set canceled_at
+  // until the period actually ends, so surface cancel_at as the "ending on"
+  // marker. Resuming (cancel_at_period_end=false) clears it.
+  const subCanceledAt = sub.canceled_at
+    ? isoOrNull(sub.canceled_at)
+    : sub.cancel_at_period_end
+      ? isoOrNull(sub.cancel_at)
+      : null
+
   await updateProfile(profileId, {
     tier,
     stripe_subscription_id: sub.id,
     subscription_status: sub.status,
     billing_interval: sub.metadata?.billing_interval ?? null,
     current_period_end: isoOrNull(sub.items.data[0]?.current_period_end ?? null),
-    subscription_canceled_at: sub.canceled_at ? isoOrNull(sub.canceled_at) : null,
+    subscription_canceled_at: subCanceledAt,
   })
 
-  // Belt-and-suspenders: if checkout.session.completed was missed but the
-  // subscription event arrived, still provision the brokerage.
-  if (tier === 'team') {
-    await ensureTeamBrokerage(profileId)
+  // For team subscriptions, keep the brokerage row + members in sync.
+  // Provision on first activation; always mirror status (and cut members
+  // loose if the team subscription has terminally lapsed).
+  if (sub.metadata?.tier === 'team') {
+    if (liveStatuses.has(sub.status)) {
+      await ensureTeamBrokerage(profileId)
+    }
+    await propagateTeamStatus(profileId, sub.status)
   }
 }
 
@@ -203,6 +245,9 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
     subscription_status: 'canceled',
     subscription_canceled_at: new Date().toISOString(),
   })
+  // If this was a team owner, mark the team canceled and cut members loose.
+  // No-op for solo subscribers.
+  await propagateTeamStatus(profileId, 'canceled')
 }
 
 export async function POST(request: Request) {
