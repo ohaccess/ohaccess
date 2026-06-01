@@ -1132,14 +1132,14 @@ const PLAN_TIERS: {
 }[] = [
   {
     name: 'Pro', tier: 'pro', featured: true,
-    price: { month: '$15', year: '$12.50', two_year_prepay: '$7.50' }, per: '/mo',
-    sub: { month: 'For the active agent', year: '$150/yr — 2 months free', two_year_prepay: '$180 once — 50% off' },
+    price: { month: '$15', year: '$12.50', two_year_prepay: '$10' }, per: '/mo',
+    sub: { month: 'For the active agent', year: '$150/yr — 2 months free', two_year_prepay: '$240 once — year 2 half off' },
     cta: 'Upgrade to Pro',
   },
   {
     name: 'Team', tier: 'team', featured: false,
-    price: { month: '$120', year: '$100', two_year_prepay: '$60' }, per: '/mo',
-    sub: { month: 'Up to 10 agents', year: '$1,200/yr — 2 months free', two_year_prepay: '$1,440 once — 50% off' },
+    price: { month: '$120', year: '$100', two_year_prepay: '$80' }, per: '/mo',
+    sub: { month: 'Up to 10 agents', year: '$1,200/yr — 2 months free', two_year_prepay: '$1,920 once — year 2 half off' },
     cta: 'Start Team',
   },
   {
@@ -1258,7 +1258,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast }: {
                 <button key={b.key} onClick={() => setPlanBilling(b.key)} style={{ padding: '8px 14px', borderRadius: '9px', border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: '600', background: planBilling === b.key ? '#1d1d1f' : 'transparent', color: planBilling === b.key ? 'white' : '#6e6e73', whiteSpace: 'nowrap' }}>
                   {b.label}
                   {b.key === 'year' && <span style={{ marginLeft: '6px', background: '#30d158', color: 'white', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>2 MOS FREE</span>}
-                  {b.key === 'two_year_prepay' && <span style={{ marginLeft: '6px', background: '#c9963a', color: '#1d1d1f', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>50% OFF</span>}
+                  {b.key === 'two_year_prepay' && <span style={{ marginLeft: '6px', background: '#c9963a', color: '#1d1d1f', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>BEST VALUE</span>}
                 </button>
               ))}
             </div>

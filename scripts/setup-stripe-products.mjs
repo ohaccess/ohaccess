@@ -47,8 +47,8 @@ const PRODUCTS = [
         unit_amount: 15000, recurring: { interval: 'year' },
         nickname: 'Pro Annual (2 months free)' },
       { lookup_key: 'ohaccess_pro_2year', envVar: 'STRIPE_PRICE_PRO_2YEAR',
-        unit_amount: 18000, recurring: null,
-        nickname: 'Pro 2-Year Prepay (founding member, 50% off)' },
+        unit_amount: 24000, recurring: null,
+        nickname: 'Pro 2-Year Prepay ($150 year 1 + $90 year 2 half off)' },
     ],
   },
   {
@@ -62,8 +62,8 @@ const PRODUCTS = [
         unit_amount: 120000, recurring: { interval: 'year' },
         nickname: 'Team Annual (2 months free)' },
       { lookup_key: 'ohaccess_team_2year', envVar: 'STRIPE_PRICE_TEAM_2YEAR',
-        unit_amount: 144000, recurring: null,
-        nickname: 'Team 2-Year Prepay (founding member, 50% off)' },
+        unit_amount: 192000, recurring: null,
+        nickname: 'Team 2-Year Prepay ($1,200 year 1 + $720 year 2 half off)' },
     ],
   },
 ]
@@ -84,8 +84,30 @@ async function getOrCreateProduct(name, description) {
 async function getOrCreatePrice(productId, { lookup_key, unit_amount, recurring, nickname }) {
   const existing = await stripe.prices.list({ lookup_keys: [lookup_key], limit: 1 })
   if (existing.data.length > 0) {
-    console.log(`Reusing price:    ${lookup_key} (${existing.data[0].id})`)
-    return existing.data[0]
+    const old = existing.data[0]
+    // Same amount → reuse as-is.
+    if (old.unit_amount === unit_amount) {
+      console.log(`Reusing price:    ${lookup_key} (${old.id})`)
+      return old
+    }
+    // Stripe prices are IMMUTABLE — the amount can't be edited. So when the
+    // amount has changed, create a new price, move the lookup_key onto it
+    // (transfer_lookup_key), and archive the old price so it's no longer
+    // offered. The printed env var will point to the NEW price id — update
+    // .env.local with it.
+    console.log(`Amount changed for ${lookup_key}: ${old.unit_amount} → ${unit_amount}¢ — creating a new price.`)
+    const replacement = await stripe.prices.create({
+      product: productId,
+      currency: 'usd',
+      unit_amount,
+      ...(recurring ? { recurring } : {}),
+      lookup_key,
+      nickname,
+      transfer_lookup_key: true,
+    })
+    await stripe.prices.update(old.id, { active: false })
+    console.log(`Created price:    ${lookup_key} (${replacement.id}) — archived old ${old.id}`)
+    return replacement
   }
   const created = await stripe.prices.create({
     product: productId,
