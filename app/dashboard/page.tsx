@@ -44,6 +44,7 @@ export default function Dashboard() {
   })
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
   const [totalVisitors, setTotalVisitors] = useState<number | null>(null)
+  const [teamStatus, setTeamStatus] = useState<{ subscription_status: string | null } | null>(null)
 
   const primaryColor = profile?.primary_color || '#1d1d1f'
   const accentColor = profile?.accent_color || '#0071e3'
@@ -55,10 +56,24 @@ export default function Dashboard() {
   // removed (brokerage_id cleared), it reappears.
   const isTeamMember = !!profile?.brokerage_id && profile?.role !== 'brokerage_admin'
 
+  // A 2-year prepay is a one-time payment with no auto-renew, so its row still
+  // reads tier=paid after it lapses. Treat a past access date as expired so the
+  // agent gets the renewal prompt (and the trial cap) like any free agent.
+  const twoYearExpired =
+    profile?.billing_interval === 'two_year_prepay' &&
+    !!profile?.current_period_end &&
+    Date.parse(profile.current_period_end) < Date.now()
+
+  // A team member's access depends on the TEAM's billing health, not their own
+  // row. If the team payment failed (past_due), warn them but keep access; if
+  // the team fully lapsed the webhook already unlinked them to free.
+  const teamPaymentFailed = isTeamMember && teamStatus?.subscription_status === 'past_due'
+
   // Free-tier agents who've used all 50 trial registrations are locked out of
   // every action until they upgrade. This also catches agents who were removed
   // from a team (they drop to free) and are already over the cap.
-  const isPaidTier = ['pro', 'team', 'brokerage'].includes(profile?.tier || 'free')
+  const isPaidTier =
+    ['pro', 'team', 'brokerage'].includes(profile?.tier || 'free') && !twoYearExpired
   const locked = !isPaidTier && (totalVisitors ?? 0) >= 50
   const guardLocked = (): boolean => {
     if (locked) {
@@ -113,6 +128,7 @@ export default function Dashboard() {
       await loadProfile(refreshData.session.user.id)
       await loadOpenHouses(refreshData.session.user.id)
       await loadVisitorCount(refreshData.session.user.id)
+      await loadTeamStatus()
       setLoading(false)
       return
     }
@@ -120,7 +136,22 @@ export default function Dashboard() {
     await loadProfile(session.user.id)
     await loadOpenHouses(session.user.id)
     await loadVisitorCount(session.user.id)
+    await loadTeamStatus()
     setLoading(false)
+  }
+
+  // Team billing health (drives the "contact your admin" banner for members).
+  // Returns { hasTeam:false } for solo agents — including ex-members the webhook
+  // unlinked when their team lapsed, who then see the normal plan options.
+  const loadTeamStatus = async () => {
+    try {
+      const res = await fetch('/api/team/status', { headers: await authHeaders() })
+      if (!res.ok) { setTeamStatus(null); return }
+      const json = await res.json()
+      setTeamStatus(json.hasTeam ? { subscription_status: json.subscription_status } : null)
+    } catch {
+      setTeamStatus(null)
+    }
   }
 
   const loadVisitorCount = async (userId: string) => {
@@ -469,6 +500,22 @@ export default function Dashboard() {
 
       <div style={{ padding: '28px' }}>
 
+        {/* TEAM PAYMENT BANNER — a member's team had a failed/overdue payment.
+            They can't fix billing themselves, so point them at their admin.
+            Access is retained during the grace period; if the team fully
+            lapses the webhook unlinks them and they'll see plan options. */}
+        {teamPaymentFailed && (
+          <div style={{ background: '#fff9e0', border: '1px solid #ffe066', borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            <span style={{ fontSize: '16px', lineHeight: '1.4' }}>⚠️</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: '#8a6400' }}>Your team&apos;s subscription needs attention</div>
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
+                A recent payment on your team&apos;s ohACCESS plan didn&apos;t go through. Please contact your team/brokerage admin so your access isn&apos;t interrupted. Your open houses and visitor data are safe.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* LOCKED BANNER — free tier over the 50-registration cap. Shown on
             every view so the agent always sees why actions are disabled. */}
         {locked && (
@@ -772,9 +819,15 @@ export default function Dashboard() {
             {isTeamMember ? (
               <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Subscription</div>
-                <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.5' }}>
-                  ✓ You&apos;re covered under your team&apos;s plan. Billing is managed by your team lead — there&apos;s nothing for you to pay.
-                </div>
+                {teamPaymentFailed ? (
+                  <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.5' }}>
+                    ⚠️ Your team&apos;s most recent payment didn&apos;t go through. Please contact your team/brokerage admin so your access isn&apos;t interrupted — there&apos;s nothing for you to pay directly.
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.5' }}>
+                    ✓ You&apos;re covered under your team&apos;s plan. Billing is managed by your team lead — there&apos;s nothing for you to pay.
+                  </div>
+                )}
               </div>
             ) : (
               <SubscriptionSection
@@ -782,6 +835,7 @@ export default function Dashboard() {
                 agentId={user?.id}
                 supabase={supabase}
                 showToast={showToast}
+                onChanged={async () => { await loadProfile(user.id); await loadTeamStatus() }}
               />
             )}
 
@@ -1119,6 +1173,11 @@ const BILLING_OPTIONS = [
   { key: 'two_year_prepay', label: '2 Years*' },
 ] as const
 
+// Flip to false to retire the limited-time 2-year prepay offer. Existing
+// 2-year subscribers keep their plan; it just stops being offered to new/
+// renewing agents (and the toggle option disappears).
+const OFFER_TWO_YEAR = true
+
 type BillingKey = typeof BILLING_OPTIONS[number]['key']
 
 const PLAN_TIERS: {
@@ -1164,15 +1223,17 @@ function intervalLabel(interval: string | null | undefined): string {
   return ''
 }
 
-function SubscriptionSection({ profile, agentId, supabase, showToast }: {
+function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged }: {
   profile: any
   agentId: string
   supabase: any
   showToast: (m: string, t?: 'success' | 'error') => void
+  onChanged?: () => void | Promise<void>
 }) {
   const [visitorCount, setVisitorCount] = useState(0)
   const [busy, setBusy] = useState<string | null>(null)
   const [planBilling, setPlanBilling] = useState<BillingKey>('month')
+  const [confirmingCancel, setConfirmingCancel] = useState(false)
 
   const tier = profile?.tier || 'free'
   const isFree = tier === 'free'
@@ -1181,6 +1242,22 @@ function SubscriptionSection({ profile, agentId, supabase, showToast }: {
   const canceledAt = profile?.subscription_canceled_at as string | null
   const periodEnd = profile?.current_period_end as string | null
   const billing = profile?.billing_interval as string | null
+
+  // A 2-year prepay is one-time with no auto-renew, so its row still reads
+  // paid/active after the access date passes. Treat that as expired so the
+  // agent sees the renewal picker.
+  const twoYearExpired =
+    billing === 'two_year_prepay' && !!periodEnd && Date.parse(periodEnd) < Date.now()
+  // Show the plan picker for free agents AND at the "renew" moment (expired 2-year).
+  const showPlans = isFree || twoYearExpired
+  // cancel_at_period_end keeps status 'active' until the period closes;
+  // canceledAt is our flag that an end is already scheduled.
+  const pendingCancel = !!canceledAt && (status === 'active' || status === 'trialing')
+  // Only recurring (month/year) plans can be canceled; 2-year prepay just lapses.
+  const canCancel = isPaid && !twoYearExpired && (billing === 'month' || billing === 'year')
+  const billingChoices = OFFER_TWO_YEAR
+    ? BILLING_OPTIONS
+    : BILLING_OPTIONS.filter(b => b.key !== 'two_year_prepay')
 
   useEffect(() => {
     if (!isFree || !agentId) return
@@ -1238,23 +1315,66 @@ function SubscriptionSection({ profile, agentId, supabase, showToast }: {
     }
   }
 
+  // Cancel at period end (keep access until then) or resume a pending cancel.
+  const cancelSub = async (resume: boolean) => {
+    setBusy(resume ? 'resume' : 'cancel')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { showToast('Please sign in again.', 'error'); setBusy(null); return }
+      const res = await fetch('/api/stripe/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ resume }),
+      })
+      const json = await res.json()
+      if (!res.ok) { showToast(json.error || 'Could not update subscription.', 'error'); setBusy(null); return }
+      showToast(resume
+        ? 'Subscription resumed — you’re all set.'
+        : 'Your plan is set to cancel at the end of this billing period.')
+      setConfirmingCancel(false)
+      await onChanged?.()
+    } catch {
+      showToast('Could not update subscription.', 'error')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const ghostBtn = (color: string) => ({
+    background: 'white', color, border: '1px solid #d1d1d6', borderRadius: '9px',
+    padding: '10px 18px', fontSize: '13px', fontWeight: 700,
+    cursor: busy ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
+    opacity: busy ? 0.6 : 1,
+  })
+
   return (
     <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
       <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Subscription</div>
 
-      {isFree && (
+      {showPlans && (
         <>
-          <div style={{ fontSize: '14px', color: '#1d1d1f', marginBottom: '4px' }}>
-            <strong>Plan:</strong> Free trial
-          </div>
-          <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '18px' }}>
-            {Math.max(0, 50 - visitorCount)} of 50 visitor registrations remaining
-          </div>
+          {isFree ? (
+            <>
+              <div style={{ fontSize: '14px', color: '#1d1d1f', marginBottom: '4px' }}>
+                <strong>Plan:</strong> Free trial
+              </div>
+              <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '18px' }}>
+                {Math.max(0, 50 - visitorCount)} of 50 visitor registrations remaining
+              </div>
+            </>
+          ) : (
+            <div style={{ background: '#fff9e0', border: '1px solid #ffe066', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: '#8a6400' }}>Your 2-year plan has ended</div>
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
+                Your prepaid access ended on {formatPlanDate(periodEnd)}. Choose a plan below to pick up right where you left off — your data is safe.
+              </div>
+            </div>
+          )}
 
           {/* Billing-interval toggle */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
             <div style={{ display: 'inline-flex', background: '#f5f5f7', borderRadius: '12px', padding: '4px', gap: '2px', maxWidth: '100%', flexWrap: 'wrap' }}>
-              {BILLING_OPTIONS.map(b => (
+              {billingChoices.map(b => (
                 <button key={b.key} onClick={() => setPlanBilling(b.key)} style={{ padding: '8px 14px', borderRadius: '9px', border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: '600', background: planBilling === b.key ? '#1d1d1f' : 'transparent', color: planBilling === b.key ? 'white' : '#6e6e73', whiteSpace: 'nowrap' }}>
                   {b.label}
                   {b.key === 'year' && <span style={{ marginLeft: '6px', background: '#30d158', color: 'white', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '10px' }}>2 MOS FREE</span>}
@@ -1278,18 +1398,20 @@ function SubscriptionSection({ profile, agentId, supabase, showToast }: {
                   disabled={busy !== null}
                   style={{ marginTop: 'auto', width: '100%', background: plan.featured ? '#c9963a' : '#1d1d1f', color: plan.featured ? '#1d1d1f' : 'white', border: 'none', borderRadius: '9px', padding: '9px', fontSize: '12px', fontWeight: '700', cursor: busy ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy && busy !== plan.tier ? 0.5 : 1 }}
                 >
-                  {busy === plan.tier ? 'Loading…' : plan.cta}
+                  {busy === plan.tier ? 'Loading…' : isFree ? plan.cta : (plan.tier === 'brokerage' ? plan.cta : `Renew ${plan.name}`)}
                 </button>
               </div>
             ))}
           </div>
-          <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '10px', fontStyle: 'italic' }}>
-            * 2-year prepay is a founding-member offer available for a limited time.
-          </div>
+          {OFFER_TWO_YEAR && (
+            <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '10px', fontStyle: 'italic' }}>
+              * 2-year prepay is a founding-member offer available for a limited time.
+            </div>
+          )}
         </>
       )}
 
-      {isPaid && (
+      {isPaid && !showPlans && (
         <>
           <div style={{ fontSize: '14px', color: '#1d1d1f', marginBottom: '4px' }}>
             <strong>Plan:</strong> {tier.charAt(0).toUpperCase() + tier.slice(1)}
@@ -1298,24 +1420,52 @@ function SubscriptionSection({ profile, agentId, supabase, showToast }: {
           <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '6px' }}>
             <strong>Status:</strong> {status === 'past_due'
               ? <span style={{ color: '#cc0000' }}>Payment failed — please update your card</span>
-              : canceledAt
-              ? `Canceled — access until ${formatPlanDate(periodEnd)}`
+              : pendingCancel
+              ? <span style={{ color: '#b84800' }}>Canceling — access until {formatPlanDate(periodEnd)}</span>
               : status === 'active' || status === 'trialing'
               ? 'Active'
               : (status || 'Unknown')}
           </div>
-          {periodEnd && !canceledAt && status !== 'past_due' && (
+          {periodEnd && !pendingCancel && status !== 'past_due' && (
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '14px' }}>
               {billing === 'two_year_prepay' ? <><strong>Access until:</strong> {formatPlanDate(periodEnd)}</> : <><strong>Renews on:</strong> {formatPlanDate(periodEnd)}</>}
             </div>
           )}
-          <button
-            onClick={openPortal}
-            disabled={busy !== null}
-            style={{ background: '#1d1d1f', color: 'white', border: 'none', borderRadius: '9px', padding: '10px 18px', fontSize: '13px', fontWeight: '700', cursor: busy ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy ? 0.6 : 1 }}
-          >
-            {busy === 'portal' ? 'Loading…' : 'Manage subscription →'}
-          </button>
+
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <button
+              onClick={openPortal}
+              disabled={busy !== null}
+              style={{ background: '#1d1d1f', color: 'white', border: 'none', borderRadius: '9px', padding: '10px 18px', fontSize: '13px', fontWeight: '700', cursor: busy ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy ? 0.6 : 1 }}
+            >
+              {busy === 'portal' ? 'Loading…' : 'Manage billing →'}
+            </button>
+            {pendingCancel ? (
+              <button onClick={() => cancelSub(true)} disabled={busy !== null} style={ghostBtn('#1d1d1f')}>
+                {busy === 'resume' ? '…' : 'Resume subscription'}
+              </button>
+            ) : canCancel && !confirmingCancel ? (
+              <button onClick={() => setConfirmingCancel(true)} disabled={busy !== null} style={ghostBtn('#cc0000')}>
+                Cancel subscription
+              </button>
+            ) : null}
+          </div>
+
+          {confirmingCancel && !pendingCancel && (
+            <div style={{ marginTop: '12px', background: '#fff0f0', border: '1px solid #ffcccc', borderRadius: '10px', padding: '12px 14px' }}>
+              <div style={{ fontSize: '12px', color: '#6e6e73', lineHeight: '1.5', marginBottom: '10px' }}>
+                You&apos;ll keep full access until <strong>{formatPlanDate(periodEnd)}</strong>. After that your plan won&apos;t renew and you won&apos;t be charged again. You can resume anytime before then.
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button onClick={() => cancelSub(false)} disabled={busy !== null} style={{ background: '#cc0000', color: 'white', border: 'none', borderRadius: '9px', padding: '9px 16px', fontSize: '13px', fontWeight: 700, cursor: busy ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy ? 0.6 : 1 }}>
+                  {busy === 'cancel' ? '…' : 'Yes, cancel'}
+                </button>
+                <button onClick={() => setConfirmingCancel(false)} disabled={busy !== null} style={{ background: '#f5f5f7', color: '#1d1d1f', border: 'none', borderRadius: '9px', padding: '9px 16px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  Keep my plan
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
