@@ -253,7 +253,7 @@ export default function Home() {
                 per: { monthly: '', annual: '', '2year': '' },
                 sub: { monthly: '', annual: '', '2year': '' },
                 description: 'For large brokerages',
-                features: ['Custom agent pricing', 'Unlimited everything', 'All Team features', 'White-label branding', 'Dedicated support', 'SLA + onboarding'],
+                features: ['Custom agent pricing', 'Unlimited everything', 'All Team features', 'Branded visitor emails', 'Dedicated support', 'SLA + onboarding'],
                 cta: 'Contact us', featured: false
               },
             ].map(tier => (

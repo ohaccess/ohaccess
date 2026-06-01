@@ -65,7 +65,7 @@ export async function PATCH(request: Request) {
   }
 
   const body = await request.json()
-  const update: Record<string, string> = {}
+  const update: Record<string, string | null> = {}
 
   if (typeof body.name === 'string') {
     const name = body.name.trim()
@@ -73,6 +73,16 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Team name must be 1–100 characters' }, { status: 400 })
     }
     update.name = name
+  }
+  if (body.logo_url !== undefined) {
+    const raw = typeof body.logo_url === 'string' ? body.logo_url.trim() : ''
+    if (raw === '') {
+      update.logo_url = null // empty input clears the logo
+    } else if (!/^https?:\/\/.+/i.test(raw) || raw.length > 2048) {
+      return NextResponse.json({ error: 'Logo must be a valid image URL (starting with https://)' }, { status: 400 })
+    } else {
+      update.logo_url = raw
+    }
   }
   if (body.primary_color !== undefined) {
     if (!isHexColor(body.primary_color)) {
@@ -101,11 +111,12 @@ export async function PATCH(request: Request) {
   // (the visitor registration page, dashboard chrome) reflect team branding.
   // The brokerages table isn't readable by the anonymous registration page,
   // but profiles already are — so we denormalize.
-  const colorMirror: Record<string, string> = {}
-  if (update.primary_color) colorMirror.primary_color = update.primary_color
-  if (update.accent_color) colorMirror.accent_color = update.accent_color
-  if (Object.keys(colorMirror).length > 0) {
-    await supabase.from('profiles').update(colorMirror).eq('brokerage_id', ctx.brokerageId)
+  const mirror: Record<string, string | null> = {}
+  if (update.primary_color) mirror.primary_color = update.primary_color
+  if (update.accent_color) mirror.accent_color = update.accent_color
+  if (update.logo_url !== undefined) mirror.logo_url = update.logo_url
+  if (Object.keys(mirror).length > 0) {
+    await supabase.from('profiles').update(mirror).eq('brokerage_id', ctx.brokerageId)
   }
 
   return NextResponse.json({ success: true })

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import TeamAdminPanel from './_components/TeamAdminPanel'
+import TeamActivityPanel from './_components/TeamActivityPanel'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,7 +15,7 @@ export default function Dashboard() {
   const [openHouses, setOpenHouses] = useState<any[]>([])
   const [visitors, setVisitors] = useState<any[]>([])
   const [selectedOH, setSelectedOH] = useState<any>(null)
-  const [view, setView] = useState<'dashboard' | 'new' | 'settings' | 'team'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'new' | 'settings' | 'team' | 'activity'>('dashboard')
   const [loading, setLoading] = useState(true)
   const [showCal, setShowCal] = useState(false)
   const [calDate, setCalDate] = useState(new Date())
@@ -66,13 +67,13 @@ export default function Dashboard() {
     }
     return false
   }
-  const navViews: Array<'dashboard' | 'new' | 'team' | 'settings'> = isTeamAdmin
-    ? ['dashboard', 'new', 'team', 'settings']
+  const navViews: Array<'dashboard' | 'new' | 'team' | 'activity' | 'settings'> = isTeamAdmin
+    ? ['dashboard', 'new', 'team', 'activity', 'settings']
     : ['dashboard', 'new', 'settings']
   const navLabel = (v: string) =>
-    v === 'dashboard' ? 'Dashboard' : v === 'new' ? 'New Open House' : v === 'team' ? 'Team' : 'Settings'
+    v === 'dashboard' ? 'Dashboard' : v === 'new' ? 'New Open House' : v === 'team' ? 'Team' : v === 'activity' ? 'Brokerage' : 'Settings'
   const navLabelMobile = (v: string) =>
-    v === 'dashboard' ? '📊 Dashboard' : v === 'new' ? '＋ New Open House' : v === 'team' ? '👥 Team' : '⚙️ Settings'
+    v === 'dashboard' ? '📊 Dashboard' : v === 'new' ? '＋ New Open House' : v === 'team' ? '👥 Team' : v === 'activity' ? '🏢 Brokerage' : '⚙️ Settings'
 
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
   const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
@@ -90,7 +91,7 @@ export default function Dashboard() {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
     const v = params.get('view')
-    if (v === 'settings' || v === 'new' || v === 'dashboard' || v === 'team') setView(v)
+    if (v === 'settings' || v === 'new' || v === 'dashboard' || v === 'team' || v === 'activity') setView(v)
     const checkout = params.get('checkout')
     if (checkout === 'success') {
       showToast('Subscription activated — welcome aboard!')
@@ -793,7 +794,16 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <label style={labelStyle}>Brokerage</label>
-                  <input style={inputStyle} type="text" placeholder="Premier Realty Group" value={profile?.brokerage || ''} onChange={e => setProfile({ ...profile, brokerage: e.target.value })} />
+                  {profile?.brokerage_id ? (
+                    <>
+                      <input style={{ ...inputStyle, background: '#ececf0', color: '#8e8e93', cursor: 'not-allowed' }} type="text" placeholder="Managed by your team" value={profile?.brokerage || ''} disabled readOnly />
+                      <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '4px' }}>
+                        🔒 Managed by your team.{isTeamAdmin ? ' Set the team name in the Team tab.' : ''}
+                      </div>
+                    </>
+                  ) : (
+                    <input style={inputStyle} type="text" placeholder="Premier Realty Group" value={profile?.brokerage || ''} onChange={e => setProfile({ ...profile, brokerage: e.target.value })} />
+                  )}
                 </div>
                 <div>
                   <label style={labelStyle}>Display Email (shown to visitors)</label>
@@ -914,6 +924,12 @@ export default function Dashboard() {
         {/* TEAM VIEW (team-lead only) */}
         {view === 'team' && isTeamAdmin && (
           <TeamAdminPanel supabase={supabase} showToast={showToast} />
+        )}
+
+        {/* BROKERAGE ACTIVITY VIEW (team-lead only) — every agent's open
+            houses + visitor logs across the whole brokerage. */}
+        {view === 'activity' && isTeamAdmin && (
+          <TeamActivityPanel supabase={supabase} showToast={showToast} primaryColor={primaryColor} accentColor={accentColor} />
         )}
 
       </div>
