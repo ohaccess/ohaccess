@@ -283,7 +283,7 @@ export async function POST(request: Request) {
               ${logoUrl ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; text-align: center;"><img src="${escapeHtml(logoUrl)}" style="max-height:80px;width:80%;object-fit:contain;" /></div>` : ''}
             </div>
             <div style="margin-top: 16px; padding: 12px; background: #f5f5f7; border-radius: 8px; font-size: 11px; color: #6e6e73; text-align: center; line-height: 1.6;">
-              By registering you agreed to the ohACCESS Terms of Service.<br/>
+              By registering you agreed to the ohACCESS <a href="https://ohaccess.com/terms" style="color: #6e6e73;">Terms of Service</a>.<br/>
               You consent to be contacted by the listing agent.<br/>
               Reply STOP to any text to opt out · <a href="https://ohaccess.com/privacy" style="color: #6e6e73;">Privacy Policy</a><br/>
               <em style="color: #6e6e73;">Heads up: opting out blocks access codes for all future ohACCESS open houses.</em>
