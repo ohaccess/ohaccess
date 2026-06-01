@@ -101,7 +101,7 @@ export default function Contact() {
 
             {[
               { emoji: '🏢', title: 'Built for teams', body: 'Manage all your agents from one admin dashboard. See every open house and visitor log across your entire brokerage.' },
-              { emoji: '🎨', title: 'Brokerage branding', body: 'Your logo, your colors, your brand — on every registration form and visitor email.' },
+              { emoji: '🎨', title: 'Brokerage branding', body: 'Your logo on every visitor email, plus your team colors carried across every agent\'s registration page.' },
               { emoji: '💰', title: 'Per-agent pricing', body: 'Pay only for the agents you have. Pricing scales with your team — from boutique brokerages to enterprise networks.' },
               { emoji: '📋', title: 'Centralized data', body: 'All visitor data flows into one place. Export to your CRM, share with your team, and track performance across all listings.' },
               { emoji: '🔒', title: 'Compliance ready', body: 'Built-in TCPA consent, DNC override language, and data sharing terms protect your brokerage from day one.' },
@@ -146,7 +146,7 @@ export default function Contact() {
 
                 <form onSubmit={handleSubmit}>
                   {[
-                    { label: 'Your Name', key: 'name', type: 'text', placeholder: 'David Sheehan', required: true },
+                    { label: 'Your Name', key: 'name', type: 'text', placeholder: 'David Ryan', required: true },
                     { label: 'Work Email', key: 'email', type: 'email', placeholder: 'david@brokerage.com', required: true },
                     { label: 'Brokerage Name', key: 'brokerage', type: 'text', placeholder: 'Premier Realty Group', required: true },
                   ].map(field => (

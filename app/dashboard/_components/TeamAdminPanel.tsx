@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface Member {
   id: string
@@ -55,9 +55,9 @@ export default function TeamAdminPanel({ supabase, showToast }: {
   const [inviteEmail, setInviteEmail] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const [name, setName] = useState('')
+  const [logo, setLogo] = useState('')
   const [primary, setPrimary] = useState('#1d1d1f')
   const [accent, setAccent] = useState('#0071e3')
-  const fileRef = useRef<HTMLInputElement>(null)
 
   const authHeaders = useCallback(async (): Promise<Record<string, string>> => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -73,6 +73,7 @@ export default function TeamAdminPanel({ supabase, showToast }: {
     setInvitations(json.invitations)
     setSeats(json.seats)
     setName(json.brokerage.name || '')
+    setLogo(json.brokerage.logo_url || '')
     setPrimary(json.brokerage.primary_color || '#1d1d1f')
     setAccent(json.brokerage.accent_color || '#0071e3')
     setLoading(false)
@@ -85,30 +86,11 @@ export default function TeamAdminPanel({ supabase, showToast }: {
     const res = await fetch('/api/team/settings', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
-      body: JSON.stringify({ name, primary_color: primary, accent_color: accent }),
+      body: JSON.stringify({ name, logo_url: logo, primary_color: primary, accent_color: accent }),
     })
     const json = await res.json()
     if (res.ok) { showToast('Team settings saved'); await load() }
     else showToast(json.error || 'Could not save settings', 'error')
-    setBusy(null)
-  }
-
-  const uploadLogo = async (file: File) => {
-    setBusy('logo')
-    const fd = new FormData()
-    fd.append('file', file)
-    const res = await fetch('/api/team/logo', { method: 'POST', headers: await authHeaders(), body: fd })
-    const json = await res.json()
-    if (res.ok) { showToast('Logo updated'); setBrokerage(b => b ? { ...b, logo_url: json.logo_url } : b) }
-    else showToast(json.error || 'Upload failed', 'error')
-    setBusy(null)
-  }
-
-  const removeLogo = async () => {
-    setBusy('logo')
-    const res = await fetch('/api/team/logo', { method: 'DELETE', headers: await authHeaders() })
-    if (res.ok) { showToast('Logo removed'); setBrokerage(b => b ? { ...b, logo_url: null } : b) }
-    else showToast('Could not remove logo', 'error')
     setBusy(null)
   }
 
@@ -216,23 +198,26 @@ export default function TeamAdminPanel({ supabase, showToast }: {
         <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px' }}>Team name</label>
         <input style={{ ...inputStyle, marginBottom: '16px' }} type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Premier Realty Team" />
 
-        <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px' }}>Team logo</label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          {brokerage.logo_url && (
-            <div style={{ background: '#f5f5f7', borderRadius: '8px', padding: '8px', border: '1px solid #d1d1d6', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '52px', minWidth: '90px' }}>
-              <img src={brokerage.logo_url} alt="Team logo" style={{ maxHeight: '60px', maxWidth: '140px', objectFit: 'contain' }} />
-            </div>
-          )}
-          <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style={{ display: 'none' }}
-            onChange={e => { const f = e.target.files?.[0]; if (f) uploadLogo(f); if (fileRef.current) fileRef.current.value = '' }} />
-          <button onClick={() => fileRef.current?.click()} disabled={busy !== null} style={{ ...btn('#1d1d1f'), opacity: busy ? 0.6 : 1 }}>
-            {busy === 'logo' ? 'Working…' : brokerage.logo_url ? 'Replace logo' : 'Upload logo'}
-          </button>
-          {brokerage.logo_url && (
-            <button onClick={removeLogo} disabled={busy !== null} style={{ background: 'none', border: '1px solid #d1d1d6', color: '#cc0000', borderRadius: '9px', padding: '10px 14px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Remove</button>
-          )}
+        <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px' }}>Team logo URL</label>
+        <input style={inputStyle} type="url" placeholder="https://yoursite.com/logo.png" value={logo} onChange={e => setLogo(e.target.value)} />
+        <div style={{ fontSize: '11px', color: '#aeaeb2', marginTop: '6px', marginBottom: logo ? '10px' : '18px' }}>
+          Paste a direct image URL (ending in .png, .jpg, or .svg). Leave blank to remove. Appears on every team member&apos;s visitor emails and registration forms.
         </div>
-        <div style={{ fontSize: '11px', color: '#aeaeb2', marginBottom: '18px' }}>PNG, JPEG, WebP, or SVG · max 2 MB</div>
+        {logo && (
+          <div style={{ marginBottom: '18px', background: '#f5f5f7', borderRadius: '8px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '52px', border: '1px solid #d1d1d6' }}>
+            <img
+              src={logo}
+              alt="Team logo preview"
+              style={{ maxHeight: '60px', maxWidth: '180px', objectFit: 'contain', display: 'block' }}
+              onError={e => {
+                const el = e.target as HTMLImageElement
+                el.style.display = 'none'
+                const parent = el.parentElement
+                if (parent) parent.innerHTML = '<span style="font-size:11px;color:#cc0000;">⚠️ Image could not load — check the URL</span>'
+              }}
+            />
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
           <div>
