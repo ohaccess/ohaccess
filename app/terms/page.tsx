@@ -140,7 +140,7 @@ export default function Terms() {
           </Section>
 
           <Section title="10. Intellectual Property">
-            All content, design, code, and materials on the ohACCESS platform are the exclusive property of ohACCESS, LLC and are protected by applicable intellectual property laws. The ohACCESS visitor verification mechanic is the subject of a provisional patent filing under David Ryan Sheehan. Unauthorized use, reproduction, or distribution of any ohACCESS materials is strictly prohibited.
+            All content, design, code, and materials on the ohACCESS platform are the exclusive property of ohACCESS, LLC and are protected by applicable intellectual property laws. The ohACCESS visitor verification mechanic is the subject of U.S. Provisional Patent Application No. 64/071,134. Unauthorized use, reproduction, or distribution of any ohACCESS materials is strictly prohibited.
           </Section>
 
           <Section title="11. Limitation of Liability">
