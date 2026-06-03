@@ -1,11 +1,5 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 export default function RegisterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
@@ -194,14 +188,17 @@ function ExpiredOpenHouse() {
 
   useEffect(() => {
     const fetchOpenHouse = async () => {
-      const { data, error } = await supabase
-        .from('open_houses')
-        .select('*, profiles(*)')
-        .eq('id', id)
-        .single()
-
-      if (!error && data) {
-        setOpenHouse(data)
+      // Fetch via a server route that returns ONLY safe display fields (no
+      // code words, no agent PII). The open_houses/profiles tables are locked
+      // down by RLS, so they must not be read with the public key here.
+      try {
+        const res = await fetch(`/api/open-house/${id}`)
+        if (res.ok) {
+          const data = await res.json()
+          setOpenHouse(data)
+        }
+      } catch {
+        // leave openHouse null -> ExpiredOpenHouse fallback renders
       }
       setLoading(false)
     }
