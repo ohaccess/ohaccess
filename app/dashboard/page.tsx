@@ -1155,9 +1155,21 @@ export default function Dashboard() {
               {/* Add to calendar — only when the open house has a scheduled time */}
               {qrModal.oh.start_at && qrModal.oh.end_at && (() => {
                 const z = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+                const tz = qrModal.oh.timezone
+                // Compact wall-clock stamp (YYYYMMDDTHHMMSS) in the property's tz.
+                const localStamp = (iso: string) => {
+                  const dtf = new Intl.DateTimeFormat('en-CA', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                  const p: Record<string, string> = {}
+                  for (const part of dtf.formatToParts(new Date(iso))) p[part.type] = part.value
+                  return `${p.year}${p.month}${p.day}T${p.hour}${p.minute}${p.second}`
+                }
                 const title = encodeURIComponent(`Open House — ${qrModal.oh.property_address || ''}`)
                 const loc = encodeURIComponent(qrModal.oh.property_address || '')
-                const gcal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${z(qrModal.oh.start_at)}/${z(qrModal.oh.end_at)}&location=${loc}`
+                // Anchor the event to the PROPERTY's timezone (ctz) so it reads at
+                // the scheduled local time no matter where it's added from.
+                const gcal = tz
+                  ? `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${localStamp(qrModal.oh.start_at)}/${localStamp(qrModal.oh.end_at)}&ctz=${encodeURIComponent(tz)}&location=${loc}`
+                  : `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${z(qrModal.oh.start_at)}/${z(qrModal.oh.end_at)}&location=${loc}`
                 const outlook = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${encodeURIComponent(qrModal.oh.start_at)}&enddt=${encodeURIComponent(qrModal.oh.end_at)}&location=${loc}&path=/calendar/action/compose&rru=addevent`
                 const ics = `/api/open-house/${qrModal.oh.id}/calendar`
                 const calBtn = { flex: 1, textAlign: 'center' as const, background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '8px', padding: '8px', fontSize: '12px', fontWeight: 600, textDecoration: 'none', fontFamily: "'Plus Jakarta Sans', sans-serif" }
