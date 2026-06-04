@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -50,4 +51,37 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       accent_color: agent?.accent_color ?? null,
     },
   })
+}
+
+// DELETE: remove an open house and ALL its child rows. Done server-side with
+// the service role because the children have foreign keys back to open_houses
+// (short_urls especially) and short_urls is locked to the service role by RLS —
+// a client-side delete can't clear them, which previously made deletes fail
+// silently with a FK violation. Verifies the caller owns the open house first.
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getAuthenticatedUser(request)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { id } = await params
+
+  const { data: oh } = await supabase
+    .from('open_houses')
+    .select('id, agent_id')
+    .eq('id', id)
+    .maybeSingle()
+  if (!oh) return NextResponse.json({ error: 'Open house not found' }, { status: 404 })
+  if (oh.agent_id !== user.id) {
+    return NextResponse.json({ error: 'That open house is not yours' }, { status: 403 })
+  }
+
+  // Delete children first (FK order), then the open house itself.
+  await supabase.from('short_urls').delete().eq('open_house_id', id)
+  await supabase.from('visitors').delete().eq('open_house_id', id)
+  const { error } = await supabase.from('open_houses').delete().eq('id', id)
+  if (error) {
+    console.error('Open house delete failed', error)
+    return NextResponse.json({ error: 'Could not delete open house' }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
 }
