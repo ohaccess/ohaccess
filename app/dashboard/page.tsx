@@ -1081,7 +1081,7 @@ export default function Dashboard() {
 
         {/* TEAM VIEW (team-lead only) */}
         {view === 'team' && isTeamAdmin && (
-          <TeamAdminPanel supabase={supabase} showToast={showToast} />
+          <TeamAdminPanel supabase={supabase} showToast={showToast} onSaved={() => loadProfile(user.id)} />
         )}
 
         {/* BROKERAGE ACTIVITY VIEW (team-lead only) — every agent's open

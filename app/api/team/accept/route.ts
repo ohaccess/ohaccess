@@ -78,6 +78,7 @@ export async function POST(request: Request) {
     role: invite.role,
     tier: brokerage?.tier ?? 'team',
   }
+  if (brokerage?.name) profileUpdate.brokerage = brokerage.name
   if (brokerage?.primary_color) profileUpdate.primary_color = brokerage.primary_color
   if (brokerage?.accent_color) profileUpdate.accent_color = brokerage.accent_color
   if (brokerage?.logo_url) profileUpdate.logo_url = brokerage.logo_url
