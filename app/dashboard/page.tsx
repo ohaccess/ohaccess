@@ -465,12 +465,20 @@ export default function Dashboard() {
   }
 
   const deleteOpenHouse = async (ohId: string) => {
-    await supabase.from('visitors').delete().eq('open_house_id', ohId)
-    await supabase.from('open_houses').delete().eq('id', ohId)
+    // Server-side cascade delete (clears short_urls + visitors, then the open
+    // house) — the client can't delete short_urls (locked by RLS), which is why
+    // a direct client delete failed silently on a FK violation.
+    const res = await fetch(`/api/open-house/${ohId}`, { method: 'DELETE', headers: await authHeaders() })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      showToast(json.error || 'Could not delete open house. Please try again.', 'error')
+      return
+    }
     setDeleteConfirm(null)
     setSelectedOH(null)
     setVisitors([])
     await loadOpenHouses(user.id)
+    showToast('Open house deleted.')
   }
 
   const toggleVerified = async (visitorId: string, current: boolean) => {
