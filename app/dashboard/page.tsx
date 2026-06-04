@@ -37,6 +37,9 @@ export default function Dashboard() {
     bathrooms: '',
     square_footage: '',
     open_house_date: '',
+    open_house_date_iso: '',
+    open_house_start_time: '',
+    open_house_end_time: '',
     open_house_hours: '',
     listing_url: '',
     code_word: '',
@@ -233,9 +236,37 @@ export default function Dashboard() {
   const resetForm = () => setForm({
     street_address: '', address_2: '', city: '', state: '', zip_code: '',
     listing_price: '', bedrooms: '', bathrooms: '',
-    square_footage: '', open_house_date: '',
+    square_footage: '', open_house_date: '', open_house_date_iso: '',
+    open_house_start_time: '', open_house_end_time: '',
     open_house_hours: '', listing_url: '', code_word: '', code_word_email: ''
   })
+
+  // 24h "13:30" -> "1:30 PM" for the human-readable hours string.
+  const fmtTime12 = (t: string) => {
+    if (!t) return ''
+    const [h, m] = t.split(':').map(Number)
+    const ampm = h >= 12 ? 'PM' : 'AM'
+    const h12 = h % 12 === 0 ? 12 : h % 12
+    return `${h12}:${String(m).padStart(2, '0')} ${ampm}`
+  }
+  // ISO date (yyyy-mm-dd) + 24h time (HH:MM) -> UTC instant, interpreted in the
+  // agent's local timezone. Used for scheduling the report and calendar links.
+  const localToISO = (dateIso: string, time: string): string | null => {
+    if (!dateIso || !time) return null
+    const d = new Date(`${dateIso}T${time}`)
+    return isNaN(d.getTime()) ? null : d.toISOString()
+  }
+  // Split a stored UTC instant back into the local yyyy-mm-dd + HH:MM (for edit).
+  const isoToLocalParts = (iso: string | null | undefined) => {
+    if (!iso) return { date: '', time: '' }
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return { date: '', time: '' }
+    const p = (n: number) => String(n).padStart(2, '0')
+    return {
+      date: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
+      time: `${p(d.getHours())}:${p(d.getMinutes())}`,
+    }
+  }
 
   const authHeaders = async (): Promise<HeadersInit> => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -288,6 +319,18 @@ export default function Dashboard() {
       showToast('Please fill in the address, city, state, and both code words (text + email).')
       return
     }
+    if (!form.open_house_date_iso || !form.open_house_start_time || !form.open_house_end_time) {
+      showToast('Please choose the open house date, start time, and end time.')
+      return
+    }
+    const startAt = localToISO(form.open_house_date_iso, form.open_house_start_time)
+    const endAt = localToISO(form.open_house_date_iso, form.open_house_end_time)
+    if (!startAt || !endAt || endAt <= startAt) {
+      showToast('The end time needs to be after the start time.')
+      return
+    }
+    const hoursText = `${fmtTime12(form.open_house_start_time)} – ${fmtTime12(form.open_house_end_time)}`
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
     const { data, error } = await supabase.from('open_houses').insert({
       agent_id: user.id,
@@ -302,7 +345,10 @@ export default function Dashboard() {
       bathrooms: form.bathrooms,
       square_footage: form.square_footage,
       open_house_date: form.open_house_date,
-      open_house_hours: form.open_house_hours,
+      open_house_hours: hoursText,
+      start_at: startAt,
+      end_at: endAt,
+      timezone: tz,
       listing_url: form.listing_url,
       code_word: form.code_word,
       code_word_email: form.code_word_email,
@@ -315,6 +361,8 @@ export default function Dashboard() {
   const startEdit = (oh: any) => {
     if (guardLocked()) return
     setEditingOH(oh)
+    const start = isoToLocalParts(oh.start_at)
+    const end = isoToLocalParts(oh.end_at)
     setForm({
       street_address: oh.street_address || '',
       address_2: oh.address_2 || '',
@@ -326,6 +374,9 @@ export default function Dashboard() {
       bathrooms: oh.bathrooms || '',
       square_footage: oh.square_footage || '',
       open_house_date: oh.open_house_date || '',
+      open_house_date_iso: start.date,
+      open_house_start_time: start.time,
+      open_house_end_time: end.time,
       open_house_hours: oh.open_house_hours || '',
       listing_url: oh.listing_url || '',
       code_word: oh.code_word || '',
@@ -340,7 +391,21 @@ export default function Dashboard() {
       showToast('Please fill in the address, city, state, and both code words (text + email).')
       return
     }
+    if (!form.open_house_date_iso || !form.open_house_start_time || !form.open_house_end_time) {
+      showToast('Please choose the open house date, start time, and end time.')
+      return
+    }
+    const startAt = localToISO(form.open_house_date_iso, form.open_house_start_time)
+    const endAt = localToISO(form.open_house_date_iso, form.open_house_end_time)
+    if (!startAt || !endAt || endAt <= startAt) {
+      showToast('The end time needs to be after the start time.')
+      return
+    }
+    const hoursText = `${fmtTime12(form.open_house_start_time)} – ${fmtTime12(form.open_house_end_time)}`
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
+    // Editing the time clears report_sent_at so a rescheduled open house can
+    // still trigger a fresh post-event report.
     const { error } = await supabase.from('open_houses').update({
       property_address: fullAddress,
       street_address: form.street_address,
@@ -353,7 +418,11 @@ export default function Dashboard() {
       bathrooms: form.bathrooms,
       square_footage: form.square_footage,
       open_house_date: form.open_house_date,
-      open_house_hours: form.open_house_hours,
+      open_house_hours: hoursText,
+      start_at: startAt,
+      end_at: endAt,
+      timezone: tz,
+      report_sent_at: null,
       listing_url: form.listing_url,
       code_word: form.code_word,
       code_word_email: form.code_word_email,
@@ -744,7 +813,7 @@ export default function Dashboard() {
                         {Array.from({ length: daysInMonth }).map((_, i) => {
                           const day = i + 1
                           return (
-                            <div key={day} onClick={() => { const d = new Date(calDate.getFullYear(), calDate.getMonth(), day); setForm({ ...form, open_house_date: `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${day}, ${d.getFullYear()}` }); setShowCal(false) }}
+                            <div key={day} onClick={() => { const d = new Date(calDate.getFullYear(), calDate.getMonth(), day); const p = (n: number) => String(n).padStart(2, '0'); setForm({ ...form, open_house_date: `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${day}, ${d.getFullYear()}`, open_house_date_iso: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(day)}` }); setShowCal(false) }}
                               style={{ fontSize: '12px', textAlign: 'center', padding: '5px 2px', borderRadius: '6px', cursor: 'pointer', color: '#1d1d1f' }}
                               onMouseEnter={e => (e.currentTarget.style.background = '#e8e8ed')}
                               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -757,7 +826,12 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <label style={labelStyle}>Open House Hours</label>
-                  <input style={inputStyle} type="text" placeholder="1:00 PM – 4:00 PM" value={form.open_house_hours} onChange={e => setForm({ ...form, open_house_hours: e.target.value })} />
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input style={inputStyle} type="time" value={form.open_house_start_time} onChange={e => setForm({ ...form, open_house_start_time: e.target.value })} />
+                    <span style={{ color: '#6e6e73', fontSize: '13px' }}>to</span>
+                    <input style={inputStyle} type="time" value={form.open_house_end_time} onChange={e => setForm({ ...form, open_house_end_time: e.target.value })} />
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#aeaeb2', marginTop: '4px' }}>We&apos;ll email you a visitor report about 30 minutes after it ends.</div>
                 </div>
                 <div>
                   <label style={labelStyle}>Listing URL (your site, Zill*w, H*omes)</label>
@@ -1047,6 +1121,27 @@ export default function Dashboard() {
                   📤 Share QR Code
                 </button>
               )}
+
+              {/* Add to calendar — only when the open house has a scheduled time */}
+              {qrModal.oh.start_at && qrModal.oh.end_at && (() => {
+                const z = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+                const title = encodeURIComponent(`Open House — ${qrModal.oh.property_address || ''}`)
+                const loc = encodeURIComponent(qrModal.oh.property_address || '')
+                const gcal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${z(qrModal.oh.start_at)}/${z(qrModal.oh.end_at)}&location=${loc}`
+                const outlook = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${encodeURIComponent(qrModal.oh.start_at)}&enddt=${encodeURIComponent(qrModal.oh.end_at)}&location=${loc}&path=/calendar/action/compose&rru=addevent`
+                const ics = `/api/open-house/${qrModal.oh.id}/calendar`
+                const calBtn = { flex: 1, textAlign: 'center' as const, background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '8px', padding: '8px', fontSize: '12px', fontWeight: 600, textDecoration: 'none', fontFamily: "'Plus Jakarta Sans', sans-serif" }
+                return (
+                  <div style={{ borderTop: '1px solid #f2f2f7', paddingTop: '12px', marginTop: '2px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>📅 Add to calendar</div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <a href={gcal} target="_blank" rel="noopener noreferrer" style={calBtn}>Google</a>
+                      <a href={outlook} target="_blank" rel="noopener noreferrer" style={calBtn}>Outlook</a>
+                      <a href={ics} style={calBtn}>Apple / .ics</a>
+                    </div>
+                  </div>
+                )
+              })()}
 
               <button onClick={() => setQrModal(null)} style={{ background: 'none', border: 'none', color: '#aeaeb2', fontSize: '13px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '4px' }}>
                 Close
