@@ -51,11 +51,31 @@ export async function GET(request: Request) {
       if (c.types.includes('administrative_area_level_1')) state = c.short_name
       if (c.types.includes('postal_code')) zip = c.long_name
     })
+
+    // Resolve the property's timezone from its coordinates so open-house times
+    // are anchored to the property, not whoever is scheduling. Requires the
+    // "Time Zone API" to be enabled on the Google key; on any failure we just
+    // omit it and the client falls back to the scheduler's device timezone.
+    let timezone: string | null = null
+    const loc = data.results[0].geometry?.location
+    if (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') {
+      try {
+        const tzRes = await fetch(
+          `https://maps.googleapis.com/maps/api/timezone/json?location=${loc.lat},${loc.lng}&timestamp=${Math.floor(Date.now() / 1000)}&key=${apiKey}`
+        )
+        const tzData = await tzRes.json()
+        if (tzData.status === 'OK' && tzData.timeZoneId) timezone = tzData.timeZoneId
+      } catch {
+        // ignore — client falls back to device timezone
+      }
+    }
+
     return NextResponse.json({
       street: `${streetNumber} ${route}`.trim(),
       city,
       state,
-      zip
+      zip,
+      timezone,
     })
   }
 

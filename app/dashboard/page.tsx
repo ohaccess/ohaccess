@@ -41,6 +41,7 @@ export default function Dashboard() {
     open_house_start_time: '',
     open_house_end_time: '',
     open_house_hours: '',
+    property_timezone: '',
     listing_url: '',
     code_word: '',
     code_word_email: ''
@@ -238,7 +239,7 @@ export default function Dashboard() {
     listing_price: '', bedrooms: '', bathrooms: '',
     square_footage: '', open_house_date: '', open_house_date_iso: '',
     open_house_start_time: '', open_house_end_time: '',
-    open_house_hours: '', listing_url: '', code_word: '', code_word_email: ''
+    open_house_hours: '', property_timezone: '', listing_url: '', code_word: '', code_word_email: ''
   })
 
   // 24h "13:30" -> "1:30 PM" for the human-readable hours string.
@@ -249,23 +250,50 @@ export default function Dashboard() {
     const h12 = h % 12 === 0 ? 12 : h % 12
     return `${h12}:${String(m).padStart(2, '0')} ${ampm}`
   }
-  // ISO date (yyyy-mm-dd) + 24h time (HH:MM) -> UTC instant, interpreted in the
-  // agent's local timezone. Used for scheduling the report and calendar links.
-  const localToISO = (dateIso: string, time: string): string | null => {
-    if (!dateIso || !time) return null
-    const d = new Date(`${dateIso}T${time}`)
-    return isNaN(d.getTime()) ? null : d.toISOString()
+  // How many minutes `tz` is ahead of UTC at `date` (handles DST).
+  const tzOffsetMinutes = (tz: string, date: Date): number => {
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hourCycle: 'h23',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    })
+    const parts: Record<string, string> = {}
+    for (const p of dtf.formatToParts(date)) parts[p.type] = p.value
+    const asUTC = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second)
+    return (asUTC - date.getTime()) / 60000
   }
-  // Split a stored UTC instant back into the local yyyy-mm-dd + HH:MM (for edit).
-  const isoToLocalParts = (iso: string | null | undefined) => {
+  // Wall-clock date (yyyy-mm-dd) + time (HH:MM) -> UTC instant, interpreted in
+  // `tz` (the property's timezone). Falls back to the device timezone if no tz.
+  const wallToISO = (dateIso: string, time: string, tz?: string): string | null => {
+    if (!dateIso || !time) return null
+    if (!tz) {
+      const d = new Date(`${dateIso}T${time}`)
+      return isNaN(d.getTime()) ? null : d.toISOString()
+    }
+    const naive = new Date(`${dateIso}T${time}:00Z`).getTime()
+    if (isNaN(naive)) return null
+    const offset = tzOffsetMinutes(tz, new Date(naive))
+    return new Date(naive - offset * 60000).toISOString()
+  }
+  // Stored UTC instant -> wall-clock yyyy-mm-dd + HH:MM in `tz` (for edit).
+  const isoToLocalParts = (iso: string | null | undefined, tz?: string) => {
     if (!iso) return { date: '', time: '' }
     const d = new Date(iso)
     if (isNaN(d.getTime())) return { date: '', time: '' }
     const p = (n: number) => String(n).padStart(2, '0')
-    return {
-      date: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
-      time: `${p(d.getHours())}:${p(d.getMinutes())}`,
+    if (!tz) {
+      return {
+        date: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
+        time: `${p(d.getHours())}:${p(d.getMinutes())}`,
+      }
     }
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hourCycle: 'h23',
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+    })
+    const parts: Record<string, string> = {}
+    for (const part of dtf.formatToParts(d)) parts[part.type] = part.value
+    return { date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}` }
   }
 
   const authHeaders = async (): Promise<HeadersInit> => {
@@ -303,7 +331,8 @@ export default function Dashboard() {
           street_address: data.street,
           city: data.city,
           state: data.state,
-          zip_code: data.zip
+          zip_code: data.zip,
+          property_timezone: data.timezone || ''
         }))
       }
       setShowSuggestions(false)
@@ -323,14 +352,14 @@ export default function Dashboard() {
       showToast('Please choose the open house date, start time, and end time.')
       return
     }
-    const startAt = localToISO(form.open_house_date_iso, form.open_house_start_time)
-    const endAt = localToISO(form.open_house_date_iso, form.open_house_end_time)
+    const tz = form.property_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+    const startAt = wallToISO(form.open_house_date_iso, form.open_house_start_time, tz)
+    const endAt = wallToISO(form.open_house_date_iso, form.open_house_end_time, tz)
     if (!startAt || !endAt || endAt <= startAt) {
       showToast('The end time needs to be after the start time.')
       return
     }
     const hoursText = `${fmtTime12(form.open_house_start_time)} – ${fmtTime12(form.open_house_end_time)}`
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
     const { data, error } = await supabase.from('open_houses').insert({
       agent_id: user.id,
@@ -361,8 +390,8 @@ export default function Dashboard() {
   const startEdit = (oh: any) => {
     if (guardLocked()) return
     setEditingOH(oh)
-    const start = isoToLocalParts(oh.start_at)
-    const end = isoToLocalParts(oh.end_at)
+    const start = isoToLocalParts(oh.start_at, oh.timezone)
+    const end = isoToLocalParts(oh.end_at, oh.timezone)
     setForm({
       street_address: oh.street_address || '',
       address_2: oh.address_2 || '',
@@ -378,6 +407,7 @@ export default function Dashboard() {
       open_house_start_time: start.time,
       open_house_end_time: end.time,
       open_house_hours: oh.open_house_hours || '',
+      property_timezone: oh.timezone || '',
       listing_url: oh.listing_url || '',
       code_word: oh.code_word || '',
       code_word_email: oh.code_word_email || ''
@@ -395,14 +425,14 @@ export default function Dashboard() {
       showToast('Please choose the open house date, start time, and end time.')
       return
     }
-    const startAt = localToISO(form.open_house_date_iso, form.open_house_start_time)
-    const endAt = localToISO(form.open_house_date_iso, form.open_house_end_time)
+    const tz = form.property_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+    const startAt = wallToISO(form.open_house_date_iso, form.open_house_start_time, tz)
+    const endAt = wallToISO(form.open_house_date_iso, form.open_house_end_time, tz)
     if (!startAt || !endAt || endAt <= startAt) {
       showToast('The end time needs to be after the start time.')
       return
     }
     const hoursText = `${fmtTime12(form.open_house_start_time)} – ${fmtTime12(form.open_house_end_time)}`
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
     // Editing the time clears report_sent_at so a rescheduled open house can
     // still trigger a fresh post-event report.
