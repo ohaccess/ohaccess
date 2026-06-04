@@ -115,6 +115,10 @@ export async function PATCH(request: Request) {
   if (update.primary_color) mirror.primary_color = update.primary_color
   if (update.accent_color) mirror.accent_color = update.accent_color
   if (update.logo_url !== undefined) mirror.logo_url = update.logo_url
+  // Mirror the team name onto each member's profile `brokerage` field so the
+  // (read-only) Brokerage field in Settings and visitor emails show the team
+  // name for everyone, including the admin.
+  if (update.name) mirror.brokerage = update.name
   if (Object.keys(mirror).length > 0) {
     await supabase.from('profiles').update(mirror).eq('brokerage_id', ctx.brokerageId)
   }

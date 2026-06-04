@@ -43,9 +43,10 @@ const btn = (bg: string) => ({
   fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
 })
 
-export default function TeamAdminPanel({ supabase, showToast }: {
+export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
   supabase: any
   showToast: (m: string, t?: 'success' | 'error') => void
+  onSaved?: () => void | Promise<void>
 }) {
   const [loading, setLoading] = useState(true)
   const [brokerage, setBrokerage] = useState<Brokerage | null>(null)
@@ -89,7 +90,7 @@ export default function TeamAdminPanel({ supabase, showToast }: {
       body: JSON.stringify({ name, logo_url: logo, primary_color: primary, accent_color: accent }),
     })
     const json = await res.json()
-    if (res.ok) { showToast('Team settings saved'); await load() }
+    if (res.ok) { showToast('Team settings saved'); await load(); await onSaved?.() }
     else showToast(json.error || 'Could not save settings', 'error')
     setBusy(null)
   }
