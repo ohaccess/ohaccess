@@ -180,6 +180,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to save visitor' }, { status: 500 })
     }
 
+    // CRM push via Zapier — best-effort. Only call verified Zapier "Catch Hook"
+    // URLs (https://hooks.zapier.com/) to avoid SSRF, and never let a slow or
+    // dead webhook delay/break the visitor's registration.
+    const zapHook = agent?.zapier_webhook_url
+    if (typeof zapHook === 'string' && zapHook.startsWith('https://hooks.zapier.com/')) {
+      try {
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), 3000)
+        await fetch(zapHook, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            first_name: firstName,
+            last_name: lastName,
+            email,
+            phone,
+            purchasing_timeline: purchasingTimeline,
+            registered_at: new Date().toISOString(),
+            property_address: openHouse.property_address,
+            agent_name: agent?.full_name || '',
+            visitor_url: `https://ohaccess.com/visitor/${visitorRow.id}`,
+          }),
+        })
+        clearTimeout(timer)
+      } catch { /* best effort — ignore webhook failures */ }
+    }
+
     // Generate short URLs (best-effort — if creation fails we just skip the link)
     let listingShortUrl: string | null = null
     let agentShortUrl: string | null = null

@@ -503,6 +503,11 @@ export default function Dashboard() {
   }
 
   const saveSettings = async () => {
+    const hook = (profile?.zapier_webhook_url || '').trim()
+    if (hook && !hook.startsWith('https://hooks.zapier.com/')) {
+      showToast('Zapier webhook must start with https://hooks.zapier.com/', 'error')
+      return
+    }
     const { error } = await supabase.from('profiles').update({
       full_name: profile?.full_name,
       brokerage: profile?.brokerage,
@@ -515,6 +520,7 @@ export default function Dashboard() {
       primary_color: profile?.primary_color,
       accent_color: profile?.accent_color,
       landing_page_url: profile?.landing_page_url,
+      zapier_webhook_url: hook || null,
     }).eq('id', user.id)
     if (error) { showToast('Error saving: ' + error.message); return }
     showToast('Settings saved!')
@@ -1084,6 +1090,23 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+
+            <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>CRM integration (Zapier)</div>
+              <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
+                Send every new visitor straight into your CRM — Follow Up Boss, kvCORE, a Google Sheet, and 7,000+ apps — through Zapier.
+              </div>
+              <label style={labelStyle}>Zapier webhook URL</label>
+              <input style={inputStyle} type="url" placeholder="https://hooks.zapier.com/hooks/catch/..." value={profile?.zapier_webhook_url || ''} onChange={e => setProfile({ ...profile, zapier_webhook_url: e.target.value })} />
+              <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.7' }}>
+                <strong style={{ color: '#1d1d1f' }}>Set it up in ~5 minutes:</strong><br />
+                1. In Zapier, create a Zap with the trigger <strong>&quot;Webhooks by Zapier → Catch Hook.&quot;</strong><br />
+                2. Copy the custom webhook URL Zapier gives you, paste it above, and click Save settings.<br />
+                3. In Zapier, add your CRM as the action (e.g. <strong>Follow Up Boss → Create Lead</strong>) and map the fields we send: first/last name, email, phone, timeline, property address, and a link to the visitor.<br />
+                4. Turn the Zap on — new visitors now flow into your CRM automatically.
+                <div style={{ marginTop: '8px', fontStyle: 'italic' }}>Note: Zapier&apos;s &quot;Catch Hook&quot; trigger requires a paid Zapier plan.</div>
+              </div>
+            </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
               <button onClick={saveSettings} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
