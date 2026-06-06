@@ -26,10 +26,19 @@ function LoginForm() {
   const intervalParam = searchParams.get('interval')
   const hasCheckoutIntent =
     (planParam === 'pro' || planParam === 'team') && !!intervalParam
+  // Where to send the user after login (e.g. a deep link to a visitor page).
+  // Only same-origin relative paths are honored, to avoid open-redirects.
+  const nextParam = searchParams.get('next')
+  const safeNext =
+    nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : null
 
   // After login succeeds, either start Stripe Checkout (if user came from a pricing CTA)
   // or send them to the dashboard as usual.
   const proceedAfterAuth = async () => {
+    if (safeNext) {
+      window.location.href = safeNext
+      return
+    }
     if (!hasCheckoutIntent) {
       window.location.href = '/dashboard'
       return

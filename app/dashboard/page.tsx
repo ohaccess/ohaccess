@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import TeamAdminPanel from './_components/TeamAdminPanel'
 import TeamActivityPanel from './_components/TeamActivityPanel'
+import VisitorDetail from '@/app/_components/VisitorDetail'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [savedSettings, setSavedSettings] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [qrModal, setQrModal] = useState<any>(null)
+  const [visitorModal, setVisitorModal] = useState<any>(null)
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [form, setForm] = useState({
@@ -740,7 +742,11 @@ export default function Dashboard() {
                       <tbody>
                         {visitors.map((v, i) => (
                           <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.first_name} {v.last_name}</td>
+                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
+                              <button onClick={() => setVisitorModal(v)} style={{ background: 'none', border: 'none', padding: 0, color: accentColor, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px', textAlign: 'left' }}>
+                                {v.first_name} {v.last_name}{v.notes ? ' 📝' : ''}
+                              </button>
+                            </td>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}</td>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.email}</td>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
@@ -1197,6 +1203,29 @@ export default function Dashboard() {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* VISITOR DETAIL PANEL — opens when a visitor name is clicked */}
+      {visitorModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px' }}
+          onClick={() => setVisitorModal(null)}>
+          <div style={{ background: 'white', borderRadius: '24px', padding: '24px', maxWidth: '440px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4px' }}>
+              <button onClick={() => setVisitorModal(null)} style={{ background: 'none', border: 'none', color: '#aeaeb2', fontSize: '20px', cursor: 'pointer', lineHeight: 1, padding: '2px 6px' }}>✕</button>
+            </div>
+            <VisitorDetail
+              visitor={visitorModal}
+              supabase={supabase}
+              primaryColor={primaryColor}
+              accentColor={accentColor}
+              onChange={(fields) => {
+                setVisitors(prev => prev.map(v => v.id === visitorModal.id ? { ...v, ...fields } : v))
+                setVisitorModal((vm: any) => vm ? { ...vm, ...fields } : vm)
+              }}
+            />
           </div>
         </div>
       )}

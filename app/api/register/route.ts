@@ -161,7 +161,7 @@ export async function POST(request: Request) {
     }
 
     // Save visitor
-    const { error: visitorError } = await supabase
+    const { data: visitorRow, error: visitorError } = await supabase
       .from('visitors')
       .insert({
         open_house_id: openHouseId,
@@ -173,8 +173,10 @@ export async function POST(request: Request) {
         purchasing_timeline: purchasingTimeline,
         source: 'ohaccess'
       })
+      .select('id')
+      .single()
 
-    if (visitorError) {
+    if (visitorError || !visitorRow) {
       return NextResponse.json({ error: 'Failed to save visitor' }, { status: 500 })
     }
 
@@ -296,9 +298,21 @@ export async function POST(request: Request) {
     // ③ AGENT SMS ALERT — sent to every agent (paid or within their trial
     // cap). The trial limit is enforced above, so reaching here means the
     // visitor row was allowed; the agent should always be notified.
+    // Include a tap-through link to the visitor page where the agent can
+    // verify and add notes (best-effort short link).
     if (agent?.phone) {
+      let visitorShortUrl: string | null = null
+      try {
+        visitorShortUrl = await createShortUrl(
+          `https://ohaccess.com/visitor/${visitorRow.id}`,
+          openHouse.agent_id,
+          openHouseId,
+          'visitor'
+        )
+      } catch { /* skip link on failure */ }
+
       await twilioClient.messages.create({
-        body: `ohACCESS Alert: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${phone}, ${email}, Timeline: ${purchasingTimeline}, Time: ${now}`,
+        body: `ohACCESS Alert: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${phone}, ${email}, Timeline: ${purchasingTimeline}, Time: ${now}${visitorShortUrl ? ` — Verify & add notes: ${visitorShortUrl}` : ''}`,
         from: process.env.TWILIO_PHONE_NUMBER!,
         to: agent.phone
       })
