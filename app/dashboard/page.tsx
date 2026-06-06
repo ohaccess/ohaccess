@@ -436,9 +436,15 @@ export default function Dashboard() {
     }
     const hoursText = `${fmtTime12(form.open_house_start_time)} – ${fmtTime12(form.open_house_end_time)}`
     const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
-    // Editing the time clears report_sent_at so a rescheduled open house can
-    // still trigger a fresh post-event report.
-    const { error } = await supabase.from('open_houses').update({
+    // Only clear report_sent_at when the SCHEDULE actually changed — a reschedule
+    // should re-trigger the post-event report, but editing any other field must
+    // not re-send a report that already went out. Compare by instant (DB and
+    // toISOString() use different string formats for the same time).
+    const timesChanged =
+      !editingOH.start_at || !editingOH.end_at ||
+      Date.parse(startAt) !== Date.parse(editingOH.start_at) ||
+      Date.parse(endAt) !== Date.parse(editingOH.end_at)
+    const update: Record<string, unknown> = {
       property_address: fullAddress,
       street_address: form.street_address,
       address_2: form.address_2,
@@ -454,11 +460,12 @@ export default function Dashboard() {
       start_at: startAt,
       end_at: endAt,
       timezone: tz,
-      report_sent_at: null,
       listing_url: form.listing_url,
       code_word: form.code_word,
       code_word_email: form.code_word_email,
-    }).eq('id', editingOH.id)
+    }
+    if (timesChanged) update.report_sent_at = null
+    const { error } = await supabase.from('open_houses').update(update).eq('id', editingOH.id)
     if (error) { showToast('Error updating: ' + error.message); return }
     setEditingOH(null)
     await loadOpenHouses(user.id)

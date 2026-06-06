@@ -105,8 +105,20 @@ async function getOrCreatePrice(productId, { lookup_key, unit_amount, recurring,
       nickname,
       transfer_lookup_key: true,
     })
-    await stripe.prices.update(old.id, { active: false })
+    try {
+      await stripe.prices.update(old.id, { active: false })
+    } catch (e) {
+      // The new price exists and now owns the lookup_key, but the old one is
+      // still ACTIVE — if its id is still in .env.local, checkout keeps charging
+      // the OLD amount. Fail loudly so the operator archives it by hand instead
+      // of silently shipping the wrong price.
+      throw new Error(
+        `Created new price ${replacement.id} for "${lookup_key}" but FAILED to archive the old price ${old.id} (${e.message}). ` +
+        `The OLD price is still ACTIVE — archive it in the Stripe dashboard, then set the ${lookup_key} env var to ${replacement.id}.`
+      )
+    }
     console.log(`Created price:    ${lookup_key} (${replacement.id}) — archived old ${old.id}`)
+    console.log(`  ⚠️  ACTION REQUIRED: update .env.local so its ${lookup_key} env var = ${replacement.id} (else checkout keeps using the old price).`)
     return replacement
   }
   const created = await stripe.prices.create({
