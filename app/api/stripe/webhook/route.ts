@@ -111,30 +111,59 @@ async function ensureTeamBrokerage(profileId: string): Promise<string | null> {
 
 // Mirror the team owner's subscription status onto their brokerage row so
 // members can see team billing health (drives the "contact your admin"
-// banner). When the team subscription is terminally gone, cut members loose:
-// drop them to free and unlink from the brokerage — KEEPING their account and
-// all their data so they can start their own plan without reinventing the
-// wheel. The owner's own downgrade is handled by the caller.
-async function propagateTeamStatus(ownerProfileId: string, status: string) {
+// banner). When the team's OWN subscription terminally ends, cut members loose:
+// drop them to free, unlink from the brokerage, and clear the team's mirrored
+// branding — KEEPING their account + all their data so they can start their own
+// plan. `subId` MUST be the Stripe subscription id of the event; we only act
+// when it matches the brokerage's recorded team subscription, so a different
+// subscription on the same customer (or a stale/out-of-order event for an
+// already-replaced subscription) can never tear down a live, paid team.
+async function propagateTeamStatus(ownerProfileId: string, subId: string | null, status: string) {
   const { data: brokerage } = await supabase
     .from('brokerages')
-    .select('id')
+    .select('id, stripe_subscription_id')
     .eq('owner_id', ownerProfileId)
     .maybeSingle()
   if (!brokerage) return // not a team owner — nothing to propagate
 
-  await supabase
-    .from('brokerages')
-    .update({ subscription_status: status })
-    .eq('id', brokerage.id)
+  // Ignore events for a subscription that isn't this team's (unless we haven't
+  // recorded one yet, in which case the first event adopts it).
+  const isThisTeamsSub = !brokerage.stripe_subscription_id || brokerage.stripe_subscription_id === subId
+  if (!isThisTeamsSub) return
 
-  const terminal = new Set(['canceled', 'unpaid', 'incomplete_expired'])
+  // Only 'canceled'/'incomplete_expired' are terminal. 'unpaid' is a recoverable
+  // dunning state (Stripe keeps retrying) — keep members on the team and let the
+  // payment-failure banner prompt the admin, rather than irreversibly evicting
+  // a team that may still pay.
+  const terminal = new Set(['canceled', 'incomplete_expired'])
+  const liveStatuses = new Set(['active', 'trialing', 'past_due'])
+
+  const brokerageUpdate: Record<string, string | null> = { subscription_status: status }
+  // Record/refresh the team's subscription id while alive (so future terminal
+  // events can be matched), and CLEAR it on teardown so a later re-subscribe —
+  // which always has a brand-new sub id — is re-adopted instead of being
+  // rejected by the isThisTeamsSub check above.
+  if (liveStatuses.has(status) && subId) brokerageUpdate.stripe_subscription_id = subId
+  if (terminal.has(status)) brokerageUpdate.stripe_subscription_id = null
+  await supabase.from('brokerages').update(brokerageUpdate).eq('id', brokerage.id)
+
   if (terminal.has(status)) {
+    // Members → independent free agents, KEEPING their account, data, and their
+    // own branding. (We don't null branding: those columns are per-agent and a
+    // member may have set their own colors/logo, so erasing them is destructive.)
     await supabase
       .from('profiles')
       .update({ tier: 'free', brokerage_id: null, role: 'agent' })
       .eq('brokerage_id', brokerage.id)
       .neq('id', ownerProfileId)
+    // Owner → consistent free state (role/link cleared). Keep the brokerage row
+    // so a later re-subscribe reuses it (ensureTeamBrokerage re-links on the
+    // owner_id unique-violation path; the nulled sub id lets propagateTeamStatus
+    // re-adopt the new subscription).
+    await supabase
+      .from('profiles')
+      .update({ role: 'agent', brokerage_id: null })
+      .eq('id', ownerProfileId)
   }
 }
 
@@ -229,7 +258,7 @@ async function handleSubscriptionChange(sub: Stripe.Subscription) {
     if (liveStatuses.has(sub.status)) {
       await ensureTeamBrokerage(profileId)
     }
-    await propagateTeamStatus(profileId, sub.status)
+    await propagateTeamStatus(profileId, sub.id, sub.status)
   }
 }
 
@@ -245,9 +274,10 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
     subscription_status: 'canceled',
     subscription_canceled_at: new Date().toISOString(),
   })
-  // If this was a team owner, mark the team canceled and cut members loose.
-  // No-op for solo subscribers.
-  await propagateTeamStatus(profileId, 'canceled')
+  // If this deleted subscription was the team's, mark the team canceled and cut
+  // members loose. propagateTeamStatus no-ops for solo subscribers and for a
+  // non-team subscription that happens to share the owner's customer.
+  await propagateTeamStatus(profileId, sub.id, 'canceled')
 }
 
 export async function POST(request: Request) {

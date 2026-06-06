@@ -27,10 +27,20 @@ function LoginForm() {
   const hasCheckoutIntent =
     (planParam === 'pro' || planParam === 'team') && !!intervalParam
   // Where to send the user after login (e.g. a deep link to a visitor page).
-  // Only same-origin relative paths are honored, to avoid open-redirects.
+  // Only same-origin relative paths are honored, to avoid open-redirects. Must
+  // start with a single "/" and contain no backslash or control character:
+  // browsers normalize "\"→"/" and STRIP tab/newline/CR, so "/\evil",
+  // "//evil", and "/<TAB>//evil.com" (e.g. ?next=/%09//evil.com) would all
+  // otherwise resolve to the off-site protocol-relative "//evil.com".
   const nextParam = searchParams.get('next')
-  const safeNext =
-    nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : null
+  // Only honor same-origin relative paths after login. Reject "//", any
+  // backslash (browsers normalize it to "/"), and any control char (browsers
+  // strip tab/newline/CR) — all of which can resolve to an off-site
+  // "//evil.com". Char-code check avoids regex/backslash escaping pitfalls.
+  const isSafeNext = (p: string) =>
+    p.startsWith('/') && !p.startsWith('//') &&
+    [...p].every((ch) => { const c = ch.charCodeAt(0); return c >= 0x20 && c !== 0x5c })
+  const safeNext = nextParam && isSafeNext(nextParam) ? nextParam : null
 
   // After login succeeds, either start Stripe Checkout (if user came from a pricing CTA)
   // or send them to the dashboard as usual.
