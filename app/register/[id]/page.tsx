@@ -297,7 +297,7 @@ function ExpiredOpenHouse() {
     marginTop: '13px'
   }
 
-  const timelines = ['0–1 Month', '2–3 Months', '3–6 Months', '6–12 Months', '12+ Months']
+  const timelines = ['0–3 Months', '3–6 Months', '6–12 Months', '12+ Months']
 
   return (
     <main style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: '40px' }}>
@@ -411,8 +411,7 @@ function ExpiredOpenHouse() {
                     cursor: 'pointer',
                     fontSize: '12px',
                     color: selectedTimeline === t ? primaryColor : '#6e6e73',
-                    fontWeight: selectedTimeline === t ? '600' : '400',
-                    gridColumn: t === '12+ Months' ? '1 / -1' : 'auto'
+                    fontWeight: selectedTimeline === t ? '600' : '400'
                   }}
                 >
                   <div style={{
@@ -466,7 +465,7 @@ function ExpiredOpenHouse() {
             )}
 
             {/* TOS */}
-            <div style={{ marginTop: '14px', padding: '12px 14px', background: '#f5f5f7', borderRadius: '10px', fontSize: '11px', color: '#6e6e73', lineHeight: '1.65', textAlign: 'center', border: '1px solid #e5e5ea' }}>
+            <div style={{ marginTop: '14px', padding: '13px 15px', background: '#f5f5f7', borderRadius: '10px', fontSize: '12px', color: '#48484a', lineHeight: '1.6', textAlign: 'left', border: '1px solid #e5e5ea' }}>
               By entering your number and tapping <strong style={{ color: '#1d1d1f' }}>Request Access Code</strong>, you agree to receive a one-time SMS access code from ohACCESS to enter this open house. Message &amp; data rates may apply. Reply STOP to opt out, HELP for help.<br /><br />
               You also agree to the{' '}
               <a href="/terms" style={{ color: '#1d1d1f', fontWeight: '700', textDecoration: 'underline' }}>
@@ -476,7 +475,7 @@ function ExpiredOpenHouse() {
 
             {/* Alternative to acceptance — preserves the validity of consent
                 by giving the visitor an obvious, named alternative path. */}
-            <div style={{ marginTop: '10px', padding: '12px 14px', background: '#fdfaf3', borderRadius: '10px', fontSize: '11px', color: '#6e6e73', lineHeight: '1.65', textAlign: 'center', border: '1px solid #ead9ad' }}>
+            <div style={{ marginTop: '10px', padding: '13px 15px', background: '#fdfaf3', borderRadius: '10px', fontSize: '12px', color: '#48484a', lineHeight: '1.6', textAlign: 'left', border: '1px solid #ead9ad' }}>
               <strong style={{ color: '#1d1d1f' }}>Prefer not to register?</strong> You&apos;re welcome to schedule a private showing of this — or any — listed property with the buyer&apos;s agent of your choice. Under NAR rules effective August&nbsp;17,&nbsp;2024, you&apos;ll need a written buyer representation agreement with that agent before they can show you the home; most agents can prepare one on the spot. ohACCESS registration is required only to attend today&apos;s open house.
             </div>
           </>
