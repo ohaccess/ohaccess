@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { IMPERSONATION_KEY } from '../_components/ImpersonationBanner'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -130,6 +131,58 @@ export default function AdminDashboard() {
   const selectTab = (t: Tab) => {
     setTab(t)
     setQuery('')
+  }
+
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null)
+
+  const impersonate = async (agent: Agent) => {
+    if (
+      !window.confirm(
+        `Sign in as ${agent.name}?\n\nYou'll be taken to their dashboard and any changes will affect THEIR account. A banner will let you return to admin at any time.`
+      )
+    )
+      return
+    setImpersonatingId(agent.id)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = '/login'
+      return
+    }
+    const res = await fetch('/api/admin/impersonate', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId: agent.id }),
+    })
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      window.alert(`Could not sign in as agent: ${j.error || res.status}`)
+      setImpersonatingId(null)
+      return
+    }
+    const { token_hash, email, name } = await res.json()
+    // Save the admin session BEFORE swapping, so the banner can restore it.
+    localStorage.setItem(
+      IMPERSONATION_KEY,
+      JSON.stringify({
+        adminAccessToken: session.access_token,
+        adminRefreshToken: session.refresh_token,
+        agentName: name,
+        agentEmail: email,
+      })
+    )
+    const { error } = await supabase.auth.verifyOtp({ token_hash, type: 'magiclink' })
+    if (error) {
+      localStorage.removeItem(IMPERSONATION_KEY)
+      window.alert(`Could not sign in as agent: ${error.message}`)
+      setImpersonatingId(null)
+      return
+    }
+    window.location.href = '/dashboard'
   }
 
   useEffect(() => {
@@ -356,7 +409,9 @@ export default function AdminDashboard() {
 
           {/* Panels */}
           {tab === 'overview' && <Overview data={data} setTab={selectTab} />}
-          {tab === 'agents' && <AgentsTable rows={filteredAgents} />}
+          {tab === 'agents' && (
+            <AgentsTable rows={filteredAgents} onImpersonate={impersonate} impersonatingId={impersonatingId} />
+          )}
           {tab === 'openhouses' && <OpenHousesTable rows={filteredOpenHouses} />}
           {tab === 'visitors' && <VisitorsTable rows={filteredVisitors} />}
         </>
@@ -512,7 +567,15 @@ function tierBadge(tier: string, status: string) {
   return <Badge text="free" color={SUB} bg="#f0f0f2" />
 }
 
-function AgentsTable({ rows }: { rows: Agent[] }) {
+function AgentsTable({
+  rows,
+  onImpersonate,
+  impersonatingId,
+}: {
+  rows: Agent[]
+  onImpersonate: (a: Agent) => void
+  impersonatingId: string | null
+}) {
   return (
     <TableShell>
       <thead>
@@ -523,10 +586,11 @@ function AgentsTable({ rows }: { rows: Agent[] }) {
           <th style={thR}>Open Houses</th>
           <th style={thR}>Visitors</th>
           <th style={th}>Joined</th>
+          <th style={thR}></th>
         </tr>
       </thead>
       <tbody>
-        {rows.length === 0 && <EmptyRow span={6} text="No agents match." />}
+        {rows.length === 0 && <EmptyRow span={7} text="No agents match." />}
         {rows.map((a) => (
           <tr key={a.id} style={{ borderTop: `1px solid ${BORDER}` }}>
             <td style={td}>
@@ -538,6 +602,25 @@ function AgentsTable({ rows }: { rows: Agent[] }) {
             <td style={tdR}>{a.openHouseCount}</td>
             <td style={tdR}>{a.visitorCount}</td>
             <td style={tdSub}>{fmtDate(a.created_at)}</td>
+            <td style={{ ...tdR, whiteSpace: 'nowrap' }}>
+              <button
+                onClick={() => onImpersonate(a)}
+                disabled={impersonatingId === a.id}
+                style={{
+                  background: '#f5f5f7',
+                  color: INK,
+                  border: '1px solid #d1d1d6',
+                  borderRadius: 8,
+                  padding: '6px 12px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: impersonatingId === a.id ? 'default' : 'pointer',
+                  opacity: impersonatingId === a.id ? 0.6 : 1,
+                }}
+              >
+                {impersonatingId === a.id ? 'Signing in…' : 'Sign in as'}
+              </button>
+            </td>
           </tr>
         ))}
       </tbody>
