@@ -261,6 +261,7 @@ export default function AdminDashboard() {
   }, [data, q])
 
   return (
+    <div style={{ background: '#ffffff', color: INK, minHeight: '100vh', width: '100%' }}>
     <main
       style={{
         maxWidth: 1200,
@@ -417,6 +418,7 @@ export default function AdminDashboard() {
         </>
       )}
     </main>
+    </div>
   )
 }
 
