@@ -185,6 +185,55 @@ export default function AdminDashboard() {
     window.location.href = '/dashboard'
   }
 
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const deleteAccount = async (agent: Agent) => {
+    const typed = window.prompt(
+      `⚠️ PERMANENTLY DELETE this account?\n\n` +
+        `${agent.name} (${agent.email})\n` +
+        `This will also delete their ${agent.openHouseCount} open house(s) and ${agent.visitorCount} visitor(s). ` +
+        `This cannot be undone.\n\n` +
+        `To confirm, type the agent's email exactly:`
+    )
+    if (typed == null) return
+    if (typed.trim().toLowerCase() !== agent.email.toLowerCase()) {
+      window.alert('Email did not match — nothing was deleted.')
+      return
+    }
+    setDeletingId(agent.id)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = '/login'
+      return
+    }
+    const res = await fetch('/api/admin/delete-account', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId: agent.id, confirmEmail: agent.email }),
+    })
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      window.alert(`Could not delete account: ${j.error || res.status}`)
+      setDeletingId(null)
+      return
+    }
+    const { deleted: d } = await res.json()
+    window.alert(
+      `Deleted ${d.name}.\n` +
+        `Removed ${d.openHouses} open house(s) and ${d.visitors} visitor(s).` +
+        (d.brokeragesDeleted
+          ? `\nAlso removed ${d.brokeragesDeleted} team/brokerage and detached ${d.membersDetached} member(s).`
+          : '')
+    )
+    setDeletingId(null)
+    refresh()
+  }
+
   useEffect(() => {
     let cancelled = false
     const run = async () => {
@@ -411,7 +460,13 @@ export default function AdminDashboard() {
           {/* Panels */}
           {tab === 'overview' && <Overview data={data} setTab={selectTab} />}
           {tab === 'agents' && (
-            <AgentsTable rows={filteredAgents} onImpersonate={impersonate} impersonatingId={impersonatingId} />
+            <AgentsTable
+              rows={filteredAgents}
+              onImpersonate={impersonate}
+              impersonatingId={impersonatingId}
+              onDelete={deleteAccount}
+              deletingId={deletingId}
+            />
           )}
           {tab === 'openhouses' && <OpenHousesTable rows={filteredOpenHouses} />}
           {tab === 'visitors' && <VisitorsTable rows={filteredVisitors} />}
@@ -573,10 +628,14 @@ function AgentsTable({
   rows,
   onImpersonate,
   impersonatingId,
+  onDelete,
+  deletingId,
 }: {
   rows: Agent[]
   onImpersonate: (a: Agent) => void
   impersonatingId: string | null
+  onDelete: (a: Agent) => void
+  deletingId: string | null
 }) {
   return (
     <TableShell>
@@ -605,23 +664,42 @@ function AgentsTable({
             <td style={tdR}>{a.visitorCount}</td>
             <td style={tdSub}>{fmtDate(a.created_at)}</td>
             <td style={{ ...tdR, whiteSpace: 'nowrap' }}>
-              <button
-                onClick={() => onImpersonate(a)}
-                disabled={impersonatingId === a.id}
-                style={{
-                  background: '#f5f5f7',
-                  color: INK,
-                  border: '1px solid #d1d1d6',
-                  borderRadius: 8,
-                  padding: '6px 12px',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: impersonatingId === a.id ? 'default' : 'pointer',
-                  opacity: impersonatingId === a.id ? 0.6 : 1,
-                }}
-              >
-                {impersonatingId === a.id ? 'Signing in…' : 'Sign in as'}
-              </button>
+              <div style={{ display: 'inline-flex', gap: 8 }}>
+                <button
+                  onClick={() => onImpersonate(a)}
+                  disabled={impersonatingId === a.id || deletingId === a.id}
+                  style={{
+                    background: '#f5f5f7',
+                    color: INK,
+                    border: '1px solid #d1d1d6',
+                    borderRadius: 8,
+                    padding: '6px 12px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: impersonatingId === a.id ? 'default' : 'pointer',
+                    opacity: impersonatingId === a.id ? 0.6 : 1,
+                  }}
+                >
+                  {impersonatingId === a.id ? 'Signing in…' : 'Sign in as'}
+                </button>
+                <button
+                  onClick={() => onDelete(a)}
+                  disabled={deletingId === a.id || impersonatingId === a.id}
+                  style={{
+                    background: 'white',
+                    color: '#cc0000',
+                    border: '1px solid #f0c0c0',
+                    borderRadius: 8,
+                    padding: '6px 12px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: deletingId === a.id ? 'default' : 'pointer',
+                    opacity: deletingId === a.id ? 0.6 : 1,
+                  }}
+                >
+                  {deletingId === a.id ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
             </td>
           </tr>
         ))}
