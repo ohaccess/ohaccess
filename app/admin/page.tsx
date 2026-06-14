@@ -234,6 +234,46 @@ export default function AdminDashboard() {
     refresh()
   }
 
+  const [deletingOHId, setDeletingOHId] = useState<string | null>(null)
+
+  const deleteOpenHouse = async (oh: OpenHouse) => {
+    if (
+      !window.confirm(
+        `Delete this open house?\n\n` +
+          `${oh.address}\n` +
+          `Agent: ${oh.agentName}\n\n` +
+          `This will also delete its ${oh.visitorCount} visitor(s). This cannot be undone.`
+      )
+    )
+      return
+    setDeletingOHId(oh.id)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = '/login'
+      return
+    }
+    const res = await fetch('/api/admin/delete-open-house', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ openHouseId: oh.id }),
+    })
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      window.alert(`Could not delete open house: ${j.error || res.status}`)
+      setDeletingOHId(null)
+      return
+    }
+    const { deleted: d } = await res.json()
+    window.alert(`Deleted "${d.address}" and its ${d.visitors} visitor(s).`)
+    setDeletingOHId(null)
+    refresh()
+  }
+
   useEffect(() => {
     let cancelled = false
     const run = async () => {
@@ -468,7 +508,9 @@ export default function AdminDashboard() {
               deletingId={deletingId}
             />
           )}
-          {tab === 'openhouses' && <OpenHousesTable rows={filteredOpenHouses} />}
+          {tab === 'openhouses' && (
+            <OpenHousesTable rows={filteredOpenHouses} onDelete={deleteOpenHouse} deletingId={deletingOHId} />
+          )}
           {tab === 'visitors' && <VisitorsTable rows={filteredVisitors} />}
         </>
       )}
@@ -708,7 +750,15 @@ function AgentsTable({
   )
 }
 
-function OpenHousesTable({ rows }: { rows: OpenHouse[] }) {
+function OpenHousesTable({
+  rows,
+  onDelete,
+  deletingId,
+}: {
+  rows: OpenHouse[]
+  onDelete: (o: OpenHouse) => void
+  deletingId: string | null
+}) {
   return (
     <TableShell>
       <thead>
@@ -719,10 +769,11 @@ function OpenHousesTable({ rows }: { rows: OpenHouse[] }) {
           <th style={th}>Status</th>
           <th style={th}>Code Word</th>
           <th style={thR}>Visitors</th>
+          <th style={thR}></th>
         </tr>
       </thead>
       <tbody>
-        {rows.length === 0 && <EmptyRow span={6} text="No open houses match." />}
+        {rows.length === 0 && <EmptyRow span={7} text="No open houses match." />}
         {rows.map((o) => (
           <tr key={o.id} style={{ borderTop: `1px solid ${BORDER}` }}>
             <td style={td}>
@@ -743,6 +794,25 @@ function OpenHousesTable({ rows }: { rows: OpenHouse[] }) {
             </td>
             <td style={{ ...td, fontFamily: 'monospace' }}>{o.code_word || '—'}</td>
             <td style={tdR}>{o.visitorCount}</td>
+            <td style={{ ...tdR, whiteSpace: 'nowrap' }}>
+              <button
+                onClick={() => onDelete(o)}
+                disabled={deletingId === o.id}
+                style={{
+                  background: 'white',
+                  color: '#cc0000',
+                  border: '1px solid #f0c0c0',
+                  borderRadius: 8,
+                  padding: '6px 12px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: deletingId === o.id ? 'default' : 'pointer',
+                  opacity: deletingId === o.id ? 0.6 : 1,
+                }}
+              >
+                {deletingId === o.id ? 'Deleting…' : 'Delete'}
+              </button>
+            </td>
           </tr>
         ))}
       </tbody>
