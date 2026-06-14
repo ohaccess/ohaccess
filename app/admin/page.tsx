@@ -33,6 +33,7 @@ type Agent = {
   billing_interval: string
   current_period_end: string | null
   created_at: string
+  last_sign_in_at: string | null
   openHouseCount: number
   visitorCount: number
 }
@@ -98,6 +99,7 @@ const fmtDateTime = (iso: string | null) =>
         minute: '2-digit',
       })
     : '—'
+const fmtLogin = (iso: string | null) => (iso ? fmtDateTime(iso) : 'Never')
 
 function downloadCSV(filename: string, headers: string[], rows: (string | number)[][]) {
   const esc = (v: string | number) => {
@@ -529,7 +531,7 @@ function exportCurrent(
   if (tab === 'agents') {
     downloadCSV(
       'ohaccess-agents.csv',
-      ['Name', 'Email', 'Brokerage', 'Tier', 'Role', 'Subscription', 'Billing', 'Open Houses', 'Visitors', 'Joined'],
+      ['Name', 'Email', 'Brokerage', 'Tier', 'Role', 'Subscription', 'Billing', 'Open Houses', 'Visitors', 'Last Login', 'Joined'],
       agents.map((a) => [
         a.name,
         a.email,
@@ -540,6 +542,7 @@ function exportCurrent(
         a.billing_interval,
         a.openHouseCount,
         a.visitorCount,
+        fmtLogin(a.last_sign_in_at),
         fmtDate(a.created_at),
       ])
     )
@@ -688,12 +691,13 @@ function AgentsTable({
           <th style={th}>Plan</th>
           <th style={thR}>Open Houses</th>
           <th style={thR}>Visitors</th>
+          <th style={th}>Last Login</th>
           <th style={th}>Joined</th>
           <th style={thR}></th>
         </tr>
       </thead>
       <tbody>
-        {rows.length === 0 && <EmptyRow span={7} text="No agents match." />}
+        {rows.length === 0 && <EmptyRow span={8} text="No agents match." />}
         {rows.map((a) => (
           <tr key={a.id} style={{ borderTop: `1px solid ${BORDER}` }}>
             <td style={td}>
@@ -704,6 +708,7 @@ function AgentsTable({
             <td style={td}>{tierBadge(a.tier, a.subscription_status)}</td>
             <td style={tdR}>{a.openHouseCount}</td>
             <td style={tdR}>{a.visitorCount}</td>
+            <td style={tdSub}>{fmtLogin(a.last_sign_in_at)}</td>
             <td style={tdSub}>{fmtDate(a.created_at)}</td>
             <td style={{ ...tdR, whiteSpace: 'nowrap' }}>
               <div style={{ display: 'inline-flex', gap: 8 }}>

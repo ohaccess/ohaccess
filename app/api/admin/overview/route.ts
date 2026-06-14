@@ -98,6 +98,15 @@ export async function GET(request: Request) {
   const openHouses = (openHousesRes.data || []) as OpenHouseRow[]
   const visitors = (visitorsRes.data || []) as VisitorRow[]
 
+  // Last-login times live on the auth records, not in profiles.
+  const lastSignIn = new Map<string, string | null>()
+  for (let page = 1; ; page++) {
+    const { data: list, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 })
+    if (error || !list?.users?.length) break
+    for (const u of list.users) lastSignIn.set(u.id, u.last_sign_in_at || null)
+    if (list.users.length < 1000) break
+  }
+
   const now = Date.now()
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000
 
@@ -128,10 +137,20 @@ export async function GET(request: Request) {
     if (oh.agent_id) openHousesByAgent.set(oh.agent_id, (openHousesByAgent.get(oh.agent_id) || 0) + 1)
   }
 
-  // Classify an open house as past or upcoming/present
+  // Start of "today" (server tz) for day-level comparison of legacy dates.
+  const startOfToday = new Date(now)
+  startOfToday.setHours(0, 0, 0, 0)
+
+  // Classify an open house as past or upcoming/present.
   const isPastOpenHouse = (oh: OpenHouseRow): boolean => {
     if (oh.end_at) return new Date(oh.end_at).getTime() < now
     if (oh.start_at) return new Date(oh.start_at).getTime() < now
+    // Legacy rows have no machine-readable time — fall back to the free-text
+    // date (e.g. "Sunday, May 24, 2026"). Past if its day is before today.
+    if (oh.open_house_date) {
+      const t = Date.parse(oh.open_house_date)
+      if (!Number.isNaN(t)) return t < startOfToday.getTime()
+    }
     return (oh.status || '').toLowerCase() === 'archived'
   }
 
@@ -147,6 +166,7 @@ export async function GET(request: Request) {
     billing_interval: p.billing_interval || '',
     current_period_end: p.current_period_end,
     created_at: p.created_at,
+    last_sign_in_at: lastSignIn.get(p.id) || null,
     openHouseCount: openHousesByAgent.get(p.id) || 0,
     visitorCount: visitorsByAgent.get(p.id) || 0,
   }))
