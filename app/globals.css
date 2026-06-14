@@ -12,10 +12,16 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/*
+ * ohACCESS is a light-only app — every page uses fixed light-theme colors.
+ * We intentionally keep the light palette even when the OS is in dark mode,
+ * so dark text never lands on a dark background. (Previously this block
+ * flipped the background to near-black, hiding text on several pages.)
+ */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
   }
 }
 
