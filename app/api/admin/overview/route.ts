@@ -55,7 +55,6 @@ type VisitorRow = {
   purchasing_timeline: string | null
   verified: boolean | null
   registered_at: string | null
-  created_at: string
 }
 
 const PAYING_STATUSES = new Set(['active', 'trialing', 'past_due'])
@@ -85,7 +84,7 @@ export async function GET(request: Request) {
     supabase
       .from('visitors')
       .select(
-        'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, verified, registered_at, created_at'
+        'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, verified, registered_at'
       )
       .order('registered_at', { ascending: false }),
   ])
@@ -178,7 +177,7 @@ export async function GET(request: Request) {
     phone: v.phone || '',
     purchasing_timeline: v.purchasing_timeline || '',
     verified: !!v.verified,
-    registered_at: v.registered_at || v.created_at,
+    registered_at: v.registered_at || '',
     openHouseId: v.open_house_id || '',
     openHouseAddress: v.open_house_id ? ohAddress.get(v.open_house_id) || '—' : '—',
     agentName: v.agent_id ? agentName.get(v.agent_id) || 'Unknown' : 'Unknown',
