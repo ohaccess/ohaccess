@@ -632,6 +632,64 @@ const td: React.CSSProperties = { padding: '11px 14px', color: INK, fontSize: 13
 const tdR: React.CSSProperties = { ...td, textAlign: 'right' }
 const tdSub: React.CSSProperties = { ...td, color: SUB }
 
+// ---- sorting ----
+type SortDir = 'asc' | 'desc'
+type SortState = { key: string; dir: SortDir }
+
+function useSortable(defaultKey: string, defaultDir: SortDir = 'asc') {
+  const [state, setState] = useState<SortState>({ key: defaultKey, dir: defaultDir })
+  const onSort = (k: string) =>
+    setState((s) => (s.key === k ? { key: k, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key: k, dir: 'asc' }))
+  return { state, onSort }
+}
+
+type Sortable = string | number | boolean | null
+
+function applySort<T>(rows: T[], get: (r: T) => Sortable, dir: SortDir): T[] {
+  const m = dir === 'asc' ? 1 : -1
+  return [...rows].sort((x, y) => {
+    const a = get(x)
+    const b = get(y)
+    const an = a === null || a === undefined || a === ''
+    const bn = b === null || b === undefined || b === ''
+    if (an && bn) return 0
+    if (an) return 1 // blanks always sort last, regardless of direction
+    if (bn) return -1
+    let r: number
+    if (typeof a === 'number' && typeof b === 'number') r = a - b
+    else if (typeof a === 'boolean' && typeof b === 'boolean') r = a === b ? 0 : a ? 1 : -1
+    else r = String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' })
+    return r * m
+  })
+}
+
+function SortTh({
+  label,
+  k,
+  state,
+  onSort,
+  align,
+}: {
+  label: string
+  k: string
+  state: SortState
+  onSort: (k: string) => void
+  align?: 'right'
+}) {
+  const active = state.key === k
+  return (
+    <th
+      onClick={() => onSort(k)}
+      style={{ ...(align === 'right' ? thR : th), cursor: 'pointer', userSelect: 'none' }}
+    >
+      {label}
+      <span style={{ marginLeft: 4, fontSize: 10, color: active ? INK : '#c7c7cc' }}>
+        {active ? (state.dir === 'asc' ? '▲' : '▼') : '↕'}
+      </span>
+    </th>
+  )
+}
+
 function TableShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ background: 'white', border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden' }}>
@@ -669,6 +727,16 @@ function tierBadge(tier: string, status: string) {
   return <Badge text="free" color={SUB} bg="#f0f0f2" />
 }
 
+const AGENT_ACC: Record<string, (a: Agent) => Sortable> = {
+  name: (a) => a.name,
+  brokerage: (a) => a.brokerage,
+  plan: (a) => a.subscription_status || a.tier,
+  openHouseCount: (a) => a.openHouseCount,
+  visitorCount: (a) => a.visitorCount,
+  lastLogin: (a) => (a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : null),
+  joined: (a) => new Date(a.created_at).getTime(),
+}
+
 function AgentsTable({
   rows,
   onImpersonate,
@@ -682,23 +750,25 @@ function AgentsTable({
   onDelete: (a: Agent) => void
   deletingId: string | null
 }) {
+  const { state, onSort } = useSortable('joined', 'desc')
+  const sorted = useMemo(() => applySort(rows, AGENT_ACC[state.key], state.dir), [rows, state])
   return (
     <TableShell>
       <thead>
         <tr style={{ background: '#f5f5f7' }}>
-          <th style={th}>Agent</th>
-          <th style={th}>Brokerage</th>
-          <th style={th}>Plan</th>
-          <th style={thR}>Open Houses</th>
-          <th style={thR}>Visitors</th>
-          <th style={th}>Last Login</th>
-          <th style={th}>Joined</th>
+          <SortTh label="Agent" k="name" state={state} onSort={onSort} />
+          <SortTh label="Brokerage" k="brokerage" state={state} onSort={onSort} />
+          <SortTh label="Plan" k="plan" state={state} onSort={onSort} />
+          <SortTh label="Open Houses" k="openHouseCount" state={state} onSort={onSort} align="right" />
+          <SortTh label="Visitors" k="visitorCount" state={state} onSort={onSort} align="right" />
+          <SortTh label="Last Login" k="lastLogin" state={state} onSort={onSort} />
+          <SortTh label="Joined" k="joined" state={state} onSort={onSort} />
           <th style={thR}></th>
         </tr>
       </thead>
       <tbody>
-        {rows.length === 0 && <EmptyRow span={8} text="No agents match." />}
-        {rows.map((a) => (
+        {sorted.length === 0 && <EmptyRow span={8} text="No agents match." />}
+        {sorted.map((a) => (
           <tr key={a.id} style={{ borderTop: `1px solid ${BORDER}` }}>
             <td style={td}>
               <div style={{ fontWeight: 600 }}>{a.name}</div>
@@ -755,6 +825,20 @@ function AgentsTable({
   )
 }
 
+const OH_ACC: Record<string, (o: OpenHouse) => Sortable> = {
+  address: (o) => o.address,
+  agentName: (o) => o.agentName,
+  when: (o) =>
+    o.start_at
+      ? new Date(o.start_at).getTime()
+      : o.open_house_date && !Number.isNaN(Date.parse(o.open_house_date))
+      ? Date.parse(o.open_house_date)
+      : new Date(o.created_at).getTime(),
+  status: (o) => (o.isPast ? 1 : 0),
+  code_word: (o) => o.code_word,
+  visitorCount: (o) => o.visitorCount,
+}
+
 function OpenHousesTable({
   rows,
   onDelete,
@@ -764,22 +848,24 @@ function OpenHousesTable({
   onDelete: (o: OpenHouse) => void
   deletingId: string | null
 }) {
+  const { state, onSort } = useSortable('when', 'desc')
+  const sorted = useMemo(() => applySort(rows, OH_ACC[state.key], state.dir), [rows, state])
   return (
     <TableShell>
       <thead>
         <tr style={{ background: '#f5f5f7' }}>
-          <th style={th}>Listing</th>
-          <th style={th}>Agent</th>
-          <th style={th}>When</th>
-          <th style={th}>Status</th>
-          <th style={th}>Code Word</th>
-          <th style={thR}>Visitors</th>
+          <SortTh label="Listing" k="address" state={state} onSort={onSort} />
+          <SortTh label="Agent" k="agentName" state={state} onSort={onSort} />
+          <SortTh label="When" k="when" state={state} onSort={onSort} />
+          <SortTh label="Status" k="status" state={state} onSort={onSort} />
+          <SortTh label="Code Word" k="code_word" state={state} onSort={onSort} />
+          <SortTh label="Visitors" k="visitorCount" state={state} onSort={onSort} align="right" />
           <th style={thR}></th>
         </tr>
       </thead>
       <tbody>
-        {rows.length === 0 && <EmptyRow span={7} text="No open houses match." />}
-        {rows.map((o) => (
+        {sorted.length === 0 && <EmptyRow span={7} text="No open houses match." />}
+        {sorted.map((o) => (
           <tr key={o.id} style={{ borderTop: `1px solid ${BORDER}` }}>
             <td style={td}>
               <div style={{ fontWeight: 600 }}>{o.address}</div>
@@ -825,23 +911,42 @@ function OpenHousesTable({
   )
 }
 
+const TIMELINE_RANK: Record<string, number> = {
+  '0–1 Month': 1,
+  '2–3 Months': 2,
+  '3–6 Months': 3,
+  '6–12 Months': 4,
+  '12+ Months': 5,
+}
+const V_ACC: Record<string, (v: Visitor) => Sortable> = {
+  name: (v) => v.name,
+  contact: (v) => v.email,
+  timeline: (v) => TIMELINE_RANK[v.purchasing_timeline] ?? 99,
+  openHouse: (v) => v.openHouseAddress,
+  agent: (v) => v.agentName,
+  verified: (v) => v.verified,
+  registered: (v) => (v.registered_at ? new Date(v.registered_at).getTime() : null),
+}
+
 function VisitorsTable({ rows }: { rows: Visitor[] }) {
+  const { state, onSort } = useSortable('registered', 'desc')
+  const sorted = useMemo(() => applySort(rows, V_ACC[state.key], state.dir), [rows, state])
   return (
     <TableShell>
       <thead>
         <tr style={{ background: '#f5f5f7' }}>
-          <th style={th}>Visitor</th>
-          <th style={th}>Contact</th>
-          <th style={th}>Timeline</th>
-          <th style={th}>Open House</th>
-          <th style={th}>Agent</th>
-          <th style={th}>Verified</th>
-          <th style={th}>Registered</th>
+          <SortTh label="Visitor" k="name" state={state} onSort={onSort} />
+          <SortTh label="Contact" k="contact" state={state} onSort={onSort} />
+          <SortTh label="Timeline" k="timeline" state={state} onSort={onSort} />
+          <SortTh label="Open House" k="openHouse" state={state} onSort={onSort} />
+          <SortTh label="Agent" k="agent" state={state} onSort={onSort} />
+          <SortTh label="Verified" k="verified" state={state} onSort={onSort} />
+          <SortTh label="Registered" k="registered" state={state} onSort={onSort} />
         </tr>
       </thead>
       <tbody>
-        {rows.length === 0 && <EmptyRow span={7} text="No visitors match." />}
-        {rows.map((v) => (
+        {sorted.length === 0 && <EmptyRow span={7} text="No visitors match." />}
+        {sorted.map((v) => (
           <tr key={v.id} style={{ borderTop: `1px solid ${BORDER}` }}>
             <td style={{ ...td, fontWeight: 600 }}>{v.name}</td>
             <td style={td}>
