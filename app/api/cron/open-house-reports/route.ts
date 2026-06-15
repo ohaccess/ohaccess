@@ -168,6 +168,9 @@ async function handle(request: Request) {
       await resend.emails.send({
         from: 'ohACCESS <noreply@mail.ohaccess.com>',
         to,
+        // Replies reach a monitored inbox instead of bouncing off the send-only
+        // noreply subdomain.
+        replyTo: 'support@ohaccess.com',
         subject: `Open house report — ${oh.property_address || 'your open house'} (${(visitors ?? []).length} registered)`,
         html,
       })

@@ -97,6 +97,9 @@ export async function POST(request: Request) {
     await resend.emails.send({
       from: 'ohACCESS <noreply@mail.ohaccess.com>',
       to: email,
+      // Replies reach a monitored inbox instead of bouncing off the send-only
+      // noreply subdomain.
+      replyTo: 'support@ohaccess.com',
       subject: `You're invited to join ${ctx.name} on ohACCESS`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">

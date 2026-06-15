@@ -285,6 +285,10 @@ export async function POST(request: Request) {
       from: 'ohACCESS <noreply@mail.ohaccess.com>',
       to: email,
       cc: agent?.email ? [agent.email] : [],
+      // Replies go to the listing agent (the person a visitor would want to
+      // reach), not the send-only noreply subdomain — which has no inbox and
+      // hard-bounces any reply.
+      replyTo: agent?.display_email || agent?.email || 'support@ohaccess.com',
       subject: `Your ohACCESS email code: ${emailCodeWord}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
