@@ -17,7 +17,7 @@ const twilioClient = twilio(
 
 const resend = new Resend(process.env.RESEND_API_KEY!)
 
-const TRIAL_LIMIT = 50
+const TRIAL_LIMIT = 25
 const SMS_MAX_LENGTH = 160
 
 function generateCode(): string {

@@ -75,15 +75,15 @@ export default function Dashboard() {
   // the team fully lapsed the webhook already unlinked them to free.
   const teamPaymentFailed = isTeamMember && teamStatus?.subscription_status === 'past_due'
 
-  // Free-tier agents who've used all 50 trial registrations are locked out of
+  // Free-tier agents who've used all 25 trial registrations are locked out of
   // every action until they upgrade. This also catches agents who were removed
   // from a team (they drop to free) and are already over the cap.
   const isPaidTier =
     ['pro', 'team', 'brokerage'].includes(profile?.tier || 'free') && !twoYearExpired
-  const locked = !isPaidTier && (totalVisitors ?? 0) >= 50
+  const locked = !isPaidTier && (totalVisitors ?? 0) >= 25
   const guardLocked = (): boolean => {
     if (locked) {
-      showToast('You’ve used all 50 free registrations. Upgrade to keep using ohACCESS.', 'error')
+      showToast('You’ve used all 25 free registrations. Upgrade to keep using ohACCESS.', 'error')
       return true
     }
     return false
@@ -645,7 +645,7 @@ export default function Dashboard() {
             <div style={{ flex: 1, minWidth: '220px' }}>
               <div style={{ fontSize: '14px', fontWeight: '700', color: '#cc0000' }}>⚠️ Your free trial has ended</div>
               <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
-                You&apos;ve used all 50 free visitor registrations. Creating open houses, QR codes, editing, and CSV export are paused. Choose a plan to turn everything back on — your data is safe.
+                You&apos;ve used all 25 free visitor registrations. Creating open houses, QR codes, editing, and CSV export are paused. Choose a plan to turn everything back on — your data is safe.
               </div>
             </div>
             <button onClick={() => setView('settings')} style={{ background: '#1d1d1f', color: 'white', border: 'none', padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
@@ -1323,9 +1323,9 @@ function TrialBanner({ agentId, supabase, accentColor }: { agentId: string, supa
 
   if (!loaded) return null
 
-  const remaining = Math.max(0, 50 - count)
-  const isExpired = count >= 50
-  const isWarning = count >= 35
+  const remaining = Math.max(0, 25 - count)
+  const isExpired = count >= 25
+  const isWarning = count >= 18
 
   return (
     <div style={{
@@ -1343,7 +1343,7 @@ function TrialBanner({ agentId, supabase, accentColor }: { agentId: string, supa
         <div style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f' }}>
           {isExpired
             ? '⚠️ Your free trial has ended'
-            : `✓ Free trial — ${remaining} of 50 visitor registrations remaining`
+            : `✓ Free trial — ${remaining} of 25 visitor registrations remaining`
           }
         </div>
         <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>
@@ -1563,7 +1563,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
                 <strong>Plan:</strong> Free trial
               </div>
               <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '18px' }}>
-                {Math.max(0, 50 - visitorCount)} of 50 visitor registrations remaining
+                {Math.max(0, 25 - visitorCount)} of 25 visitor registrations remaining
               </div>
             </>
           ) : (

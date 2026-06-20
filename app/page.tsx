@@ -101,7 +101,7 @@ export default function Home() {
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', padding: '0 16px' }}>
             <Link href="/login?signup=true" style={{ background: '#c9963a', color: '#1d1d1f', padding: '16px 32px', borderRadius: '12px', textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '340px', lineHeight: '1.4' }}>
               <span style={{ fontSize: '17px', fontWeight: '700' }}>Start free</span>
-              <span style={{ fontSize: '13px', fontWeight: '500', opacity: 0.8 }}>50 visitor registrations on us</span>
+              <span style={{ fontSize: '13px', fontWeight: '500', opacity: 0.8 }}>25 visitor registrations on us</span>
             </Link>
             <a href="#how-it-works" style={{ background: 'rgba(255,255,255,0.1)', color: 'white', padding: '16px 32px', borderRadius: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '340px', fontSize: '16px', fontWeight: '600', textAlign: 'center' as const }}>
               See how it works
@@ -227,9 +227,9 @@ export default function Home() {
               {
                 name: 'Trial', price: { monthly: 'Free', annual: 'Free', '2year': 'Free' },
                 per: { monthly: '', annual: '', '2year': '' },
-                sub: { monthly: '50 registrations, no credit card', annual: '50 registrations, no credit card', '2year': '50 registrations, no credit card' },
+                sub: { monthly: '25 registrations, no credit card', annual: '25 registrations, no credit card', '2year': '25 registrations, no credit card' },
                 description: 'Try the full Pro experience',
-                features: ['50 visitor registrations free', 'Full Pro features included', 'SMS + email delivery', 'QR code PNG download', 'Agent SMS alerts', 'Visitor log + CSV export'],
+                features: ['25 visitor registrations free', 'Full Pro features included', 'SMS + email delivery', 'QR code PNG download', 'Agent SMS alerts', 'Visitor log + CSV export'],
                 cta: 'Start free trial', featured: false
               },
               {
@@ -297,7 +297,7 @@ export default function Home() {
             Ready to verify your first open house?
           </h2>
           <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.6)', marginBottom: '32px', lineHeight: '1.6' }}>
-            Get 50 full Pro visitor registrations completely free — then just $15/month.
+            Get 25 full Pro visitor registrations completely free — then just $15/month.
           </p>
           <Link href="/login?signup=true" style={{ display: 'inline-block', background: '#c9963a', color: '#1d1d1f', padding: '16px 40px', borderRadius: '12px', fontSize: '16px', fontWeight: '700', textDecoration: 'none' }}>
             Get started free →

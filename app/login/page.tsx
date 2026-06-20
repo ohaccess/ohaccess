@@ -247,7 +247,7 @@ function LoginForm() {
               {isLogin ? 'Welcome back' : 'Start your free trial'}
             </div>
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>
-              {isLogin ? 'Sign in to your ohACCESS dashboard.' : '50 free visitor registrations. No credit card required.'}
+              {isLogin ? 'Sign in to your ohACCESS dashboard.' : '25 free visitor registrations. No credit card required.'}
             </div>
 
             <form onSubmit={handleAuth}>
