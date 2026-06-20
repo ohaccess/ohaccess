@@ -13,6 +13,7 @@ type Stats = {
   totalAgents: number
   payingAgents: number
   freeAgents: number
+  doubleBilled: number
   newAgentsThisWeek: number
   totalOpenHouses: number
   upcomingOpenHouses: number
@@ -36,6 +37,7 @@ type Agent = {
   last_sign_in_at: string | null
   openHouseCount: number
   visitorCount: number
+  doubleBilling: boolean
 }
 
 type OpenHouse = {
@@ -233,6 +235,50 @@ export default function AdminDashboard() {
           : '')
     )
     setDeletingId(null)
+    refresh()
+  }
+
+  const [resolvingId, setResolvingId] = useState<string | null>(null)
+
+  const resolveDoubleBilling = async (agent: Agent) => {
+    if (
+      !window.confirm(
+        `Stop double-charging ${agent.name}?\n\n` +
+          `They're on team "${agent.brokerage}", which covers them, but they still have an active personal subscription. ` +
+          `This schedules their personal subscription to cancel at period end (they keep what they already paid for; it just won't renew). ` +
+          `They stay on the team the whole time.`
+      )
+    )
+      return
+    setResolvingId(agent.id)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = '/login'
+      return
+    }
+    const res = await fetch('/api/admin/resolve-double-billing', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId: agent.id }),
+    })
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      window.alert(`Could not resolve double-billing: ${j.error || res.status}`)
+      setResolvingId(null)
+      return
+    }
+    const d = await res.json()
+    window.alert(
+      d.canceled > 0
+        ? `Done — ${d.canceled} personal subscription(s) for ${d.name} will cancel at period end.`
+        : `No active personal subscription found for ${d.name} — nothing to cancel.`
+    )
+    setResolvingId(null)
     refresh()
   }
 
@@ -434,6 +480,14 @@ export default function AdminDashboard() {
           >
             <Kpi label="Agents Signed Up" value={data.stats.totalAgents} sub={`+${data.stats.newAgentsThisWeek} this week`} />
             <Kpi label="Paying Agents" value={data.stats.payingAgents} sub={`${data.stats.freeAgents} free`} accent={GREEN} />
+            {data.stats.doubleBilled > 0 && (
+              <Kpi
+                label="Double-billed"
+                value={data.stats.doubleBilled}
+                sub="on a team + paying personally"
+                accent="#cc0000"
+              />
+            )}
             <Kpi label="Open Houses" value={data.stats.totalOpenHouses} sub={`${data.stats.upcomingOpenHouses} upcoming · ${data.stats.pastOpenHouses} past`} />
             <Kpi label="Total Visitors" value={data.stats.totalVisitors} sub={`+${data.stats.visitorsThisWeek} this week`} accent={BLUE} />
             <Kpi label="Verified Visitors" value={data.stats.verifiedVisitors} sub={`${data.stats.totalVisitors - data.stats.verifiedVisitors} unverified`} />
@@ -508,6 +562,8 @@ export default function AdminDashboard() {
               impersonatingId={impersonatingId}
               onDelete={deleteAccount}
               deletingId={deletingId}
+              onResolveDoubleBilling={resolveDoubleBilling}
+              resolvingId={resolvingId}
             />
           )}
           {tab === 'openhouses' && (
@@ -743,12 +799,16 @@ function AgentsTable({
   impersonatingId,
   onDelete,
   deletingId,
+  onResolveDoubleBilling,
+  resolvingId,
 }: {
   rows: Agent[]
   onImpersonate: (a: Agent) => void
   impersonatingId: string | null
   onDelete: (a: Agent) => void
   deletingId: string | null
+  onResolveDoubleBilling: (a: Agent) => void
+  resolvingId: string | null
 }) {
   const { state, onSort } = useSortable('joined', 'desc')
   const sorted = useMemo(() => applySort(rows, AGENT_ACC[state.key], state.dir), [rows, state])
@@ -775,13 +835,53 @@ function AgentsTable({
               <div style={{ fontSize: 12, color: SUB }}>{a.email}</div>
             </td>
             <td style={tdSub}>{a.brokerage || '—'}{a.role === 'brokerage_admin' ? ' (admin)' : ''}</td>
-            <td style={td}>{tierBadge(a.tier, a.subscription_status)}</td>
+            <td style={td}>
+              {tierBadge(a.tier, a.subscription_status)}
+              {a.doubleBilling && (
+                <span
+                  title="On a team AND still paying for a personal subscription — being double-charged."
+                  style={{
+                    display: 'inline-block',
+                    marginLeft: 6,
+                    background: '#fff0f0',
+                    color: '#cc0000',
+                    border: '1px solid #f0c0c0',
+                    borderRadius: 6,
+                    padding: '1px 6px',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  ⚠ Double-billed
+                </span>
+              )}
+            </td>
             <td style={tdR}>{a.openHouseCount}</td>
             <td style={tdR}>{a.visitorCount}</td>
             <td style={tdSub}>{fmtLogin(a.last_sign_in_at)}</td>
             <td style={tdSub}>{fmtDate(a.created_at)}</td>
             <td style={{ ...tdR, whiteSpace: 'nowrap' }}>
               <div style={{ display: 'inline-flex', gap: 8 }}>
+                {a.doubleBilling && (
+                  <button
+                    onClick={() => onResolveDoubleBilling(a)}
+                    disabled={resolvingId === a.id}
+                    style={{
+                      background: '#cc0000',
+                      color: 'white',
+                      border: '1px solid #cc0000',
+                      borderRadius: 8,
+                      padding: '6px 12px',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: resolvingId === a.id ? 'default' : 'pointer',
+                      opacity: resolvingId === a.id ? 0.6 : 1,
+                    }}
+                  >
+                    {resolvingId === a.id ? 'Resolving…' : 'Stop double-charge'}
+                  </button>
+                )}
                 <button
                   onClick={() => onImpersonate(a)}
                   disabled={impersonatingId === a.id || deletingId === a.id}

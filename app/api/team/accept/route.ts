@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth'
+import { stripe } from '@/lib/stripe'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -96,5 +97,36 @@ export async function POST(request: Request) {
     .update({ accepted_at: new Date().toISOString() })
     .eq('id', invite.id)
 
-  return NextResponse.json({ success: true })
+  // If this person was already paying for their own Pro/Team subscription,
+  // the team now covers them — schedule their personal subscription to cancel
+  // at period end so they aren't double-charged. They keep what they already
+  // paid for; it just won't renew. (A 2-year prepay is a one-time payment with
+  // no subscription to cancel, so it's naturally skipped.) Non-fatal: if Stripe
+  // hiccups, they're still on the team and an admin can resolve it from /admin.
+  let personalSubsCanceled = 0
+  try {
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', user.id)
+      .single()
+    if (prof?.stripe_customer_id) {
+      const subs = await stripe.subscriptions.list({
+        customer: prof.stripe_customer_id,
+        status: 'all',
+        limit: 100,
+      })
+      const billing = new Set(['active', 'trialing', 'past_due'])
+      for (const sub of subs.data) {
+        if (billing.has(sub.status) && !sub.cancel_at_period_end) {
+          await stripe.subscriptions.update(sub.id, { cancel_at_period_end: true })
+          personalSubsCanceled++
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Accept invite: failed to cancel personal subscription', e)
+  }
+
+  return NextResponse.json({ success: true, personalSubsCanceled })
 }

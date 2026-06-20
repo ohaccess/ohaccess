@@ -21,9 +21,12 @@ type ProfileRow = {
   full_name: string | null
   email: string | null
   brokerage: string | null
+  brokerage_id: string | null
   tier: string | null
   role: string | null
   subscription_status: string | null
+  stripe_subscription_id: string | null
+  subscription_canceled_at: string | null
   billing_interval: string | null
   current_period_end: string | null
   created_at: string
@@ -72,7 +75,7 @@ export async function GET(request: Request) {
     supabase
       .from('profiles')
       .select(
-        'id, full_name, email, brokerage, tier, role, subscription_status, billing_interval, current_period_end, created_at'
+        'id, full_name, email, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, created_at'
       )
       .order('created_at', { ascending: false }),
     supabase
@@ -154,6 +157,17 @@ export async function GET(request: Request) {
     return (oh.status || '').toLowerCase() === 'archived'
   }
 
+  // A team MEMBER (not the owner/admin) who still has an active personal
+  // subscription that isn't already winding down is being double-charged: the
+  // team covers their seat AND Stripe is still billing them. Flag for one-click
+  // resolution in the admin UI.
+  const isDoubleBilled = (p: ProfileRow): boolean =>
+    !!p.brokerage_id &&
+    p.role !== 'brokerage_admin' &&
+    !!p.stripe_subscription_id &&
+    PAYING_STATUSES.has((p.subscription_status || '').toLowerCase()) &&
+    !p.subscription_canceled_at
+
   // ---- Agents ----
   const agents = profiles.map((p) => ({
     id: p.id,
@@ -169,6 +183,7 @@ export async function GET(request: Request) {
     last_sign_in_at: lastSignIn.get(p.id) || null,
     openHouseCount: openHousesByAgent.get(p.id) || 0,
     visitorCount: visitorsByAgent.get(p.id) || 0,
+    doubleBilling: isDoubleBilled(p),
   }))
 
   // ---- Open houses ----
@@ -220,6 +235,7 @@ export async function GET(request: Request) {
     totalAgents: profiles.length,
     payingAgents,
     freeAgents: profiles.length - payingAgents,
+    doubleBilled: profiles.filter(isDoubleBilled).length,
     newAgentsThisWeek,
     totalOpenHouses: openHouses.length,
     upcomingOpenHouses,

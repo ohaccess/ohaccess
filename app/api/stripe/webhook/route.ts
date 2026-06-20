@@ -44,6 +44,18 @@ async function updateProfile(profileId: string, update: ProfileUpdate) {
   }
 }
 
+// True if the profile is linked to a brokerage (i.e. their features are
+// covered by a team/brokerage). Used to avoid downgrading a covered member
+// when their own personal subscription is canceled.
+async function isBrokerageMember(profileId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('brokerage_id')
+    .eq('id', profileId)
+    .maybeSingle()
+  return !!data?.brokerage_id
+}
+
 // Ensure the Team subscriber owns a `brokerages` row and is linked to it
 // as brokerage_admin. Idempotent: if they already own a team brokerage we
 // just return its id. Called after a successful Team checkout.
@@ -233,6 +245,13 @@ async function handleSubscriptionChange(sub: Stripe.Subscription) {
     ? ((sub.metadata?.tier ?? 'pro') as 'pro' | 'team')
     : 'free'
 
+  // A team member's feature tier is governed by their brokerage, NOT their own
+  // personal subscription. So if this is a PERSONAL (non-team) subscription for
+  // someone linked to a brokerage, leave their tier alone — otherwise canceling
+  // a former-Pro member's personal plan would wrongly knock them off the team.
+  const isTeamSub = sub.metadata?.tier === 'team'
+  const isCoveredMember = !isTeamSub && (await isBrokerageMember(profileId))
+
   // A scheduled cancellation (cancel_at_period_end) doesn't set canceled_at
   // until the period actually ends, so surface cancel_at as the "ending on"
   // marker. Resuming (cancel_at_period_end=false) clears it.
@@ -243,7 +262,7 @@ async function handleSubscriptionChange(sub: Stripe.Subscription) {
       : null
 
   await updateProfile(profileId, {
-    tier,
+    ...(isCoveredMember ? {} : { tier }),
     stripe_subscription_id: sub.id,
     subscription_status: sub.status,
     billing_interval: sub.metadata?.billing_interval ?? null,
@@ -268,8 +287,14 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
     typeof sub.customer === 'string' ? sub.customer : sub.customer.id
   )
   if (!profileId) return
+  // Same guard as handleSubscriptionChange: when a brokerage member's PERSONAL
+  // subscription finally ends, keep them on the team (the brokerage covers
+  // them) instead of dropping them to free. Their team subscription ending is
+  // handled below via propagateTeamStatus.
+  const isTeamSub = sub.metadata?.tier === 'team'
+  const isCoveredMember = !isTeamSub && (await isBrokerageMember(profileId))
   await updateProfile(profileId, {
-    tier: 'free',
+    ...(isCoveredMember ? {} : { tier: 'free' }),
     stripe_subscription_id: null,
     subscription_status: 'canceled',
     subscription_canceled_at: new Date().toISOString(),
