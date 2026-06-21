@@ -67,10 +67,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: true })
   }
 
-  const { error } = await supabase
+  // A bounce/complaint is terminal — record it unconditionally so it wins over
+  // any competing event. A "delivered" only counts as the FIRST event (status
+  // still null), so the agent-CC delivering can never overwrite a real bounce
+  // on the visitor's own address.
+  const isFailure = status === 'bounced' || status === 'complained'
+  let query = supabase
     .from('visitors')
     .update({ email_status: status, delivery_updated_at: new Date().toISOString() })
     .eq('email_message_id', emailId)
+  if (!isFailure) query = query.is('email_status', null)
+  const { error } = await query
   if (error) {
     console.error('Resend webhook: failed to update visitor', error)
     return NextResponse.json({ error: 'DB update failed' }, { status: 500 })

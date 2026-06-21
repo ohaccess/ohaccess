@@ -37,10 +37,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: true })
   }
 
-  const { error } = await supabase
+  // Failures (undelivered/failed) are terminal — record unconditionally. Other
+  // statuses (queued/sent/delivered) only apply as the FIRST event (status
+  // still null), so an out-of-order intermediate callback can't overwrite a
+  // recorded failure.
+  const isFailure = status === 'undelivered' || status === 'failed'
+  let query = supabase
     .from('visitors')
     .update({ sms_status: status, delivery_updated_at: new Date().toISOString() })
     .eq('sms_message_sid', sid)
+  if (!isFailure) query = query.is('sms_status', null)
+  const { error } = await query
   if (error) {
     console.error('Twilio status webhook: failed to update visitor', error)
     return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
