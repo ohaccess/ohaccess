@@ -17,6 +17,10 @@ const twilioClient = twilio(
 
 const resend = new Resend(process.env.RESEND_API_KEY!)
 
+// Base URL Twilio posts SMS delivery updates back to. Use the www host so the
+// callback isn't lost to the apex→www 308 redirect.
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ohaccess.com'
+
 const TRIAL_LIMIT = 25
 const SMS_MAX_LENGTH = 160
 
@@ -249,10 +253,14 @@ export async function POST(request: Request) {
       ]
     )
 
-    await twilioClient.messages.create({
+    const visitorSms = await twilioClient.messages.create({
       body: smsBody,
       from: process.env.TWILIO_PHONE_NUMBER!,
-      to: phone
+      to: phone,
+      // Twilio posts delivery updates (delivered/undelivered/failed) here so we
+      // can flag bad numbers on the agent dashboard. Dormant until the toll-free
+      // number is verified and SMS actually starts sending.
+      statusCallback: `${APP_URL}/api/webhooks/twilio-status`,
     })
 
     // ② VISITOR EMAIL — escape every agent-controlled field before
@@ -281,7 +289,7 @@ export async function POST(request: Request) {
     const headerColor = isHexColor(brandColor) ? brandColor : '#1d1d1f'
     const logoUrl = safeUrl(brandLogo)
 
-    await resend.emails.send({
+    const visitorEmail = await resend.emails.send({
       from: 'ohACCESS <noreply@mail.ohaccess.com>',
       to: email,
       cc: agent?.email ? [agent.email] : [],
@@ -334,6 +342,20 @@ export async function POST(request: Request) {
         </div>
       `
     })
+
+    // Record the provider message ids so the Resend / Twilio status webhooks
+    // can match later delivery events (bounce / undelivered) back to this
+    // visitor. Best-effort: a bookkeeping failure must not fail registration.
+    const { error: deliveryIdErr } = await supabase
+      .from('visitors')
+      .update({
+        email_message_id: visitorEmail.data?.id ?? null,
+        sms_message_sid: visitorSms.sid ?? null,
+      })
+      .eq('id', visitorRow.id)
+    if (deliveryIdErr) {
+      console.error('Failed to store delivery message ids', deliveryIdErr)
+    }
 
     // ③ AGENT SMS ALERT — sent to every agent (paid or within their trial
     // cap). The trial limit is enforced above, so reaching here means the

@@ -9,6 +9,12 @@ const TIMELINE_COLORS: Record<string, { bg: string; color: string }> = {
   '12+ Months': { bg: '#f2f2f7', color: '#555' },
 }
 
+// A hard delivery failure reported by Resend (email) or Twilio (SMS) means the
+// visitor's contact info is likely bad.
+const deliveryFailed = (status: string | null | undefined): boolean =>
+  status === 'bounced' || status === 'complained' || status === 'undelivered' || status === 'failed'
+const failBadge = { marginLeft: '8px', background: '#fff0f0', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+
 // Shared visitor detail + notes editor. Used both in the dashboard panel
 // (modal) and on the standalone mobile /visitor/[id] page, so the verify
 // toggle and notes-save logic live in exactly one place. Saves via the
@@ -67,8 +73,8 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
       </div>
 
       <div style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
-        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentColor, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a></div>
-        <div><div style={label}>Email</div><a href={`mailto:${visitor.email}`} style={{ fontSize: '15px', color: accentColor, textDecoration: 'none', fontWeight: 600, wordBreak: 'break-all' }}>{visitor.email || '—'}</a></div>
+        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentColor, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{deliveryFailed(visitor.sms_status) && <span style={failBadge} title="Text could not be delivered to this number">⚠ text undelivered</span>}</div>
+        <div><div style={label}>Email</div><a href={`mailto:${visitor.email}`} style={{ fontSize: '15px', color: accentColor, textDecoration: 'none', fontWeight: 600, wordBreak: 'break-all' }}>{visitor.email || '—'}</a>{deliveryFailed(visitor.email_status) && <span style={failBadge} title="Email bounced — this address may be invalid">⚠ email bounced</span>}</div>
         <div><div style={label}>Registered</div><div style={{ fontSize: '14px', color: '#1d1d1f' }}>{visitor.registered_at ? new Date(visitor.registered_at).toLocaleString() : '—'}</div></div>
       </div>
 

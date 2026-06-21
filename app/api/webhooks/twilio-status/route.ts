@@ -1,0 +1,50 @@
+import { createClient } from '@supabase/supabase-js'
+import { NextResponse } from 'next/server'
+import twilio from 'twilio'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ohaccess.com'
+const CALLBACK_URL = `${APP_URL}/api/webhooks/twilio-status`
+
+// Twilio posts SMS delivery updates as form-encoded data and signs them with
+// X-Twilio-Signature (HMAC over the exact callback URL + sorted params).
+export async function POST(request: Request) {
+  const form = await request.formData()
+  const params: Record<string, string> = {}
+  for (const [k, v] of form.entries()) params[k] = String(v)
+
+  const signature = request.headers.get('x-twilio-signature') || ''
+  if (AUTH_TOKEN) {
+    const valid = twilio.validateRequest(AUTH_TOKEN, signature, CALLBACK_URL, params)
+    if (!valid) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
+    }
+  } else {
+    console.warn('TWILIO_AUTH_TOKEN not set — skipping signature check')
+  }
+
+  const sid = params.MessageSid
+  const status = params.MessageStatus // queued | sent | delivered | undelivered | failed
+  if (!sid || !status) {
+    return NextResponse.json({ ok: true, ignored: true })
+  }
+
+  const { error } = await supabase
+    .from('visitors')
+    .update({ sms_status: status, delivery_updated_at: new Date().toISOString() })
+    .eq('sms_message_sid', sid)
+  if (error) {
+    console.error('Twilio status webhook: failed to update visitor', error)
+    return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}

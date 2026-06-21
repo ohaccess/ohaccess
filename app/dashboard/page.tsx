@@ -550,6 +550,12 @@ export default function Dashboard() {
     return <span style={{ background: c.bg, color: c.color, padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>{timeline}</span>
   }
 
+  // A code-word delivery failed if the provider reported a hard failure. Used
+  // to flag bad visitor contact info (bounced email / undeliverable SMS).
+  const deliveryFlag = (status: string | null | undefined): boolean =>
+    status === 'bounced' || status === 'complained' || status === 'undelivered' || status === 'failed'
+  const deliveryBadgeStyle = { marginLeft: '6px', background: '#fff0f0', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#f5f5f7' }}>
       <div style={{ fontSize: '16px', color: '#6e6e73' }}>Loading your dashboard...</div>
@@ -760,8 +766,8 @@ export default function Dashboard() {
                                 {v.first_name} {v.last_name}{v.notes ? ' 📝' : ''}
                               </button>
                             </td>
-                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}</td>
-                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.email}</td>
+                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}{deliveryFlag(v.sms_status) && <span title="Text could not be delivered to this number" style={deliveryBadgeStyle}>⚠ undelivered</span>}</td>
+                            <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.email}{deliveryFlag(v.email_status) && <span title="Email bounced — this address may be invalid" style={deliveryBadgeStyle}>⚠ bounced</span>}</td>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{new Date(v.registered_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
