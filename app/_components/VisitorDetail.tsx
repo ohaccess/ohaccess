@@ -20,18 +20,24 @@ const failBadge = { marginLeft: '8px', background: '#fff0f0', color: '#cc0000', 
 // toggle and notes-save logic live in exactly one place. Saves via the
 // (authenticated) supabase client; the visitors RLS policy already restricts
 // writes to the owning agent.
-export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d1f', accentColor = '#0071e3', onChange }: {
+export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d1f', accentColor = '#0071e3', onChange, onDelete }: {
   visitor: any
   supabase: any
   primaryColor?: string
   accentColor?: string
   onChange?: (fields: { verified?: boolean; notes?: string }) => void
+  // When provided, a "Delete visitor" button is shown. Called after the visitor
+  // is successfully deleted, so the parent can close the modal / refresh its list.
+  onDelete?: () => void
 }) {
   const [notes, setNotes] = useState<string>(visitor.notes || '')
   const [verified, setVerified] = useState<boolean>(!!visitor.verified)
   const [savingNotes, setSavingNotes] = useState(false)
   const [savedNotes, setSavedNotes] = useState(false)
   const [busyVerify, setBusyVerify] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(false)
 
   const tl = TIMELINE_COLORS[visitor.purchasing_timeline] || { bg: '#f2f2f7', color: '#555' }
   const dirty = notes !== (visitor.notes || '')
@@ -57,6 +63,17 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
       onChange?.({ notes })
       setTimeout(() => setSavedNotes(false), 2000)
     }
+  }
+
+  const deleteVisitor = async () => {
+    setDeleting(true)
+    setDeleteError(false)
+    // RLS (visitors_owner_all) restricts deletes to the owning agent, same as the
+    // verify/notes writes above — an agent can only ever delete their own visitors.
+    const { error } = await supabase.from('visitors').delete().eq('id', visitor.id)
+    setDeleting(false)
+    if (error) { setDeleteError(true); return }
+    onDelete?.()
   }
 
   const label = { display: 'block', fontSize: '11px', fontWeight: 600, color: '#6e6e73', textTransform: 'uppercase' as const, letterSpacing: '0.5px', marginBottom: '4px' }
@@ -106,6 +123,42 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
           </button>
         </div>
       </div>
+
+      {onDelete && (
+        <div style={{ marginTop: '22px', paddingTop: '18px', borderTop: '1px solid #f2f2f7' }}>
+          {!confirmingDelete ? (
+            <button
+              onClick={() => { setConfirmingDelete(true); setDeleteError(false) }}
+              style={{ width: '100%', background: 'none', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '12px', padding: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
+              Delete visitor
+            </button>
+          ) : (
+            <div>
+              <div style={{ fontSize: '13px', color: '#1d1d1f', lineHeight: 1.5, marginBottom: '10px' }}>
+                Permanently delete <strong>{`${visitor.first_name || ''} ${visitor.last_name || ''}`.trim() || 'this visitor'}</strong> and all their information? This can&apos;t be undone.
+              </div>
+              {deleteError && <div style={{ fontSize: '13px', color: '#cc0000', fontWeight: 600, marginBottom: '10px' }}>Couldn&apos;t delete — please try again.</div>}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() => setConfirmingDelete(false)}
+                  disabled={deleting}
+                  style={{ flex: 1, background: '#f5f5f7', color: '#1d1d1f', border: 'none', borderRadius: '12px', padding: '12px', fontSize: '14px', fontWeight: 700, cursor: deleting ? 'default' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={deleteVisitor}
+                  disabled={deleting}
+                  style={{ flex: 1, background: '#cc0000', color: 'white', border: 'none', borderRadius: '12px', padding: '12px', fontSize: '14px', fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: deleting ? 0.6 : 1 }}
+                >
+                  {deleting ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

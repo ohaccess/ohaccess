@@ -1261,6 +1261,11 @@ export default function Dashboard() {
                 setVisitors(prev => prev.map(v => v.id === visitorModal.id ? { ...v, ...fields } : v))
                 setVisitorModal((vm: any) => vm ? { ...vm, ...fields } : vm)
               }}
+              onDelete={() => {
+                setVisitors(prev => prev.filter(v => v.id !== visitorModal.id))
+                setVisitorModal(null)
+                showToast('Visitor deleted.')
+              }}
             />
           </div>
         </div>

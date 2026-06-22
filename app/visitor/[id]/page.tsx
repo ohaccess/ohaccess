@@ -52,7 +52,11 @@ export default function VisitorPage({ params }: { params: Promise<{ id: string }
             </div>
           )}
           {status === 'ready' && visitor && (
-            <VisitorDetail visitor={visitor} supabase={supabase} />
+            <VisitorDetail
+              visitor={visitor}
+              supabase={supabase}
+              onDelete={() => { window.location.href = '/dashboard' }}
+            />
           )}
         </div>
       </div>
