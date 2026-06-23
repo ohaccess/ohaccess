@@ -173,7 +173,7 @@ export default function SubscriberTerms() {
           </Section>
 
           <Section title="19. General Provisions">
-            <p><strong>19.1 Entire Agreement.</strong> These Terms (together with the Privacy Policy, Visitor Terms, and any order forms or addenda referenced herein) constitute the entire agreement between you and ohACCESS regarding the Service and supersede all prior or contemporaneous communications and proposals.</p>
+            <p><strong>19.1 Entire Agreement.</strong> These Terms (together with the <a href="/privacy" style={{ color: '#0071e3', textDecoration: 'underline' }}>Privacy Policy</a>, <a href="/terms" style={{ color: '#0071e3', textDecoration: 'underline' }}>Visitor Terms</a>, and any order forms or addenda referenced herein) constitute the entire agreement between you and ohACCESS regarding the Service and supersede all prior or contemporaneous communications and proposals.</p>
             <p style={{ marginTop: '10px' }}><strong>19.2 No Waiver.</strong> Failure to enforce any provision of these Terms is not a waiver of the right to enforce that or any other provision later.</p>
             <p style={{ marginTop: '10px' }}><strong>19.3 Severability.</strong> If any provision of these Terms is held invalid or unenforceable, the remaining provisions will remain in full force and effect, and the invalid provision will be modified to the minimum extent necessary to make it enforceable.</p>
             <p style={{ marginTop: '10px' }}><strong>19.4 Assignment.</strong> You may not assign or transfer these Terms or your account without ohACCESS&apos;s prior written consent. ohACCESS may assign these Terms in connection with a merger, acquisition, sale of assets, or by operation of law without your consent.</p>
