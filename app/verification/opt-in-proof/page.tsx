@@ -42,7 +42,7 @@ export default function OptInProof() {
           <div><strong>Legal business name:</strong> OHACCESS LLC</div>
           <div><strong>Brand / DBA:</strong> ohACCESS</div>
           <div><strong>Website:</strong> https://www.ohaccess.com</div>
-          <div><strong>Use case:</strong> Transactional one-time access codes for open-house entry (no marketing messages sent through this number).</div>
+          <div><strong>Use case:</strong> Two transactional message types — (1) <strong>one-time access codes</strong> (two-factor/verification) sent to open-house visitors, and (2) <strong>account notifications</strong> sent to the hosting real estate agent when a new visitor registers. No marketing messages are sent through this number.</div>
         </div>
 
         {/* Workflow steps */}
@@ -95,11 +95,24 @@ export default function OptInProof() {
           </p>
         </div>
 
-        {/* Sample message */}
-        <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1d1d1f', marginBottom: '16px' }}>Sample message a visitor receives</h2>
+        {/* Sample message — message type 1 */}
+        <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>Message type 1 — one-time access code (to the visitor)</h2>
+        <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>The verification/2FA code a visitor receives after opting in above.</div>
         <div style={{ background: '#f5f5f7', border: '1px solid #e5e5ea', borderRadius: '12px', padding: '20px 24px', marginBottom: '40px', fontSize: '14px', lineHeight: '1.75', color: '#1d1d1f', fontFamily: 'monospace' }}>
           ohACCESS: Your one-time entry code for 123 Main St is 4827. Show this text at the door to gain access. Msg &amp; data
           rates may apply. Reply STOP to opt out, HELP for help.
+        </div>
+
+        {/* Sample message — message type 2 */}
+        <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>Message type 2 — new-visitor account notification (to the hosting agent)</h2>
+        <div style={{ fontSize: '13px', color: '#3a3a3c', marginBottom: '16px', lineHeight: '1.7' }}>
+          The hosting real estate agent is an ohACCESS <strong>account holder</strong>. When they create their account they
+          provide their own mobile number and agree to receive operational SMS alerts about their open houses. They receive a
+          transactional notification each time a new visitor registers. Agents can stop these any time by replying STOP.
+        </div>
+        <div style={{ background: '#f5f5f7', border: '1px solid #e5e5ea', borderRadius: '12px', padding: '20px 24px', marginBottom: '40px', fontSize: '14px', lineHeight: '1.75', color: '#1d1d1f', fontFamily: 'monospace' }}>
+          ohACCESS Alert: A new visitor just registered at your 123 Main St open house. Open your ohACCESS dashboard to view
+          their details. Reply STOP to opt out, HELP for help.
         </div>
 
         {/* Policy links */}
