@@ -582,7 +582,7 @@ export default function Dashboard() {
               {navLabel(v)}
             </button>
           ))}
-          <a href="/resources" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textDecoration: 'none', padding: '6px 14px' }}>
+          <a href="/resources" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textDecoration: 'none', padding: '6px 14px' }}>
               Resources
             </a>
           <button onClick={signOut} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.7)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px' }}>
@@ -602,7 +602,7 @@ export default function Dashboard() {
               {navLabelMobile(v)}
             </button>
           ))}
-          <a href="/resources" onClick={() => setMobileMenuOpen(false)}
+          <a href="/resources" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}
             style={{ color: 'white', padding: '10px 14px', borderRadius: '8px', fontSize: '14px', fontWeight: '400', textDecoration: 'none', display: 'block' }}>
             📚 Resources
           </a>
