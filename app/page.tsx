@@ -154,7 +154,7 @@ export default function Home() {
               { step: '1', title: 'Create your open house', body: 'Enter your listing details and choose a secret code word. A unique QR code is generated instantly.' },
               { step: '2', title: 'Buyer scans the QR code', body: 'A mobile form loads. They enter their name, valid email, valid phone number, and buying timeline.' },
               { step: '3', title: 'Code word is delivered', body: 'A text and email with the code word hits their phone instantly. Fake info = no code = no entry.' },
-              { step: '4', title: 'Agent is notified', body: "You receive an instant SMS with the visitor's full details — before they even reach the door." },
+              { step: '4', title: 'Agent is notified', body: "You receive an instant SMS with the visitor's full details — before they even reach the door. Tap the link in the alert to verify the visitor and save private notes." },
             ].map(item => (
               <div key={item.step} style={{ background: '#f5f5f7', borderRadius: '18px', padding: '24px' }}>
                 <div style={{ width: '36px', height: '36px', background: '#1d1d1f', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '700', color: 'white', marginBottom: '16px' }}>
@@ -226,7 +226,7 @@ export default function Home() {
             {[
               { emoji: '📱', title: 'QR code per open house', body: 'Every listing gets a unique QR code. Display it at the entrance — buyers scan and register in seconds.' },
               { emoji: '✅', title: 'Real-time verification', body: 'Code word delivered instantly via SMS and email. No valid contact info = no access code.' },
-              { emoji: '🔔', title: 'Instant agent alerts', body: 'Know who is walking in before they reach the door. Name, phone, email, and buying timeline — instantly.' },
+              { emoji: '🔔', title: 'Instant agent alerts', body: 'Know who is walking in before they reach the door. Name, phone, email, and buying timeline — instantly. Tap the alert link to verify them and add private notes.' },
               { emoji: '📋', title: 'Verified visitor log', body: 'Every registration saved automatically. Mark visitors as verified at the door and export to CSV.' },
               { emoji: '🔗', title: 'CRM ready', body: 'Export visitor data to CSV and import into Follow Up Boss, Lofty, or any CRM you use.' },
               { emoji: '🌍', title: 'Multi-market ready', body: 'Built for real estate today — designed to expand to automotive, events, vacation rentals, and more.' },
