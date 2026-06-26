@@ -105,7 +105,7 @@ export default function Resources() {
             {[
               { step: '1', title: 'Create your open house in the dashboard', body: 'Enter the property address, date, hours, and listing URL. Create or auto-generate a code word.' },
               { step: '2', title: 'Download and print your QR code', body: 'Click "QR Code" on your open house card. Download the PNG, add it to the Canva template or your own custom sign. Print enough copies for each entry.' },
-              { step: '3', title: 'Set up your welcome sign', body: 'Use a pedestal sign holder and display the QR code with instructions prominetly before the entrance.' },
+              { step: '3', title: 'Set up your welcome sign', body: 'Use a pedestal sign holder, easel, or A-frame poster and display the QR code with instructions prominently before the entrance.' },
               { step: '4', title: 'Greet visitors at the door', body: 'Ask visitors for their code word as they arrive. Only visitors who registered with real contact info will have received the code.' },
               { step: '5', title: 'Review your visitor log', body: 'After the open house, check your dashboard for the full verified visitor log. Export to CSV and import into your CRM.' },
             ].map(item => (
@@ -132,7 +132,7 @@ export default function Resources() {
           </div>
           <div className="tips-grid">
             {[
-              { emoji: '🪧', title: 'Use a pedestal sign stand', body: 'Prominently display the QR code with instructions on a pedestal sign holder well before the entrance.' },
+              { emoji: '🪧', title: 'Use a pedestal, easel, or A-frame sign', body: 'Prominently display the QR code with instructions on a pedestal sign holder, easel, or A-frame poster well before the entrance.' },
               { emoji: '🔗', title: 'Add your listing URL', body: 'Include a link to the full listing so visitors can review details before and after the open house.' },
               { emoji: '🏷️', title: 'Choose a memorable code word', body: 'Pick a code word related to the property — like ACREAGE or LAKEHOUSE. Easier for visitors to remember.' },
               { emoji: '👤', title: 'Add your landing page URL', body: 'Add your bio page, website, or Instagram in Settings so every visitor email includes a link to your profile.' },
