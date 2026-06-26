@@ -58,7 +58,9 @@ export default function Home() {
           oh<span style={{ fontWeight: '700' }}>ACCESS</span>
         </div>
         <div className="nav-links">
+          <a href="#problem">The Problem</a>
           <a href="#how-it-works">How it works</a>
+          <a href="#safety">Safety</a>
           <a href="#pricing">Pricing</a>
           <Link href="/login" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', textDecoration: 'none' }}>Sign in</Link>
           <Link href="/login?signup=true" style={{ background: '#c9963a', color: '#1d1d1f', padding: '8px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
@@ -76,7 +78,9 @@ export default function Home() {
       {/* Mobile dropdown menu */}
       {menuOpen && (
         <div style={{ background: '#2a2a2a', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '60px', zIndex: 99 }}>
+          <a href="#problem" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>The Problem</a>
           <a href="#how-it-works" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>How it works</a>
+          <a href="#safety" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>Safety</a>
           <a href="#pricing" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>Pricing</a>
           <Link href="/login" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>Sign in</Link>
           <Link href="/login?signup=true" onClick={() => setMenuOpen(false)} style={{ background: '#c9963a', color: '#1d1d1f', padding: '12px 20px', borderRadius: '8px', fontSize: '15px', fontWeight: '700', textDecoration: 'none', textAlign: 'center' }}>
@@ -111,7 +115,7 @@ export default function Home() {
       </section>
 
       {/* PROBLEM */}
-      <section className="section-pad" style={{ background: '#f5f5f7' }}>
+      <section id="problem" className="section-pad" style={{ background: '#f5f5f7' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <h2 className="section-title">The problem with paper sign-in sheets</h2>
@@ -163,7 +167,7 @@ export default function Home() {
       </section>
 
       {/* SAFETY & ACCOUNTABILITY */}
-      <section className="section-pad" style={{ background: '#f5f5f7' }}>
+      <section id="safety" className="section-pad" style={{ background: '#f5f5f7' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <h2 className="section-title">Every guest checks in. No anonymous walk-ins.</h2>
