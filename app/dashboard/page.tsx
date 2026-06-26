@@ -556,6 +556,36 @@ export default function Dashboard() {
     status === 'bounced' || status === 'complained' || status === 'undelivered' || status === 'failed'
   const deliveryBadgeStyle = { marginLeft: '6px', background: '#fff0f0', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 
+  // Derive an open house's lifecycle state from its schedule, since the stored
+  // `status` is only ever 'active' and never transitions. Falls back to the
+  // free-text date for legacy rows without start/end times, then to the stored
+  // status as a last resort.
+  const ohState = (oh: { status?: string | null; start_at?: string | null; end_at?: string | null; open_house_date?: string | null }): 'upcoming' | 'live' | 'ended' => {
+    const now = Date.now()
+    const start = oh.start_at ? new Date(oh.start_at).getTime() : NaN
+    const end = oh.end_at ? new Date(oh.end_at).getTime() : NaN
+    if (!Number.isNaN(end)) {
+      if (now > end) return 'ended'
+      if (!Number.isNaN(start) && now < start) return 'upcoming'
+      return 'live'
+    }
+    if (oh.open_house_date) {
+      const t = Date.parse(oh.open_house_date)
+      if (!Number.isNaN(t)) {
+        const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0)
+        if (t < startOfToday.getTime()) return 'ended'
+        if (t > startOfToday.getTime()) return 'upcoming'
+        return 'live'
+      }
+    }
+    return oh.status === 'active' ? 'live' : 'ended'
+  }
+  const OH_BADGE: Record<'upcoming' | 'live' | 'ended', { bg: string; color: string; dot: string; label: string }> = {
+    upcoming: { bg: '#e5f0ff', color: '#0040a0', dot: '#0071e3', label: 'Upcoming' },
+    live: { bg: '#e8f9ee', color: '#1a7a3c', dot: '#30d158', label: 'Live' },
+    ended: { bg: '#f2f2f7', color: '#6e6e73', dot: '#aeaeb2', label: 'Ended' },
+  }
+
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#f5f5f7' }}>
       <div style={{ fontSize: '16px', color: '#6e6e73' }}>Loading your dashboard...</div>
@@ -672,7 +702,7 @@ export default function Dashboard() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
               {[
-                { label: 'Active Open Houses', value: openHouses.filter(oh => oh.status === 'active').length },
+                { label: 'Active Open Houses', value: openHouses.filter(oh => ohState(oh) !== 'ended').length },
                 { label: 'Total Registrations', value: visitors.length, accent: true },
                 { label: 'Verified at Door', value: visitors.filter(v => v.verified).length }
               ].map(stat => (
@@ -700,16 +730,16 @@ export default function Dashboard() {
                   <div key={oh.id} style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentColor : '#d1d1d6'}`, borderRadius: '18px', padding: '14px 18px', cursor: 'pointer' }}
                     onClick={async () => { setSelectedOH(oh); await loadVisitors(oh.id) }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: oh.status === 'active' ? accentColor : '#aeaeb2', flexShrink: 0 }} />
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: OH_BADGE[ohState(oh)].dot, flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{oh.property_address}</div>
                         <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>{oh.open_house_date} · {oh.open_house_hours} · 📱 <strong>{oh.code_word}</strong> · ✉️ <strong>{oh.code_word_email || oh.code_word}</strong></div>
                       </div>
-                      {oh.status === 'active' && (
-                        <div style={{ background: '#e8f9ee', color: '#1a7a3c', fontSize: '11px', fontWeight: '600', padding: '3px 9px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                          <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#30d158' }} />Live
+                      {(() => { const b = OH_BADGE[ohState(oh)]; return (
+                        <div style={{ background: b.bg, color: b.color, fontSize: '11px', fontWeight: '600', padding: '3px 9px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                          <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: b.dot }} />{b.label}
                         </div>
-                      )}
+                      )})()}
                     </div>
                     <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'nowrap' }} onClick={e => e.stopPropagation()}>
                       <button disabled={locked} onClick={async (e) => {
