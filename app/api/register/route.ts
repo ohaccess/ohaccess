@@ -4,6 +4,7 @@ import twilio from 'twilio'
 import { Resend } from 'resend'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/escape-html'
+import { normalizePhone } from '@/lib/phone'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -172,6 +173,20 @@ export async function POST(request: Request) {
       }
     }
 
+    // Has this number opted out of SMS (replied STOP) on any prior open house,
+    // for any agent? If so we suppress the code-word text (Twilio would reject
+    // it with error 21610 anyway) and flag the visitor. Email still goes out.
+    const normalizedPhone = normalizePhone(phone)
+    let phoneOptedOut = false
+    if (normalizedPhone) {
+      const { data: optOut } = await supabase
+        .from('sms_opt_outs')
+        .select('phone')
+        .eq('phone', normalizedPhone)
+        .maybeSingle()
+      phoneOptedOut = !!optOut
+    }
+
     // Save visitor
     const { data: visitorRow, error: visitorError } = await supabase
       .from('visitors')
@@ -183,6 +198,7 @@ export async function POST(request: Request) {
         email: email,
         phone: phone,
         purchasing_timeline: purchasingTimeline,
+        sms_opted_out: phoneOptedOut,
         source: 'ohaccess'
       })
       .select('id')
@@ -253,15 +269,19 @@ export async function POST(request: Request) {
       ]
     )
 
-    const visitorSms = await twilioClient.messages.create({
-      body: smsBody,
-      from: process.env.TWILIO_PHONE_NUMBER!,
-      to: phone,
-      // Twilio posts delivery updates (delivered/undelivered/failed) here so we
-      // can flag bad numbers on the agent dashboard. Dormant until the toll-free
-      // number is verified and SMS actually starts sending.
-      statusCallback: `${APP_URL}/api/webhooks/twilio-status`,
-    })
+    // Skip the code-word text for opted-out numbers (they get the email code
+    // instead). Sending would just bounce with Twilio error 21610.
+    let visitorSms: Awaited<ReturnType<typeof twilioClient.messages.create>> | null = null
+    if (!phoneOptedOut) {
+      visitorSms = await twilioClient.messages.create({
+        body: smsBody,
+        from: process.env.TWILIO_PHONE_NUMBER!,
+        to: phone,
+        // Twilio posts delivery updates (delivered/undelivered/failed) here so we
+        // can flag bad numbers on the agent dashboard.
+        statusCallback: `${APP_URL}/api/webhooks/twilio-status`,
+      })
+    }
 
     // ② VISITOR EMAIL — escape every agent-controlled field before
     // interpolating it into the HTML to prevent injection / tracking-pixel abuse.
@@ -350,7 +370,7 @@ export async function POST(request: Request) {
       .from('visitors')
       .update({
         email_message_id: visitorEmail.data?.id ?? null,
-        sms_message_sid: visitorSms.sid ?? null,
+        sms_message_sid: visitorSms?.sid ?? null,
       })
       .eq('id', visitorRow.id)
     if (deliveryIdErr) {

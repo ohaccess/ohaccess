@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import twilio from 'twilio'
+import { normalizePhone } from '@/lib/phone'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -51,6 +52,19 @@ export async function POST(request: Request) {
   if (error) {
     console.error('Twilio status webhook: failed to update visitor', error)
     return NextResponse.json({ error: 'DB update failed' }, { status: 500 })
+  }
+
+  // Error 21610 = the recipient has opted out (replied STOP). Record the number
+  // in the global suppression list and flag this visitor as opted out. Future
+  // registrations of this number (any agent) are then suppressed at send time.
+  if (params.ErrorCode === '21610') {
+    const phone = normalizePhone(params.To)
+    if (phone) {
+      await supabase
+        .from('sms_opt_outs')
+        .upsert({ phone, source: 'twilio_error_21610' }, { onConflict: 'phone' })
+    }
+    await supabase.from('visitors').update({ sms_opted_out: true }).eq('sms_message_sid', sid)
   }
 
   return NextResponse.json({ ok: true })
