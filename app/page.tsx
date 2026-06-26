@@ -162,6 +162,36 @@ export default function Home() {
         </div>
       </section>
 
+      {/* SAFETY & ACCOUNTABILITY */}
+      <section className="section-pad" style={{ background: '#f5f5f7' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <h2 className="section-title">Every guest checks in. No anonymous walk-ins.</h2>
+            <p style={{ fontSize: '16px', color: '#6e6e73', maxWidth: '640px', margin: '0 auto' }}>
+              Open houses are the #1 situation where real estate agents report feeling unsafe.<sup>1</sup> A paper sign-in sheet doesn&apos;t change that — anyone can scribble a fake name and walk in. ohACCESS replaces the clipboard with a verified check-in.
+            </p>
+          </div>
+          <div className="grid-4">
+            {[
+              { emoji: '🔒', title: 'Verified check-in', body: 'Every guest confirms a real, reachable phone or email before they get the entry code — not a name scribbled on paper.' },
+              { emoji: '🗂️', title: 'A real attendance record', body: 'Traceable contact info for everyone who came through your open house, saved to your dashboard.' },
+              { emoji: '⚡', title: 'Instant alerts', body: "You're notified the moment a visitor checks in, with their details — before they reach the door." },
+              { emoji: '🛡️', title: 'A built-in deterrent', body: 'Requiring a verified contact signals attendance is logged, not anonymous — discouraging bad actors.' },
+            ].map(item => (
+              <div key={item.title} style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '24px', textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>{item.emoji}</div>
+                <div style={{ fontSize: '15px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>{item.title}</div>
+                <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6' }}>{item.body}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: '12px', color: '#86868b', lineHeight: '1.6', maxWidth: '720px', margin: '28px auto 0', textAlign: 'center' }}>
+            ohACCESS confirms that a visitor provided a reachable phone or email. It does not run background checks or verify identity, and it can&apos;t guarantee anyone&apos;s safety — it&apos;s about accountability and deterrence.<br />
+            <sup>1</sup> Source: National Association of REALTORS®, <a href="https://www.nar.realtor/safety" target="_blank" rel="noopener noreferrer" style={{ color: '#86868b', textDecoration: 'underline' }}>2024 Member Safety Residential Report</a> (open houses were the most commonly cited situation in which members felt unsafe).
+          </p>
+        </div>
+      </section>
+
       {/* STATS */}
       <section className="section-pad" style={{ background: '#1d1d1f' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
