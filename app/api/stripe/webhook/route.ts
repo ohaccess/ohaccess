@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import type Stripe from 'stripe'
+import { Resend } from 'resend'
 import { stripe } from '@/lib/stripe'
+import { escapeHtml } from '@/lib/escape-html'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -12,6 +14,8 @@ const supabase = createClient(
 )
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
+const resend = new Resend(process.env.RESEND_API_KEY!)
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ohaccess.com'
 
 interface ProfileUpdate {
   tier?: 'free' | 'pro' | 'team' | 'brokerage'
@@ -305,6 +309,81 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
   await propagateTeamStatus(profileId, sub.id, 'canceled')
 }
 
+// A renewal (or initial) charge failed. Notify the customer so they can fix
+// their card before access is interrupted, and send an internal heads-up.
+// Idempotent at the event level (stripe_events), so each failed attempt sends
+// at most one email. Best-effort: never throw, so a mail hiccup doesn't cause
+// Stripe to retry the whole webhook.
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+  const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id
+  const profileId = await findProfileId(undefined, customerId)
+  if (!profileId) {
+    console.error('invoice.payment_failed: could not resolve profile', invoice.id)
+    return
+  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, full_name')
+    .eq('id', profileId)
+    .maybeSingle()
+  if (!profile?.email) {
+    console.error('invoice.payment_failed: no email on profile', profileId)
+    return
+  }
+
+  const name = escapeHtml((profile.full_name || '').trim() || 'there')
+  const payUrl = invoice.hosted_invoice_url || `${APP_URL}/dashboard?view=settings`
+  const manageUrl = `${APP_URL}/dashboard?view=settings`
+
+  // Customer-facing notice
+  try {
+    await resend.emails.send({
+      from: 'ohACCESS <noreply@mail.ohaccess.com>',
+      to: profile.email,
+      replyTo: 'support@ohaccess.com',
+      subject: "Your ohACCESS payment didn't go through",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
+          <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
+            <div style="font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
+          </div>
+          <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; color: #1d1d1f; font-size: 14px; line-height: 1.6;">
+            <p>Hi ${name},</p>
+            <p>We tried to process your recent ohACCESS subscription payment, but it didn't go through.</p>
+            <p>To keep your account active, please update your payment method or pay the outstanding invoice:</p>
+            <p style="text-align: center; margin: 24px 0;">
+              <a href="${payUrl}" style="background: #c9963a; color: #1d1d1f; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700;">Update payment</a>
+            </p>
+            <p style="font-size: 13px; color: #6e6e73;">We'll automatically retry over the next few days. You can also manage your subscription anytime from your <a href="${manageUrl}" style="color: #0071e3;">dashboard settings</a>. If you think this is a mistake, just reply to this email.</p>
+          </div>
+        </div>
+      `,
+    })
+  } catch (e) {
+    console.error('invoice.payment_failed: customer email failed', e)
+  }
+
+  // Internal heads-up to the first admin address, so churn signals are visible.
+  const admin = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim())
+    .filter(Boolean)[0]
+  if (admin) {
+    const amount = ((invoice.amount_due ?? 0) / 100).toFixed(2)
+    const currency = String(invoice.currency || 'usd').toUpperCase()
+    try {
+      await resend.emails.send({
+        from: 'ohACCESS <noreply@mail.ohaccess.com>',
+        to: admin,
+        subject: `⚠️ Payment failed: ${profile.email}`,
+        html: `<p>A subscription payment just failed.</p><p><strong>Account:</strong> ${escapeHtml(profile.email)}<br/><strong>Amount due:</strong> ${amount} ${currency}</p><p>Stripe will retry automatically. The customer has been emailed.</p>`,
+      })
+    } catch (e) {
+      console.error('invoice.payment_failed: admin email failed', e)
+    }
+  }
+}
+
 export async function POST(request: Request) {
   if (!WEBHOOK_SECRET) {
     return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
@@ -351,6 +430,9 @@ export async function POST(request: Request) {
         break
       case 'customer.subscription.deleted':
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription)
+        break
+      case 'invoice.payment_failed':
+        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice)
         break
       default:
         // Ignore other event types — they're harmless but we record them
