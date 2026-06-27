@@ -1184,7 +1184,7 @@ export default function Dashboard() {
               <input style={inputStyle} type="email" placeholder="e.g. yourname@followupboss.me" value={profile?.crm_lead_email || ''} onChange={e => setProfile({ ...profile, crm_lead_email: e.target.value })} />
               <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.7' }}>
                 <strong style={{ color: '#1d1d1f' }}>Where to find your lead-intake email:</strong><br />
-                • <strong>Follow Up Boss</strong> — your <em>@followupboss.me</em> address (Admin → Lead Flow / Email Address).<br />
+                • <strong>Follow Up Boss</strong> — your <em>@followupboss.me</em> address (Admin → Overview → API Keys &amp; Lead Email, under Integrations).<br />
                 • <strong>BoldTrail / kvCORE</strong> — Lead Engine → your lead parsing email.<br />
                 • <strong>Lofty, Sierra, Real Geeks, CINC, Top Producer, Wise Agent</strong> — search your CRM&apos;s help for &quot;lead parsing&quot; or &quot;forward leads by email&quot; to get your unique address.<br />
                 Paste it above and click Save settings. New sign-ins appear in your CRM within seconds. (Tip: add <em>noreply@mail.ohaccess.com</em> as an allowed sender in your CRM so leads aren&apos;t filtered.)
