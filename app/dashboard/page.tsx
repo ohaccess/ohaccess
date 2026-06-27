@@ -534,6 +534,11 @@ export default function Dashboard() {
       showToast('Zapier webhook must start with https://hooks.zapier.com/', 'error')
       return
     }
+    const crmEmail = (profile?.crm_lead_email || '').trim()
+    if (crmEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(crmEmail)) {
+      showToast('CRM lead email must be a valid email address', 'error')
+      return
+    }
     const { error } = await supabase.from('profiles').update({
       full_name: profile?.full_name,
       brokerage: profile?.brokerage,
@@ -547,6 +552,8 @@ export default function Dashboard() {
       accent_color: profile?.accent_color,
       landing_page_url: profile?.landing_page_url,
       zapier_webhook_url: hook || null,
+      crm_lead_email: crmEmail || null,
+      crm_type: profile?.crm_type || null,
     }).eq('id', user.id)
     if (error) { showToast('Error saving: ' + error.message); return }
     showToast('Settings saved!')
@@ -1155,7 +1162,37 @@ export default function Dashboard() {
             )}
 
             <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>CRM integration (Zapier)</div>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Send leads to your CRM</div>
+              <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
+                Every new visitor flows straight into your CRM as a lead — no Zapier, no setup fees. Your CRM gives each user a unique &quot;lead intake&quot; email address; paste it here and we send each sign-in there automatically. Works with Follow Up Boss, BoldTrail/kvCORE, Lofty, Sierra Interactive, Real Geeks, and most others.
+              </div>
+              <label style={labelStyle}>Your CRM</label>
+              <select style={inputStyle} value={profile?.crm_type || ''} onChange={e => setProfile({ ...profile, crm_type: e.target.value })}>
+                <option value="">Select your CRM (optional)</option>
+                <option value="follow_up_boss">Follow Up Boss</option>
+                <option value="boldtrail">BoldTrail / kvCORE</option>
+                <option value="lofty">Lofty (formerly Chime)</option>
+                <option value="sierra_interactive">Sierra Interactive</option>
+                <option value="real_geeks">Real Geeks</option>
+                <option value="cinc">CINC</option>
+                <option value="top_producer">Top Producer</option>
+                <option value="wise_agent">Wise Agent</option>
+                <option value="liondesk">LionDesk</option>
+                <option value="other">Other</option>
+              </select>
+              <label style={{ ...labelStyle, marginTop: '12px' }}>Your CRM lead-intake email</label>
+              <input style={inputStyle} type="email" placeholder="e.g. yourname@followupboss.me" value={profile?.crm_lead_email || ''} onChange={e => setProfile({ ...profile, crm_lead_email: e.target.value })} />
+              <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.7' }}>
+                <strong style={{ color: '#1d1d1f' }}>Where to find your lead-intake email:</strong><br />
+                • <strong>Follow Up Boss</strong> — your <em>@followupboss.me</em> address (Admin → Lead Flow / Email Address).<br />
+                • <strong>BoldTrail / kvCORE</strong> — Lead Engine → your lead parsing email.<br />
+                • <strong>Lofty, Sierra, Real Geeks, CINC, Top Producer, Wise Agent</strong> — search your CRM&apos;s help for &quot;lead parsing&quot; or &quot;forward leads by email&quot; to get your unique address.<br />
+                Paste it above and click Save settings. New sign-ins appear in your CRM within seconds. (Tip: add <em>noreply@mail.ohaccess.com</em> as an allowed sender in your CRM so leads aren&apos;t filtered.)
+              </div>
+            </div>
+
+            <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Advanced: CRM integration via Zapier</div>
               <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
                 Send every new visitor straight into your CRM — Follow Up Boss, kvCORE, a Google Sheet, and 7,000+ apps — through Zapier.
               </div>
