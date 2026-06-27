@@ -205,6 +205,25 @@ export default function Dashboard() {
           .single()
         if (newProfile) setProfile(newProfile)
       }
+
+      // One-time heads-up to the ohACCESS team that a new account is active.
+      // The endpoint claims a per-account flag server-side, so it emails at
+      // most once per account no matter how often this runs; the sessionStorage
+      // guard just avoids redundant calls within a browser session.
+      try {
+        if (!sessionStorage.getItem('ohaccess_signup_notified')) {
+          sessionStorage.setItem('ohaccess_signup_notified', '1')
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session?.access_token) {
+            void fetch('/api/notify/new-account', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${session.access_token}` },
+            })
+          }
+        }
+      } catch {
+        // best-effort; never block the dashboard on a notification
+      }
     }
 
   const loadOpenHouses = async (userId: string) => {

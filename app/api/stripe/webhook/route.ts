@@ -4,6 +4,7 @@ import type Stripe from 'stripe'
 import { Resend } from 'resend'
 import { stripe } from '@/lib/stripe'
 import { escapeHtml } from '@/lib/escape-html'
+import { notifyAdmins } from '@/lib/notify-admin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -231,6 +232,27 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (tier === 'team') {
     await ensureTeamBrokerage(profileId)
   }
+
+  // Internal heads-up: someone just subscribed / paid. This event is recorded
+  // in stripe_events for idempotency, so it fires at most once per checkout.
+  const { data: buyer } = await supabase
+    .from('profiles')
+    .select('email')
+    .eq('id', profileId)
+    .maybeSingle()
+  const amount =
+    session.amount_total != null
+      ? `${(session.amount_total / 100).toFixed(2)} ${String(session.currency || 'usd').toUpperCase()}`
+      : '—'
+  const planLabel = tier === 'team' ? 'Team' : 'Pro'
+  const intervalLabel = interval ? ` (${interval.replace(/_/g, ' ')})` : ''
+  await notifyAdmins(
+    `💳 New ohACCESS subscription: ${buyer?.email ?? profileId}`,
+    `<p>Someone just subscribed to ohACCESS.</p>
+     <p><strong>Account:</strong> ${escapeHtml(buyer?.email ?? '')}<br/>
+     <strong>Plan:</strong> ${escapeHtml(planLabel + intervalLabel)}<br/>
+     <strong>Amount:</strong> ${escapeHtml(amount)}</p>`
+  )
 }
 
 async function handleSubscriptionChange(sub: Stripe.Subscription) {
@@ -363,23 +385,24 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     console.error('invoice.payment_failed: customer email failed', e)
   }
 
-  // Internal heads-up to the first admin address, so churn signals are visible.
-  const admin = (process.env.ADMIN_EMAILS || '')
+  // Internal heads-up to billing, so churn signals are visible. Defaults to the
+  // billing alias; override with BILLING_EMAILS (comma-separated) if needed.
+  const billing = (process.env.BILLING_EMAILS || 'billing@ohaccess.com')
     .split(',')
     .map((e) => e.trim())
-    .filter(Boolean)[0]
-  if (admin) {
+    .filter(Boolean)
+  if (billing.length > 0) {
     const amount = ((invoice.amount_due ?? 0) / 100).toFixed(2)
     const currency = String(invoice.currency || 'usd').toUpperCase()
     try {
       await resend.emails.send({
         from: 'ohACCESS <noreply@mail.ohaccess.com>',
-        to: admin,
+        to: billing,
         subject: `⚠️ Payment failed: ${profile.email}`,
         html: `<p>A subscription payment just failed.</p><p><strong>Account:</strong> ${escapeHtml(profile.email)}<br/><strong>Amount due:</strong> ${amount} ${currency}</p><p>Stripe will retry automatically. The customer has been emailed.</p>`,
       })
     } catch (e) {
-      console.error('invoice.payment_failed: admin email failed', e)
+      console.error('invoice.payment_failed: billing email failed', e)
     }
   }
 }
