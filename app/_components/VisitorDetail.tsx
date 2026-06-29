@@ -1,14 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { onColor, readableOnLight, fillBorder } from '@/lib/colors'
-
-const TIMELINE_COLORS: Record<string, { bg: string; color: string }> = {
-  '0–1 Month': { bg: '#fff0e6', color: '#b84800' },
-  '2–3 Months': { bg: '#fff9e0', color: '#8a6400' },
-  '3–6 Months': { bg: '#e5f0ff', color: '#0040a0' },
-  '6–12 Months': { bg: '#e5f0ff', color: '#0040a0' },
-  '12+ Months': { bg: '#f2f2f7', color: '#555' },
-}
+import { timelineStyle } from '@/lib/timeline'
 
 // A hard delivery failure reported by Resend (email) or Twilio (SMS) means the
 // visitor's contact info is likely bad.
@@ -47,7 +40,7 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(false)
 
-  const tl = TIMELINE_COLORS[visitor.purchasing_timeline] || { bg: '#f2f2f7', color: '#555' }
+  const tl = timelineStyle(visitor.purchasing_timeline)
   const dirty = notes !== (visitor.notes || '')
 
   const toggleVerify = async () => {

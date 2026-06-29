@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { IMPERSONATION_KEY } from '../_components/ImpersonationBanner'
+import { timelineRank } from '@/lib/timeline'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -1011,17 +1012,10 @@ function OpenHousesTable({
   )
 }
 
-const TIMELINE_RANK: Record<string, number> = {
-  '0–1 Month': 1,
-  '2–3 Months': 2,
-  '3–6 Months': 3,
-  '6–12 Months': 4,
-  '12+ Months': 5,
-}
 const V_ACC: Record<string, (v: Visitor) => Sortable> = {
   name: (v) => v.name,
   contact: (v) => v.email,
-  timeline: (v) => TIMELINE_RANK[v.purchasing_timeline] ?? 99,
+  timeline: (v) => timelineRank(v.purchasing_timeline),
   openHouse: (v) => v.openHouseAddress,
   agent: (v) => v.agentName,
   verified: (v) => v.verified,

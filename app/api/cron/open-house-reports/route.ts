@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { escapeHtml } from '@/lib/escape-html'
+import { TIMELINE_ORDER } from '@/lib/timeline'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,9 +12,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 const resend = new Resend(process.env.RESEND_API_KEY!)
-
-// Buying-timeline buckets in priority order; anything else falls into "Other".
-const TIMELINE_ORDER = ['0–1 Month', '2–3 Months', '3–6 Months', '6–12 Months', '12+ Months']
 
 interface Visitor {
   first_name: string | null

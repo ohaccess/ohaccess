@@ -5,6 +5,7 @@ import TeamAdminPanel from './_components/TeamAdminPanel'
 import TeamActivityPanel from './_components/TeamActivityPanel'
 import VisitorDetail from '@/app/_components/VisitorDetail'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
+import { timelineStyle } from '@/lib/timeline'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -583,14 +584,7 @@ export default function Dashboard() {
   }
 
   const getTimelineBadge = (timeline: string) => {
-    const colors: any = {
-      '0–1 Month': { bg: '#fff0e6', color: '#b84800' },
-      '2–3 Months': { bg: '#fff9e0', color: '#8a6400' },
-      '3–6 Months': { bg: '#e5f0ff', color: '#0040a0' },
-      '6–12 Months': { bg: '#e5f0ff', color: '#0040a0' },
-      '12+ Months': { bg: '#f2f2f7', color: '#555' }
-    }
-    const c = colors[timeline] || { bg: '#f2f2f7', color: '#555' }
+    const c = timelineStyle(timeline)
     return <span style={{ background: c.bg, color: c.color, padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>{timeline}</span>
   }
 
