@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import TeamAdminPanel from './_components/TeamAdminPanel'
 import TeamActivityPanel from './_components/TeamActivityPanel'
 import VisitorDetail from '@/app/_components/VisitorDetail'
+import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -54,6 +55,23 @@ export default function Dashboard() {
 
   const primaryColor = profile?.primary_color || '#1d1d1f'
   const accentColor = profile?.accent_color || '#0071e3'
+
+  // Keep the topbar readable whatever primary the agent picks: a
+  // near-white primary needs dark text instead of white.
+  const primaryIsLight = isLightColor(primaryColor)
+  const onPrimary = onColor(primaryColor)
+  // Subtle pill behind the active nav item — a muted shade of the
+  // primary (darken it when light, lighten it when dark).
+  const navActiveBg = primaryIsLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.18)'
+  const onPrimaryBorder = primaryIsLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.3)'
+  // Primary-filled buttons get the same treatment as accent ones.
+  const primaryBtnBorder = fillBorder(primaryColor)
+  // Same idea for the accent: dark label on light-filled buttons, a
+  // hairline edge so a near-white button still shows on the page, and a
+  // readable fallback when the accent is used as text/links/borders.
+  const onAccent = onColor(accentColor)
+  const accentBtnBorder = fillBorder(accentColor)
+  const accentText = readableOnLight(accentColor)
 
   // Team-admin (team-lead) gets a Team tab; everyone else sees the standard nav.
   const isTeamAdmin = profile?.role === 'brokerage_admin'
@@ -630,41 +648,41 @@ export default function Dashboard() {
       
       {/* Topbar */}
       <div style={{ background: primaryColor, padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '52px' }}>
-        <div style={{ fontSize: '20px', fontWeight: '200', color: 'white', letterSpacing: '-0.5px' }}>
+        <div style={{ fontSize: '20px', fontWeight: '200', color: onPrimary, letterSpacing: '-0.5px' }}>
           oh<span style={{ fontWeight: '700' }}>ACCESS</span>
         </div>
         <div style={{ display: 'flex', gap: '4px' }} className="dash-nav-desktop">
           {navViews.map(v => (
-            <button key={v} onClick={() => { setView(v); if (v !== 'new') setEditingOH(null) }} style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: view === v ? 'white' : 'rgba(255,255,255,0.6)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
+            <button key={v} onClick={() => { setView(v); if (v !== 'new') setEditingOH(null) }} style={{ background: view === v ? navActiveBg : 'transparent', border: 'none', color: onPrimary, padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
               {navLabel(v)}
             </button>
           ))}
-          <a href="/resources" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textDecoration: 'none', padding: '6px 14px' }}>
+          <a href="/resources" target="_blank" rel="noopener noreferrer" style={{ color: onPrimary, fontSize: '13px', textDecoration: 'none', padding: '6px 14px' }}>
               Resources
             </a>
-          <button onClick={signOut} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.7)', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px' }}>
+          <button onClick={signOut} style={{ background: 'transparent', border: `1px solid ${onPrimaryBorder}`, color: onPrimary, padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px' }}>
             Sign out
           </button>
         </div>
-        <button className="dash-nav-mobile" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'none', border: 'none', color: 'white', fontSize: '22px', cursor: 'pointer', padding: '4px 8px' }}>
+        <button className="dash-nav-mobile" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'none', border: 'none', color: onPrimary, fontSize: '22px', cursor: 'pointer', padding: '4px 8px' }}>
           {mobileMenuOpen ? '✕' : '☰'}
         </button>
       </div>
 
       {mobileMenuOpen && (
-        <div style={{ background: primaryColor, borderTop: '1px solid rgba(255,255,255,0.1)', padding: '8px 16px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div style={{ background: primaryColor, borderTop: `1px solid ${primaryIsLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'}`, padding: '8px 16px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {navViews.map(v => (
             <button key={v} onClick={() => { setView(v); if (v !== 'new') setEditingOH(null); setMobileMenuOpen(false) }}
-              style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: 'white', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px', fontWeight: view === v ? '600' : '400', textAlign: 'left' as const }}>
+              style={{ background: view === v ? navActiveBg : 'transparent', border: 'none', color: onPrimary, padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px', fontWeight: view === v ? '600' : '400', textAlign: 'left' as const }}>
               {navLabelMobile(v)}
             </button>
           ))}
           <a href="/resources" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}
-            style={{ color: 'white', padding: '10px 14px', borderRadius: '8px', fontSize: '14px', fontWeight: '400', textDecoration: 'none', display: 'block' }}>
+            style={{ color: onPrimary, padding: '10px 14px', borderRadius: '8px', fontSize: '14px', fontWeight: '400', textDecoration: 'none', display: 'block' }}>
             📚 Resources
           </a>
           <button onClick={() => { signOut(); setMobileMenuOpen(false) }}
-            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.7)', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px', textAlign: 'left' as const, marginTop: '4px' }}>
+            style={{ background: 'transparent', border: `1px solid ${onPrimaryBorder}`, color: onPrimary, padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px', textAlign: 'left' as const, marginTop: '4px' }}>
             Sign out
           </button>
         </div>
@@ -735,14 +753,14 @@ export default function Dashboard() {
               ].map(stat => (
                 <div key={stat.label} style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '16px 18px' }}>
                   <div style={{ fontSize: '11px', fontWeight: '500', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>{stat.label}</div>
-                  <div style={{ fontSize: '28px', fontWeight: '600', color: stat.accent ? accentColor : '#1d1d1f', letterSpacing: '-1px' }}>{stat.value}</div>
+                  <div style={{ fontSize: '28px', fontWeight: '600', color: stat.accent ? accentText : '#1d1d1f', letterSpacing: '-1px' }}>{stat.value}</div>
                 </div>
               ))}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
               <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f' }}>Your open houses</div>
-              <button disabled={locked} onClick={() => { if (guardLocked()) return; setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: 'white', border: 'none', padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <button disabled={locked} onClick={() => { if (guardLocked()) return; setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 + New open house
               </button>
             </div>
@@ -754,7 +772,7 @@ export default function Dashboard() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
                 {openHouses.map(oh => (
-                  <div key={oh.id} style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentColor : '#d1d1d6'}`, borderRadius: '18px', padding: '14px 18px', cursor: 'pointer' }}
+                  <div key={oh.id} style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentText : '#d1d1d6'}`, borderRadius: '18px', padding: '14px 18px', cursor: 'pointer' }}
                     onClick={async () => { setSelectedOH(oh); await loadVisitors(oh.id) }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: OH_BADGE[ohState(oh)].dot, flexShrink: 0 }} />
@@ -781,14 +799,14 @@ export default function Dashboard() {
                           reader.readAsDataURL(blob)
                         })
                         setQrModal({ oh, url, dataUrl, blob })
-                      }} style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📱 QR Code</button>
+                      }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📱 QR Code</button>
                       <button disabled={locked} onClick={(e) => {
                         e.stopPropagation()
                         if (guardLocked()) return
                         const url = `${window.location.origin}/register/${oh.id}`
                         navigator.clipboard.writeText(url)
                         showToast('Registration URL copied!')
-                      }} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
+                      }} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
                       <button disabled={locked} onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
                       <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }} style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🗑 Delete</button>
                     </div>
@@ -801,7 +819,7 @@ export default function Dashboard() {
               <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Visitor log — {selectedOH.property_address}</div>
-                  <button disabled={locked} onClick={exportCSV} style={{ background: primaryColor, color: 'white', border: 'none', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
+                  <button disabled={locked} onClick={exportCSV} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
                 </div>
                 {visitors.length === 0 ? (
                   <div style={{ textAlign: 'center', color: '#6e6e73', padding: '20px', fontSize: '13px' }}>No visitors yet. Share your QR code to get started!</div>
@@ -819,7 +837,7 @@ export default function Dashboard() {
                         {visitors.map((v, i) => (
                           <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
-                              <button onClick={() => setVisitorModal(v)} style={{ background: 'none', border: 'none', padding: 0, color: accentColor, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px', textAlign: 'left' }}>
+                              <button onClick={() => setVisitorModal(v)} style={{ background: 'none', border: 'none', padding: 0, color: accentText, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px', textAlign: 'left' }}>
                                 {v.first_name} {v.last_name}{v.notes ? ' 📝' : ''}
                               </button>
                             </td>
@@ -923,9 +941,9 @@ export default function Dashboard() {
                   {showCal && (
                     <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 100, background: 'white', border: '1px solid #d1d1d6', borderRadius: '18px', padding: '14px', width: '242px', boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                        <button onClick={() => setCalDate(new Date(calDate.getFullYear(), calDate.getMonth()-1, 1))} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '7px', padding: '4px 10px', cursor: 'pointer', fontSize: '15px', fontWeight: '600' }}>‹</button>
+                        <button onClick={() => setCalDate(new Date(calDate.getFullYear(), calDate.getMonth()-1, 1))} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '7px', padding: '4px 10px', cursor: 'pointer', fontSize: '15px', fontWeight: '600' }}>‹</button>
                         <span style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>{MONTHS[calDate.getMonth()]} {calDate.getFullYear()}</span>
-                        <button onClick={() => setCalDate(new Date(calDate.getFullYear(), calDate.getMonth()+1, 1))} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '7px', padding: '4px 10px', cursor: 'pointer', fontSize: '15px', fontWeight: '600' }}>›</button>
+                        <button onClick={() => setCalDate(new Date(calDate.getFullYear(), calDate.getMonth()+1, 1))} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '7px', padding: '4px 10px', cursor: 'pointer', fontSize: '15px', fontWeight: '600' }}>›</button>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
                         {DOW.map(d => <div key={d} style={{ fontSize: '10px', fontWeight: '600', color: '#aeaeb2', textAlign: 'center', padding: '3px 0' }}>{d}</div>)}
@@ -974,7 +992,7 @@ export default function Dashboard() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. LOVELY" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
                     </div>
-                    <button onClick={() => setForm({ ...form, code_word: generateSmsWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+                    <button onClick={() => setForm({ ...form, code_word: generateSmsWord() })} style={{ padding: '9px 14px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                       ✦ Auto-generate
                     </button>
                   </div>
@@ -987,7 +1005,7 @@ export default function Dashboard() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. TUDOR" value={form.code_word_email} onChange={e => setForm({ ...form, code_word_email: e.target.value.toUpperCase() })} />
                     </div>
-                    <button onClick={() => setForm({ ...form, code_word_email: generateEmailWord() })} style={{ padding: '9px 14px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+                    <button onClick={() => setForm({ ...form, code_word_email: generateEmailWord() })} style={{ padding: '9px 14px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                       ✦ Auto-generate
                     </button>
                   </div>
@@ -997,7 +1015,7 @@ export default function Dashboard() {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
               <button onClick={() => { setView('dashboard'); setEditingOH(null); resetForm() }} style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cancel</button>
-              <button disabled={locked} onClick={editingOH ? updateOpenHouse : createOpenHouse} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <button disabled={locked} onClick={editingOH ? updateOpenHouse : createOpenHouse} style={{ padding: '9px 18px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 {editingOH ? '✓ Update open house' : '✓ Save open house'}
               </button>
             </div>
@@ -1155,8 +1173,8 @@ export default function Dashboard() {
                 </div>
                 <div style={{ marginTop: '14px', padding: '12px 16px', background: '#f5f5f7', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ fontSize: '12px', color: '#6e6e73' }}>Preview:</div>
-                  <div style={{ background: profile?.primary_color || '#1d1d1f', color: 'white', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>oh<strong>ACCESS</strong></div>
-                  <div style={{ background: profile?.accent_color || '#0071e3', color: 'white', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>Button</div>
+                  <div style={{ background: primaryColor, color: onPrimary, border: fillBorder(primaryColor), padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>oh<strong>ACCESS</strong></div>
+                  <div style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>Button</div>
                 </div>
               </div>
             )}
@@ -1209,7 +1227,7 @@ export default function Dashboard() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
-              <button onClick={saveSettings} style={{ padding: '9px 18px', background: primaryColor, color: 'white', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <button onClick={saveSettings} style={{ padding: '9px 18px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 ✓ Save settings
               </button>
             </div>
@@ -1261,7 +1279,7 @@ export default function Dashboard() {
                 a.href = qrModal.dataUrl
                 a.download = `ohaccess-qr-${qrModal.oh.property_address.replace(/\s+/g, '-')}.png`
                 a.click()
-              }} style={{ background: primaryColor, color: 'white', border: 'none', borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              }} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 📥 Download PNG
               </button>
 
@@ -1284,7 +1302,7 @@ export default function Dashboard() {
                   } catch (err) {
                     console.log('Share cancelled')
                   }
-                }} style={{ background: accentColor, color: 'white', border: 'none', borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                   📤 Share QR Code
                 </button>
               )}

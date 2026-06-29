@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
+import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
 
 export default function RegisterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
@@ -272,6 +273,14 @@ function ExpiredOpenHouse() {
   const agent = openHouse.profiles
   const primaryColor = agent?.primary_color || '#1d1d1f'
   const accentColor = agent?.accent_color || '#0071e3'
+  // Keep this public sign-in page legible whatever brand colors the agent
+  // picked, including white / near-white (see lib/colors).
+  const primaryIsLight = isLightColor(primaryColor)
+  const onPrimary = onColor(primaryColor)
+  const primaryText = readableOnLight(primaryColor)
+  const primaryBtnBorder = fillBorder(primaryColor)
+  const accentText = readableOnLight(accentColor)
+  const accentBtnBorder = fillBorder(accentColor)
 
   const inputStyle = {
     width: '100%',
@@ -305,10 +314,10 @@ function ExpiredOpenHouse() {
 
       {/* Header */}
       <div style={{ background: primaryColor, width: '100%', padding: '22px 20px 16px', textAlign: 'center' }}>
-        <div style={{ fontSize: '20px', fontWeight: '200', color: 'white', letterSpacing: '-0.5px' }}>
+        <div style={{ fontSize: '20px', fontWeight: '200', color: onPrimary, letterSpacing: '-0.5px' }}>
           oh<span style={{ fontWeight: '700' }}>ACCESS</span>
         </div>
-        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
+        <div style={{ fontSize: '11px', color: primaryIsLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
           Secure open house registration
         </div>
       </div>
@@ -405,12 +414,12 @@ function ExpiredOpenHouse() {
                     alignItems: 'center',
                     gap: '7px',
                     background: selectedTimeline === t ? '#f0f0f0' : '#f5f5f7',
-                    border: selectedTimeline === t ? `1px solid ${primaryColor}` : '1px solid #d1d1d6',
+                    border: selectedTimeline === t ? `1px solid ${primaryText}` : '1px solid #d1d1d6',
                     borderRadius: '9px',
                     padding: '9px 11px',
                     cursor: 'pointer',
                     fontSize: '12px',
-                    color: selectedTimeline === t ? primaryColor : '#6e6e73',
+                    color: selectedTimeline === t ? primaryText : '#6e6e73',
                     fontWeight: selectedTimeline === t ? '600' : '400'
                   }}
                 >
@@ -418,7 +427,7 @@ function ExpiredOpenHouse() {
                     width: '13px',
                     height: '13px',
                     borderRadius: '50%',
-                    border: selectedTimeline === t ? `1.5px solid ${primaryColor}` : '1.5px solid #d1d1d6',
+                    border: selectedTimeline === t ? `1.5px solid ${primaryText}` : '1.5px solid #d1d1d6',
                     background: selectedTimeline === t ? primaryColor : 'transparent',
                     flexShrink: 0,
                     display: 'flex',
@@ -426,7 +435,7 @@ function ExpiredOpenHouse() {
                     justifyContent: 'center'
                   }}>
                     {selectedTimeline === t && (
-                      <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'white' }} />
+                      <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: onPrimary }} />
                     )}
                   </div>
                   {t}
@@ -445,11 +454,11 @@ function ExpiredOpenHouse() {
                 marginTop: '18px',
                 padding: '14px',
                 backgroundColor: primaryColor,
-                color: '#ffffff',
+                color: onPrimary,
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontSize: '15px',
                 fontWeight: '700',
-                border: 'none',
+                border: primaryBtnBorder,
                 borderRadius: '12px',
                 cursor: submitting ? 'not-allowed' : 'pointer',
                 opacity: submitting ? 0.7 : 1
@@ -482,7 +491,7 @@ function ExpiredOpenHouse() {
         ) : (
           /* Success screen */
           <div style={{ textAlign: 'center', padding: '32px 20px' }}>
-            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: accentColor, border: accentBtnBorder, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px' }}>
               ✓
             </div>
             <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>
@@ -495,13 +504,13 @@ Your access code was texted to your phone, with a backup code sent to your email
               {openHouse.property_address}<br />
               {openHouse.open_house_date} · {openHouse.open_house_hours}
             </div>
-            <div style={{ fontSize: '12px', color: accentColor, fontWeight: '600' }}>
+            <div style={{ fontSize: '12px', color: accentText, fontWeight: '600' }}>
                 ✓ Access code was sent to your phone.
               </div>
-              <div style={{ fontSize: '12px', color: accentColor, fontWeight: '600', marginTop: '4px' }}>
+              <div style={{ fontSize: '12px', color: accentText, fontWeight: '600', marginTop: '4px' }}>
                 ✓ Backup code was sent to your email.
               </div>
-              <div style={{ fontSize: '12px', color: accentColor, fontWeight: '600', marginTop: '4px' }}>
+              <div style={{ fontSize: '12px', color: accentText, fontWeight: '600', marginTop: '4px' }}>
                 ✓ Agent has been notified of your arrival.
               </div>
           </div>

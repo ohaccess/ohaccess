@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { onColor, fillBorder } from '@/lib/colors'
 
 interface Member {
   id: string
@@ -39,7 +40,9 @@ const inputStyle = {
   boxSizing: 'border-box' as const, fontFamily: "'Plus Jakarta Sans', sans-serif",
 }
 const btn = (bg: string) => ({
-  background: bg, color: 'white', border: 'none', borderRadius: '9px', padding: '10px 18px',
+  // Dark label + hairline edge when bg is light, so a near-white brand
+  // color doesn't make the button vanish (see lib/colors).
+  background: bg, color: onColor(bg), border: fillBorder(bg), borderRadius: '9px', padding: '10px 18px',
   fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
 })
 

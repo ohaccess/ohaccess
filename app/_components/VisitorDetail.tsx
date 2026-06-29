@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { onColor, readableOnLight, fillBorder } from '@/lib/colors'
 
 const TIMELINE_COLORS: Record<string, { bg: string; color: string }> = {
   '0–1 Month': { bg: '#fff0e6', color: '#b84800' },
@@ -31,6 +32,12 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
   // is successfully deleted, so the parent can close the modal / refresh its list.
   onDelete?: () => void
 }) {
+  // Keep accent text/buttons readable for near-white accents (lib/colors).
+  const accentText = readableOnLight(accentColor)
+  const onAccent = onColor(accentColor)
+  const accentBtnBorder = fillBorder(accentColor)
+  const onPrimary = onColor(primaryColor)
+  const primaryBtnBorder = fillBorder(primaryColor)
   const [notes, setNotes] = useState<string>(visitor.notes || '')
   const [verified, setVerified] = useState<boolean>(!!visitor.verified)
   const [savingNotes, setSavingNotes] = useState(false)
@@ -91,15 +98,15 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
       </div>
 
       <div style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
-        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentColor, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{visitor.sms_opted_out ? <span style={optedOutBadge} title="This number replied STOP — do not contact">🚫 opted out</span> : deliveryFailed(visitor.sms_status) ? <span style={failBadge} title="Text could not be delivered to this number">⚠ text undelivered</span> : null}</div>
-        <div><div style={label}>Email</div><a href={`mailto:${visitor.email}`} style={{ fontSize: '15px', color: accentColor, textDecoration: 'none', fontWeight: 600, wordBreak: 'break-all' }}>{visitor.email || '—'}</a>{deliveryFailed(visitor.email_status) && <span style={failBadge} title="Email bounced — this address may be invalid">⚠ email bounced</span>}</div>
+        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{visitor.sms_opted_out ? <span style={optedOutBadge} title="This number replied STOP — do not contact">🚫 opted out</span> : deliveryFailed(visitor.sms_status) ? <span style={failBadge} title="Text could not be delivered to this number">⚠ text undelivered</span> : null}</div>
+        <div><div style={label}>Email</div><a href={`mailto:${visitor.email}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600, wordBreak: 'break-all' }}>{visitor.email || '—'}</a>{deliveryFailed(visitor.email_status) && <span style={failBadge} title="Email bounced — this address may be invalid">⚠ email bounced</span>}</div>
         <div><div style={label}>Registered</div><div style={{ fontSize: '14px', color: '#1d1d1f' }}>{visitor.registered_at ? new Date(visitor.registered_at).toLocaleString() : '—'}</div></div>
       </div>
 
       <button
         onClick={toggleVerify}
         disabled={busyVerify}
-        style={{ marginTop: '16px', width: '100%', background: verified ? '#30d158' : primaryColor, color: 'white', border: 'none', borderRadius: '12px', padding: '13px', fontSize: '15px', fontWeight: 700, cursor: busyVerify ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busyVerify ? 0.6 : 1 }}
+        style={{ marginTop: '16px', width: '100%', background: verified ? '#30d158' : primaryColor, color: verified ? 'white' : onPrimary, border: verified ? 'none' : primaryBtnBorder, borderRadius: '12px', padding: '13px', fontSize: '15px', fontWeight: 700, cursor: busyVerify ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busyVerify ? 0.6 : 1 }}
       >
         {verified ? '✓ Verified at door' : 'Mark as verified at door'}
       </button>
@@ -118,7 +125,7 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
           <button
             onClick={saveNotes}
             disabled={savingNotes || !dirty}
-            style={{ background: dirty ? accentColor : '#e8e8ed', color: dirty ? 'white' : '#aeaeb2', border: 'none', borderRadius: '10px', padding: '10px 20px', fontSize: '14px', fontWeight: 700, cursor: savingNotes || !dirty ? 'default' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            style={{ background: dirty ? accentColor : '#e8e8ed', color: dirty ? onAccent : '#aeaeb2', border: dirty ? accentBtnBorder : 'none', borderRadius: '10px', padding: '10px 20px', fontSize: '14px', fontWeight: 700, cursor: savingNotes || !dirty ? 'default' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >
             {savingNotes ? 'Saving…' : 'Save notes'}
           </button>

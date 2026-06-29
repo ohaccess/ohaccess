@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { onColor, readableOnLight, fillBorder } from '@/lib/colors'
 
 interface AgentRollup {
   id: string
@@ -61,6 +62,12 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
   primaryColor: string
   accentColor: string
 }) {
+  // Keep accent-colored text and buttons readable if the agent picks a
+  // near-white accent (see lib/colors).
+  const onAccent = onColor(accentColor)
+  const accentText = readableOnLight(accentColor)
+  const onPrimary = onColor(primaryColor)
+  const primaryBtnBorder = fillBorder(primaryColor)
   const [loading, setLoading] = useState(true)
   const [agents, setAgents] = useState<AgentRollup[]>([])
   const [openHouses, setOpenHouses] = useState<OpenHouseRow[]>([])
@@ -137,7 +144,7 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
         ].map(stat => (
           <div key={stat.label} style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '16px 18px' }}>
             <div style={{ fontSize: '11px', fontWeight: 500, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>{stat.label}</div>
-            <div style={{ fontSize: '28px', fontWeight: 600, color: stat.accent ? accentColor : '#1d1d1f', letterSpacing: '-1px' }}>{stat.value}</div>
+            <div style={{ fontSize: '28px', fontWeight: 600, color: stat.accent ? accentText : '#1d1d1f', letterSpacing: '-1px' }}>{stat.value}</div>
           </div>
         ))}
       </div>
@@ -167,7 +174,7 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
                     <td style={{ ...td, textAlign: 'right' }}>
                       <button
                         onClick={() => setAgentFilter(agentFilter === a.id ? 'all' : a.id)}
-                        style={{ background: agentFilter === a.id ? accentColor : '#f5f5f7', color: agentFilter === a.id ? 'white' : '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '7px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
+                        style={{ background: agentFilter === a.id ? accentColor : '#f5f5f7', color: agentFilter === a.id ? onAccent : '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '7px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
                       >
                         {agentFilter === a.id ? 'Showing' : 'View open houses'}
                       </button>
@@ -194,9 +201,9 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
             {visibleOpenHouses.map(oh => (
               <div key={oh.id} onClick={() => openVisitorLog(oh)}
-                style={{ background: selectedOH?.id === oh.id ? '#f5f9ff' : 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentColor : '#d1d1d6'}`, borderRadius: '14px', padding: '12px 16px', cursor: 'pointer' }}>
+                style={{ background: selectedOH?.id === oh.id ? '#f5f9ff' : 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentText : '#d1d1d6'}`, borderRadius: '14px', padding: '12px 16px', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: oh.status === 'active' ? accentColor : '#aeaeb2', flexShrink: 0 }} />
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: oh.status === 'active' ? accentText : '#aeaeb2', flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: '#1d1d1f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{oh.property_address}</div>
                     <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>
@@ -221,7 +228,7 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
               Visitor log — {selectedOH.property_address}
               <span style={{ color: '#6e6e73', fontWeight: 400 }}> · {selectedOH.agent_name}</span>
             </div>
-            <button onClick={exportCSV} disabled={visitors.length === 0} style={{ background: primaryColor, color: 'white', border: 'none', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: visitors.length === 0 ? 'not-allowed' : 'pointer', opacity: visitors.length === 0 ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
+            <button onClick={exportCSV} disabled={visitors.length === 0} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: visitors.length === 0 ? 'not-allowed' : 'pointer', opacity: visitors.length === 0 ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
           </div>
           {visitorsLoading ? (
             <div style={{ textAlign: 'center', color: '#6e6e73', padding: '20px', fontSize: '13px' }}>Loading visitors…</div>
