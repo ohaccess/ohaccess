@@ -1,22 +1,47 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import TeamAdminPanel from './_components/TeamAdminPanel'
 import TeamActivityPanel from './_components/TeamActivityPanel'
 import VisitorDetail from '@/app/_components/VisitorDetail'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
-import { timelineStyle } from '@/lib/timeline'
+import { timelineStyle, timelineRank } from '@/lib/timeline'
+import { useSortable, applySort, type Sortable } from '@/lib/sort'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+// Columns + sort accessors for the per-open-house visitor list. Clicking a
+// header toggles sort (shared useSortable/applySort, same as the admin tables).
+const VISITOR_COLUMNS: { label: string; key: string }[] = [
+  { label: 'Name', key: 'name' },
+  { label: 'Phone', key: 'phone' },
+  { label: 'Email', key: 'email' },
+  { label: 'Timeline', key: 'timeline' },
+  { label: 'Time', key: 'time' },
+  { label: '✓', key: 'verified' },
+]
+const VISITOR_ACC: Record<string, (v: any) => Sortable> = {
+  name: (v) => `${v.first_name || ''} ${v.last_name || ''}`.trim(),
+  phone: (v) => v.phone,
+  email: (v) => v.email,
+  timeline: (v) => timelineRank(v.purchasing_timeline),
+  time: (v) => (v.registered_at ? new Date(v.registered_at).getTime() : null),
+  verified: (v) => !!v.verified,
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [openHouses, setOpenHouses] = useState<any[]>([])
   const [visitors, setVisitors] = useState<any[]>([])
+  const visitorSort = useSortable('time', 'desc')
+  const sortedVisitors = useMemo(
+    () => applySort(visitors, VISITOR_ACC[visitorSort.state.key] || VISITOR_ACC.time, visitorSort.state.dir),
+    [visitors, visitorSort.state]
+  )
   const [selectedOH, setSelectedOH] = useState<any>(null)
   const [view, setView] = useState<'dashboard' | 'new' | 'settings' | 'team' | 'activity'>('dashboard')
   const [loading, setLoading] = useState(true)
@@ -822,13 +847,19 @@ export default function Dashboard() {
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', minWidth: '500px' }}>
                       <thead>
                         <tr>
-                          {['Name','Phone','Email','Timeline','Time','✓'].map(h => (
-                            <th key={h} style={{ textAlign: 'left', padding: '8px', fontSize: '10px', fontWeight: '600', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid #d1d1d6', whiteSpace: 'nowrap' }}>{h}</th>
-                          ))}
+                          {VISITOR_COLUMNS.map(col => {
+                            const active = visitorSort.state.key === col.key
+                            return (
+                              <th key={col.key} onClick={() => visitorSort.onSort(col.key)} title="Sort" style={{ textAlign: 'left', padding: '8px', fontSize: '10px', fontWeight: '600', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid #d1d1d6', whiteSpace: 'nowrap', cursor: 'pointer', userSelect: 'none' }}>
+                                {col.label}
+                                <span style={{ marginLeft: '4px', fontSize: '9px', color: active ? '#1d1d1f' : '#c7c7cc' }}>{active ? (visitorSort.state.dir === 'asc' ? '▲' : '▼') : '↕'}</span>
+                              </th>
+                            )
+                          })}
                         </tr>
                       </thead>
                       <tbody>
-                        {visitors.map((v, i) => (
+                        {sortedVisitors.map((v, i) => (
                           <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
                               <button onClick={() => setVisitorModal(v)} style={{ background: 'none', border: 'none', padding: 0, color: accentText, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px', textAlign: 'left' }}>
@@ -840,7 +871,7 @@ export default function Dashboard() {
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{new Date(v.registered_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                             <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
-                              <button disabled={locked} onClick={() => toggleVerified(v.id, v.verified)} style={{ background: v.verified ? '#30d158' : primaryColor, color: 'white', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+                              <button disabled={locked} onClick={() => toggleVerified(v.id, v.verified)} style={{ background: v.verified ? '#30d158' : primaryColor, color: v.verified ? 'white' : onPrimary, border: v.verified ? 'none' : primaryBtnBorder, borderRadius: '6px', padding: '4px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                                 {v.verified ? '✓' : 'Verify'}
                               </button>
                             </td>

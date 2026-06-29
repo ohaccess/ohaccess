@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { IMPERSONATION_KEY } from '../_components/ImpersonationBanner'
 import { timelineRank } from '@/lib/timeline'
+import { useSortable, applySort, type SortState, type Sortable } from '@/lib/sort'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -689,36 +690,7 @@ const td: React.CSSProperties = { padding: '11px 14px', color: INK, fontSize: 13
 const tdR: React.CSSProperties = { ...td, textAlign: 'right' }
 const tdSub: React.CSSProperties = { ...td, color: SUB }
 
-// ---- sorting ----
-type SortDir = 'asc' | 'desc'
-type SortState = { key: string; dir: SortDir }
-
-function useSortable(defaultKey: string, defaultDir: SortDir = 'asc') {
-  const [state, setState] = useState<SortState>({ key: defaultKey, dir: defaultDir })
-  const onSort = (k: string) =>
-    setState((s) => (s.key === k ? { key: k, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key: k, dir: 'asc' }))
-  return { state, onSort }
-}
-
-type Sortable = string | number | boolean | null
-
-function applySort<T>(rows: T[], get: (r: T) => Sortable, dir: SortDir): T[] {
-  const m = dir === 'asc' ? 1 : -1
-  return [...rows].sort((x, y) => {
-    const a = get(x)
-    const b = get(y)
-    const an = a === null || a === undefined || a === ''
-    const bn = b === null || b === undefined || b === ''
-    if (an && bn) return 0
-    if (an) return 1 // blanks always sort last, regardless of direction
-    if (bn) return -1
-    let r: number
-    if (typeof a === 'number' && typeof b === 'number') r = a - b
-    else if (typeof a === 'boolean' && typeof b === 'boolean') r = a === b ? 0 : a ? 1 : -1
-    else r = String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' })
-    return r * m
-  })
-}
+// ---- sorting ---- (hook + comparator shared with the dashboard)
 
 function SortTh({
   label,
