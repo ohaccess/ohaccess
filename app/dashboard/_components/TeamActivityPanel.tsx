@@ -1,6 +1,8 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { onColor, readableOnLight, fillBorder } from '@/lib/colors'
+import { timelineRank } from '@/lib/timeline'
+import { useSortable, applySort, type SortState, type Sortable } from '@/lib/sort'
 
 interface AgentRollup {
   id: string
@@ -56,6 +58,48 @@ const td = {
   whiteSpace: 'nowrap' as const,
 }
 
+// Click-to-sort header cell, matching the admin tables' behavior.
+function SortTh({ label, k, state, onSort }: { label: string; k: string; state: SortState; onSort: (k: string) => void }) {
+  const active = state.key === k
+  return (
+    <th onClick={() => onSort(k)} style={{ ...th, cursor: 'pointer', userSelect: 'none' as const }}>
+      {label}
+      <span style={{ marginLeft: '4px', fontSize: '9px', color: active ? '#1d1d1f' : '#c7c7cc' }}>
+        {active ? (state.dir === 'asc' ? '▲' : '▼') : '↕'}
+      </span>
+    </th>
+  )
+}
+
+const AGENT_COLUMNS: { label: string; key: string }[] = [
+  { label: 'Agent', key: 'agent' },
+  { label: 'Open Houses', key: 'openHouses' },
+  { label: 'Registrations', key: 'registrations' },
+  { label: 'Verified', key: 'verified' },
+]
+const AGENT_ACC: Record<string, (a: AgentRollup) => Sortable> = {
+  agent: (a) => a.full_name || a.email,
+  openHouses: (a) => a.open_house_count,
+  registrations: (a) => a.visitor_count,
+  verified: (a) => a.verified_count,
+}
+const VISITOR_COLUMNS: { label: string; key: string }[] = [
+  { label: 'Name', key: 'name' },
+  { label: 'Phone', key: 'phone' },
+  { label: 'Email', key: 'email' },
+  { label: 'Timeline', key: 'timeline' },
+  { label: 'Time', key: 'time' },
+  { label: '✓', key: 'verified' },
+]
+const VISITOR_ACC: Record<string, (v: Visitor) => Sortable> = {
+  name: (v) => `${v.first_name || ''} ${v.last_name || ''}`.trim(),
+  phone: (v) => v.phone,
+  email: (v) => v.email,
+  timeline: (v) => timelineRank(v.purchasing_timeline),
+  time: (v) => (v.registered_at ? new Date(v.registered_at).getTime() : null),
+  verified: (v) => !!v.verified,
+}
+
 export default function TeamActivityPanel({ supabase, showToast, primaryColor, accentColor }: {
   supabase: any
   showToast: (m: string, t?: 'success' | 'error') => void
@@ -76,6 +120,17 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
   const [selectedOH, setSelectedOH] = useState<OpenHouseRow | null>(null)
   const [visitors, setVisitors] = useState<Visitor[]>([])
   const [visitorsLoading, setVisitorsLoading] = useState(false)
+
+  const agentSort = useSortable('registrations', 'desc')
+  const sortedAgents = useMemo(
+    () => applySort(agents, AGENT_ACC[agentSort.state.key] || AGENT_ACC.registrations, agentSort.state.dir),
+    [agents, agentSort.state]
+  )
+  const visitorSort = useSortable('time', 'desc')
+  const sortedVisitors = useMemo(
+    () => applySort(visitors, VISITOR_ACC[visitorSort.state.key] || VISITOR_ACC.time, visitorSort.state.dir),
+    [visitors, visitorSort.state]
+  )
 
   const authHeaders = useCallback(async (): Promise<Record<string, string>> => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -159,13 +214,14 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', minWidth: '460px' }}>
               <thead>
                 <tr>
-                  {['Agent', 'Open Houses', 'Registrations', 'Verified', ''].map((h, i) => (
-                    <th key={i} style={th}>{h}</th>
+                  {AGENT_COLUMNS.map(col => (
+                    <SortTh key={col.key} label={col.label} k={col.key} state={agentSort.state} onSort={agentSort.onSort} />
                   ))}
+                  <th style={th}></th>
                 </tr>
               </thead>
               <tbody>
-                {agents.map((a, i) => (
+                {sortedAgents.map((a, i) => (
                   <tr key={a.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                     <td style={{ ...td, color: '#1d1d1f', fontWeight: 500 }}>{a.full_name || a.email}</td>
                     <td style={td}>{a.open_house_count}</td>
@@ -239,13 +295,13 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', minWidth: '500px' }}>
                 <thead>
                   <tr>
-                    {['Name', 'Phone', 'Email', 'Timeline', 'Time', '✓'].map(h => (
-                      <th key={h} style={th}>{h}</th>
+                    {VISITOR_COLUMNS.map(col => (
+                      <SortTh key={col.key} label={col.label} k={col.key} state={visitorSort.state} onSort={visitorSort.onSort} />
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {visitors.map((v, i) => (
+                  {sortedVisitors.map((v, i) => (
                     <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                       <td style={{ ...td }}>{v.first_name} {v.last_name}</td>
                       <td style={td}>{v.phone}</td>
