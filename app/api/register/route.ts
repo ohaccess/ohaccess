@@ -4,7 +4,7 @@ import twilio from 'twilio'
 import { Resend } from 'resend'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/escape-html'
-import { normalizePhone } from '@/lib/phone'
+import { normalizePhone, usPhoneError } from '@/lib/phone'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -147,6 +147,14 @@ export async function POST(request: Request) {
 
     if (!firstName || !lastName || !email || !phone || !openHouseId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Reject structurally-impossible phone numbers (bad area code, service
+    // codes, fictional 555 range, etc.) — the form blocks these client-side,
+    // but enforce it here too so a crafted request can't slip a junk number in.
+    const phoneError = usPhoneError(phone)
+    if (phoneError) {
+      return NextResponse.json({ error: phoneError }, { status: 400 })
     }
 
     const ip = getClientIp(request)
@@ -355,15 +363,24 @@ export async function POST(request: Request) {
     // Skip the code-word text for opted-out numbers (they get the email code
     // instead). Sending would just bounce with Twilio error 21610.
     let visitorSms: Awaited<ReturnType<typeof twilioClient.messages.create>> | null = null
+    let smsSendFailed = false
     if (!phoneOptedOut) {
-      visitorSms = await twilioClient.messages.create({
-        body: smsBody,
-        from: process.env.TWILIO_PHONE_NUMBER!,
-        to: phone,
-        // Twilio posts delivery updates (delivered/undelivered/failed) here so we
-        // can flag bad numbers on the agent dashboard.
-        statusCallback: `${APP_URL}/api/webhooks/twilio-status`,
-      })
+      try {
+        visitorSms = await twilioClient.messages.create({
+          body: smsBody,
+          from: process.env.TWILIO_PHONE_NUMBER!,
+          to: normalizedPhone || phone,
+          // Twilio posts delivery updates (delivered/undelivered/failed) here so we
+          // can flag bad numbers on the agent dashboard.
+          statusCallback: `${APP_URL}/api/webhooks/twilio-status`,
+        })
+      } catch (err) {
+        // Twilio rejected the number outright (invalid / unreachable). Don't fail
+        // the whole sign-in — the visitor still gets their email code — but record
+        // it so the agent dashboard flags the bad number right away.
+        smsSendFailed = true
+        console.error('Visitor SMS send failed:', err)
+      }
     }
 
     // ② VISITOR EMAIL — escape every agent-controlled field before
@@ -454,6 +471,8 @@ export async function POST(request: Request) {
       .update({
         email_message_id: visitorEmail.data?.id ?? null,
         sms_message_sid: visitorSms?.sid ?? null,
+        // A send-time rejection won't get a delivery callback, so flag it now.
+        ...(smsSendFailed ? { sms_status: 'failed', delivery_updated_at: new Date().toISOString() } : {}),
       })
       .eq('id', visitorRow.id)
     if (deliveryIdErr) {

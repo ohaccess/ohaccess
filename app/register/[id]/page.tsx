@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
+import { usPhoneError } from '@/lib/phone'
 
 export default function RegisterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
@@ -34,7 +35,8 @@ function ExpiredOpenHouse() {
     const newErrors: any = {}
     if (!form.name.trim()) newErrors.name = 'Please enter your name'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email)) newErrors.email = 'Please enter a valid email'
-    if (form.phone.replace(/\D/g, '').length !== 10) newErrors.phone = 'Please enter a valid phone number'
+    const phoneErr = usPhoneError(form.phone)
+    if (phoneErr) newErrors.phone = phoneErr
     if (!form.zip.trim()) newErrors.zip = 'Please enter your zip code'
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return }
 
@@ -223,7 +225,8 @@ function ExpiredOpenHouse() {
     const nameParts = `${form.firstName} ${form.lastName}`.trim().split(' ').filter(w => w.length > 0)
     if (nameParts.length < 2) newErrors.name = 'Please enter your first and last name'
     if (!validateEmail(form.email)) newErrors.email = 'Please enter a valid email address'
-    if (form.phone.replace(/\D/g, '').length !== 10) newErrors.phone = 'Please enter a valid 10-digit phone number'
+    const phoneErr = usPhoneError(form.phone)
+    if (phoneErr) newErrors.phone = phoneErr
     if (!selectedTimeline) newErrors.timeline = 'Please select a purchasing timeline'
     return newErrors
   }
@@ -391,13 +394,15 @@ function ExpiredOpenHouse() {
               placeholder="(000) 000-0000"
               value={form.phone}
               onChange={e => {
-                setForm({ ...form, phone: formatPhone(e.target.value) })
-                if (errors.phone) setErrors({ ...errors, phone: null })
+                const next = formatPhone(e.target.value)
+                setForm({ ...form, phone: next })
+                // Flag a bad number the moment a full one is entered; stay quiet
+                // while they're still typing.
+                const complete = next.replace(/\D/g, '').length >= 10
+                setErrors({ ...errors, phone: complete ? usPhoneError(next) : null })
               }}
               onBlur={() => {
-                if (form.phone.replace(/\D/g, '').length !== 10 && form.phone) {
-                  setErrors({ ...errors, phone: 'Please enter a valid 10-digit phone number' })
-                }
+                if (form.phone) setErrors({ ...errors, phone: usPhoneError(form.phone) })
               }}
             />
             {errors.phone && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.phone}</div>}

@@ -62,6 +62,7 @@ export default function Home() {
           <a href="#how-it-works">How it works</a>
           <a href="#safety">Safety</a>
           <a href="#features">What&apos;s Included</a>
+          <a href="#integrations">Integrations</a>
           <a href="#pricing">Pricing</a>
           <Link href="/login" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', textDecoration: 'none' }}>Sign in</Link>
           <Link href="/login?signup=true" style={{ background: '#c9963a', color: '#1d1d1f', padding: '8px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>
@@ -83,6 +84,7 @@ export default function Home() {
           <a href="#how-it-works" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>How it works</a>
           <a href="#safety" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>Safety</a>
           <a href="#features" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>What&apos;s Included</a>
+          <a href="#integrations" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>Integrations</a>
           <a href="#pricing" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>Pricing</a>
           <Link href="/login" onClick={() => setMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', textDecoration: 'none', fontWeight: '500' }}>Sign in</Link>
           <Link href="/login?signup=true" onClick={() => setMenuOpen(false)} style={{ background: '#c9963a', color: '#1d1d1f', padding: '12px 20px', borderRadius: '8px', fontSize: '15px', fontWeight: '700', textDecoration: 'none', textAlign: 'center' }}>
@@ -228,7 +230,7 @@ export default function Home() {
               { emoji: '✅', title: 'Real-time verification', body: 'Code word delivered instantly via SMS and email. No valid contact info = no access code.' },
               { emoji: '🔔', title: 'Instant agent alerts', body: 'Know who is walking in before they reach the door. Name, phone, email, and buying timeline — instantly. Tap the alert link to verify them and add private notes.' },
               { emoji: '📋', title: 'Verified visitor log', body: 'Every registration saved automatically. Mark visitors as verified at the door and export to CSV.' },
-              { emoji: '🔗', title: 'CRM ready', body: 'Export visitor data to CSV and import into Follow Up Boss, Lofty, or any CRM you use.' },
+              { emoji: '🔗', title: 'Automatic CRM sync', body: 'Every verified sign-in lands in your CRM as a new lead automatically — Follow Up Boss, kvCORE, Lofty, and more. CSV export too.' },
               { emoji: '🌍', title: 'Multi-market ready', body: 'Built for real estate today — designed to expand to automotive, events, vacation rentals, and more.' },
             ].map(item => (
               <div key={item.title} style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '24px' }}>
@@ -241,8 +243,26 @@ export default function Home() {
         </div>
       </section>
 
+      {/* INTEGRATIONS */}
+      <section id="integrations" className="section-pad" style={{ background: 'white' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
+          <h2 className="section-title">Leads flow straight to your CRM</h2>
+          <p style={{ fontSize: '16px', color: '#6e6e73', margin: '0 auto 28px', maxWidth: '640px', lineHeight: '1.6' }}>
+            Every verified sign-in is sent to your CRM as a new lead automatically — no CSV exports, no setup fees. Works with the tools agents already use:
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', maxWidth: '780px', margin: '0 auto' }}>
+            {['Follow Up Boss', 'BoldTrail / kvCORE', 'Lofty', 'Sierra Interactive', 'Real Geeks', 'CINC', 'Top Producer', 'Wise Agent', 'LionDesk'].map(name => (
+              <span key={name} style={{ background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '20px', padding: '8px 16px', fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>{name}</span>
+            ))}
+          </div>
+          <p style={{ fontSize: '13px', color: '#6e6e73', marginTop: '20px' }}>
+            Using something else? Connect 7,000+ apps with Zapier — included free on every plan.
+          </p>
+        </div>
+      </section>
+
       {/* PRICING */}
-      <section id="pricing" className="section-pad" style={{ background: 'white' }}>
+      <section id="pricing" className="section-pad" style={{ background: '#f5f5f7' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <h2 className="section-title">Plans & Pricing</h2>
