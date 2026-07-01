@@ -24,6 +24,8 @@ interface Brokerage {
   primary_color: string | null
   accent_color: string | null
   owner_id: string
+  crm_lead_email: string | null
+  crm_forward_member_leads: boolean
 }
 
 const card = {
@@ -62,6 +64,8 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
   const [logo, setLogo] = useState('')
   const [primary, setPrimary] = useState('#1d1d1f')
   const [accent, setAccent] = useState('#0071e3')
+  const [crmEmail, setCrmEmail] = useState('')
+  const [crmForward, setCrmForward] = useState(false)
 
   const authHeaders = useCallback(async (): Promise<Record<string, string>> => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -80,6 +84,8 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
     setLogo(json.brokerage.logo_url || '')
     setPrimary(json.brokerage.primary_color || '#1d1d1f')
     setAccent(json.brokerage.accent_color || '#0071e3')
+    setCrmEmail(json.brokerage.crm_lead_email || '')
+    setCrmForward(!!json.brokerage.crm_forward_member_leads)
     setLoading(false)
   }, [authHeaders])
 
@@ -90,7 +96,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
     const res = await fetch('/api/team/settings', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
-      body: JSON.stringify({ name, logo_url: logo, primary_color: primary, accent_color: accent }),
+      body: JSON.stringify({ name, logo_url: logo, primary_color: primary, accent_color: accent, crm_lead_email: crmEmail, crm_forward_member_leads: crmForward }),
     })
     const json = await res.json()
     if (res.ok) { showToast('Team settings saved'); await load(); await onSaved?.() }
@@ -238,6 +244,18 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
               <input style={{ ...inputStyle, flex: 1 }} type="text" value={accent} onChange={e => setAccent(e.target.value)} />
             </div>
           </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid #f2f2f7', paddingTop: '16px', marginBottom: '16px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px' }}>Team CRM lead email</label>
+          <input style={{ ...inputStyle, width: '100%' }} type="email" placeholder="leads@yourteamcrm.com" value={crmEmail} onChange={e => setCrmEmail(e.target.value)} />
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginTop: '12px', cursor: 'pointer' }}>
+            <input type="checkbox" checked={crmForward} onChange={e => setCrmForward(e.target.checked)} style={{ width: '18px', height: '18px', marginTop: '1px', cursor: 'pointer', flexShrink: 0 }} />
+            <span style={{ fontSize: '13px', color: '#1d1d1f', lineHeight: '1.5' }}>
+              Send every sign-in from my team&apos;s open houses to this CRM too
+              <span style={{ display: 'block', fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>Each agent still gets leads in their own CRM — this adds a copy to the team CRM above.</span>
+            </span>
+          </label>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

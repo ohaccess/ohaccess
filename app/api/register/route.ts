@@ -304,27 +304,48 @@ export async function POST(request: Request) {
     // there so the signup lands in the agent's CRM with no per-CRM API. Reply-To
     // is the visitor so the agent can reply straight to the lead. A failed or
     // slow send must never delay/break registration.
+    const sendLeadEmail = (to: string) =>
+      resend.emails.send({
+        from: 'ohACCESS Leads <noreply@mail.ohaccess.com>',
+        to: to.trim(),
+        replyTo: isEmail(email) ? email : 'support@ohaccess.com',
+        subject: `New Lead from ohACCESS — ${firstName} ${lastName}`,
+        html: buildCrmLeadEmail({
+          firstName,
+          lastName,
+          email,
+          phone,
+          purchasingTimeline,
+          propertyAddress: openHouse.property_address || '',
+          agentName: agent?.full_name || '',
+          registeredAt: now,
+          visitorUrl: `https://ohaccess.com/visitor/${visitorRow.id}`,
+        }),
+      })
+
     const crmLeadEmail = agent?.crm_lead_email
     if (isEmail(crmLeadEmail)) {
-      try {
-        await resend.emails.send({
-          from: 'ohACCESS Leads <noreply@mail.ohaccess.com>',
-          to: crmLeadEmail.trim(),
-          replyTo: isEmail(email) ? email : 'support@ohaccess.com',
-          subject: `New Lead from ohACCESS — ${firstName} ${lastName}`,
-          html: buildCrmLeadEmail({
-            firstName,
-            lastName,
-            email,
-            phone,
-            purchasingTimeline,
-            propertyAddress: openHouse.property_address || '',
-            agentName: agent?.full_name || '',
-            registeredAt: now,
-            visitorUrl: `https://ohaccess.com/visitor/${visitorRow.id}`,
-          }),
-        })
-      } catch (err) { console.error('CRM lead-email send failed:', err) }
+      try { await sendLeadEmail(crmLeadEmail) } catch (err) { console.error('CRM lead-email send failed:', err) }
+    }
+
+    // Also forward to the team/brokerage CRM when the member's brokerage has
+    // opted in — the team lead then gets every member's open-house lead in one
+    // place, on top of the agent's own CRM. Skip if it resolves to the same
+    // address the agent already used (avoids a duplicate lead).
+    if (agent?.brokerage_id) {
+      const { data: brokerage } = await supabase
+        .from('brokerages')
+        .select('crm_lead_email, crm_forward_member_leads')
+        .eq('id', agent.brokerage_id)
+        .maybeSingle()
+      const teamCrmEmail = brokerage?.crm_lead_email
+      if (
+        brokerage?.crm_forward_member_leads &&
+        isEmail(teamCrmEmail) &&
+        teamCrmEmail.trim().toLowerCase() !== (crmLeadEmail || '').trim().toLowerCase()
+      ) {
+        try { await sendLeadEmail(teamCrmEmail) } catch (err) { console.error('Team CRM lead-email forward failed:', err) }
+      }
     }
 
     // Generate short URLs (best-effort — if creation fails we just skip the link)

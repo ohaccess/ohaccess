@@ -45,6 +45,8 @@ export async function GET(request: Request) {
       primary_color: ctx.primaryColor,
       accent_color: ctx.accentColor,
       owner_id: ctx.ownerId,
+      crm_lead_email: ctx.crmLeadEmail,
+      crm_forward_member_leads: ctx.crmForwardMemberLeads,
     },
     isAdmin: ctx.isAdmin,
     members: members ?? [],
@@ -65,7 +67,7 @@ export async function PATCH(request: Request) {
   }
 
   const body = await request.json()
-  const update: Record<string, string | null> = {}
+  const update: Record<string, string | null | boolean> = {}
 
   if (typeof body.name === 'string') {
     const name = body.name.trim()
@@ -96,6 +98,20 @@ export async function PATCH(request: Request) {
     }
     update.accent_color = body.accent_color
   }
+  // Team CRM intake address: empty clears it; otherwise must look like an email.
+  if (body.crm_lead_email !== undefined) {
+    const raw = typeof body.crm_lead_email === 'string' ? body.crm_lead_email.trim() : ''
+    if (raw === '') {
+      update.crm_lead_email = null
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw) || raw.length > 254) {
+      return NextResponse.json({ error: 'Team CRM email must be a valid email address' }, { status: 400 })
+    } else {
+      update.crm_lead_email = raw
+    }
+  }
+  if (body.crm_forward_member_leads !== undefined) {
+    update.crm_forward_member_leads = !!body.crm_forward_member_leads
+  }
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
@@ -112,13 +128,13 @@ export async function PATCH(request: Request) {
   // The brokerages table isn't readable by the anonymous registration page,
   // but profiles already are — so we denormalize.
   const mirror: Record<string, string | null> = {}
-  if (update.primary_color) mirror.primary_color = update.primary_color
-  if (update.accent_color) mirror.accent_color = update.accent_color
-  if (update.logo_url !== undefined) mirror.logo_url = update.logo_url
+  if (typeof update.primary_color === 'string') mirror.primary_color = update.primary_color
+  if (typeof update.accent_color === 'string') mirror.accent_color = update.accent_color
+  if (update.logo_url !== undefined) mirror.logo_url = typeof update.logo_url === 'string' ? update.logo_url : null
   // Mirror the team name onto each member's profile `brokerage` field so the
   // (read-only) Brokerage field in Settings and visitor emails show the team
   // name for everyone, including the admin.
-  if (update.name) mirror.brokerage = update.name
+  if (typeof update.name === 'string') mirror.brokerage = update.name
   if (Object.keys(mirror).length > 0) {
     await supabase.from('profiles').update(mirror).eq('brokerage_id', ctx.brokerageId)
   }

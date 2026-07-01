@@ -16,6 +16,8 @@ export interface BrokerageContext {
   primaryColor: string | null
   accentColor: string | null
   subscriptionStatus: string | null
+  crmLeadEmail: string | null
+  crmForwardMemberLeads: boolean
 }
 
 // Resolve the brokerage a user belongs to and whether they are the admin.
@@ -32,7 +34,7 @@ export async function getBrokerageContext(userId: string): Promise<BrokerageCont
 
   const { data: brokerage } = await supabase
     .from('brokerages')
-    .select('id, name, owner_id, tier, seat_limit, logo_url, primary_color, accent_color, subscription_status')
+    .select('id, name, owner_id, tier, seat_limit, logo_url, primary_color, accent_color, subscription_status, crm_lead_email, crm_forward_member_leads')
     .eq('id', profile.brokerage_id)
     .single()
 
@@ -49,6 +51,8 @@ export async function getBrokerageContext(userId: string): Promise<BrokerageCont
     primaryColor: brokerage.primary_color,
     accentColor: brokerage.accent_color,
     subscriptionStatus: brokerage.subscription_status,
+    crmLeadEmail: brokerage.crm_lead_email,
+    crmForwardMemberLeads: !!brokerage.crm_forward_member_leads,
   }
 }
 
