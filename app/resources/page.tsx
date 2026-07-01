@@ -122,6 +122,39 @@ export default function Resources() {
           </div>
         </div>
 
+        {/* Open house essentials (affiliate) */}
+        <div style={{ marginBottom: '48px' }}>
+          <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
+            🪧 Open house essentials
+          </div>
+          <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
+            Our favorite sign stands and displays for showing your QR welcome sign at the door — and guiding visitors in from the street.
+          </div>
+
+          <div className="resources-grid">
+            {[
+              { emoji: '🪧', name: 'A-Frame Sidewalk Sign', body: 'Double-sided sidewalk sign to guide visitors from the street to your door. Slide in a poster with your QR code and address.', url: 'https://amzn.to/4v48sQg' },
+              { emoji: '🏷️', name: 'Pedestal Sign Holder', body: 'Weighted floor stand for an 8.5×11" sign — ideal for your QR welcome sign right at the entrance. Adjustable height, portrait or landscape.', url: 'https://amzn.to/4wkUfj2' },
+              { emoji: '🖼️', name: 'Poster Easel Stand', body: 'Lightweight, collapsible tripod easel — a simple, budget-friendly way to prop up a foam-board welcome sign indoors.', url: 'https://amzn.to/4eNmLnH' },
+              { emoji: '✨', name: 'Gold Sign Easel', body: 'Elegant adjustable gold easel for a premium welcome sign at higher-end listings. Holds signs, posters, and framed displays.', url: 'https://amzn.to/4xZoSw4' },
+            ].map(item => (
+              <div key={item.name} style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ fontSize: '28px', marginBottom: '10px' }}>{item.emoji}</div>
+                <div style={{ fontSize: '15px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>{item.name}</div>
+                <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '16px', flex: 1 }}>{item.body}</div>
+                <a href={item.url} target="_blank" rel="noopener noreferrer sponsored"
+                  style={{ display: 'block', textAlign: 'center', background: '#c9963a', color: '#1d1d1f', padding: '10px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}>
+                  View on Amazon →
+                </a>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontSize: '12px', color: '#aeaeb2', marginTop: '16px', lineHeight: '1.6' }}>
+            As an Amazon Associate, ohACCESS earns from qualifying purchases. These are affiliate links — they cost you nothing extra and help support ohACCESS.
+          </div>
+        </div>
+
         {/* Tips section */}
         <div style={{ marginBottom: '48px' }}>
           <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
