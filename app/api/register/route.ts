@@ -374,7 +374,7 @@ export async function POST(request: Request) {
     // message even if it pushes us to 2 segments for very long addresses —
     // TCPA opt-out signaling is more important than the marginal cost.
     const smsBody = buildSmsBody(
-      `Your TEXT entry code for ${streetAddress} is ${smsCodeWord}. Show this text at the door. Reply STOP to opt out.`,
+      `Your TEXT entry code for ${streetAddress} is "${smsCodeWord}". Show this text at the door. Reply STOP to opt out.`,
       [
         ...(listingShortUrl ? [{ label: 'Listing', url: listingShortUrl }] : []),
         ...(agentShortUrl ? [{ label: 'Agent', url: agentShortUrl }] : []),
