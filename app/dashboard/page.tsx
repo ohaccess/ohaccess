@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import TeamAdminPanel from './_components/TeamAdminPanel'
 import TeamActivityPanel from './_components/TeamActivityPanel'
+import QrModal from './_components/QrModal'
 import VisitorDetail from '@/app/_components/VisitorDetail'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { timelineStyle, timelineRank } from '@/lib/timeline'
@@ -1268,104 +1269,17 @@ export default function Dashboard() {
       </div>
 {/* QR CODE MODAL */}
       {qrModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px' }}
-          onClick={() => setQrModal(null)}>
-          <div style={{ background: 'white', borderRadius: '24px', padding: '28px', maxWidth: '380px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', textAlign: 'center' }}
-            onClick={e => e.stopPropagation()}>
-            
-            {/* Header */}
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '16px', fontWeight: '700', color: '#1d1d1f', marginBottom: '3px' }}>
-                {qrModal.oh.street_address || qrModal.oh.property_address}
-              </div>
-              <div style={{ fontSize: '13px', color: '#6e6e73' }}>
-                {qrModal.oh.open_house_date} · {qrModal.oh.open_house_hours}
-              </div>
-            </div>
-
-            {/* QR Code */}
-            <div style={{ background: '#f5f5f7', borderRadius: '16px', padding: '20px', marginBottom: '20px', display: 'inline-block' }}>
-              <img src={qrModal.dataUrl} alt="QR Code" style={{ width: '200px', height: '200px', display: 'block' }} />
-            </div>
-
-            <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '20px' }}>
-              Visitors scan this code to register and receive their access code
-            </div>
-
-            {/* Action buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button onClick={() => {
-                const a = document.createElement('a')
-                a.href = qrModal.dataUrl
-                a.download = `ohaccess-qr-${qrModal.oh.property_address.replace(/\s+/g, '-')}.png`
-                a.click()
-              }} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                📥 Download PNG
-              </button>
-
-              <button onClick={() => {
-                navigator.clipboard.writeText(qrModal.url)
-                showToast('Registration URL copied!')
-              }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                📋 Copy registration URL
-              </button>
-
-              {navigator.share && (
-                <button onClick={async () => {
-                  try {
-                    const file = new File([qrModal.blob], `ohaccess-qr.png`, { type: 'image/png' })
-                    await navigator.share({
-                      title: `ohACCESS QR — ${qrModal.oh.street_address || qrModal.oh.property_address}`,
-                      text: `Scan to register for the open house at ${qrModal.oh.property_address}`,
-                      files: [file]
-                    })
-                  } catch (err) {
-                    console.log('Share cancelled')
-                  }
-                }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  📤 Share QR Code
-                </button>
-              )}
-
-              {/* Add to calendar — only when the open house has a scheduled time */}
-              {qrModal.oh.start_at && qrModal.oh.end_at && (() => {
-                const z = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
-                const tz = qrModal.oh.timezone
-                // Compact wall-clock stamp (YYYYMMDDTHHMMSS) in the property's tz.
-                const localStamp = (iso: string) => {
-                  const dtf = new Intl.DateTimeFormat('en-CA', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                  const p: Record<string, string> = {}
-                  for (const part of dtf.formatToParts(new Date(iso))) p[part.type] = part.value
-                  return `${p.year}${p.month}${p.day}T${p.hour}${p.minute}${p.second}`
-                }
-                const title = encodeURIComponent(`Open House — ${qrModal.oh.property_address || ''}`)
-                const loc = encodeURIComponent(qrModal.oh.property_address || '')
-                // Anchor the event to the PROPERTY's timezone (ctz) so it reads at
-                // the scheduled local time no matter where it's added from.
-                const gcal = tz
-                  ? `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${localStamp(qrModal.oh.start_at)}/${localStamp(qrModal.oh.end_at)}&ctz=${encodeURIComponent(tz)}&location=${loc}`
-                  : `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${z(qrModal.oh.start_at)}/${z(qrModal.oh.end_at)}&location=${loc}`
-                const outlook = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${encodeURIComponent(qrModal.oh.start_at)}&enddt=${encodeURIComponent(qrModal.oh.end_at)}&location=${loc}&path=/calendar/action/compose&rru=addevent`
-                const ics = `/api/open-house/${qrModal.oh.id}/calendar`
-                const calBtn = { flex: 1, textAlign: 'center' as const, background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '8px', padding: '8px', fontSize: '12px', fontWeight: 600, textDecoration: 'none', fontFamily: "'Plus Jakarta Sans', sans-serif" }
-                return (
-                  <div style={{ borderTop: '1px solid #f2f2f7', paddingTop: '12px', marginTop: '2px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 600, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>📅 Add to calendar</div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <a href={gcal} target="_blank" rel="noopener noreferrer" style={calBtn}>Google</a>
-                      <a href={outlook} target="_blank" rel="noopener noreferrer" style={calBtn}>Outlook</a>
-                      <a href={ics} style={calBtn}>Apple / .ics</a>
-                    </div>
-                  </div>
-                )
-              })()}
-
-              <button onClick={() => setQrModal(null)} style={{ background: 'none', border: 'none', color: '#aeaeb2', fontSize: '13px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '4px' }}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <QrModal
+          data={qrModal}
+          onClose={() => setQrModal(null)}
+          showToast={showToast}
+          primaryColor={primaryColor}
+          onPrimary={onPrimary}
+          primaryBtnBorder={primaryBtnBorder}
+          accentColor={accentColor}
+          onAccent={onAccent}
+          accentBtnBorder={accentBtnBorder}
+        />
       )}
 
       {/* VISITOR DETAIL PANEL — opens when a visitor name is clicked */}
