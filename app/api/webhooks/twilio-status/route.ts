@@ -1,15 +1,10 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import twilio from 'twilio'
 import { normalizePhone } from '@/lib/phone'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ohaccess.com'

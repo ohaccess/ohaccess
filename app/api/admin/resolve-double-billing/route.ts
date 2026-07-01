@@ -1,21 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/auth'
+import { getAuthenticatedUser, isAdmin } from '@/lib/auth'
 import { stripe } from '@/lib/stripe'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-function isAdmin(email: string | undefined): boolean {
-  if (!email) return false
-  const allowlist = (process.env.ADMIN_EMAILS || '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean)
-  return allowlist.includes(email.toLowerCase())
-}
 
 const BILLING_STATUSES = new Set(['active', 'trialing', 'past_due'])
 

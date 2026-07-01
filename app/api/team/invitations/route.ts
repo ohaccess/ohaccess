@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 import { Resend } from 'resend'
@@ -8,11 +8,6 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/escape-html'
 
 export const runtime = 'nodejs'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 const resend = new Resend(process.env.RESEND_API_KEY!)
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://ohaccess.com'

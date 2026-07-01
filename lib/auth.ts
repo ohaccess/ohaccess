@@ -1,9 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { supabaseAdmin as supabase } from './supabase-admin'
 
 export async function getAuthenticatedUser(req: Request) {
   const authHeader = req.headers.get('authorization')
@@ -15,4 +10,15 @@ export async function getAuthenticatedUser(req: Request) {
   const { data: { user }, error } = await supabase.auth.getUser(token)
   if (error || !user) return null
   return user
+}
+
+// Is this email on the admin allowlist (ADMIN_EMAILS, comma-separated)?
+// Case-insensitive. Used to gate the /api/admin/* routes.
+export function isAdmin(email: string | undefined): boolean {
+  if (!email) return false
+  const allowlist = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+  return allowlist.includes(email.toLowerCase())
 }

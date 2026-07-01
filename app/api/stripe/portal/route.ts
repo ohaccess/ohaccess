@@ -1,13 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { stripe } from '@/lib/stripe'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://ohaccess.com'
 

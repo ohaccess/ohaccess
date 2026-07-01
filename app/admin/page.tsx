@@ -1,15 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { IMPERSONATION_KEY } from '../_components/ImpersonationBanner'
 import { timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type SortState, type Sortable } from '@/lib/sort'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 type Stats = {
   totalAgents: number

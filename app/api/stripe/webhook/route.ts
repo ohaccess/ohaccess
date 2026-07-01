@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { Resend } from 'resend'
@@ -8,11 +8,6 @@ import { notifyAdmins } from '@/lib/notify-admin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
 const resend = new Resend(process.env.RESEND_API_KEY!)
