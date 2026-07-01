@@ -1,12 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { getBrokerageContext, getSeatUsage } from '@/lib/team'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 function isHexColor(value: unknown): value is string {
   return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value)

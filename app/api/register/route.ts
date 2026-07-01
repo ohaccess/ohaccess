@@ -1,15 +1,20 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import twilio from 'twilio'
 import { Resend } from 'resend'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/escape-html'
 import { normalizePhone, usPhoneError } from '@/lib/phone'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import {
+  generateCode,
+  buildSmsBody,
+  isHttpUrl,
+  safeUrl,
+  isHexColor,
+  isEmail,
+  buildCrmLeadEmail,
+  SMS_MAX_LENGTH,
+} from '@/lib/register-helpers'
 
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID!,
@@ -23,16 +28,6 @@ const resend = new Resend(process.env.RESEND_API_KEY!)
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ohaccess.com'
 
 const TRIAL_LIMIT = 25
-const SMS_MAX_LENGTH = 160
-
-function generateCode(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let code = ''
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return code
-}
 
 async function createShortUrl(destinationUrl: string, agentId: string, openHouseId: string, urlType: string): Promise<string | null> {
   let code = generateCode()
@@ -55,82 +50,6 @@ async function createShortUrl(destinationUrl: string, agentId: string, openHouse
     return null
   }
   return `https://ohaccess.com/r/${code}`
-}
-
-// Safely append optional URLs without exceeding SMS_MAX_LENGTH.
-function buildSmsBody(base: string, extras: { label: string; url: string }[]): string {
-  let body = base
-  for (const extra of extras) {
-    const candidate = `${body} ${extra.label}: ${extra.url}`
-    if (candidate.length <= SMS_MAX_LENGTH) body = candidate
-  }
-  return body
-}
-
-function isHttpUrl(value: string | null | undefined): value is string {
-  if (!value) return false
-  return /^https?:\/\//i.test(value)
-}
-
-function safeUrl(value: string | null | undefined): string {
-  return isHttpUrl(value) ? value : ''
-}
-
-function isHexColor(value: string | null | undefined): boolean {
-  return !!value && /^#[0-9a-fA-F]{3,8}$/.test(value)
-}
-
-function isEmail(value: string | null | undefined): value is string {
-  return !!value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
-}
-
-// Builds the lead-notification email we send to an agent's CRM intake address.
-// Two layers of coverage:
-//   1. A clearly-labeled human-readable body — every CRM email parser (Follow Up
-//      Boss, BoldTrail, Lofty, Sierra, Real Geeks, …) is tuned to read "Name:",
-//      "Email:", "Phone:" style lead alerts, so this works almost everywhere.
-//   2. Lead Metadata Spec v1.0 meta tags (leadmetadata.org) for CRMs that support
-//      the real-estate standard and parse structured fields directly.
-// All visitor/agent-controlled values are escaped before interpolation.
-function buildCrmLeadEmail(lead: {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  purchasingTimeline: string
-  propertyAddress: string
-  agentName: string
-  registeredAt: string
-  visitorUrl: string
-}): string {
-  const fullName = `${lead.firstName} ${lead.lastName}`.trim()
-  const e = escapeHtml
-  return `<!DOCTYPE html>
-<html>
-<head>
-<meta name="lead_information_version" content="1.0" />
-<meta name="lead_name" content="${e(fullName)}" />
-<meta name="lead_email" content="${e(lead.email)}" />
-<meta name="lead_phone" content="${e(lead.phone)}" />
-<meta name="lead_source" content="ohACCESS" />
-<meta name="lead_message" content="Open-house sign-in. Purchasing timeline: ${e(lead.purchasingTimeline || 'Not specified')}." />
-<meta name="lead_property_address" content="${e(lead.propertyAddress)}" />
-</head>
-<body>
-<p>New lead from an ohACCESS open-house sign-in.</p>
-<p>
-Name: ${e(fullName)}<br/>
-Email: ${e(lead.email)}<br/>
-Phone: ${e(lead.phone)}<br/>
-Purchasing Timeline: ${e(lead.purchasingTimeline || 'Not specified')}<br/>
-Property: ${e(lead.propertyAddress)}<br/>
-Listing Agent: ${e(lead.agentName)}<br/>
-Source: ohACCESS<br/>
-Registered: ${e(lead.registeredAt)}
-</p>
-<p>Visitor details: <a href="${e(lead.visitorUrl)}">${e(lead.visitorUrl)}</a></p>
-</body>
-</html>`
 }
 
 export async function POST(request: Request) {

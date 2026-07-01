@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { notifyAdmins } from '@/lib/notify-admin'
@@ -6,11 +6,6 @@ import { escapeHtml } from '@/lib/escape-html'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 // Emails the ohACCESS team the first time a freshly-created account becomes
 // active (first authenticated dashboard load). The dashboard calls this on

@@ -1,12 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import VisitorDetail from '@/app/_components/VisitorDetail'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 // Standalone, mobile-optimized visitor page — the destination of the agent's
 // SMS/email "view & add notes" link. Requires login; if the agent isn't signed

@@ -1,17 +1,12 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import TeamAdminPanel from './_components/TeamAdminPanel'
 import TeamActivityPanel from './_components/TeamActivityPanel'
 import VisitorDetail from '@/app/_components/VisitorDetail'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { timelineStyle, timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type Sortable } from '@/lib/sort'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 // Columns + sort accessors for the per-open-house visitor list. Clicking a
 // header toggles sort (shared useSortable/applySort, same as the admin tables).

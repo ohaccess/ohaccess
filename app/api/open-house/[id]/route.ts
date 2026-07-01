@@ -1,11 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 // GET: public, read-only display data for the visitor registration page.
 // Returns ONLY safe fields — never the secret code_word/code_word_email, and

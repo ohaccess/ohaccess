@@ -1,12 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { SUBSCRIBER_TERMS_VERSION, PRIVACY_POLICY_VERSION } from '@/lib/legal-versions'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 // Records that a particular email agreed to the current subscriber terms +
 // privacy policy versions at signup time. Captures IP and user-agent so the

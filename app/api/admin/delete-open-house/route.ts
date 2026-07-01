@@ -1,20 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/auth'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-function isAdmin(email: string | undefined): boolean {
-  if (!email) return false
-  const allowlist = (process.env.ADMIN_EMAILS || '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean)
-  return allowlist.includes(email.toLowerCase())
-}
+import { getAuthenticatedUser, isAdmin } from '@/lib/auth'
 
 async function del(step: string, run: PromiseLike<{ error: { message: string } | null }>) {
   const { error } = await run

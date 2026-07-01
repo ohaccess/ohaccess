@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 // Compact UTC stamp for iCalendar: 2026-05-31T18:00:00.000Z -> 20260531T180000Z
 function icsStamp(iso: string): string {

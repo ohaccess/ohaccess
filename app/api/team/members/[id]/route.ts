@@ -1,12 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { getBrokerageContext } from '@/lib/team'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 // DELETE: remove a member from the team. Admin only. The member keeps their
 // account and data but drops to the free tier and is unlinked from the team.

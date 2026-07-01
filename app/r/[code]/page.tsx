@@ -1,11 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 export default async function RedirectPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params
