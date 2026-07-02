@@ -680,6 +680,27 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* DISPLAY-EMAIL NUDGE — until the agent sets a public contact email,
+            visitor replies and their copy of each sign-in go to their private
+            login email. Soft, non-blocking; disappears once it's set (and is
+            hidden on the Settings view where they'd fix it, or when locked). */}
+        {profile && !profile.display_email?.trim() && view !== 'settings' && !locked && (
+          <div style={{ background: '#eef4ff', border: '1px solid #cfe0ff', borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '220px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+              <span style={{ fontSize: '16px', lineHeight: '1.4' }}>✉️</span>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#0040a0' }}>Add your public contact email</div>
+                <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
+                  Set a <strong>Display Email</strong> so visitor replies and your copy of each sign-in reach the inbox you choose — and your private login email stays private. Until then we fall back to your login email.
+                </div>
+              </div>
+            </div>
+            <button onClick={() => setView('settings')} style={{ background: '#0071e3', color: 'white', border: 'none', padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+              Add it in Settings →
+            </button>
+          </div>
+        )}
+
         {/* DASHBOARD VIEW */}
         {view === 'dashboard' && (
           <OpenHouseList

@@ -405,6 +405,11 @@ export default function SettingsPanel({
           <div>
             <label style={labelStyle}>Display Email (shown to visitors)</label>
             <input style={inputStyle} type="email" placeholder="sarah@premierre.com" value={profile?.display_email || ''} onChange={e => setProfile({ ...profile, display_email: e.target.value })} />
+            <div style={{ fontSize: '11px', color: profile?.display_email?.trim() ? '#6e6e73' : '#b25e00', marginTop: '4px', lineHeight: '1.4' }}>
+              {profile?.display_email?.trim()
+                ? 'Where visitor replies and your copy of each sign-in are sent.'
+                : '⚠ Recommended — set this so replies and your sign-in copies go here, keeping your private login email hidden from visitors.'}
+            </div>
           </div>
           <div>
             <label style={labelStyle}>Phone</label>
