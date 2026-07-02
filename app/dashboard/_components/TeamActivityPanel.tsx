@@ -88,7 +88,7 @@ const VISITOR_COLUMNS: { label: string; key: string }[] = [
   { label: 'Phone', key: 'phone' },
   { label: 'Email', key: 'email' },
   { label: 'Timeline', key: 'timeline' },
-  { label: 'Time', key: 'time' },
+  { label: 'Registered', key: 'time' },
   { label: '✓', key: 'verified' },
 ]
 const VISITOR_ACC: Record<string, (v: Visitor) => Sortable> = {
@@ -307,7 +307,7 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
                       <td style={td}>{v.phone}</td>
                       <td style={td}>{v.email}</td>
                       <td style={td}>{v.purchasing_timeline}</td>
-                      <td style={td}>{new Date(v.registered_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                      <td style={td}>{new Date(v.registered_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>
                       <td style={td}>{v.verified ? <span style={{ color: '#30d158', fontWeight: 700 }}>✓</span> : '—'}</td>
                     </tr>
                   ))}
