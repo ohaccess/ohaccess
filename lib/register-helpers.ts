@@ -48,6 +48,23 @@ export function isEmail(value: string | null | undefined): value is string {
   return !!value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
 }
 
+// Picks who gets the agent's copy of a visitor's code email. A CC is visible
+// to the visitor, so the visible copy goes to the agent's public display email
+// (falling back to their login email only if no display email is set). The
+// login email additionally gets a HIDDEN bcc copy as a safety net — deduped so
+// a single address that serves as both isn't emailed twice. Invalid/missing
+// addresses are dropped.
+export function agentCopyRecipients(
+  displayEmail: string | null | undefined,
+  loginEmail: string | null | undefined
+): { cc: string[]; bcc: string[] } {
+  const cc = isEmail(displayEmail)
+    ? displayEmail.trim()
+    : (isEmail(loginEmail) ? loginEmail.trim() : null)
+  const bcc = isEmail(loginEmail) && loginEmail.trim() !== cc ? loginEmail.trim() : null
+  return { cc: cc ? [cc] : [], bcc: bcc ? [bcc] : [] }
+}
+
 // Builds the lead-notification email we send to an agent's CRM intake address.
 // Two layers of coverage:
 //   1. A clearly-labeled human-readable body — every CRM email parser (Follow Up

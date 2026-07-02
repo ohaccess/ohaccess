@@ -13,6 +13,7 @@ import {
   isHexColor,
   isEmail,
   buildCrmLeadEmail,
+  agentCopyRecipients,
   SMS_MAX_LENGTH,
 } from '@/lib/register-helpers'
 
@@ -349,10 +350,15 @@ export async function POST(request: Request) {
     const headerColor = isHexColor(brandColor) ? brandColor : '#1d1d1f'
     const logoUrl = safeUrl(brandLogo)
 
+    // The agent's copy of the visitor's code email: visible CC to their public
+    // display email (fallback login), hidden BCC to their login as a backup.
+    const agentCopy = agentCopyRecipients(agent?.display_email, agent?.email)
+
     const visitorEmail = await resend.emails.send({
       from: 'ohACCESS <noreply@mail.ohaccess.com>',
       to: email,
-      cc: agent?.email ? [agent.email] : [],
+      cc: agentCopy.cc,
+      bcc: agentCopy.bcc,
       // Replies go to the listing agent (the person a visitor would want to
       // reach), not the send-only noreply subdomain — which has no inbox and
       // hard-bounces any reply.
