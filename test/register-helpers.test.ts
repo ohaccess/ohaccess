@@ -7,6 +7,7 @@ import {
   isHexColor,
   isEmail,
   buildCrmLeadEmail,
+  agentCopyRecipients,
   SMS_MAX_LENGTH,
 } from '@/lib/register-helpers'
 
@@ -115,5 +116,51 @@ describe('buildCrmLeadEmail', () => {
     const html = buildCrmLeadEmail({ ...base, firstName: '<script>alert(1)</script>' })
     expect(html).not.toContain('<script>alert(1)</script>')
     expect(html).toContain('&lt;script&gt;')
+  })
+})
+
+describe('agentCopyRecipients', () => {
+  it('CCs the display email and BCCs the login email when both are set and differ', () => {
+    expect(agentCopyRecipients('public@agent.com', 'login@agent.com')).toEqual({
+      cc: ['public@agent.com'],
+      bcc: ['login@agent.com'],
+    })
+  })
+  it('dedupes when display and login are the same address (no double send)', () => {
+    expect(agentCopyRecipients('same@agent.com', 'same@agent.com')).toEqual({
+      cc: ['same@agent.com'],
+      bcc: [],
+    })
+  })
+  it('falls back to the login email for the CC when no display email is set', () => {
+    expect(agentCopyRecipients('', 'login@agent.com')).toEqual({
+      cc: ['login@agent.com'],
+      bcc: [],
+    })
+    expect(agentCopyRecipients(null, 'login@agent.com')).toEqual({
+      cc: ['login@agent.com'],
+      bcc: [],
+    })
+  })
+  it('CCs the display email and adds no BCC when there is no login email', () => {
+    expect(agentCopyRecipients('public@agent.com', null)).toEqual({
+      cc: ['public@agent.com'],
+      bcc: [],
+    })
+  })
+  it('never exposes the login email as a visible CC when a display email exists', () => {
+    const { cc } = agentCopyRecipients('public@agent.com', 'login@agent.com')
+    expect(cc).not.toContain('login@agent.com')
+  })
+  it('drops invalid addresses and trims whitespace', () => {
+    expect(agentCopyRecipients('not-an-email', 'login@agent.com')).toEqual({
+      cc: ['login@agent.com'],
+      bcc: [],
+    })
+    expect(agentCopyRecipients('  public@agent.com  ', '  login@agent.com  ')).toEqual({
+      cc: ['public@agent.com'],
+      bcc: ['login@agent.com'],
+    })
+    expect(agentCopyRecipients(null, null)).toEqual({ cc: [], bcc: [] })
   })
 })
