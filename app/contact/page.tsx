@@ -103,7 +103,7 @@ export default function Contact() {
               { emoji: '🏢', title: 'Built for teams', body: 'Manage all your agents from one admin dashboard. See every open house and visitor log across your entire brokerage.' },
               { emoji: '🎨', title: 'Brokerage branding', body: 'Your logo on every visitor email, plus your team colors carried across every agent\'s registration page.' },
               { emoji: '💰', title: 'Per-agent pricing', body: 'Pay only for the agents you have. Pricing scales with your team — from boutique brokerages to enterprise networks.' },
-              { emoji: '📋', title: 'Centralized data', body: 'All visitor data flows into one place. Export to your CRM, share with your team, and track performance across all listings.' },
+              { emoji: '📋', title: 'CRM integration', body: 'Every sign-in flows automatically into your agents\' CRMs — Follow Up Boss, BoldTrail, Lofty, Sierra, Real Geeks, and more (or any app via Zapier) — plus one-click CSV export and brokerage-wide reporting.' },
               { emoji: '🔒', title: 'Compliance ready', body: 'Built-in TCPA consent, DNC override language, and data sharing terms protect your brokerage from day one.' },
               { emoji: '🚀', title: 'Fast onboarding', body: 'Your entire team can be set up and running at their first open house within 24 hours of signing up.' },
             ].map(item => (
@@ -250,7 +250,7 @@ export default function Contact() {
           <a href="/privacy" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Privacy Policy</a>
           <a href="/contact" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Contact</a>
         </div>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>© 2026 ohACCESS. All rights reserved.</div>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)' }}>© 2026 ohACCESS. All rights reserved. · <span style={{ fontWeight: '600' }}>Patent Pending</span></div>
       </footer>
     </main>
   )
