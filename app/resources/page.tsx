@@ -55,9 +55,9 @@ export default function Resources() {
 
           <div className="resources-grid">
             {[
-              { name: 'Welcome Sign — Design 1', body: 'Print-ready open-house welcome sign. Add your QR code and customize the colors and text in Canva.', url: 'https://canva.link/b76tfh40e386it6' },
-              { name: 'Welcome Sign — Design 2', body: 'Print-ready open-house welcome sign. Add your QR code and customize the colors and text in Canva.', url: 'https://canva.link/0c68v28pdk4m53p' },
-              { name: 'Welcome Sign — Design 3', body: 'Print-ready open-house welcome sign. Add your QR code and customize the colors and text in Canva.', url: 'https://canva.link/2s36rhd4noy0eoe' },
+              { name: '8.5 x 11 in. Sign', body: 'Print-ready open-house welcome sign. Add your QR code and customize the colors and text in Canva.', url: 'https://canva.link/b76tfh40e386it6' },
+              { name: '24 x 36 in. Sign', body: 'Print-ready open-house welcome sign. Add your QR code and customize the colors and text in Canva.', url: 'https://canva.link/0c68v28pdk4m53p' },
+              { name: '24 x 32 in. Sign', body: 'Print-ready open-house welcome sign. Add your QR code and customize the colors and text in Canva.', url: 'https://canva.link/2s36rhd4noy0eoe' },
             ].map((tpl) => (
               <div key={tpl.name} style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
                 <div style={{ background: '#1d1d1f', padding: '32px 20px', textAlign: 'center' }}>
