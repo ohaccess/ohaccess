@@ -44,6 +44,36 @@ export default function Resources() {
           </p>
         </div>
 
+        {/* How to use section */}
+        <div style={{ marginBottom: '48px' }}>
+          <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
+            📋 How to set up your open house
+          </div>
+          <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
+            Follow these steps for a smooth, verified open house every time.
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[
+              { step: '1', title: 'Create your open house in the dashboard', body: 'Enter the property address, date, hours, and listing URL. Create or auto-generate a code word.' },
+              { step: '2', title: 'Download and print your QR code', body: 'Click "QR Code" on your open house card. Download the PNG, add it to the Canva template or your own custom sign. Print enough copies for each entry.' },
+              { step: '3', title: 'Set up your welcome sign', body: 'Use a pedestal sign holder, easel, or A-frame poster and display the QR code with instructions prominently before the entrance.' },
+              { step: '4', title: 'Greet visitors at the door', body: 'Ask visitors for their code word as they arrive. Only visitors who registered with real contact info will have received the code.' },
+              { step: '5', title: 'Review your visitor log', body: 'After the open house, check your dashboard for the full verified visitor log. Export to CSV and import into your CRM.' },
+            ].map(item => (
+              <div key={item.step} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', background: 'white', borderRadius: '14px', border: '1px solid #d1d1d6', padding: '16px 20px' }}>
+                <div style={{ width: '32px', height: '32px', background: '#1d1d1f', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '700', color: 'white', flexShrink: 0 }}>
+                  {item.step}
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#1d1d1f', marginBottom: '3px' }}>{item.title}</div>
+                  <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6' }}>{item.body}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Welcome Sign Templates */}
         <div style={{ marginBottom: '48px' }}>
           <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
@@ -81,36 +111,6 @@ export default function Resources() {
                   >
                     Open in Canva →
                   </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* How to use section */}
-        <div style={{ marginBottom: '48px' }}>
-          <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
-            📋 How to set up your open house
-          </div>
-          <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
-            Follow these steps for a smooth, verified open house every time.
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {[
-              { step: '1', title: 'Create your open house in the dashboard', body: 'Enter the property address, date, hours, and listing URL. Create or auto-generate a code word.' },
-              { step: '2', title: 'Download and print your QR code', body: 'Click "QR Code" on your open house card. Download the PNG, add it to the Canva template or your own custom sign. Print enough copies for each entry.' },
-              { step: '3', title: 'Set up your welcome sign', body: 'Use a pedestal sign holder, easel, or A-frame poster and display the QR code with instructions prominently before the entrance.' },
-              { step: '4', title: 'Greet visitors at the door', body: 'Ask visitors for their code word as they arrive. Only visitors who registered with real contact info will have received the code.' },
-              { step: '5', title: 'Review your visitor log', body: 'After the open house, check your dashboard for the full verified visitor log. Export to CSV and import into your CRM.' },
-            ].map(item => (
-              <div key={item.step} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', background: 'white', borderRadius: '14px', border: '1px solid #d1d1d6', padding: '16px 20px' }}>
-                <div style={{ width: '32px', height: '32px', background: '#1d1d1f', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '700', color: 'white', flexShrink: 0 }}>
-                  {item.step}
-                </div>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#1d1d1f', marginBottom: '3px' }}>{item.title}</div>
-                  <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6' }}>{item.body}</div>
                 </div>
               </div>
             ))}
