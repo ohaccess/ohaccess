@@ -178,9 +178,9 @@ function ExpiredOpenHouse() {
             <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6' }}>
               A local agent will be in touch shortly to help with your home search.
             </div>
-            <a href="https://ohaccess.com" style={{ display: 'inline-block', marginTop: '20px', color: '#6e6e73', fontSize: '12px', textDecoration: 'none' }}>
-              Powered by ohACCESS
-            </a>
+            <div style={{ marginTop: '20px', fontSize: '12px', color: '#6e6e73' }}>
+              <a href="https://ohaccess.com" style={{ color: '#6e6e73', textDecoration: 'none' }}>Powered by ohACCESS</a> · <span style={{ fontWeight: '600' }}>Patent Pending</span>
+            </div>
           </div>
         )}
       </div>
