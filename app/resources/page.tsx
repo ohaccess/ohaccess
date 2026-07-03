@@ -54,41 +54,36 @@ export default function Resources() {
           </div>
 
           <div className="resources-grid">
-
-            {/* Template 1 */}
-            <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-              <div style={{ background: '#1d1d1f', padding: '32px 20px', textAlign: 'center' }}>
-                <div style={{ fontSize: '18px', fontWeight: '200', color: 'white', letterSpacing: '-0.5px', marginBottom: '8px' }}>
-                  oh<span style={{ fontWeight: '700' }}>ACCESS</span>
-                </div>
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginBottom: '16px' }}>WELCOME SIGN</div>
-                <div style={{ background: 'white', borderRadius: '8px', padding: '12px', display: 'inline-block' }}>
-                  <div style={{ width: '60px', height: '60px', background: '#f5f5f7', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
-                    ▦
+            {[
+              { name: 'Welcome Sign — Design 1', body: 'Print-ready open-house welcome sign. Add your QR code and customize the colors and text in Canva.', url: 'https://canva.link/b76tfh40e386it6' },
+              { name: 'Welcome Sign — Design 2', body: 'Print-ready open-house welcome sign. Add your QR code and customize the colors and text in Canva.', url: 'https://canva.link/0c68v28pdk4m53p' },
+              { name: 'Welcome Sign — Design 3', body: 'Print-ready open-house welcome sign. Add your QR code and customize the colors and text in Canva.', url: 'https://canva.link/2s36rhd4noy0eoe' },
+            ].map((tpl) => (
+              <div key={tpl.name} style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                <div style={{ background: '#1d1d1f', padding: '32px 20px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '18px', fontWeight: '200', color: 'white', letterSpacing: '-0.5px', marginBottom: '8px' }}>
+                    oh<span style={{ fontWeight: '700' }}>ACCESS</span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginBottom: '16px' }}>WELCOME SIGN</div>
+                  <div style={{ background: 'white', borderRadius: '8px', padding: '12px', display: 'inline-block' }}>
+                    <div style={{ width: '60px', height: '60px', background: '#f5f5f7', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
+                      ▦
+                    </div>
                   </div>
                 </div>
+                <div style={{ padding: '16px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>{tpl.name}</div>
+                  <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '14px' }}>{tpl.body}</div>
+                  <a href={tpl.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: 'block', textAlign: 'center', background: '#1d1d1f', color: 'white', padding: '10px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}
+                  >
+                    Open in Canva →
+                  </a>
+                </div>
               </div>
-              <div style={{ padding: '16px' }}>
-                <div style={{ fontSize: '14px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>Classic Dark</div>
-                <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '14px' }}>Navy background, white text. Professional and elegant.</div>
-                
-                  <a href="https://canva.link/ohaccess-sign-template-1"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ display: 'block', textAlign: 'center', background: '#1d1d1f', color: 'white', padding: '10px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}
-                >
-                  Open in Canva →
-                </a>
-              </div>
-            </div>
-
-            {/* More templates coming soon */}
-            <div style={{ background: '#f5f5f7', borderRadius: '18px', border: '1px dashed #d1d1d6', padding: '32px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
-              <div style={{ fontSize: '28px', marginBottom: '12px' }}>🎨</div>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>More templates coming soon</div>
-              <div style={{ fontSize: '12px', color: '#6e6e73', lineHeight: '1.6' }}>Light, branded, and multilingual versions on the way.</div>
-            </div>
-
+            ))}
           </div>
         </div>
 
