@@ -129,7 +129,7 @@ export default function Resources() {
           <div className="resources-grid">
             {[
               { emoji: '🪧', name: 'A-Frame Sidewalk Sign', body: 'Double-sided sidewalk sign to guide visitors from the street to your door. Slide in a poster with your QR code and address.', url: 'https://amzn.to/4v48sQg' },
-              { emoji: '🏷️', name: 'Pedestal Sign Holder', body: 'Weighted floor stand for an 8.5×11" sign — ideal for your QR welcome sign right at the entrance. Adjustable height, portrait or landscape.', url: 'https://amzn.to/4wkUfj2' },
+              { emoji: '🏷️', name: 'Pedestal Sign Holder', body: 'Weighted floor stand for an 8.5×11" sign — ideal for your QR welcome sign right at the entrance. Adjustable height, portrait or landscape.', url: 'https://amzn.to/4vgxnAr' },
               { emoji: '🖼️', name: 'Poster Easel Stand', body: 'Lightweight, collapsible tripod easel — a simple, budget-friendly way to prop up a foam-board welcome sign indoors.', url: 'https://amzn.to/4eNmLnH' },
               // Hidden until there are more items to keep the grid rows even. To restore, uncomment:
               // { emoji: '✨', name: 'Gold Sign Easel', body: 'Elegant adjustable gold easel for a premium welcome sign at higher-end listings. Holds signs, posters, and framed displays.', url: 'https://amzn.to/4xZoSw4' },
