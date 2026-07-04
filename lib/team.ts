@@ -11,6 +11,10 @@ export interface BrokerageContext {
   primaryColor: string | null
   accentColor: string | null
   subscriptionStatus: string | null
+  // The team's funding Stripe subscription (recorded by the webhook). Null for
+  // admin-provisioned/invoice-based brokerages — their seats are managed by
+  // Dave, not self-serve.
+  stripeSubscriptionId: string | null
   crmLeadEmail: string | null
   crmForwardMemberLeads: boolean
 }
@@ -29,7 +33,7 @@ export async function getBrokerageContext(userId: string): Promise<BrokerageCont
 
   const { data: brokerage } = await supabase
     .from('brokerages')
-    .select('id, name, owner_id, tier, seat_limit, logo_url, primary_color, accent_color, subscription_status, crm_lead_email, crm_forward_member_leads')
+    .select('id, name, owner_id, tier, seat_limit, logo_url, primary_color, accent_color, subscription_status, stripe_subscription_id, crm_lead_email, crm_forward_member_leads')
     .eq('id', profile.brokerage_id)
     .single()
 
@@ -46,6 +50,7 @@ export async function getBrokerageContext(userId: string): Promise<BrokerageCont
     primaryColor: brokerage.primary_color,
     accentColor: brokerage.accent_color,
     subscriptionStatus: brokerage.subscription_status,
+    stripeSubscriptionId: brokerage.stripe_subscription_id,
     crmLeadEmail: brokerage.crm_lead_email,
     crmForwardMemberLeads: !!brokerage.crm_forward_member_leads,
   }

@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   const ctx = await getBrokerageContext(user.id)
   if (!ctx) return NextResponse.json({ error: 'No team found' }, { status: 404 })
 
-  const [{ data: members }, { data: invitations }, usage] = await Promise.all([
+  const [{ data: members }, { data: invitations }, usage, { data: owner }] = await Promise.all([
     supabase
       .from('profiles')
       .select('id, full_name, email, role, created_at')
@@ -29,7 +29,18 @@ export async function GET(request: Request) {
       .is('accepted_at', null)
       .order('created_at', { ascending: false }),
     getSeatUsage(ctx.brokerageId),
+    supabase
+      .from('profiles')
+      .select('stripe_subscription_id')
+      .eq('id', ctx.ownerId)
+      .maybeSingle(),
   ])
+
+  // A team funded by a real Stripe subscription can manage seats/upgrade
+  // self-serve; admin-provisioned (invoice-based) brokerages cannot — their
+  // seats are set by us. Owner-profile fallback covers the moments right
+  // after checkout before the first subscription webhook lands.
+  const selfServeBilling = !!(ctx.stripeSubscriptionId || owner?.stripe_subscription_id)
 
   return NextResponse.json({
     brokerage: {
@@ -44,6 +55,7 @@ export async function GET(request: Request) {
       crm_forward_member_leads: ctx.crmForwardMemberLeads,
     },
     isAdmin: ctx.isAdmin,
+    selfServeBilling,
     members: members ?? [],
     invitations: invitations ?? [],
     seats: usage,
