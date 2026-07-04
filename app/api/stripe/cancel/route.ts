@@ -8,8 +8,10 @@ import { stripe } from '@/lib/stripe'
 //   body { resume: true }  -> undo a pending cancellation
 //   body { } / { resume:false } -> cancel at period end (keep access until then)
 //
-// Only valid for month/year subscriptions. The 2-year prepay is a one-time
-// payment with nothing to cancel — it simply lapses at its access date.
+// Valid for any real subscription — month, year, and the (auto-renewing)
+// 2-year term alike. LEGACY 2-year prepays were one-time payments with no
+// subscription to cancel; they carry stripe_subscription_id = null, so the
+// guard below already blocks them with the friendly prepaid-plan message.
 // Stripe's customer.subscription.updated webhook is the source of truth; we
 // also update the profile optimistically so the UI reflects it immediately.
 export async function POST(request: Request) {
@@ -30,7 +32,7 @@ export async function POST(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (!profile?.stripe_subscription_id || profile.billing_interval === 'two_year_prepay') {
+    if (!profile?.stripe_subscription_id) {
       return NextResponse.json(
         { error: 'No cancelable subscription. A prepaid plan simply ends on its access date.' },
         { status: 400 }

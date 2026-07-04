@@ -16,6 +16,7 @@ import {
   agentCopyRecipients,
   SMS_MAX_LENGTH,
 } from '@/lib/register-helpers'
+import { isExpiredLegacyTwoYear } from '@/lib/billing-plans'
 
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID!,
@@ -129,14 +130,12 @@ export async function POST(request: Request) {
     })
 
     const agentTier = agent?.tier || 'free'
-    // A 2-year prepay is a one-time payment with no auto-renew, so the row still
+    // A LEGACY 2-year prepay (one-time payment, no Stripe subscription) still
     // reads tier=paid after the access date passes. Treat an expired prepay as
     // free here too (the dashboard already does) so lapsed agents are capped
-    // server-side and don't get the paid product for free.
-    const twoYearExpired =
-      agent?.billing_interval === 'two_year_prepay' &&
-      !!agent?.current_period_end &&
-      Date.parse(agent.current_period_end) < Date.now()
+    // server-side and don't get the paid product for free. New-style 2-year
+    // subscriptions auto-renew and never trip this.
+    const twoYearExpired = isExpiredLegacyTwoYear(agent)
     const isPro = ['pro', 'team', 'brokerage'].includes(agentTier) && !twoYearExpired
 
     // Trial cap check — BEFORE creating the visitor row, so over-quota

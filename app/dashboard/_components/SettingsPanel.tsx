@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { fillBorder } from '@/lib/colors'
+import { isLegacyTwoYear, isExpiredLegacyTwoYear } from '@/lib/billing-plans'
 
 // The Settings view: subscription/billing, agent profile, branding & photos,
 // brand colors, CRM lead-intake, and the Zapier webhook. Presentational —
@@ -62,7 +63,7 @@ function formatPlanDate(iso: string | null | undefined): string {
 function intervalLabel(interval: string | null | undefined): string {
   if (interval === 'month') return 'Monthly'
   if (interval === 'year') return 'Annual'
-  if (interval === 'two_year_prepay') return '2-Year Prepay'
+  if (interval === 'two_year_prepay') return '2-Year'
   return ''
 }
 
@@ -86,18 +87,18 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
   const periodEnd = profile?.current_period_end as string | null
   const billing = profile?.billing_interval as string | null
 
-  // A 2-year prepay is one-time with no auto-renew, so its row still reads
+  // A LEGACY 2-year prepay (one-time payment, no subscription) still reads
   // paid/active after the access date passes. Treat that as expired so the
-  // agent sees the renewal picker.
-  const twoYearExpired =
-    billing === 'two_year_prepay' && !!periodEnd && Date.parse(periodEnd) < Date.now()
-  // Show the plan picker for free agents AND at the "renew" moment (expired 2-year).
+  // agent sees the renewal picker. New-style 2-year subs auto-renew.
+  const twoYearExpired = isExpiredLegacyTwoYear(profile)
+  // Show the plan picker for free agents AND at the "renew" moment (expired legacy 2-year).
   const showPlans = isFree || twoYearExpired
   // cancel_at_period_end keeps status 'active' until the period closes;
   // canceledAt is our flag that an end is already scheduled.
   const pendingCancel = !!canceledAt && (status === 'active' || status === 'trialing')
-  // Only recurring (month/year) plans can be canceled; 2-year prepay just lapses.
-  const canCancel = isPaid && !twoYearExpired && (billing === 'month' || billing === 'year')
+  // Any real subscription can be canceled at period end — month, year, and the
+  // auto-renewing 2-year alike. Legacy prepays have no sub id (nothing to cancel).
+  const canCancel = isPaid && !twoYearExpired && !!profile?.stripe_subscription_id
   const billingChoices = OFFER_TWO_YEAR
     ? BILLING_OPTIONS
     : BILLING_OPTIONS.filter(b => b.key !== 'two_year_prepay')
@@ -271,7 +272,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
           </div>
           {periodEnd && !pendingCancel && status !== 'past_due' && (
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '14px' }}>
-              {billing === 'two_year_prepay' ? <><strong>Access until:</strong> {formatPlanDate(periodEnd)}</> : <><strong>Renews on:</strong> {formatPlanDate(periodEnd)}</>}
+              {isLegacyTwoYear(profile) ? <><strong>Access until:</strong> {formatPlanDate(periodEnd)}</> : <><strong>Renews on:</strong> {formatPlanDate(periodEnd)}</>}
             </div>
           )}
 
