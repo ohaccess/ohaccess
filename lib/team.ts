@@ -76,3 +76,94 @@ export async function getSeatUsage(brokerageId: string): Promise<{ used: number;
 
   return { used: (memberCount ?? 0) + (pendingCount ?? 0), limit }
 }
+
+// Ensure `profileId` owns a `brokerages` row and is linked to it as
+// brokerage_admin. Idempotent and shared by BOTH the Stripe webhook (Team and
+// per-seat Brokerage checkouts / subscription events) and the admin
+// provision-brokerage tool (invoice-based 100+ deals).
+//
+// Adopt-vs-create semantics:
+//  - If the owner already has a brokerage, adopt it: update `tier` if it
+//    changed (Team → Brokerage upgrade), and sync `seat_limit` ONLY for the
+//    per-seat tier (where Stripe's subscription quantity is the source of
+//    truth). Flat-Team rows keep whatever seat_limit they have so a manually
+//    raised limit is never clobbered back to 10 by a routine event.
+//  - Otherwise create it. A 23505 unique violation means a concurrent webhook
+//    event won the race — fetch the winner and adopt it the same way.
+export async function ensureManagedBrokerage(
+  profileId: string,
+  opts: { tier: 'team' | 'brokerage'; seatLimit: number; name?: string | null }
+): Promise<string | null> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, brokerage_id, full_name, email')
+    .eq('id', profileId)
+    .single()
+  if (!profile) return null
+
+  const adopt = async (brokerageId: string) => {
+    const update: Record<string, string | number> = {}
+    const { data: existing } = await supabase
+      .from('brokerages')
+      .select('id, owner_id, tier, seat_limit')
+      .eq('id', brokerageId)
+      .maybeSingle()
+    if (!existing || existing.owner_id !== profileId) return null
+    if (existing.tier !== opts.tier) update.tier = opts.tier
+    if (opts.tier === 'brokerage' && existing.seat_limit !== opts.seatLimit) {
+      update.seat_limit = opts.seatLimit
+    }
+    if (Object.keys(update).length > 0) {
+      await supabase.from('brokerages').update(update).eq('id', brokerageId)
+    }
+    return brokerageId
+  }
+
+  if (profile.brokerage_id) {
+    const adopted = await adopt(profile.brokerage_id)
+    if (adopted) return adopted
+  }
+
+  const defaultName =
+    opts.name?.trim() ||
+    profile.full_name?.trim() ||
+    (profile.email ? `${profile.email.split('@')[0]}'s Team` : 'My Team')
+
+  const { data: brokerage, error: createErr } = await supabase
+    .from('brokerages')
+    .insert({
+      name: defaultName,
+      owner_id: profileId,
+      tier: opts.tier,
+      seat_limit: opts.seatLimit,
+    })
+    .select('id')
+    .single()
+
+  let brokerageId = brokerage?.id ?? null
+
+  // 23505 = unique violation: a concurrent event already created the row for
+  // this owner. Fetch the winner and adopt it instead of erroring out.
+  if (createErr) {
+    if ((createErr as { code?: string }).code === '23505') {
+      const { data: existing } = await supabase
+        .from('brokerages')
+        .select('id')
+        .eq('owner_id', profileId)
+        .maybeSingle()
+      brokerageId = existing ? await adopt(existing.id) : null
+    } else {
+      console.error('Failed to create brokerage', { profileId, createErr })
+      return null
+    }
+  }
+
+  if (!brokerageId) return null
+
+  await supabase
+    .from('profiles')
+    .update({ brokerage_id: brokerageId, role: 'brokerage_admin' })
+    .eq('id', profileId)
+
+  return brokerageId
+}
