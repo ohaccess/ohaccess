@@ -103,7 +103,7 @@ export default function Partners() {
             {[
               { emoji: '🎨', title: 'Your brand on every sign-in', body: 'Your logo and colors appear on every verified visitor email your agents send — you control all of it from your Team dashboard.' },
               { emoji: '🤝', title: 'Sponsor your agent partners', body: 'Pay for one Team plan and share ohACCESS with up to 10 of your agent partners. You own the account; they run their open houses.' },
-              { emoji: '📊', title: 'See every open-house lead', body: 'Every verified sign-in across your agents’ open houses flows into one dashboard, with CSV export — real buyers and sellers, captured at the door.' },
+              { emoji: '📊', title: 'Leads delivered to your CRM', body: 'Set one Team CRM lead email and every verified sign-in from your agents’ open houses is forwarded straight into your CRM — automatically, no exports. Plus a shared dashboard and CSV export whenever you want it. Real buyers and sellers, captured at the door.' },
               { emoji: '🔁', title: 'Stay top of mind', body: 'Show up in front of motivated buyers and sellers at the exact moment they’re touring homes — and strengthen your agent relationships.' },
               { emoji: '🛡️', title: 'Built for RESPA-conscious co-marketing', body: 'You pay for the platform and control your own branding while your agents run their events. As with any co-marketing arrangement, confirm your specific setup with your own compliance counsel.' },
               { emoji: '🚀', title: 'Live within 24 hours', body: 'Set up your team, add your branding, and be running at your agents’ first open house within a day of signing up.' },
