@@ -121,7 +121,7 @@ export default function Partners() {
             <div style={{ background: '#f5f5f7', borderRadius: '16px', padding: '20px', marginTop: '8px' }}>
               <div style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f', marginBottom: '14px' }}>How it works</div>
               {[
-                { n: '1', t: 'Subscribe to a Team plan', d: '$120/mo — up to 10 agent partners. Add your logo and brand colors.' },
+                { n: '1', t: 'Subscribe to a Team plan', d: '$120/mo, $1,200 annually, or $1,920 for two years when paid upfront — up to 10 agent partners. Add your logo and brand colors.' },
                 { n: '2', t: 'Invite your agent partners', d: 'They join your team and start running verified open houses.' },
                 { n: '3', t: 'Your brand + your leads', d: 'Every sign-in goes out under your branding and lands in your dashboard.' },
               ].map((s, i) => (
