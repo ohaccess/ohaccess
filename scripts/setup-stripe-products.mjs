@@ -47,8 +47,8 @@ const PRODUCTS = [
         unit_amount: 15000, recurring: { interval: 'year' },
         nickname: 'Pro Annual (2 months free)' },
       { lookup_key: 'ohaccess_pro_2year', envVar: 'STRIPE_PRICE_PRO_2YEAR',
-        unit_amount: 24000, recurring: null,
-        nickname: 'Pro 2-Year Prepay ($150 year 1 + $90 year 2 half off)' },
+        unit_amount: 24000, recurring: { interval: 'year', interval_count: 2 },
+        nickname: 'Pro 2-Year ($150 year 1 + $90 year 2 half off — renews every 2 years)' },
     ],
   },
   {
@@ -62,8 +62,27 @@ const PRODUCTS = [
         unit_amount: 120000, recurring: { interval: 'year' },
         nickname: 'Team Annual (2 months free)' },
       { lookup_key: 'ohaccess_team_2year', envVar: 'STRIPE_PRICE_TEAM_2YEAR',
-        unit_amount: 192000, recurring: null,
-        nickname: 'Team 2-Year Prepay ($1,200 year 1 + $720 year 2 half off)' },
+        unit_amount: 192000, recurring: { interval: 'year', interval_count: 2 },
+        nickname: 'Team 2-Year ($1,200 year 1 + $720 year 2 half off — renews every 2 years)' },
+    ],
+  },
+  {
+    // Per-seat plan for 11–100 agents. These are PER-SEAT unit prices — the
+    // checkout line item's QUANTITY carries the seat count, so Stripe handles
+    // seat-add proration natively. Amounts must match lib/billing-plans.ts
+    // (BROKERAGE_SEAT_CENTS): month $11, year $110 (10×), 2-year $176 (year + 6×month).
+    productName: 'ohACCESS Brokerage',
+    description: 'Per-agent pricing for 11–100 agents. Brand customization, team logo, all Pro features.',
+    prices: [
+      { lookup_key: 'ohaccess_brokerage_monthly', envVar: 'STRIPE_PRICE_BROKERAGE_MONTHLY',
+        unit_amount: 1100, recurring: { interval: 'month' },
+        nickname: 'Brokerage Monthly ($11/agent/mo)' },
+      { lookup_key: 'ohaccess_brokerage_annual', envVar: 'STRIPE_PRICE_BROKERAGE_ANNUAL',
+        unit_amount: 11000, recurring: { interval: 'year' },
+        nickname: 'Brokerage Annual ($110/agent/yr — 2 months free)' },
+      { lookup_key: 'ohaccess_brokerage_2year', envVar: 'STRIPE_PRICE_BROKERAGE_2YEAR',
+        unit_amount: 17600, recurring: { interval: 'year', interval_count: 2 },
+        nickname: 'Brokerage 2-Year ($176/agent — year 2 half off, renews every 2 years)' },
     ],
   },
 ]
@@ -81,21 +100,42 @@ async function getOrCreateProduct(name, description) {
   return created
 }
 
+// A price only "matches" if BOTH the amount AND the billing shape agree.
+// Comparing unit_amount alone is a trap: converting the 2-year plans from
+// one-time payments to recurring subscriptions keeps the SAME amount but
+// changes `recurring` — without this check the script would silently reuse
+// the old one-time price and checkout would keep selling the wrong thing.
+function priceMatches(old, { unit_amount, recurring }) {
+  if (old.unit_amount !== unit_amount) return false
+  if (!old.recurring !== !recurring) return false // one-time vs recurring
+  if (old.recurring && recurring) {
+    if (old.recurring.interval !== recurring.interval) return false
+    if ((old.recurring.interval_count ?? 1) !== (recurring.interval_count ?? 1)) return false
+  }
+  return true
+}
+
+function describePrice({ unit_amount, recurring }) {
+  return recurring
+    ? `${unit_amount}¢ every ${recurring.interval_count ?? 1} ${recurring.interval}(s)`
+    : `${unit_amount}¢ one-time`
+}
+
 async function getOrCreatePrice(productId, { lookup_key, unit_amount, recurring, nickname }) {
   const existing = await stripe.prices.list({ lookup_keys: [lookup_key], limit: 1 })
   if (existing.data.length > 0) {
     const old = existing.data[0]
-    // Same amount → reuse as-is.
-    if (old.unit_amount === unit_amount) {
+    // Same amount AND same billing shape → reuse as-is.
+    if (priceMatches(old, { unit_amount, recurring })) {
       console.log(`Reusing price:    ${lookup_key} (${old.id})`)
       return old
     }
-    // Stripe prices are IMMUTABLE — the amount can't be edited. So when the
-    // amount has changed, create a new price, move the lookup_key onto it
-    // (transfer_lookup_key), and archive the old price so it's no longer
-    // offered. The printed env var will point to the NEW price id — update
-    // .env.local with it.
-    console.log(`Amount changed for ${lookup_key}: ${old.unit_amount} → ${unit_amount}¢ — creating a new price.`)
+    // Stripe prices are IMMUTABLE — neither the amount nor the recurrence can
+    // be edited. When the definition changes, create a new price, move the
+    // lookup_key onto it (transfer_lookup_key), and archive the old price so
+    // it's no longer offered. The printed env var will point to the NEW price
+    // id — update .env.local with it.
+    console.log(`Definition changed for ${lookup_key}: ${describePrice(old)} → ${describePrice({ unit_amount, recurring })} — creating a new price.`)
     const replacement = await stripe.prices.create({
       product: productId,
       currency: 'usd',
