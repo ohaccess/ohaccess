@@ -8,14 +8,15 @@ export default function Home() {
 
   const billingToInterval = { monthly: 'month', annual: 'year', '2year': 'two_year_prepay' } as const
 
-  // CTA destination per tier. Pro and Team route through /login with checkout
+  // CTA destination per tier. Paid tiers route through /login with checkout
   // params so the login page can hand off to Stripe Checkout after signup/signin.
-  // Brokerage stays on the contact-sales path (custom pricing).
+  // Brokerage is per-seat self-serve (11–100 agents, starts at 11 seats —
+  // adjustable anytime from the Team tab); 100+ deals go through /contact.
   const ctaHref = (tierName: string): string => {
-    if (tierName === 'Brokerage') return '/contact'
     if (tierName === 'Trial') return '/login?signup=true'
-    const plan = tierName === 'Team' ? 'team' : 'pro'
-    return `/login?signup=true&plan=${plan}&interval=${billingToInterval[billing]}`
+    const plan = tierName === 'Brokerage' ? 'brokerage' : tierName === 'Team' ? 'team' : 'pro'
+    const seats = tierName === 'Brokerage' ? '&seats=11' : ''
+    return `/login?signup=true&plan=${plan}&interval=${billingToInterval[billing]}${seats}`
   }
 
   return (
@@ -291,7 +292,7 @@ export default function Home() {
               {
                 name: 'Pro', price: { monthly: '$15', annual: '$12.50', '2year': '$10' },
                 per: { monthly: '/mo', annual: '/mo', '2year': '/mo' },
-                sub: { monthly: '', annual: 'Billed $150/yr — 2 months free', '2year': 'Billed $240 upfront — year 2 is half off' },
+                sub: { monthly: '', annual: 'Billed $150/yr — 2 months free', '2year': '$240 every 2 years — year 2 half off' },
                 description: 'For the active agent',
                 features: ['Unlimited open houses', 'Unlimited visitor registrations', 'Instant agent SMS alerts', 'Agent CC on emails', 'QR code download', 'CSV export'],
                 cta: 'Start Pro', featured: true
@@ -299,18 +300,18 @@ export default function Home() {
               {
                 name: 'Team', price: { monthly: '$120', annual: '$100', '2year': '$80' },
                 per: { monthly: '/mo', annual: '/mo', '2year': '/mo' },
-                sub: { monthly: '', annual: 'Billed $1,200/yr — 2 months free', '2year': 'Billed $1,920 upfront — year 2 is half off' },
-                description: 'For teams up to 10 agents',
+                sub: { monthly: '', annual: 'Billed $1,200/yr — 2 months free', '2year': '$1,920 every 2 years — year 2 half off' },
+                description: 'For teams of 2–10 agents',
                 features: ['Unlimited open houses', 'Unlimited visitor registrations', 'Up to 10 agents', 'All Pro features', 'Brand customization', 'Team logo'],
                 cta: 'Start Team', featured: false
               },
               {
-                name: 'Brokerage', price: { monthly: 'Custom', annual: 'Custom', '2year': 'Custom' },
-                per: { monthly: '', annual: '', '2year': '' },
-                sub: { monthly: '', annual: '', '2year': '' },
-                description: 'For large brokerages',
-                features: ['Custom agent pricing', 'Unlimited everything', 'All Team features', 'Branded visitor emails', 'Dedicated support', 'SLA + onboarding'],
-                cta: 'Contact us', featured: false
+                name: 'Brokerage', price: { monthly: '$11', annual: '$110', '2year': '$176' },
+                per: { monthly: '/agent/mo', annual: '/agent/yr', '2year': '/agent/2yr' },
+                sub: { monthly: 'For 11–100 agents', annual: '11–100 agents — 2 months free', '2year': '11–100 agents — year 2 half off' },
+                description: 'Per-agent pricing, 11–100 agents',
+                features: ['Every seat at one flat rate', 'Add agents anytime — pay the prorated difference instantly', 'Unlimited everything', 'All Team features', 'Branded visitor emails', '100+ agents? Contact us'],
+                cta: 'Start Brokerage', featured: false
               },
             ].map(tier => (
               <div key={tier.name} style={{ background: tier.featured ? '#1d1d1f' : 'white', border: tier.featured ? '2px solid #c9963a' : '1px solid #d1d1d6', borderRadius: '22px', padding: '28px 22px', position: 'relative', marginTop: tier.featured ? '0' : '0' }}>
@@ -341,7 +342,7 @@ export default function Home() {
           </div>
 
           <p style={{ fontSize: '12px', color: '#6e6e73', textAlign: 'center', marginTop: '28px', fontStyle: 'italic' }}>
-            * 2-year prepay pricing is a founding-member offer available for a limited time only.
+            * 2-year pricing is a founding-member offer available for a limited time only. Paid upfront and renews automatically every 2 years — we&apos;ll email you before each renewal, and you can cancel anytime. More than 100 agents? <a href="/contact" style={{ color: '#0071e3' }}>Contact us</a> for custom pricing.
           </p>
         </div>
       </section>

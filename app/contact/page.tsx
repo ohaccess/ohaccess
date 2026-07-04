@@ -116,24 +116,22 @@ export default function Contact() {
               </div>
             ))}
 
-            {/* Pricing tiers */}
+            {/* Pricing guide — self-serve up to 100 agents; negotiated beyond. */}
             <div style={{ background: '#f5f5f7', borderRadius: '16px', padding: '20px', marginTop: '8px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f', marginBottom: '12px' }}>Enterprise pricing guide:<br/>(Discounts for long-term contracts.)</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f', marginBottom: '12px' }}>Brokerage pricing:</div>
               {[
-                { range: '11–100 agents', price: '$11/agent/mo', note: 'Contact us' },
-                { range: '101–500 agents', price: '$10/agent/mo', note: 'Contact us' },
-                { range: '501–1,000 agents', price: '$9/agent/mo', note: 'Contact us' },
-                { range: '1,001–5,000 agents', price: '$8/agent/mo', note: 'Contact us' },
-                { range: '5,001-10K agents', price: '$7/agent/mo', note: 'Contact us' },
-                { range: '10K or more agents', price: 'Custom', note: 'Contact us' },
-                
+                { range: '11–100 agents', price: '$11/agent/mo', note: 'Self-serve' },
+                { range: '100+ agents', price: 'Custom', note: 'Contact us' },
               ].map((row, i) => (
-                <div key={row.range} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 5 ? '1px solid #e5e5ea' : 'none', fontSize: '13px', gap: '8px' }}>
+                <div key={row.range} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < 1 ? '1px solid #e5e5ea' : 'none', fontSize: '13px', gap: '8px' }}>
                   <span style={{ color: '#1d1d1f', fontWeight: '500', flex: 1 }}>{row.range}</span>
                   <span style={{ color: '#c9963a', fontWeight: '700', flexShrink: 0 }}>{row.price}</span>
                   <span style={{ color: '#6e6e73', fontSize: '11px', flexShrink: 0 }}>{row.note}</span>
                 </div>
               ))}
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '12px', lineHeight: '1.6' }}>
+                Up to 100 agents you can subscribe directly from your dashboard — every seat at a flat $11/agent/mo, add or remove agents anytime. This form is for brokerages beyond 100 agents, invoice-based billing, or anything custom (long-term discounts available).
+              </div>
             </div>
           </div>
 
@@ -187,12 +185,10 @@ export default function Contact() {
                       style={{ ...inputStyle, color: form.agentCount ? '#1d1d1f' : '#aeaeb2' }}
                     >
                       <option value="">Select agent count</option>
-                      <option value="11-100">11–100 agents ($11/agent/mo)</option>
-                      <option value="101-500">101–500 agents ($10/agent/mo)</option>
-                      <option value="501-1000">501–1,000 agents ($9/agent/mo)</option>
-                      <option value="1001-5000">1,001–5,000 agents ($8/agent/mo)</option>
-                      <option value="5001-10K">5,001-10K agents ($7/agent/mo)</option>
-                      <option value="10K+">10K or more agents (Custom)</option>
+                      <option value="11-100">11–100 agents (self-serve at $11/agent/mo)</option>
+                      <option value="101-500">101–500 agents</option>
+                      <option value="501-1000">501–1,000 agents</option>
+                      <option value="1000+">1,000+ agents</option>
                     </select>
                   </div>
 

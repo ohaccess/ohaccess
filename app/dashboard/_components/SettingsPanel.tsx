@@ -36,20 +36,20 @@ const PLAN_TIERS: {
   {
     name: 'Pro', tier: 'pro', featured: true,
     price: { month: '$15', year: '$12.50', two_year_prepay: '$10' }, per: '/mo',
-    sub: { month: 'For the active agent', year: '$150/yr — 2 months free', two_year_prepay: '$240 once — year 2 half off' },
+    sub: { month: 'For the active agent', year: '$150/yr — 2 months free', two_year_prepay: '$240 every 2 yrs — year 2 half off' },
     cta: 'Upgrade to Pro',
   },
   {
     name: 'Team', tier: 'team', featured: false,
     price: { month: '$120', year: '$100', two_year_prepay: '$80' }, per: '/mo',
-    sub: { month: 'Up to 10 agents', year: '$1,200/yr — 2 months free', two_year_prepay: '$1,920 once — year 2 half off' },
+    sub: { month: 'For 2–10 agents', year: '$1,200/yr — 2 months free', two_year_prepay: '$1,920 every 2 yrs — year 2 half off' },
     cta: 'Start Team',
   },
   {
     name: 'Brokerage', tier: 'brokerage', featured: false,
-    price: { month: 'Custom', year: 'Custom', two_year_prepay: 'Custom' }, per: '',
-    sub: { month: 'Custom per-agent pricing', year: 'Custom per-agent pricing', two_year_prepay: 'Custom per-agent pricing' },
-    cta: 'Contact us',
+    price: { month: '$11', year: '$110', two_year_prepay: '$176' }, per: '/agent',
+    sub: { month: '11–100 agents · add seats anytime', year: '11–100 agents — 2 months free', two_year_prepay: '11–100 agents — year 2 half off' },
+    cta: 'Start Brokerage',
   },
 ]
 
@@ -113,8 +113,18 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
   }, [agentId, isFree, supabase])
 
   const startCheckout = async (tier: string, interval: string) => {
-    // Brokerage is custom-priced — route to the sales contact form.
-    if (tier === 'brokerage') { window.location.href = '/contact'; return }
+    // Brokerage is per-seat (11–100 agents): ask how many seats to start with.
+    // Seats are adjustable anytime afterward from the Team tab. 100+ = sales.
+    let seats: number | undefined
+    if (tier === 'brokerage') {
+      const raw = window.prompt('How many agents? (11–100 — you can add or remove seats anytime)', '11')
+      if (raw == null) return // canceled
+      seats = Number(raw)
+      if (!Number.isInteger(seats) || seats < 11 || seats > 100) {
+        showToast(seats > 100 ? 'For more than 100 agents, contact us at ohaccess.com/contact.' : 'Brokerage plans cover 11–100 agents.', 'error')
+        return
+      }
+    }
     setBusy(tier)
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -122,7 +132,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ tier, interval }),
+        body: JSON.stringify({ tier, interval, ...(seats ? { seats } : {}) }),
       })
       const json = await res.json()
       if (!res.ok || !json.url) {
@@ -249,7 +259,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
           </div>
           {OFFER_TWO_YEAR && (
             <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '10px', fontStyle: 'italic' }}>
-              * 2-year prepay is a founding-member offer available for a limited time.
+              * 2-year pricing is a limited-time founding-member offer — paid upfront, renews automatically every 2 years (we&apos;ll email you before each renewal; cancel anytime). Brokerage plans over 100 agents: <a href="/contact" style={{ color: '#0071e3' }}>contact us</a>.
             </div>
           )}
         </>
