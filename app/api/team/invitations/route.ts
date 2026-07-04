@@ -60,11 +60,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'An invite is already pending for that email' }, { status: 409 })
   }
 
-  // Seat check.
+  // Seat check. Per-seat brokerages can grow self-serve; flat Teams at 10 can
+  // upgrade to per-seat — both paths live in the Team tab's seats card.
   const usage = await getSeatUsage(ctx.brokerageId)
   if (usage.used >= usage.limit) {
+    const grow =
+      ctx.tier === 'brokerage'
+        ? ' — or add seats from the Team tab.'
+        : ' — or upgrade to per-seat pricing from the Team tab to grow past 10.'
     return NextResponse.json(
-      { error: `Your team is full (${usage.limit} seats). Remove a member or a pending invite first.` },
+      { error: `Your team is full (${usage.limit} seats). Remove a member or a pending invite first${grow}` },
       { status: 409 }
     )
   }

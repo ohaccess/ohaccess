@@ -5,6 +5,8 @@ import { Resend } from 'resend'
 import { stripe } from '@/lib/stripe'
 import { escapeHtml } from '@/lib/escape-html'
 import { notifyAdmins } from '@/lib/notify-admin'
+import { ensureManagedBrokerage } from '@/lib/team'
+import { MIN_BROKERAGE_SEATS } from '@/lib/billing-plans'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -56,69 +58,26 @@ async function isBrokerageMember(profileId: string): Promise<boolean> {
   return !!data?.brokerage_id
 }
 
-// Ensure the Team subscriber owns a `brokerages` row and is linked to it
-// as brokerage_admin. Idempotent: if they already own a team brokerage we
-// just return its id. Called after a successful Team checkout.
-async function ensureTeamBrokerage(profileId: string): Promise<string | null> {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id, brokerage_id, full_name, email')
-    .eq('id', profileId)
-    .single()
-  if (!profile) return null
+// A "managed" subscription funds a whole team/brokerage (vs a personal Pro
+// plan). Its owner gets a brokerages row via ensureManagedBrokerage (shared
+// with the admin provisioning tool in lib/team.ts).
+function isManagedTier(tier: string | undefined): tier is 'team' | 'brokerage' {
+  return tier === 'team' || tier === 'brokerage'
+}
 
-  if (profile.brokerage_id) {
-    const { data: existing } = await supabase
-      .from('brokerages')
-      .select('id, owner_id, tier')
-      .eq('id', profile.brokerage_id)
-      .maybeSingle()
-    if (existing && existing.owner_id === profileId) {
-      return existing.id
-    }
+// Resolve the tier + seat count for a managed subscription FROM STRIPE, not
+// from the (possibly stale, out-of-order) event payload. The subscription
+// item's quantity is the seat count for per-seat brokerage plans; flat Team
+// stays at its historical 10 seats.
+async function managedShapeFromStripe(subId: string): Promise<{ tier: 'team' | 'brokerage'; seatLimit: number } | null> {
+  const fresh = await stripe.subscriptions.retrieve(subId)
+  const tier = fresh.metadata?.tier
+  if (!isManagedTier(tier)) return null
+  const quantity = fresh.items.data[0]?.quantity ?? 0
+  return {
+    tier,
+    seatLimit: tier === 'brokerage' ? Math.max(quantity, MIN_BROKERAGE_SEATS) : 10,
   }
-
-  const defaultName =
-    profile.full_name?.trim() ||
-    (profile.email ? `${profile.email.split('@')[0]}'s Team` : 'My Team')
-
-  const { data: brokerage, error: createErr } = await supabase
-    .from('brokerages')
-    .insert({
-      name: defaultName,
-      owner_id: profileId,
-      tier: 'team',
-      seat_limit: 10,
-    })
-    .select('id')
-    .single()
-
-  let brokerageId = brokerage?.id ?? null
-
-  // 23505 = unique violation: a concurrent webhook event already created the
-  // brokerage for this owner. Fetch the winner instead of erroring out.
-  if (createErr) {
-    if ((createErr as { code?: string }).code === '23505') {
-      const { data: existing } = await supabase
-        .from('brokerages')
-        .select('id')
-        .eq('owner_id', profileId)
-        .maybeSingle()
-      brokerageId = existing?.id ?? null
-    } else {
-      console.error('Failed to create brokerage for team subscriber', { profileId, createErr })
-      return null
-    }
-  }
-
-  if (!brokerageId) return null
-
-  await supabase
-    .from('profiles')
-    .update({ brokerage_id: brokerageId, role: 'brokerage_admin' })
-    .eq('id', profileId)
-
-  return brokerageId
 }
 
 // Mirror the team owner's subscription status onto their brokerage row so
@@ -194,12 +153,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return
   }
 
-  const tier = (session.metadata?.tier ?? 'pro') as 'pro' | 'team'
+  const tier = (session.metadata?.tier ?? 'pro') as 'pro' | 'team' | 'brokerage'
   const interval = session.metadata?.billing_interval ?? null
+  let seatCount = 0
 
   if (session.mode === 'subscription' && session.subscription) {
     const subId = typeof session.subscription === 'string' ? session.subscription : session.subscription.id
     const sub = await stripe.subscriptions.retrieve(subId)
+    seatCount = sub.items.data[0]?.quantity ?? 0
     await updateProfile(profileId, {
       tier,
       stripe_subscription_id: sub.id,
@@ -209,7 +170,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       subscription_canceled_at: null,
     })
   } else if (session.mode === 'payment') {
-    // 2-year prepay: one-time charge, grant access for N days.
+    // LEGACY branch: the 2-year term used to be sold as a one-time charge with
+    // a locally computed access window. No new checkout produces payment mode
+    // anymore (everything is a subscription) — this stays only so replaying a
+    // historical event remains safe and correct.
     const days = Number(session.metadata?.access_duration_days ?? 0)
     const periodEnd = days > 0 ? new Date(Date.now() + days * 86_400_000).toISOString() : null
     await updateProfile(profileId, {
@@ -222,10 +186,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     })
   }
 
-  // Team buyers become owners of a brokerage row (seat_limit 10), so they get
-  // the team-admin dashboard. Idempotent on retry.
-  if (tier === 'team') {
-    await ensureTeamBrokerage(profileId)
+  // Team/Brokerage buyers become owners of a brokerages row, so they get the
+  // team-admin dashboard. Per-seat brokerages take their seat_limit from the
+  // subscription quantity; flat Team keeps the historical 10. Idempotent on retry.
+  if (isManagedTier(tier)) {
+    await ensureManagedBrokerage(profileId, {
+      tier,
+      seatLimit: tier === 'brokerage' ? Math.max(seatCount, MIN_BROKERAGE_SEATS) : 10,
+    })
   }
 
   // Internal heads-up: someone just subscribed / paid. This event is recorded
@@ -239,7 +207,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     session.amount_total != null
       ? `${(session.amount_total / 100).toFixed(2)} ${String(session.currency || 'usd').toUpperCase()}`
       : '—'
-  const planLabel = tier === 'team' ? 'Team' : 'Pro'
+  const planLabel =
+    tier === 'brokerage' ? `Brokerage (${seatCount} seats)` : tier === 'team' ? 'Team' : 'Pro'
   const intervalLabel = interval ? ` (${interval.replace(/_/g, ' ')})` : ''
   await notifyAdmins(
     `💳 New ohACCESS subscription: ${buyer?.email ?? profileId}`,
@@ -263,15 +232,17 @@ async function handleSubscriptionChange(sub: Stripe.Subscription) {
   // For active/trialing/past_due, keep them at the paid tier; for canceled/unpaid/incomplete_expired, downgrade.
   const liveStatuses = new Set(['active', 'trialing', 'past_due'])
   const tier = liveStatuses.has(sub.status)
-    ? ((sub.metadata?.tier ?? 'pro') as 'pro' | 'team')
+    ? ((sub.metadata?.tier ?? 'pro') as 'pro' | 'team' | 'brokerage')
     : 'free'
 
   // A team member's feature tier is governed by their brokerage, NOT their own
-  // personal subscription. So if this is a PERSONAL (non-team) subscription for
-  // someone linked to a brokerage, leave their tier alone — otherwise canceling
-  // a former-Pro member's personal plan would wrongly knock them off the team.
-  const isTeamSub = sub.metadata?.tier === 'team'
-  const isCoveredMember = !isTeamSub && (await isBrokerageMember(profileId))
+  // personal subscription. So if this is a PERSONAL (non-managed) subscription
+  // for someone linked to a brokerage, leave their tier alone — otherwise
+  // canceling a former-Pro member's personal plan would wrongly knock them off
+  // the team. Managed (team/brokerage) subs are exempt: their OWNER also has
+  // brokerage_id set, and their sub is exactly what funds the brokerage.
+  const isManagedSub = isManagedTier(sub.metadata?.tier)
+  const isCoveredMember = !isManagedSub && (await isBrokerageMember(profileId))
 
   // A scheduled cancellation (cancel_at_period_end) doesn't set canceled_at
   // until the period actually ends, so surface cancel_at as the "ending on"
@@ -291,12 +262,15 @@ async function handleSubscriptionChange(sub: Stripe.Subscription) {
     subscription_canceled_at: subCanceledAt,
   })
 
-  // For team subscriptions, keep the brokerage row + members in sync.
-  // Provision on first activation; always mirror status (and cut members
-  // loose if the team subscription has terminally lapsed).
-  if (sub.metadata?.tier === 'team') {
+  // For managed (team/brokerage) subscriptions, keep the brokerage row +
+  // members in sync. Provision on first activation and sync the seat count
+  // from the CURRENT subscription state at Stripe — not this event's payload —
+  // so a stale out-of-order event can never shrink seats or undo an upgrade.
+  // Always mirror status (and cut members loose on terminal lapse).
+  if (isManagedSub) {
     if (liveStatuses.has(sub.status)) {
-      await ensureTeamBrokerage(profileId)
+      const shape = await managedShapeFromStripe(sub.id)
+      if (shape) await ensureManagedBrokerage(profileId, shape)
     }
     await propagateTeamStatus(profileId, sub.id, sub.status)
   }
@@ -310,10 +284,10 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
   if (!profileId) return
   // Same guard as handleSubscriptionChange: when a brokerage member's PERSONAL
   // subscription finally ends, keep them on the team (the brokerage covers
-  // them) instead of dropping them to free. Their team subscription ending is
-  // handled below via propagateTeamStatus.
-  const isTeamSub = sub.metadata?.tier === 'team'
-  const isCoveredMember = !isTeamSub && (await isBrokerageMember(profileId))
+  // them) instead of dropping them to free. Their team/brokerage subscription
+  // ending is handled below via propagateTeamStatus.
+  const isManagedSub = isManagedTier(sub.metadata?.tier)
+  const isCoveredMember = !isManagedSub && (await isBrokerageMember(profileId))
   await updateProfile(profileId, {
     ...(isCoveredMember ? {} : { tier: 'free' }),
     stripe_subscription_id: null,
@@ -402,6 +376,66 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   }
 }
 
+// Advance notice that a subscription is about to renew and charge. Fires at
+// the window configured in Stripe Billing settings ("Upcoming renewal events",
+// set to ~30-45 days). Gated to annual/2-year plans — a monthly renewal email
+// every month is noise, and several states require advance notice specifically
+// for long terms. Idempotent via stripe_events on event.id (upcoming invoices
+// themselves have no invoice id yet). Best-effort: never throws.
+async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
+  if (!invoice.amount_due) return // free/credit renewal — nothing to warn about
+  const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id
+  const profileId = await findProfileId(undefined, customerId)
+  if (!profileId) {
+    console.error('invoice.upcoming: could not resolve profile for customer', customerId)
+    return
+  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, full_name, tier, billing_interval')
+    .eq('id', profileId)
+    .maybeSingle()
+  if (!profile?.email) return
+  // Monthly plans renew every few weeks — skip those; Stripe's receipt suffices.
+  if (!profile.billing_interval || profile.billing_interval === 'month') return
+
+  const name = escapeHtml((profile.full_name || '').trim() || 'there')
+  const amount = `$${((invoice.amount_due ?? 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+  const renewTs = invoice.next_payment_attempt ?? invoice.period_end
+  const renewDate = renewTs
+    ? new Date(renewTs * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : 'soon'
+  const termLabel = profile.billing_interval === 'two_year_prepay' ? '2-year' : 'annual'
+  const manageUrl = `${APP_URL}/dashboard?view=settings`
+
+  try {
+    await resend.emails.send({
+      from: 'ohACCESS <noreply@mail.ohaccess.com>',
+      to: profile.email,
+      replyTo: 'support@ohaccess.com',
+      subject: `Your ohACCESS plan renews on ${renewDate}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
+          <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
+            <div style="font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
+          </div>
+          <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; color: #1d1d1f; font-size: 14px; line-height: 1.6;">
+            <p>Hi ${name},</p>
+            <p>A quick heads-up: your ohACCESS ${escapeHtml(termLabel)} plan renews on <strong>${escapeHtml(renewDate)}</strong>, and your card on file will be charged <strong>${escapeHtml(amount)}</strong>.</p>
+            <p>No action is needed if you'd like to continue — everything keeps working without interruption.</p>
+            <p style="text-align: center; margin: 24px 0;">
+              <a href="${manageUrl}" style="background: #1d1d1f; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700;">Manage subscription</a>
+            </p>
+            <p style="font-size: 13px; color: #6e6e73;">You can cancel or change your plan anytime before the renewal date from your dashboard settings. Questions? Just reply to this email.</p>
+          </div>
+        </div>
+      `,
+    })
+  } catch (e) {
+    console.error('invoice.upcoming: renewal notice email failed', e)
+  }
+}
+
 export async function POST(request: Request) {
   if (!WEBHOOK_SECRET) {
     return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
@@ -451,6 +485,9 @@ export async function POST(request: Request) {
         break
       case 'invoice.payment_failed':
         await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice)
+        break
+      case 'invoice.upcoming':
+        await handleInvoiceUpcoming(event.data.object as Stripe.Invoice)
         break
       default:
         // Ignore other event types — they're harmless but we record them

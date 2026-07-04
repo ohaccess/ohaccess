@@ -279,6 +279,57 @@ export default function AdminDashboard() {
     refresh()
   }
 
+  // Provision an invoice-based brokerage (100+/custom deals) without touching
+  // Supabase Studio. Payment stays manual (Stripe invoice from the dashboard).
+  const [provEmail, setProvEmail] = useState('')
+  const [provName, setProvName] = useState('')
+  const [provSeats, setProvSeats] = useState('')
+  const [provBusy, setProvBusy] = useState(false)
+
+  const provisionBrokerage = async () => {
+    const seats = Number(provSeats)
+    if (!provEmail.trim() || !Number.isInteger(seats) || seats < 1) {
+      window.alert('Enter the owner\'s account email and a whole-number seat limit.')
+      return
+    }
+    if (
+      !window.confirm(
+        `Provision an invoice-based brokerage?\n\n` +
+          `Owner: ${provEmail.trim()}\n` +
+          `Seats: ${seats}\n` +
+          (provName.trim() ? `Name: ${provName.trim()}\n` : '') +
+          `\nThey become a brokerage admin immediately. Billing stays manual (send a Stripe invoice separately).`
+      )
+    )
+      return
+    setProvBusy(true)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = '/login'
+      return
+    }
+    const res = await fetch('/api/admin/provision-brokerage', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ownerEmail: provEmail.trim(), seatLimit: seats, name: provName.trim() || undefined }),
+    })
+    const j = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      window.alert(`Could not provision: ${j.error || res.status}`)
+      setProvBusy(false)
+      return
+    }
+    window.alert(`Done — ${provEmail.trim()} is now a brokerage admin with ${seats} seats.`)
+    setProvEmail(''); setProvName(''); setProvSeats('')
+    setProvBusy(false)
+    refresh()
+  }
+
   const [deletingOHId, setDeletingOHId] = useState<string | null>(null)
 
   const deleteOpenHouse = async (oh: OpenHouse) => {
@@ -551,7 +602,32 @@ export default function AdminDashboard() {
           )}
 
           {/* Panels */}
-          {tab === 'overview' && <Overview data={data} setTab={selectTab} />}
+          {tab === 'overview' && (
+            <>
+              <Overview data={data} setTab={selectTab} />
+              {/* Provision brokerage — invoice-based 100+/custom deals. Self-serve
+                  (11–100 seats) never needs this; it exists so big negotiated deals
+                  don't require hand-editing Supabase Studio. */}
+              <div style={{ background: 'white', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginTop: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 4 }}>Provision invoice-based brokerage</div>
+                <div style={{ fontSize: 12, color: SUB, marginBottom: 12 }}>
+                  For negotiated 100+ deals paid by invoice. The owner must already have an ohACCESS account. Billing stays manual — send them a Stripe invoice separately.
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <input value={provEmail} onChange={(e) => setProvEmail(e.target.value)} placeholder="owner@brokerage.com"
+                    style={{ flex: '1 1 220px', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+                  <input value={provName} onChange={(e) => setProvName(e.target.value)} placeholder="Brokerage name (optional)"
+                    style={{ flex: '1 1 180px', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+                  <input value={provSeats} onChange={(e) => setProvSeats(e.target.value)} placeholder="Seats" inputMode="numeric"
+                    style={{ width: 80, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+                  <button onClick={provisionBrokerage} disabled={provBusy}
+                    style={{ background: INK, color: 'white', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: provBusy ? 0.6 : 1 }}>
+                    {provBusy ? 'Provisioning…' : 'Provision →'}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
           {tab === 'agents' && (
             <AgentsTable
               rows={filteredAgents}

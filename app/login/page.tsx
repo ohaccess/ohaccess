@@ -16,11 +16,13 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  // Read pricing-CTA params: plan=pro|team & interval=month|year|two_year_prepay.
+  // Read pricing-CTA params: plan=pro|team|brokerage & interval=month|year|two_year_prepay.
+  // Brokerage is per-seat: a seats param rides along (validated server-side, 11–100).
   const planParam = searchParams.get('plan')
   const intervalParam = searchParams.get('interval')
+  const seatsParam = searchParams.get('seats')
   const hasCheckoutIntent =
-    (planParam === 'pro' || planParam === 'team') && !!intervalParam
+    (planParam === 'pro' || planParam === 'team' || planParam === 'brokerage') && !!intervalParam
   // Where to send the user after login (e.g. a deep link to a visitor page).
   // Only same-origin relative paths are honored, to avoid open-redirects. Must
   // start with a single "/" and contain no backslash or control character:
@@ -60,7 +62,11 @@ function LoginForm() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ tier: planParam, interval: intervalParam }),
+        body: JSON.stringify({
+          tier: planParam,
+          interval: intervalParam,
+          ...(planParam === 'brokerage' ? { seats: Number(seatsParam) || 11 } : {}),
+        }),
       })
       const json = await res.json()
       if (res.ok && json.url) {
@@ -125,6 +131,7 @@ function LoginForm() {
       if (hasCheckoutIntent) {
         confirmUrl.searchParams.set('plan', planParam!)
         confirmUrl.searchParams.set('interval', intervalParam!)
+        if (planParam === 'brokerage' && seatsParam) confirmUrl.searchParams.set('seats', seatsParam)
       }
       // Pull the referral source from the cookie set by RefCapture (if any)
       // and stash it on the auth user. This survives the email-confirmation

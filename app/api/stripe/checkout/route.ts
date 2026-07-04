@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { stripe, getPriceConfig, isTier, isBillingInterval } from '@/lib/stripe'
+import { isValidSeatCount, isExpiredLegacyTwoYear, MIN_BROKERAGE_SEATS, MAX_BROKERAGE_SEATS } from '@/lib/billing-plans'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://ohaccess.com'
 
@@ -19,14 +20,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
-    const { tier, interval } = await request.json()
+    const { tier, interval, seats } = await request.json()
     if (!isTier(tier) || !isBillingInterval(interval)) {
       return NextResponse.json({ error: 'Invalid tier or interval' }, { status: 400 })
     }
 
+    // Brokerage is per-seat: the seat count rides as the line-item quantity.
+    // Self-serve range is 11–100; larger deals are negotiated via /contact.
+    let seatCount = 1
+    if (tier === 'brokerage') {
+      const parsed = typeof seats === 'string' ? Number(seats) : seats
+      if (!isValidSeatCount(parsed)) {
+        return NextResponse.json(
+          { error: `Brokerage plans cover ${MIN_BROKERAGE_SEATS}–${MAX_BROKERAGE_SEATS} agents. For more than ${MAX_BROKERAGE_SEATS}, contact us at ohaccess.com/contact.` },
+          { status: 400 }
+        )
+      }
+      seatCount = parsed
+    }
+
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, email, full_name, stripe_customer_id, tier, subscription_status, billing_interval, current_period_end')
+      .select('id, email, full_name, stripe_customer_id, stripe_subscription_id, tier, subscription_status, billing_interval, current_period_end')
       .eq('id', user.id)
       .single()
 
@@ -34,12 +49,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
-    // An expired 2-year prepay still reads tier=paid/status=active locally
-    // (it's a one-time payment with no auto-renew), so let those users renew.
-    const twoYearExpired =
-      profile.billing_interval === 'two_year_prepay' &&
-      !!profile.current_period_end &&
-      Date.parse(profile.current_period_end) < Date.now()
+    // A LEGACY (one-time) 2-year prepay that has lapsed still reads
+    // tier=paid/status=active locally, so let those users renew. New-style
+    // 2-year subscriptions carry a sub id and auto-renew — never "expired".
+    const twoYearExpired = isExpiredLegacyTwoYear(profile)
 
     // Block double-paying. If they already have an active paid subscription,
     // route them to the customer portal instead of starting a second checkout.
@@ -71,10 +84,13 @@ export async function POST(request: Request) {
 
     const cfg = getPriceConfig(tier, interval)
 
+    // Every plan is a subscription now — the 2-year term included (it's a
+    // real interval=year×2 subscription that auto-renews; the old one-time
+    // payment flow is gone, and legacy holders are handled by the guards above).
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      mode: cfg.mode,
-      line_items: [{ price: cfg.priceId, quantity: 1 }],
+      mode: 'subscription',
+      line_items: [{ price: cfg.priceId, quantity: seatCount }],
       success_url: `${APP_URL}/dashboard?view=settings&checkout=success`,
       cancel_url: `${APP_URL}/dashboard?view=settings&checkout=cancel`,
       allow_promotion_codes: true,
@@ -83,28 +99,16 @@ export async function POST(request: Request) {
         profile_id: user.id,
         tier,
         billing_interval: interval,
-        ...(cfg.accessDurationDays ? { access_duration_days: String(cfg.accessDurationDays) } : {}),
+        ...(tier === 'brokerage' ? { seats: String(seatCount) } : {}),
       },
-      ...(cfg.mode === 'subscription'
-        ? {
-            subscription_data: {
-              metadata: {
-                profile_id: user.id,
-                tier,
-                billing_interval: interval,
-              },
-            },
-          }
-        : {
-            payment_intent_data: {
-              metadata: {
-                profile_id: user.id,
-                tier,
-                billing_interval: interval,
-                access_duration_days: String(cfg.accessDurationDays ?? 0),
-              },
-            },
-          }),
+      subscription_data: {
+        metadata: {
+          profile_id: user.id,
+          tier,
+          billing_interval: interval,
+          ...(tier === 'brokerage' ? { seats: String(seatCount) } : {}),
+        },
+      },
     })
 
     if (!session.url) {

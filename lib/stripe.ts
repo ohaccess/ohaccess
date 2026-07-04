@@ -24,30 +24,41 @@ export const stripe = new Proxy({} as Stripe, {
   },
 })
 
-export type Tier = 'pro' | 'team'
+export type Tier = 'pro' | 'team' | 'brokerage'
 export type BillingInterval = 'month' | 'year' | 'two_year_prepay'
 
+// Every plan is a real Stripe subscription now — including the 2-year term
+// (interval: year × 2, auto-renews) and the per-seat Brokerage tier (the
+// subscription's quantity carries the seat count). The old one-time-payment
+// 2-year flow is gone; legacy holders are handled via lib/billing-plans.
 interface PriceConfig {
   envVar: string
-  mode: 'subscription' | 'payment'
-  accessDurationDays?: number
+  mode: 'subscription'
 }
 
 const PRICE_CONFIG: Record<Tier, Record<BillingInterval, PriceConfig>> = {
   pro: {
     month:           { envVar: 'STRIPE_PRICE_PRO_MONTHLY', mode: 'subscription' },
     year:            { envVar: 'STRIPE_PRICE_PRO_ANNUAL',  mode: 'subscription' },
-    two_year_prepay: { envVar: 'STRIPE_PRICE_PRO_2YEAR',   mode: 'payment', accessDurationDays: 730 },
+    two_year_prepay: { envVar: 'STRIPE_PRICE_PRO_2YEAR',   mode: 'subscription' },
   },
   team: {
     month:           { envVar: 'STRIPE_PRICE_TEAM_MONTHLY', mode: 'subscription' },
     year:            { envVar: 'STRIPE_PRICE_TEAM_ANNUAL',  mode: 'subscription' },
-    two_year_prepay: { envVar: 'STRIPE_PRICE_TEAM_2YEAR',   mode: 'payment', accessDurationDays: 730 },
+    two_year_prepay: { envVar: 'STRIPE_PRICE_TEAM_2YEAR',   mode: 'subscription' },
+  },
+  // Per-seat prices ($11 / $110 / $176 per seat) — checkout passes the seat
+  // count as the line-item quantity (self-serve range 11–100, enforced in
+  // lib/billing-plans; 100+ deals are negotiated and admin-provisioned).
+  brokerage: {
+    month:           { envVar: 'STRIPE_PRICE_BROKERAGE_MONTHLY', mode: 'subscription' },
+    year:            { envVar: 'STRIPE_PRICE_BROKERAGE_ANNUAL',  mode: 'subscription' },
+    two_year_prepay: { envVar: 'STRIPE_PRICE_BROKERAGE_2YEAR',   mode: 'subscription' },
   },
 }
 
 export function isTier(value: unknown): value is Tier {
-  return value === 'pro' || value === 'team'
+  return value === 'pro' || value === 'team' || value === 'brokerage'
 }
 
 export function isBillingInterval(value: unknown): value is BillingInterval {

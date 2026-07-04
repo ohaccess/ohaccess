@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { fillBorder } from '@/lib/colors'
+import { isLegacyTwoYear, isExpiredLegacyTwoYear } from '@/lib/billing-plans'
 
 // The Settings view: subscription/billing, agent profile, branding & photos,
 // brand colors, CRM lead-intake, and the Zapier webhook. Presentational —
@@ -35,20 +36,20 @@ const PLAN_TIERS: {
   {
     name: 'Pro', tier: 'pro', featured: true,
     price: { month: '$15', year: '$12.50', two_year_prepay: '$10' }, per: '/mo',
-    sub: { month: 'For the active agent', year: '$150/yr — 2 months free', two_year_prepay: '$240 once — year 2 half off' },
+    sub: { month: 'For the active agent', year: '$150/yr — 2 months free', two_year_prepay: '$240 every 2 yrs — year 2 half off' },
     cta: 'Upgrade to Pro',
   },
   {
     name: 'Team', tier: 'team', featured: false,
     price: { month: '$120', year: '$100', two_year_prepay: '$80' }, per: '/mo',
-    sub: { month: 'Up to 10 agents', year: '$1,200/yr — 2 months free', two_year_prepay: '$1,920 once — year 2 half off' },
+    sub: { month: 'For 2–10 agents', year: '$1,200/yr — 2 months free', two_year_prepay: '$1,920 every 2 yrs — year 2 half off' },
     cta: 'Start Team',
   },
   {
     name: 'Brokerage', tier: 'brokerage', featured: false,
-    price: { month: 'Custom', year: 'Custom', two_year_prepay: 'Custom' }, per: '',
-    sub: { month: 'Custom per-agent pricing', year: 'Custom per-agent pricing', two_year_prepay: 'Custom per-agent pricing' },
-    cta: 'Contact us',
+    price: { month: '$11', year: '$110', two_year_prepay: '$176' }, per: '/agent',
+    sub: { month: '11–100 agents · add seats anytime', year: '11–100 agents — 2 months free', two_year_prepay: '11–100 agents — year 2 half off' },
+    cta: 'Start Brokerage',
   },
 ]
 
@@ -62,7 +63,7 @@ function formatPlanDate(iso: string | null | undefined): string {
 function intervalLabel(interval: string | null | undefined): string {
   if (interval === 'month') return 'Monthly'
   if (interval === 'year') return 'Annual'
-  if (interval === 'two_year_prepay') return '2-Year Prepay'
+  if (interval === 'two_year_prepay') return '2-Year'
   return ''
 }
 
@@ -86,18 +87,18 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
   const periodEnd = profile?.current_period_end as string | null
   const billing = profile?.billing_interval as string | null
 
-  // A 2-year prepay is one-time with no auto-renew, so its row still reads
+  // A LEGACY 2-year prepay (one-time payment, no subscription) still reads
   // paid/active after the access date passes. Treat that as expired so the
-  // agent sees the renewal picker.
-  const twoYearExpired =
-    billing === 'two_year_prepay' && !!periodEnd && Date.parse(periodEnd) < Date.now()
-  // Show the plan picker for free agents AND at the "renew" moment (expired 2-year).
+  // agent sees the renewal picker. New-style 2-year subs auto-renew.
+  const twoYearExpired = isExpiredLegacyTwoYear(profile)
+  // Show the plan picker for free agents AND at the "renew" moment (expired legacy 2-year).
   const showPlans = isFree || twoYearExpired
   // cancel_at_period_end keeps status 'active' until the period closes;
   // canceledAt is our flag that an end is already scheduled.
   const pendingCancel = !!canceledAt && (status === 'active' || status === 'trialing')
-  // Only recurring (month/year) plans can be canceled; 2-year prepay just lapses.
-  const canCancel = isPaid && !twoYearExpired && (billing === 'month' || billing === 'year')
+  // Any real subscription can be canceled at period end — month, year, and the
+  // auto-renewing 2-year alike. Legacy prepays have no sub id (nothing to cancel).
+  const canCancel = isPaid && !twoYearExpired && !!profile?.stripe_subscription_id
   const billingChoices = OFFER_TWO_YEAR
     ? BILLING_OPTIONS
     : BILLING_OPTIONS.filter(b => b.key !== 'two_year_prepay')
@@ -112,8 +113,18 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
   }, [agentId, isFree, supabase])
 
   const startCheckout = async (tier: string, interval: string) => {
-    // Brokerage is custom-priced — route to the sales contact form.
-    if (tier === 'brokerage') { window.location.href = '/contact'; return }
+    // Brokerage is per-seat (11–100 agents): ask how many seats to start with.
+    // Seats are adjustable anytime afterward from the Team tab. 100+ = sales.
+    let seats: number | undefined
+    if (tier === 'brokerage') {
+      const raw = window.prompt('How many agents? (11–100 — you can add or remove seats anytime)', '11')
+      if (raw == null) return // canceled
+      seats = Number(raw)
+      if (!Number.isInteger(seats) || seats < 11 || seats > 100) {
+        showToast(seats > 100 ? 'For more than 100 agents, contact us at ohaccess.com/contact.' : 'Brokerage plans cover 11–100 agents.', 'error')
+        return
+      }
+    }
     setBusy(tier)
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -121,7 +132,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ tier, interval }),
+        body: JSON.stringify({ tier, interval, ...(seats ? { seats } : {}) }),
       })
       const json = await res.json()
       if (!res.ok || !json.url) {
@@ -248,7 +259,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
           </div>
           {OFFER_TWO_YEAR && (
             <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '10px', fontStyle: 'italic' }}>
-              * 2-year prepay is a founding-member offer available for a limited time.
+              * 2-year pricing is a limited-time founding-member offer — paid upfront, renews automatically every 2 years (we&apos;ll email you before each renewal; cancel anytime). Brokerage plans over 100 agents: <a href="/contact" style={{ color: '#0071e3' }}>contact us</a>.
             </div>
           )}
         </>
@@ -271,7 +282,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
           </div>
           {periodEnd && !pendingCancel && status !== 'past_due' && (
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '14px' }}>
-              {billing === 'two_year_prepay' ? <><strong>Access until:</strong> {formatPlanDate(periodEnd)}</> : <><strong>Renews on:</strong> {formatPlanDate(periodEnd)}</>}
+              {isLegacyTwoYear(profile) ? <><strong>Access until:</strong> {formatPlanDate(periodEnd)}</> : <><strong>Renews on:</strong> {formatPlanDate(periodEnd)}</>}
             </div>
           )}
 

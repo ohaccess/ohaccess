@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { onColor, fillBorder } from '@/lib/colors'
+import { MIN_BROKERAGE_SEATS, MAX_BROKERAGE_SEATS, BROKERAGE_SEAT_CENTS } from '@/lib/billing-plans'
 
 interface Member {
   id: string
@@ -66,6 +67,15 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
   const [accent, setAccent] = useState('#0071e3')
   const [crmEmail, setCrmEmail] = useState('')
   const [crmForward, setCrmForward] = useState(false)
+  // Per-seat billing: true when the team is funded by a real Stripe
+  // subscription (self-serve seats); false for invoice-based/comped teams.
+  const [selfServe, setSelfServe] = useState(false)
+  const [seatTarget, setSeatTarget] = useState<number | null>(null)
+  const [seatPreview, setSeatPreview] = useState<{
+    amountDueNowCents: number; newTotalCents: number; perSeatCents: number; interval: string; currentQuantity: number
+  } | null>(null)
+  const [previewErr, setPreviewErr] = useState('')
+  const [upgradeSeats, setUpgradeSeats] = useState(MIN_BROKERAGE_SEATS)
 
   const authHeaders = useCallback(async (): Promise<Record<string, string>> => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -86,10 +96,63 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
     setAccent(json.brokerage.accent_color || '#0071e3')
     setCrmEmail(json.brokerage.crm_lead_email || '')
     setCrmForward(!!json.brokerage.crm_forward_member_leads)
+    setSelfServe(!!json.selfServeBilling)
+    setSeatTarget(json.seats.limit)
     setLoading(false)
   }, [authHeaders])
 
   useEffect(() => { load() }, [load])
+
+  // Debounced proration preview: as the admin dials a new seat count, ask the
+  // server what Stripe would charge right now so the confirm button is honest.
+  useEffect(() => {
+    if (!brokerage || brokerage.tier !== 'brokerage' || !selfServe) return
+    if (seatTarget == null || seatTarget === seats.limit) { setSeatPreview(null); setPreviewErr(''); return }
+    if (!Number.isInteger(seatTarget) || seatTarget < MIN_BROKERAGE_SEATS || seatTarget > MAX_BROKERAGE_SEATS) {
+      setSeatPreview(null)
+      setPreviewErr(`Seats must be ${MIN_BROKERAGE_SEATS}–${MAX_BROKERAGE_SEATS}. Need more? Contact us at ohaccess.com/contact.`)
+      return
+    }
+    if (seatTarget < seats.used) {
+      setSeatPreview(null)
+      setPreviewErr(`You're using ${seats.used} seats — remove members or invites first.`)
+      return
+    }
+    setPreviewErr('')
+    const t = setTimeout(async () => {
+      const res = await fetch(`/api/team/seats?quantity=${seatTarget}`, { headers: await authHeaders() })
+      const json = await res.json()
+      if (res.ok) { setSeatPreview(json) } else { setSeatPreview(null); setPreviewErr(json.error || 'Could not preview the change') }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [seatTarget, seats.limit, seats.used, brokerage, selfServe, authHeaders])
+
+  const applySeats = async () => {
+    if (seatTarget == null) return
+    setBusy('seats')
+    const res = await fetch('/api/team/seats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+      body: JSON.stringify({ quantity: seatTarget }),
+    })
+    const json = await res.json()
+    if (res.ok) { showToast(`Your plan is now ${json.quantity} seats`); setSeatPreview(null); await load() }
+    else showToast(json.error || 'Could not update seats', 'error')
+    setBusy(null)
+  }
+
+  const upgradeToPerSeat = async () => {
+    setBusy('upgrade')
+    const res = await fetch('/api/team/upgrade', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+      body: JSON.stringify({ seats: upgradeSeats }),
+    })
+    const json = await res.json()
+    if (res.ok) { showToast(`Upgraded — your plan is now ${json.seats} seats`); await load(); await onSaved?.() }
+    else showToast(json.error || 'Could not upgrade', 'error')
+    setBusy(null)
+  }
 
   const saveSettings = async () => {
     setBusy('settings')
@@ -140,6 +203,9 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
 
   const seatsFull = seats.used >= seats.limit
   const tierLabel = brokerage.tier === 'brokerage' ? 'Brokerage' : 'Team'
+  const termSuffix = (interval: string) => (interval === 'month' ? '/mo' : interval === 'year' ? '/yr' : '/2yr')
+  const usd = (cents: number) => `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: cents % 100 ? 2 : 0 })}`
+  const monthlySeatUsd = usd(BROKERAGE_SEAT_CENTS.month)
 
   return (
     <>
@@ -154,6 +220,85 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
         <div style={{ fontSize: '12px', color: seatsFull ? '#cc0000' : '#6e6e73', marginBottom: '16px' }}>
           {seats.used} of {seats.limit} seats used{seatsFull ? ' — your team is full' : ''}
         </div>
+
+        {/* PER-SEAT SEAT MANAGEMENT — brokerage plans funded by a Stripe
+            subscription. Adding seats charges the prorated difference
+            immediately; reducing takes effect at the next invoice (no refunds). */}
+        {brokerage.tier === 'brokerage' && selfServe && (
+          <div style={{ background: '#f5f5f7', borderRadius: '12px', padding: '14px 16px', marginBottom: '18px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: '#1d1d1f', marginBottom: '8px' }}>Seats on your plan</div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button type="button" disabled={busy !== null || (seatTarget ?? 0) <= Math.max(MIN_BROKERAGE_SEATS, seats.used)}
+                onClick={() => setSeatTarget(t => Math.max(Math.max(MIN_BROKERAGE_SEATS, seats.used), (t ?? seats.limit) - 1))}
+                style={{ width: '34px', height: '34px', borderRadius: '8px', border: '1px solid #d1d1d6', background: 'white', fontSize: '16px', cursor: 'pointer' }}>−</button>
+              <input
+                type="number" min={Math.max(MIN_BROKERAGE_SEATS, seats.used)} max={MAX_BROKERAGE_SEATS}
+                value={seatTarget ?? seats.limit}
+                onChange={e => setSeatTarget(Number(e.target.value))}
+                style={{ ...inputStyle, width: '84px', textAlign: 'center' as const }}
+              />
+              <button type="button" disabled={busy !== null || (seatTarget ?? 0) >= MAX_BROKERAGE_SEATS}
+                onClick={() => setSeatTarget(t => Math.min(MAX_BROKERAGE_SEATS, (t ?? seats.limit) + 1))}
+                style={{ width: '34px', height: '34px', borderRadius: '8px', border: '1px solid #d1d1d6', background: 'white', fontSize: '16px', cursor: 'pointer' }}>+</button>
+              {seatTarget != null && seatTarget !== seats.limit && seatPreview && (
+                <button type="button" onClick={applySeats} disabled={busy !== null}
+                  style={{ ...btn('#1d1d1f'), padding: '8px 16px', opacity: busy ? 0.6 : 1 }}>
+                  {busy === 'seats' ? 'Updating…' : seatTarget > seats.limit
+                    ? `Confirm — pay ${usd(seatPreview.amountDueNowCents)} today`
+                    : 'Confirm reduction'}
+                </button>
+              )}
+            </div>
+            {seatTarget != null && seatTarget !== seats.limit && seatPreview && (
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '10px', lineHeight: '1.6' }}>
+                {seatTarget > seats.limit ? (
+                  <>You&apos;ll be charged <strong>{usd(seatPreview.amountDueNowCents)} now</strong> (prorated for the rest of your term). New total: <strong>{usd(seatPreview.newTotalCents)}{termSuffix(seatPreview.interval)}</strong> at {usd(seatPreview.perSeatCents)}/seat.</>
+                ) : (
+                  <>No charge today and no refund for the current period — your new rate of <strong>{usd(seatPreview.newTotalCents)}{termSuffix(seatPreview.interval)}</strong> starts on your next invoice.</>
+                )}
+              </div>
+            )}
+            {previewErr && <div style={{ fontSize: '12px', color: '#cc0000', marginTop: '10px' }}>{previewErr}</div>}
+            {(seatTarget === MAX_BROKERAGE_SEATS || seats.limit === MAX_BROKERAGE_SEATS) && (
+              <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '8px' }}>
+                Need more than {MAX_BROKERAGE_SEATS} agents? <a href="/contact" style={{ color: '#0071e3' }}>Contact us</a> for custom pricing.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Invoice-based / comped brokerage: seats are managed by ohACCESS. */}
+        {brokerage.tier === 'brokerage' && !selfServe && (
+          <div style={{ background: '#f5f5f7', borderRadius: '12px', padding: '12px 16px', marginBottom: '18px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.6' }}>
+            Your plan is invoice-based, so seats are handled by your account manager. Email <a href="mailto:support@ohaccess.com" style={{ color: '#0071e3' }}>support@ohaccess.com</a> to add or remove seats.
+          </div>
+        )}
+
+        {/* FLAT TEAM AT CAPACITY: one-click upgrade to per-seat pricing. */}
+        {brokerage.tier === 'team' && seatsFull && (
+          <div style={{ background: '#fff9e0', border: '1px solid #ffe066', borderRadius: '12px', padding: '14px 16px', marginBottom: '18px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#1d1d1f', marginBottom: '4px' }}>Need more than 10 agents?</div>
+            <div style={{ fontSize: '12px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '12px' }}>
+              Switch to per-seat pricing at <strong>{monthlySeatUsd}/agent/mo</strong> — every seat billed at that rate ({MIN_BROKERAGE_SEATS} agents = <strong>{usd(MIN_BROKERAGE_SEATS * BROKERAGE_SEAT_CENTS.month)}/mo</strong>), on your current billing schedule. You&apos;ll be charged the prorated difference today, and you can add seats anytime after (up to {MAX_BROKERAGE_SEATS}).
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="number" min={Math.max(MIN_BROKERAGE_SEATS, seats.used)} max={MAX_BROKERAGE_SEATS}
+                value={upgradeSeats}
+                onChange={e => setUpgradeSeats(Number(e.target.value))}
+                style={{ ...inputStyle, width: '84px', textAlign: 'center' as const }}
+              />
+              <span style={{ fontSize: '12px', color: '#6e6e73' }}>seats</span>
+              <button type="button" onClick={upgradeToPerSeat} disabled={busy !== null || !Number.isInteger(upgradeSeats) || upgradeSeats < MIN_BROKERAGE_SEATS || upgradeSeats > MAX_BROKERAGE_SEATS}
+                style={{ ...btn('#1d1d1f'), padding: '8px 16px', opacity: busy ? 0.6 : 1 }}>
+                {busy === 'upgrade' ? 'Upgrading…' : 'Upgrade to per-seat →'}
+              </button>
+            </div>
+            <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '8px' }}>
+              More than {MAX_BROKERAGE_SEATS} agents? <a href="/contact" style={{ color: '#0071e3' }}>Contact us</a> for custom pricing.
+            </div>
+          </div>
+        )}
 
         <form onSubmit={sendInvite} style={{ display: 'flex', gap: '8px', marginBottom: '18px' }}>
           <input

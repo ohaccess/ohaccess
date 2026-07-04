@@ -9,6 +9,7 @@ import NewOpenHouseForm from './_components/NewOpenHouseForm'
 import SettingsPanel from './_components/SettingsPanel'
 import VisitorDetail from '@/app/_components/VisitorDetail'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
+import { isExpiredLegacyTwoYear } from '@/lib/billing-plans'
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
@@ -79,13 +80,11 @@ export default function Dashboard() {
   // removed (brokerage_id cleared), it reappears.
   const isTeamMember = !!profile?.brokerage_id && profile?.role !== 'brokerage_admin'
 
-  // A 2-year prepay is a one-time payment with no auto-renew, so its row still
+  // A LEGACY 2-year prepay (one-time payment, no Stripe subscription) still
   // reads tier=paid after it lapses. Treat a past access date as expired so the
   // agent gets the renewal prompt (and the trial cap) like any free agent.
-  const twoYearExpired =
-    profile?.billing_interval === 'two_year_prepay' &&
-    !!profile?.current_period_end &&
-    Date.parse(profile.current_period_end) < Date.now()
+  // New-style 2-year subscriptions auto-renew and never trip this.
+  const twoYearExpired = isExpiredLegacyTwoYear(profile)
 
   // A team member's access depends on the TEAM's billing health, not their own
   // row. If the team payment failed (past_due), warn them but keep access; if
