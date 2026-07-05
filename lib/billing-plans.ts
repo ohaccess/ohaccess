@@ -84,3 +84,46 @@ export function isExpiredLegacyTwoYear(
     Date.parse(p.current_period_end) < Date.now()
   )
 }
+
+// ---------------------------------------------------------------------------
+// Free trial cap + admin gifts
+// ---------------------------------------------------------------------------
+// Free-tier agents get TRIAL_LIMIT visitor registrations. The admin can gift
+// extras (profiles.bonus_visitors, referral thank-yous etc.), which raise that
+// agent's personal cap. Bonus visitors only matter while the agent is on the
+// free tier — paid tiers are uncapped.
+
+export const TRIAL_LIMIT = 25
+
+export function trialLimitFor(p: { bonus_visitors?: number | null } | null | undefined): number {
+  const bonus = Number(p?.bonus_visitors)
+  return TRIAL_LIMIT + (Number.isFinite(bonus) && bonus > 0 ? Math.floor(bonus) : 0)
+}
+
+// Admin-gifted paid access ("comped"): tier set to a paid value with
+// billing_interval='comped', NO Stripe ids, and current_period_end = the
+// gift's end date. Same shape as a legacy prepay — nothing at Stripe ever
+// ends it — so expiry follows the same rule and the account reads as free
+// once the date passes (renewal prompt, trial cap, checkout allowed).
+
+export function isComped(p: LegacyCheckFields | null | undefined): boolean {
+  return !!p && p.billing_interval === 'comped' && !p.stripe_subscription_id
+}
+
+export function isExpiredComp(
+  p: (LegacyCheckFields & { current_period_end?: string | null }) | null | undefined
+): boolean {
+  return (
+    isComped(p) &&
+    !!p?.current_period_end &&
+    Date.parse(p.current_period_end) < Date.now()
+  )
+}
+
+// Any non-Stripe paid access whose end date has passed — legacy 2-year prepay
+// or an admin comp. The one check the dashboard/register/checkout guards use.
+export function isExpiredPrepaidAccess(
+  p: (LegacyCheckFields & { current_period_end?: string | null }) | null | undefined
+): boolean {
+  return isExpiredLegacyTwoYear(p) || isExpiredComp(p)
+}

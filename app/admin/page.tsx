@@ -30,6 +30,9 @@ type Agent = {
   subscription_status: string
   billing_interval: string
   current_period_end: string | null
+  bonus_visitors: number
+  referral_source: string
+  comped: boolean
   created_at: string
   last_sign_in_at: string | null
   openHouseCount: number
@@ -232,6 +235,86 @@ export default function AdminDashboard() {
           : '')
     )
     setDeletingId(null)
+    refresh()
+  }
+
+  // Gifts — the manual reward behind the referral program: bonus trial
+  // visitors, or free Pro until a date. Paying subscribers get gifted via the
+  // Stripe dashboard instead (the API refuses them with a pointer there).
+  const [giftingId, setGiftingId] = useState<string | null>(null)
+
+  const gift = async (agent: Agent) => {
+    const choice = window.prompt(
+      `Gift for ${agent.name}:\n\n` +
+        `1 = Bonus trial visitors (raises their free-trial cap)\n` +
+        `2 = Free Pro until a date\n\nType 1 or 2:`
+    )
+    if (choice == null) return
+    let payload: { userId: string; action: string; amount?: number; until?: string }
+    let confirmMsg: string
+    if (choice.trim() === '1') {
+      const raw = window.prompt(
+        `How many bonus visitors for ${agent.name}?\n\n` +
+          `They currently have ${agent.bonus_visitors} bonus on top of the standard 25. ` +
+          `Enter a negative number to take some back.`,
+        '25'
+      )
+      if (raw == null) return
+      const amount = Number(raw)
+      if (!Number.isInteger(amount) || amount === 0) {
+        window.alert('Enter a whole number, like 25.')
+        return
+      }
+      payload = { userId: agent.id, action: 'visitors', amount }
+      confirmMsg =
+        amount > 0
+          ? `Give ${agent.name} ${amount} bonus visitor registration(s)?\n\nTheir free-trial cap becomes ${25 + agent.bonus_visitors + amount}.`
+          : `Remove ${-amount} bonus visitor registration(s) from ${agent.name}?`
+    } else if (choice.trim() === '2') {
+      const suggested = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+      const raw = window.prompt(`Free Pro for ${agent.name} until what date? (YYYY-MM-DD)`, suggested)
+      if (raw == null) return
+      if (Number.isNaN(Date.parse(raw.trim()))) {
+        window.alert('Enter a date like 2026-08-05.')
+        return
+      }
+      payload = { userId: agent.id, action: 'comp', until: raw.trim() }
+      confirmMsg =
+        `Gift ${agent.name} free Pro until ${raw.trim()}?\n\n` +
+        `Full Pro access, no card needed. When the date passes they drop back to the free trial automatically (their data is untouched).`
+    } else {
+      window.alert('Type 1 or 2.')
+      return
+    }
+    if (!window.confirm(confirmMsg)) return
+    setGiftingId(agent.id)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = '/login'
+      return
+    }
+    const res = await fetch('/api/admin/gift', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+    const j = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      window.alert(`Could not gift: ${j.error || res.status}`)
+      setGiftingId(null)
+      return
+    }
+    window.alert(
+      payload.action === 'visitors'
+        ? `Done — ${j.name} now has ${j.bonusVisitors} bonus visitor(s) (trial cap: ${j.trialLimit}).`
+        : `Done — ${j.name} has free Pro until ${new Date(j.until).toLocaleDateString()}.`
+    )
+    setGiftingId(null)
     refresh()
   }
 
@@ -494,7 +577,8 @@ export default function AdminDashboard() {
         !q ||
         a.name.toLowerCase().includes(q) ||
         a.email.toLowerCase().includes(q) ||
-        a.brokerage.toLowerCase().includes(q)
+        a.brokerage.toLowerCase().includes(q) ||
+        a.referral_source.toLowerCase().includes(q)
     )
   }, [data, q])
 
@@ -758,6 +842,8 @@ export default function AdminDashboard() {
               deletingId={deletingId}
               onResolveDoubleBilling={resolveDoubleBilling}
               resolvingId={resolvingId}
+              onGift={gift}
+              giftingId={giftingId}
             />
           )}
           {tab === 'openhouses' && (
@@ -966,6 +1052,8 @@ function AgentsTable({
   deletingId,
   onResolveDoubleBilling,
   resolvingId,
+  onGift,
+  giftingId,
 }: {
   rows: Agent[]
   onImpersonate: (a: Agent) => void
@@ -974,6 +1062,8 @@ function AgentsTable({
   deletingId: string | null
   onResolveDoubleBilling: (a: Agent) => void
   resolvingId: string | null
+  onGift: (a: Agent) => void
+  giftingId: string | null
 }) {
   const { state, onSort } = useSortable('joined', 'desc')
   const sorted = useMemo(() => applySort(rows, AGENT_ACC[state.key], state.dir), [rows, state])
@@ -998,10 +1088,31 @@ function AgentsTable({
             <td style={td}>
               <div style={{ fontWeight: 600 }}>{a.name}</div>
               <div style={{ fontSize: 12, color: SUB }}>{a.email}</div>
+              {a.referral_source && (
+                <div style={{ fontSize: 11, color: SUB }} title="Signed up via this ?ref= link">
+                  ref: <span style={{ fontFamily: 'monospace' }}>{a.referral_source}</span>
+                </div>
+              )}
             </td>
             <td style={tdSub}>{a.brokerage || '—'}{a.role === 'brokerage_admin' ? ' (admin)' : ''}</td>
             <td style={td}>
               {tierBadge(a.tier, a.subscription_status)}
+              {a.comped && (
+                <span
+                  title={`Gifted (comped) access — no card on file${a.current_period_end ? `, until ${fmtDate(a.current_period_end)}` : ''}`}
+                  style={{ display: 'inline-block', marginLeft: 6, background: '#f3ecff', color: '#6b3fd4', border: '1px solid #ddd0f5', borderRadius: 6, padding: '1px 6px', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}
+                >
+                  🎁 gifted{a.current_period_end ? ` → ${fmtDate(a.current_period_end)}` : ''}
+                </span>
+              )}
+              {a.bonus_visitors > 0 && (
+                <span
+                  title={`${a.bonus_visitors} bonus trial visitors gifted — their free-trial cap is ${25 + a.bonus_visitors}`}
+                  style={{ display: 'inline-block', marginLeft: 6, background: '#eef6ff', color: '#0b5cad', border: '1px solid #cfe5fa', borderRadius: 6, padding: '1px 6px', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}
+                >
+                  +{a.bonus_visitors} visitors
+                </span>
+              )}
               {a.doubleBilling && (
                 <span
                   title="On a team AND still paying for a personal subscription — being double-charged."
@@ -1047,6 +1158,23 @@ function AgentsTable({
                     {resolvingId === a.id ? 'Resolving…' : 'Stop double-charge'}
                   </button>
                 )}
+                <button
+                  onClick={() => onGift(a)}
+                  disabled={giftingId === a.id}
+                  style={{
+                    background: 'white',
+                    color: '#6b3fd4',
+                    border: '1px solid #ddd0f5',
+                    borderRadius: 8,
+                    padding: '6px 12px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: giftingId === a.id ? 'default' : 'pointer',
+                    opacity: giftingId === a.id ? 0.6 : 1,
+                  }}
+                >
+                  {giftingId === a.id ? 'Gifting…' : '🎁 Gift'}
+                </button>
                 <button
                   onClick={() => onImpersonate(a)}
                   disabled={impersonatingId === a.id || deletingId === a.id}

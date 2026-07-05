@@ -70,7 +70,7 @@ const OH_BADGE: Record<'upcoming' | 'live' | 'ended', { bg: string; color: strin
   ended: { bg: '#f2f2f7', color: '#6e6e73', dot: '#aeaeb2', label: 'Ended' },
 }
 
-function TrialBanner({ agentId, supabase, accentColor }: { agentId: string, supabase: any, accentColor: string }) {
+function TrialBanner({ agentId, supabase, accentColor, trialLimit }: { agentId: string, supabase: any, accentColor: string, trialLimit: number }) {
   const [count, setCount] = useState<number>(0)
   const [loaded, setLoaded] = useState(false)
 
@@ -88,9 +88,11 @@ function TrialBanner({ agentId, supabase, accentColor }: { agentId: string, supa
 
   if (!loaded) return null
 
-  const remaining = Math.max(0, 25 - count)
-  const isExpired = count >= 25
-  const isWarning = count >= 18
+  // The cap is 25 plus any admin-gifted bonus visitors; warn when ~7 remain
+  // (same margin the stock 18-of-25 warning used).
+  const remaining = Math.max(0, trialLimit - count)
+  const isExpired = count >= trialLimit
+  const isWarning = count >= trialLimit - 7
 
   return (
     <div style={{
@@ -108,7 +110,7 @@ function TrialBanner({ agentId, supabase, accentColor }: { agentId: string, supa
         <div style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f' }}>
           {isExpired
             ? '⚠️ Your free trial has ended'
-            : `✓ Free trial — ${remaining} of 25 visitor registrations remaining`
+            : `✓ Free trial — ${remaining} of ${trialLimit} visitor registrations remaining`
           }
         </div>
         <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>
@@ -142,6 +144,7 @@ export default function OpenHouseList({
   selectedOH,
   visitors,
   isPaidTier,
+  trialLimit,
   locked,
   primaryColor,
   onPrimary,
@@ -169,6 +172,7 @@ export default function OpenHouseList({
   selectedOH: any
   visitors: any[]
   isPaidTier: boolean
+  trialLimit: number
   locked: boolean
   primaryColor: string
   onPrimary: string
@@ -203,7 +207,7 @@ export default function OpenHouseList({
       <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>Real-time visitor log and open house management.</div>
 
       {!isPaidTier && !locked && (
-        <TrialBanner agentId={user?.id} supabase={supabase} accentColor={accentColor} />
+        <TrialBanner agentId={user?.id} supabase={supabase} accentColor={accentColor} trialLimit={trialLimit} />
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>

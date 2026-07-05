@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { stripe, getPriceConfig, isTier, isBillingInterval } from '@/lib/stripe'
-import { isValidSeatCount, isExpiredLegacyTwoYear, MIN_BROKERAGE_SEATS, MAX_BROKERAGE_SEATS } from '@/lib/billing-plans'
+import { isValidSeatCount, isExpiredPrepaidAccess, isComped, MIN_BROKERAGE_SEATS, MAX_BROKERAGE_SEATS } from '@/lib/billing-plans'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://ohaccess.com'
 
@@ -49,18 +49,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
-    // A LEGACY (one-time) 2-year prepay that has lapsed still reads
-    // tier=paid/status=active locally, so let those users renew. New-style
-    // 2-year subscriptions carry a sub id and auto-renew — never "expired".
-    const twoYearExpired = isExpiredLegacyTwoYear(profile)
+    // A LEGACY (one-time) 2-year prepay or admin comp that has lapsed still
+    // reads tier=paid/status=active locally, so let those users renew/buy.
+    // Real subscriptions carry a sub id and auto-renew — never "expired".
+    const prepaidExpired = isExpiredPrepaidAccess(profile)
 
     // Block double-paying. If they already have an active paid subscription,
     // route them to the customer portal instead of starting a second checkout.
+    // An ACTIVE admin comp (gifted access, no Stripe sub) is deliberately NOT
+    // blocked — a comped agent choosing to pay mid-gift is a conversion we
+    // want; the webhook overwrites the comp fields when the sub lands.
     const activeStatuses = ['active', 'trialing', 'past_due']
     if (
       profile.tier !== 'free' &&
       activeStatuses.includes(profile.subscription_status ?? '') &&
-      !twoYearExpired
+      !prepaidExpired &&
+      !isComped(profile)
     ) {
       return NextResponse.json(
         { error: 'You already have an active subscription. Manage it from the dashboard.' },

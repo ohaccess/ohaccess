@@ -1,7 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
+
+type SourceAgent = {
+  name: string
+  email: string
+  tier: string
+  created_at: string
+}
 
 type SourceRow = {
   source: string
@@ -10,12 +17,14 @@ type SourceRow = {
   conversion_pct: number
   first_signup: string
   last_signup: string
+  agents: SourceAgent[]
 }
 
 export default function AdminSourcesPage() {
   const [rows, setRows] = useState<SourceRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [expanded, setExpanded] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -104,14 +113,39 @@ export default function AdminSourcesPage() {
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.source} style={{ borderTop: '1px solid #e5e5ea' }}>
-                    <td style={{ padding: '12px 14px', fontFamily: 'monospace', color: '#1d1d1f' }}>{r.source}</td>
-                    <td style={{ padding: '12px 14px', textAlign: 'right', color: '#1d1d1f' }}>{r.signups}</td>
-                    <td style={{ padding: '12px 14px', textAlign: 'right', color: '#1d1d1f' }}>{r.pro}</td>
-                    <td style={{ padding: '12px 14px', textAlign: 'right', color: '#1d1d1f' }}>{r.conversion_pct}%</td>
-                    <td style={{ padding: '12px 14px', color: '#6e6e73' }}>{fmt(r.first_signup)}</td>
-                    <td style={{ padding: '12px 14px', color: '#6e6e73' }}>{fmt(r.last_signup)}</td>
-                  </tr>
+                  <Fragment key={r.source}>
+                    <tr
+                      onClick={() => setExpanded(expanded === r.source ? null : r.source)}
+                      style={{ borderTop: '1px solid #e5e5ea', cursor: 'pointer' }}
+                      title="Click to see who signed up with this link"
+                    >
+                      <td style={{ padding: '12px 14px', fontFamily: 'monospace', color: '#1d1d1f' }}>
+                        <span style={{ marginRight: 8, fontSize: 10, color: '#6e6e73' }}>{expanded === r.source ? '▼' : '▶'}</span>
+                        {r.source}
+                      </td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', color: '#1d1d1f' }}>{r.signups}</td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', color: '#1d1d1f' }}>{r.pro}</td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right', color: '#1d1d1f' }}>{r.conversion_pct}%</td>
+                      <td style={{ padding: '12px 14px', color: '#6e6e73' }}>{fmt(r.first_signup)}</td>
+                      <td style={{ padding: '12px 14px', color: '#6e6e73' }}>{fmt(r.last_signup)}</td>
+                    </tr>
+                    {expanded === r.source && (
+                      <tr style={{ borderTop: '1px solid #f0f0f2', background: '#fafafa' }}>
+                        <td colSpan={6} style={{ padding: '10px 14px 14px 36px' }}>
+                          {(r.agents || []).map((a) => (
+                            <div key={a.email + a.created_at} style={{ display: 'flex', gap: 10, alignItems: 'baseline', padding: '4px 0', fontSize: 13 }}>
+                              <span style={{ fontWeight: 600, color: '#1d1d1f' }}>{a.name}</span>
+                              <span style={{ color: '#6e6e73', fontSize: 12 }}>{a.email}</span>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: a.tier !== 'free' ? '#1f9d55' : '#6e6e73', background: a.tier !== 'free' ? '#e6f6ec' : '#f0f0f2', padding: '1px 8px', borderRadius: 10 }}>
+                                {a.tier}
+                              </span>
+                              <span style={{ color: '#6e6e73', fontSize: 12, marginLeft: 'auto' }}>{fmt(a.created_at)}</span>
+                            </div>
+                          ))}
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

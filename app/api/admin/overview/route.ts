@@ -15,6 +15,8 @@ type ProfileRow = {
   subscription_canceled_at: string | null
   billing_interval: string | null
   current_period_end: string | null
+  bonus_visitors: number | null
+  referral_source: string | null
   created_at: string
 }
 
@@ -61,7 +63,7 @@ export async function GET(request: Request) {
     supabase
       .from('profiles')
       .select(
-        'id, full_name, email, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, created_at'
+        'id, full_name, email, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, bonus_visitors, referral_source, created_at'
       )
       .order('created_at', { ascending: false }),
     supabase
@@ -165,6 +167,10 @@ export async function GET(request: Request) {
     subscription_status: p.subscription_status || '',
     billing_interval: p.billing_interval || '',
     current_period_end: p.current_period_end,
+    bonus_visitors: p.bonus_visitors || 0,
+    referral_source: p.referral_source || '',
+    // Gifted (comped) access: paid tier with no Stripe subscription behind it.
+    comped: p.billing_interval === 'comped' && !p.stripe_subscription_id,
     created_at: p.created_at,
     last_sign_in_at: lastSignIn.get(p.id) || null,
     openHouseCount: openHousesByAgent.get(p.id) || 0,

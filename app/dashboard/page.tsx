@@ -9,7 +9,7 @@ import NewOpenHouseForm from './_components/NewOpenHouseForm'
 import SettingsPanel from './_components/SettingsPanel'
 import VisitorDetail from '@/app/_components/VisitorDetail'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
-import { isExpiredLegacyTwoYear } from '@/lib/billing-plans'
+import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
@@ -80,26 +80,28 @@ export default function Dashboard() {
   // removed (brokerage_id cleared), it reappears.
   const isTeamMember = !!profile?.brokerage_id && profile?.role !== 'brokerage_admin'
 
-  // A LEGACY 2-year prepay (one-time payment, no Stripe subscription) still
-  // reads tier=paid after it lapses. Treat a past access date as expired so the
-  // agent gets the renewal prompt (and the trial cap) like any free agent.
-  // New-style 2-year subscriptions auto-renew and never trip this.
-  const twoYearExpired = isExpiredLegacyTwoYear(profile)
+  // A LEGACY 2-year prepay or an admin comp (gifted access) — both paid tier
+  // with no Stripe subscription — still reads tier=paid after it lapses. Treat
+  // a past access date as expired so the agent gets the renewal prompt (and
+  // the trial cap) like any free agent. Real subscriptions auto-renew.
+  const prepaidExpired = isExpiredPrepaidAccess(profile)
 
   // A team member's access depends on the TEAM's billing health, not their own
   // row. If the team payment failed (past_due), warn them but keep access; if
   // the team fully lapsed the webhook already unlinked them to free.
   const teamPaymentFailed = isTeamMember && teamStatus?.subscription_status === 'past_due'
 
-  // Free-tier agents who've used all 25 trial registrations are locked out of
-  // every action until they upgrade. This also catches agents who were removed
-  // from a team (they drop to free) and are already over the cap.
+  // Free-tier agents who've used all their trial registrations (25 plus any
+  // admin-gifted bonus) are locked out of every action until they upgrade.
+  // This also catches agents who were removed from a team (they drop to free)
+  // and are already over the cap.
+  const trialLimit = trialLimitFor(profile)
   const isPaidTier =
-    ['pro', 'team', 'brokerage'].includes(profile?.tier || 'free') && !twoYearExpired
-  const locked = !isPaidTier && (totalVisitors ?? 0) >= 25
+    ['pro', 'team', 'brokerage'].includes(profile?.tier || 'free') && !prepaidExpired
+  const locked = !isPaidTier && (totalVisitors ?? 0) >= trialLimit
   const guardLocked = (): boolean => {
     if (locked) {
-      showToast('You’ve used all 25 free registrations. Upgrade to keep using ohACCESS.', 'error')
+      showToast(`You’ve used all ${trialLimit} free registrations. Upgrade to keep using ohACCESS.`, 'error')
       return true
     }
     return false
@@ -670,7 +672,7 @@ export default function Dashboard() {
             <div style={{ flex: 1, minWidth: '220px' }}>
               <div style={{ fontSize: '14px', fontWeight: '700', color: '#cc0000' }}>⚠️ Your free trial has ended</div>
               <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
-                You&apos;ve used all 25 free visitor registrations. Creating open houses, QR codes, editing, and CSV export are paused. Choose a plan to turn everything back on — your data is safe.
+                You&apos;ve used all {trialLimit} free visitor registrations. Creating open houses, QR codes, editing, and CSV export are paused. Choose a plan to turn everything back on — your data is safe.
               </div>
             </div>
             <button onClick={() => setView('settings')} style={{ background: '#1d1d1f', color: 'white', border: 'none', padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
@@ -708,6 +710,7 @@ export default function Dashboard() {
             selectedOH={selectedOH}
             visitors={visitors}
             isPaidTier={isPaidTier}
+            trialLimit={trialLimit}
             locked={locked}
             primaryColor={primaryColor}
             onPrimary={onPrimary}

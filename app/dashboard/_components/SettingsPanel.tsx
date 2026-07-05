@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { fillBorder } from '@/lib/colors'
-import { isLegacyTwoYear, isExpiredLegacyTwoYear } from '@/lib/billing-plans'
+import { isLegacyTwoYear, isComped, isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 
 // The Settings view: subscription/billing, agent profile, branding & photos,
 // brand colors, CRM lead-intake, and the Zapier webhook. Presentational —
@@ -64,6 +64,7 @@ function intervalLabel(interval: string | null | undefined): string {
   if (interval === 'month') return 'Monthly'
   if (interval === 'year') return 'Annual'
   if (interval === 'two_year_prepay') return '2-Year'
+  if (interval === 'comped') return 'Gifted'
   return ''
 }
 
@@ -87,18 +88,18 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
   const periodEnd = profile?.current_period_end as string | null
   const billing = profile?.billing_interval as string | null
 
-  // A LEGACY 2-year prepay (one-time payment, no subscription) still reads
-  // paid/active after the access date passes. Treat that as expired so the
-  // agent sees the renewal picker. New-style 2-year subs auto-renew.
-  const twoYearExpired = isExpiredLegacyTwoYear(profile)
-  // Show the plan picker for free agents AND at the "renew" moment (expired legacy 2-year).
-  const showPlans = isFree || twoYearExpired
+  // A LEGACY 2-year prepay or an admin comp (gifted access) — both paid with
+  // no subscription — still reads paid/active after the access date passes.
+  // Treat that as expired so the agent sees the plan picker. Real subs auto-renew.
+  const prepaidExpired = isExpiredPrepaidAccess(profile)
+  // Show the plan picker for free agents AND at the "renew" moment (expired prepaid/gift).
+  const showPlans = isFree || prepaidExpired
   // cancel_at_period_end keeps status 'active' until the period closes;
   // canceledAt is our flag that an end is already scheduled.
   const pendingCancel = !!canceledAt && (status === 'active' || status === 'trialing')
   // Any real subscription can be canceled at period end — month, year, and the
   // auto-renewing 2-year alike. Legacy prepays have no sub id (nothing to cancel).
-  const canCancel = isPaid && !twoYearExpired && !!profile?.stripe_subscription_id
+  const canCancel = isPaid && !prepaidExpired && !!profile?.stripe_subscription_id
   const billingChoices = OFFER_TWO_YEAR
     ? BILLING_OPTIONS
     : BILLING_OPTIONS.filter(b => b.key !== 'two_year_prepay')
@@ -213,14 +214,16 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
                 <strong>Plan:</strong> Free trial
               </div>
               <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '18px' }}>
-                {Math.max(0, 25 - visitorCount)} of 25 visitor registrations remaining
+                {Math.max(0, trialLimitFor(profile) - visitorCount)} of {trialLimitFor(profile)} visitor registrations remaining
               </div>
             </>
           ) : (
             <div style={{ background: '#fff9e0', border: '1px solid #ffe066', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: '#8a6400' }}>Your 2-year plan has ended</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: '#8a6400' }}>
+                {isComped(profile) ? 'Your complimentary access has ended' : 'Your 2-year plan has ended'}
+              </div>
               <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
-                Your prepaid access ended on {formatPlanDate(periodEnd)}. Choose a plan below to pick up right where you left off — your data is safe.
+                Your {isComped(profile) ? 'complimentary' : 'prepaid'} access ended on {formatPlanDate(periodEnd)}. Choose a plan below to pick up right where you left off — your data is safe.
               </div>
             </div>
           )}
@@ -282,11 +285,13 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
           </div>
           {periodEnd && !pendingCancel && status !== 'past_due' && (
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '14px' }}>
-              {isLegacyTwoYear(profile) ? <><strong>Access until:</strong> {formatPlanDate(periodEnd)}</> : <><strong>Renews on:</strong> {formatPlanDate(periodEnd)}</>}
+              {isLegacyTwoYear(profile) || isComped(profile) ? <><strong>Access until:</strong> {formatPlanDate(periodEnd)}</> : <><strong>Renews on:</strong> {formatPlanDate(periodEnd)}</>}
             </div>
           )}
 
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Gifted (comped) accounts have no Stripe customer — nothing to manage. */}
+            {profile?.stripe_customer_id && (
             <button
               onClick={openPortal}
               disabled={busy !== null}
@@ -294,6 +299,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
             >
               {busy === 'portal' ? 'Loading…' : 'Manage billing →'}
             </button>
+            )}
             {pendingCancel ? (
               <button onClick={() => cancelSub(true)} disabled={busy !== null} style={ghostBtn('#1d1d1f')}>
                 {busy === 'resume' ? '…' : 'Resume subscription'}

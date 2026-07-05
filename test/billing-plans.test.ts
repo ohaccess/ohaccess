@@ -8,6 +8,11 @@ import {
   isValidSeatCount,
   isLegacyTwoYear,
   isExpiredLegacyTwoYear,
+  TRIAL_LIMIT,
+  trialLimitFor,
+  isComped,
+  isExpiredComp,
+  isExpiredPrepaidAccess,
 } from '@/lib/billing-plans'
 
 describe('per-seat rates', () => {
@@ -89,5 +94,54 @@ describe('isLegacyTwoYear / isExpiredLegacyTwoYear', () => {
   })
   it('a new-style 2-year sub is never "expired legacy", even past its period end (Stripe renews it)', () => {
     expect(isExpiredLegacyTwoYear({ billing_interval: 'two_year_prepay', stripe_subscription_id: 'sub_123', current_period_end: past })).toBe(false)
+  })
+})
+
+describe('trialLimitFor (bonus visitors)', () => {
+  it('is 25 with no bonus', () => {
+    expect(TRIAL_LIMIT).toBe(25)
+    expect(trialLimitFor(null)).toBe(25)
+    expect(trialLimitFor(undefined)).toBe(25)
+    expect(trialLimitFor({})).toBe(25)
+    expect(trialLimitFor({ bonus_visitors: null })).toBe(25)
+    expect(trialLimitFor({ bonus_visitors: 0 })).toBe(25)
+  })
+  it('adds admin-gifted bonus visitors', () => {
+    expect(trialLimitFor({ bonus_visitors: 25 })).toBe(50)
+    expect(trialLimitFor({ bonus_visitors: 1 })).toBe(26)
+  })
+  it('never LOWERS the cap on bad data (negative, NaN, fractional)', () => {
+    expect(trialLimitFor({ bonus_visitors: -10 })).toBe(25)
+    expect(trialLimitFor({ bonus_visitors: NaN })).toBe(25)
+    expect(trialLimitFor({ bonus_visitors: 10.9 })).toBe(35) // floors fractions
+  })
+})
+
+describe('isComped / isExpiredComp / isExpiredPrepaidAccess', () => {
+  const past = new Date(Date.now() - 86_400_000).toISOString()
+  const future = new Date(Date.now() + 86_400_000).toISOString()
+
+  it('comped = billing_interval "comped" AND no subscription id', () => {
+    expect(isComped({ billing_interval: 'comped', stripe_subscription_id: null })).toBe(true)
+    expect(isComped({ billing_interval: 'comped' })).toBe(true)
+    expect(isComped({ billing_interval: 'comped', stripe_subscription_id: 'sub_123' })).toBe(false)
+    expect(isComped({ billing_interval: 'month', stripe_subscription_id: null })).toBe(false)
+    expect(isComped(null)).toBe(false)
+    expect(isComped(undefined)).toBe(false)
+  })
+
+  it('a comp expires when its access date passes', () => {
+    expect(isExpiredComp({ billing_interval: 'comped', stripe_subscription_id: null, current_period_end: past })).toBe(true)
+    expect(isExpiredComp({ billing_interval: 'comped', stripe_subscription_id: null, current_period_end: future })).toBe(false)
+    expect(isExpiredComp({ billing_interval: 'comped', stripe_subscription_id: null, current_period_end: null })).toBe(false)
+  })
+
+  it('isExpiredPrepaidAccess covers both legacy 2-year AND expired comps', () => {
+    expect(isExpiredPrepaidAccess({ billing_interval: 'two_year_prepay', stripe_subscription_id: null, current_period_end: past })).toBe(true)
+    expect(isExpiredPrepaidAccess({ billing_interval: 'comped', stripe_subscription_id: null, current_period_end: past })).toBe(true)
+    expect(isExpiredPrepaidAccess({ billing_interval: 'comped', stripe_subscription_id: null, current_period_end: future })).toBe(false)
+    // a real Stripe subscription never reads as expired prepaid access
+    expect(isExpiredPrepaidAccess({ billing_interval: 'month', stripe_subscription_id: 'sub_123', current_period_end: past })).toBe(false)
+    expect(isExpiredPrepaidAccess(null)).toBe(false)
   })
 })

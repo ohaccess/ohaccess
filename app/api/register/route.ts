@@ -16,7 +16,7 @@ import {
   agentCopyRecipients,
   SMS_MAX_LENGTH,
 } from '@/lib/register-helpers'
-import { isExpiredLegacyTwoYear } from '@/lib/billing-plans'
+import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID!,
@@ -28,8 +28,6 @@ const resend = new Resend(process.env.RESEND_API_KEY!)
 // Base URL Twilio posts SMS delivery updates back to. Use the www host so the
 // callback isn't lost to the apex→www 308 redirect.
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ohaccess.com'
-
-const TRIAL_LIMIT = 25
 
 async function createShortUrl(destinationUrl: string, agentId: string, openHouseId: string, urlType: string): Promise<string | null> {
   let code = generateCode()
@@ -130,23 +128,24 @@ export async function POST(request: Request) {
     })
 
     const agentTier = agent?.tier || 'free'
-    // A LEGACY 2-year prepay (one-time payment, no Stripe subscription) still
-    // reads tier=paid after the access date passes. Treat an expired prepay as
-    // free here too (the dashboard already does) so lapsed agents are capped
-    // server-side and don't get the paid product for free. New-style 2-year
-    // subscriptions auto-renew and never trip this.
-    const twoYearExpired = isExpiredLegacyTwoYear(agent)
-    const isPro = ['pro', 'team', 'brokerage'].includes(agentTier) && !twoYearExpired
+    // A LEGACY 2-year prepay or an admin comp (both: paid tier, no Stripe
+    // subscription) still reads tier=paid after the access date passes. Treat
+    // expired prepaid access as free here too (the dashboard already does) so
+    // lapsed agents are capped server-side and don't get the paid product for
+    // free. Real Stripe subscriptions auto-renew and never trip this.
+    const prepaidExpired = isExpiredPrepaidAccess(agent)
+    const isPro = ['pro', 'team', 'brokerage'].includes(agentTier) && !prepaidExpired
 
     // Trial cap check — BEFORE creating the visitor row, so over-quota
-    // requests can't pollute the agent's visitor log.
+    // requests can't pollute the agent's visitor log. The cap is 25 plus any
+    // admin-gifted bonus_visitors (referral thank-yous).
     if (!isPro) {
       const { count } = await supabase
         .from('visitors')
         .select('*', { count: 'exact', head: true })
         .eq('agent_id', openHouse.agent_id)
 
-      if ((count ?? 0) >= TRIAL_LIMIT) {
+      if ((count ?? 0) >= trialLimitFor(agent)) {
         return NextResponse.json({
           error: 'This agent has reached their free trial limit. Please ask them to upgrade to Pro at ohaccess.com'
         }, { status: 403 })

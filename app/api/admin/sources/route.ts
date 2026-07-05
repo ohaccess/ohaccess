@@ -6,6 +6,15 @@ type ProfileRow = {
   referral_source: string | null
   tier: string | null
   created_at: string
+  full_name: string | null
+  email: string | null
+}
+
+type SourceAgent = {
+  name: string
+  email: string
+  tier: string
+  created_at: string
 }
 
 export async function GET(request: Request) {
@@ -19,7 +28,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('referral_source, tier, created_at')
+    .select('referral_source, tier, created_at, full_name, email')
     .not('referral_source', 'is', null)
 
   if (error) {
@@ -28,17 +37,24 @@ export async function GET(request: Request) {
 
   const buckets = new Map<
     string,
-    { source: string; signups: number; pro: number; first: string; last: string }
+    { source: string; signups: number; pro: number; first: string; last: string; agents: SourceAgent[] }
   >()
   for (const row of (data || []) as ProfileRow[]) {
     const source = row.referral_source!
     const isPro = (row.tier || '').toLowerCase() === 'pro'
+    const agent: SourceAgent = {
+      name: row.full_name || row.email || 'Unknown',
+      email: row.email || '',
+      tier: row.tier || 'free',
+      created_at: row.created_at,
+    }
     const existing = buckets.get(source)
     if (existing) {
       existing.signups += 1
       if (isPro) existing.pro += 1
       if (row.created_at < existing.first) existing.first = row.created_at
       if (row.created_at > existing.last) existing.last = row.created_at
+      existing.agents.push(agent)
     } else {
       buckets.set(source, {
         source,
@@ -46,6 +62,7 @@ export async function GET(request: Request) {
         pro: isPro ? 1 : 0,
         first: row.created_at,
         last: row.created_at,
+        agents: [agent],
       })
     }
   }
@@ -58,6 +75,7 @@ export async function GET(request: Request) {
       conversion_pct: b.signups > 0 ? Math.round((b.pro / b.signups) * 1000) / 10 : 0,
       first_signup: b.first,
       last_signup: b.last,
+      agents: b.agents.sort((x, y) => (x.created_at < y.created_at ? 1 : -1)),
     }))
     .sort((a, b) => b.signups - a.signups)
 
