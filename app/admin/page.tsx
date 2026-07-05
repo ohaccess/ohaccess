@@ -330,13 +330,12 @@ export default function AdminDashboard() {
     refresh()
   }
 
-  // Demo QR redirect — one printed QR (ohaccess.com/r/demo) that can be
-  // repointed at any open house for live sales demos.
-  const DEMO_SHORT_URL = 'https://ohaccess.com/r/demo'
-  const [demoUrl, setDemoUrl] = useState('')
-  const [demoCurrent, setDemoCurrent] = useState<string | null>(null)
-  const [demoClicks, setDemoClicks] = useState(0)
-  const [demoBusy, setDemoBusy] = useState(false)
+  // Demo QR redirects — printed QR signs (ohaccess.com/r/demo, /demo1, …)
+  // that can each be repointed at a different open house, so several signs
+  // can be out at once on a multi-stop demo day.
+  type DemoRow = { input: string; current: string | null; clicks: number }
+  const [demoRows, setDemoRows] = useState<Record<string, DemoRow>>({})
+  const [demoBusyCode, setDemoBusyCode] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -351,9 +350,11 @@ export default function AdminDashboard() {
       if (!res.ok || cancelled) return
       const j = await res.json()
       if (cancelled) return
-      setDemoCurrent(j.destinationUrl)
-      setDemoClicks(j.clicks || 0)
-      setDemoUrl(j.destinationUrl || '')
+      const rows: Record<string, DemoRow> = {}
+      for (const c of j.codes || []) {
+        rows[c.code] = { input: c.destinationUrl || '', current: c.destinationUrl, clicks: c.clicks || 0 }
+      }
+      setDemoRows(rows)
     }
     load()
     return () => {
@@ -361,13 +362,13 @@ export default function AdminDashboard() {
     }
   }, [reloadKey])
 
-  const saveDemoRedirect = async () => {
-    const url = demoUrl.trim()
+  const saveDemoRedirect = async (code: string) => {
+    const url = (demoRows[code]?.input || '').trim()
     if (!/^https?:\/\//i.test(url)) {
       window.alert('Paste the full open house link — it starts with https://')
       return
     }
-    setDemoBusy(true)
+    setDemoBusyCode(code)
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -381,20 +382,20 @@ export default function AdminDashboard() {
         Authorization: `Bearer ${session.access_token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ destinationUrl: url }),
+      body: JSON.stringify({ code, destinationUrl: url }),
     })
     const j = await res.json().catch(() => ({}))
     if (!res.ok) {
       window.alert(`Could not update the demo QR: ${j.error || res.status}`)
-      setDemoBusy(false)
+      setDemoBusyCode(null)
       return
     }
-    setDemoCurrent(url)
-    setDemoBusy(false)
+    setDemoRows((rows) => ({ ...rows, [code]: { ...rows[code], current: url } }))
+    setDemoBusyCode(null)
   }
 
-  const downloadDemoQr = async () => {
-    const res = await fetch(`/api/qrcode?url=${encodeURIComponent(DEMO_SHORT_URL)}`)
+  const downloadDemoQr = async (code: string) => {
+    const res = await fetch(`/api/qrcode?url=${encodeURIComponent(`https://ohaccess.com/r/${code}`)}`)
     if (!res.ok) {
       window.alert('Could not generate the QR image.')
       return
@@ -403,7 +404,7 @@ export default function AdminDashboard() {
     const objectUrl = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = objectUrl
-    a.download = 'ohaccess-demo-qr.png'
+    a.download = `ohaccess-demo-qr-${code}.png`
     a.click()
     URL.revokeObjectURL(objectUrl)
   }
@@ -704,35 +705,47 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </div>
-              {/* Demo QR redirect — the printed demo sign encodes /r/demo once;
-                  this repoints it at whatever open house was just set up in
-                  front of a prospect. */}
+              {/* Demo QR redirects — each printed demo sign encodes /r/<code>
+                  once; each row repoints one sign at whatever open house was
+                  just set up in front of a prospect. */}
               <div style={{ background: 'white', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginTop: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 4 }}>Demo QR code</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 4 }}>Demo QR codes</div>
                 <div style={{ fontSize: 12, color: SUB, marginBottom: 12 }}>
-                  Your printed demo sign encodes{' '}
-                  <code style={{ background: '#f5f5f7', padding: '2px 6px', borderRadius: 4 }}>{DEMO_SHORT_URL}</code>
-                  {' '}— paste any open house link below and the sign points there instantly.
-                  {demoClicks > 0 && <span style={{ marginLeft: 6 }}>Scanned {demoClicks.toLocaleString()} time{demoClicks === 1 ? '' : 's'}.</span>}
+                  Each printed demo sign encodes its own permanent link (
+                  <code style={{ background: '#f5f5f7', padding: '2px 6px', borderRadius: 4 }}>ohaccess.com/r/demo</code>, <code style={{ background: '#f5f5f7', padding: '2px 6px', borderRadius: 4 }}>/r/demo1</code>, …)
+                  — paste an open house link next to a sign and that sign points there instantly.
                 </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <input value={demoUrl} onChange={(e) => setDemoUrl(e.target.value)} placeholder="https://ohaccess.com/register/…"
-                    style={{ flex: '1 1 320px', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', fontSize: 13, fontFamily: 'inherit' }} />
-                  <button onClick={saveDemoRedirect} disabled={demoBusy}
-                    style={{ background: INK, color: 'white', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: demoBusy ? 0.6 : 1 }}>
-                    {demoBusy ? 'Saving…' : demoCurrent ? 'Update →' : 'Set →'}
-                  </button>
-                  <button onClick={downloadDemoQr}
-                    style={{ background: '#f5f5f7', color: INK, border: '1px solid #d1d1d6', borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    Download QR
-                  </button>
-                </div>
-                {demoCurrent && (
-                  <div style={{ fontSize: 12, color: SUB, marginTop: 10 }}>
-                    Currently pointing at:{' '}
-                    <a href={demoCurrent} target="_blank" rel="noreferrer" style={{ color: BLUE, wordBreak: 'break-all' }}>{demoCurrent}</a>
+                {Object.keys(demoRows).length === 0 && <div style={{ fontSize: 13, color: SUB }}>Loading…</div>}
+                {Object.entries(demoRows).map(([code, row]) => (
+                  <div key={code} style={{ padding: '10px 0', borderTop: `1px solid #f0f0f2` }}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <code style={{ background: '#f5f5f7', padding: '4px 8px', borderRadius: 6, fontSize: 12, fontWeight: 700, minWidth: 62, textAlign: 'center' }}>/r/{code}</code>
+                      <input value={row.input}
+                        onChange={(e) => setDemoRows((rows) => ({ ...rows, [code]: { ...rows[code], input: e.target.value } }))}
+                        placeholder="https://ohaccess.com/register/…"
+                        style={{ flex: '1 1 280px', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+                      <button onClick={() => saveDemoRedirect(code)} disabled={demoBusyCode === code}
+                        style={{ background: INK, color: 'white', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: demoBusyCode === code ? 0.6 : 1 }}>
+                        {demoBusyCode === code ? 'Saving…' : row.current ? 'Update →' : 'Set →'}
+                      </button>
+                      <button onClick={() => downloadDemoQr(code)}
+                        style={{ background: '#f5f5f7', color: INK, border: '1px solid #d1d1d6', borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        Download QR
+                      </button>
+                    </div>
+                    <div style={{ fontSize: 12, color: SUB, marginTop: 6, paddingLeft: 2 }}>
+                      {row.current ? (
+                        <>
+                          Pointing at:{' '}
+                          <a href={row.current} target="_blank" rel="noreferrer" style={{ color: BLUE, wordBreak: 'break-all' }}>{row.current}</a>
+                          {row.clicks > 0 && <span style={{ marginLeft: 8 }}>· scanned {row.clicks.toLocaleString()} time{row.clicks === 1 ? '' : 's'}</span>}
+                        </>
+                      ) : (
+                        'Not set — scans land on the ohaccess.com homepage.'
+                      )}
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             </>
           )}

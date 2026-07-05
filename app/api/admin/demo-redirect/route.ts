@@ -2,12 +2,14 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser, isAdmin } from '@/lib/auth'
 
-// Admin-only control for the permanent demo QR code. A printed sign encodes
-// https://ohaccess.com/r/demo once; this endpoint repoints that code at
-// whatever open house Dave just set up in front of a prospect. Reuses the
-// existing short_urls table + /r/[code] redirect (including click counting).
+// Admin-only control for the permanent demo QR codes. Printed signs encode
+// https://ohaccess.com/r/<code> once (one sign per code); this endpoint
+// repoints each code at whatever open house Dave just set up in front of a
+// prospect — several signs can be out at different open houses on the same
+// day. Reuses the existing short_urls table + /r/[code] redirect (including
+// click counting).
 
-const DEMO_CODE = 'demo'
+const DEMO_CODES = ['demo', 'demo1', 'demo2', 'demo3']
 
 function isHttpUrl(value: unknown): value is string {
   return typeof value === 'string' && /^https?:\/\//i.test(value)
@@ -20,14 +22,17 @@ export async function GET(request: Request) {
 
   const { data } = await supabase
     .from('short_urls')
-    .select('destination_url, clicks')
-    .eq('code', DEMO_CODE)
-    .maybeSingle()
+    .select('code, destination_url, clicks')
+    .in('code', DEMO_CODES)
 
+  const byCode = new Map((data || []).map((r) => [r.code, r]))
   return NextResponse.json({
-    shortUrl: `https://ohaccess.com/r/${DEMO_CODE}`,
-    destinationUrl: data?.destination_url ?? null,
-    clicks: data?.clicks ?? 0,
+    codes: DEMO_CODES.map((code) => ({
+      code,
+      shortUrl: `https://ohaccess.com/r/${code}`,
+      destinationUrl: byCode.get(code)?.destination_url ?? null,
+      clicks: byCode.get(code)?.clicks ?? 0,
+    })),
   })
 }
 
@@ -37,8 +42,12 @@ export async function POST(request: Request) {
   if (!isAdmin(admin.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await request.json().catch(() => ({}))
+  const code = typeof body?.code === 'string' ? body.code : 'demo'
   const destinationUrl = typeof body?.destinationUrl === 'string' ? body.destinationUrl.trim() : ''
 
+  if (!DEMO_CODES.includes(code)) {
+    return NextResponse.json({ error: 'Unknown demo code' }, { status: 400 })
+  }
   if (!isHttpUrl(destinationUrl)) {
     return NextResponse.json({ error: 'A valid http(s) URL is required' }, { status: 400 })
   }
@@ -46,16 +55,16 @@ export async function POST(request: Request) {
   const { data: existing } = await supabase
     .from('short_urls')
     .select('code')
-    .eq('code', DEMO_CODE)
+    .eq('code', code)
     .maybeSingle()
 
   const { error } = existing
     ? await supabase
         .from('short_urls')
         .update({ destination_url: destinationUrl })
-        .eq('code', DEMO_CODE)
+        .eq('code', code)
     : await supabase.from('short_urls').insert({
-        code: DEMO_CODE,
+        code,
         destination_url: destinationUrl,
         agent_id: admin.id,
         url_type: 'demo',
@@ -66,10 +75,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Could not save the demo redirect' }, { status: 500 })
   }
 
-  console.log(`[admin] ${admin.email} pointed /r/${DEMO_CODE} at ${destinationUrl}`)
+  console.log(`[admin] ${admin.email} pointed /r/${code} at ${destinationUrl}`)
   return NextResponse.json({
     success: true,
-    shortUrl: `https://ohaccess.com/r/${DEMO_CODE}`,
+    code,
+    shortUrl: `https://ohaccess.com/r/${code}`,
     destinationUrl,
   })
 }
