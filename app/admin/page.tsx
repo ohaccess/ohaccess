@@ -330,6 +330,84 @@ export default function AdminDashboard() {
     refresh()
   }
 
+  // Demo QR redirect — one printed QR (ohaccess.com/r/demo) that can be
+  // repointed at any open house for live sales demos.
+  const DEMO_SHORT_URL = 'https://ohaccess.com/r/demo'
+  const [demoUrl, setDemoUrl] = useState('')
+  const [demoCurrent, setDemoCurrent] = useState<string | null>(null)
+  const [demoClicks, setDemoClicks] = useState(0)
+  const [demoBusy, setDemoBusy] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) return
+      const res = await fetch('/api/admin/demo-redirect', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (!res.ok || cancelled) return
+      const j = await res.json()
+      if (cancelled) return
+      setDemoCurrent(j.destinationUrl)
+      setDemoClicks(j.clicks || 0)
+      setDemoUrl(j.destinationUrl || '')
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [reloadKey])
+
+  const saveDemoRedirect = async () => {
+    const url = demoUrl.trim()
+    if (!/^https?:\/\//i.test(url)) {
+      window.alert('Paste the full open house link — it starts with https://')
+      return
+    }
+    setDemoBusy(true)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = '/login'
+      return
+    }
+    const res = await fetch('/api/admin/demo-redirect', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ destinationUrl: url }),
+    })
+    const j = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      window.alert(`Could not update the demo QR: ${j.error || res.status}`)
+      setDemoBusy(false)
+      return
+    }
+    setDemoCurrent(url)
+    setDemoBusy(false)
+  }
+
+  const downloadDemoQr = async () => {
+    const res = await fetch(`/api/qrcode?url=${encodeURIComponent(DEMO_SHORT_URL)}`)
+    if (!res.ok) {
+      window.alert('Could not generate the QR image.')
+      return
+    }
+    const blob = await res.blob()
+    const objectUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = objectUrl
+    a.download = 'ohaccess-demo-qr.png'
+    a.click()
+    URL.revokeObjectURL(objectUrl)
+  }
+
   const [deletingOHId, setDeletingOHId] = useState<string | null>(null)
 
   const deleteOpenHouse = async (oh: OpenHouse) => {
@@ -625,6 +703,36 @@ export default function AdminDashboard() {
                     {provBusy ? 'Provisioning…' : 'Provision →'}
                   </button>
                 </div>
+              </div>
+              {/* Demo QR redirect — the printed demo sign encodes /r/demo once;
+                  this repoints it at whatever open house was just set up in
+                  front of a prospect. */}
+              <div style={{ background: 'white', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px', marginTop: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 4 }}>Demo QR code</div>
+                <div style={{ fontSize: 12, color: SUB, marginBottom: 12 }}>
+                  Your printed demo sign encodes{' '}
+                  <code style={{ background: '#f5f5f7', padding: '2px 6px', borderRadius: 4 }}>{DEMO_SHORT_URL}</code>
+                  {' '}— paste any open house link below and the sign points there instantly.
+                  {demoClicks > 0 && <span style={{ marginLeft: 6 }}>Scanned {demoClicks.toLocaleString()} time{demoClicks === 1 ? '' : 's'}.</span>}
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <input value={demoUrl} onChange={(e) => setDemoUrl(e.target.value)} placeholder="https://ohaccess.com/register/…"
+                    style={{ flex: '1 1 320px', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', fontSize: 13, fontFamily: 'inherit' }} />
+                  <button onClick={saveDemoRedirect} disabled={demoBusy}
+                    style={{ background: INK, color: 'white', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: demoBusy ? 0.6 : 1 }}>
+                    {demoBusy ? 'Saving…' : demoCurrent ? 'Update →' : 'Set →'}
+                  </button>
+                  <button onClick={downloadDemoQr}
+                    style={{ background: '#f5f5f7', color: INK, border: '1px solid #d1d1d6', borderRadius: 8, padding: '9px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Download QR
+                  </button>
+                </div>
+                {demoCurrent && (
+                  <div style={{ fontSize: 12, color: SUB, marginTop: 10 }}>
+                    Currently pointing at:{' '}
+                    <a href={demoCurrent} target="_blank" rel="noreferrer" style={{ color: BLUE, wordBreak: 'break-all' }}>{demoCurrent}</a>
+                  </div>
+                )}
               </div>
             </>
           )}
