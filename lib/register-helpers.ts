@@ -19,11 +19,12 @@ export function generateCode(): string {
   return code
 }
 
-// Safely append optional URLs without exceeding SMS_MAX_LENGTH.
+// Safely append optional URLs without exceeding SMS_MAX_LENGTH. An empty
+// label appends the bare URL (saves characters so links fit more addresses).
 export function buildSmsBody(base: string, extras: { label: string; url: string }[]): string {
   let body = base
   for (const extra of extras) {
-    const candidate = `${body} ${extra.label}: ${extra.url}`
+    const candidate = `${body} ${extra.label ? `${extra.label}: ` : ''}${extra.url}`
     if (candidate.length <= SMS_MAX_LENGTH) body = candidate
   }
   return body

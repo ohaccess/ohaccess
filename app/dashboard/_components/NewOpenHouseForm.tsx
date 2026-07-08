@@ -72,7 +72,10 @@ export default function NewOpenHouseForm({
       <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>{editingOH ? 'Update your listing details.' : 'Set up your listing and generate your QR code.'}</div>
 
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Property details</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
+          <span style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Property Details</span>
+          <span style={{ fontSize: '11px', color: '#6e6e73' }}><span style={{ color: '#ff3b30' }}>*</span> required field</span>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
 
           {/* Street address with autocomplete */}
@@ -140,7 +143,7 @@ export default function NewOpenHouseForm({
             <input style={inputStyle} type="text" placeholder="3" value={form.bathrooms} onChange={e => setForm({ ...form, bathrooms: e.target.value })} />
           </div>
           <div style={{ position: 'relative' }}>
-            <label style={labelStyle}>Open House Date</label>
+            <label style={labelStyle}>Open House Date <span style={{ color: '#ff3b30' }}>*</span></label>
             <input style={{ ...inputStyle, cursor: 'pointer' }} type="text" placeholder="Select a date" value={form.open_house_date} readOnly onClick={() => setShowCal(!showCal)} />
             {showCal && (
               <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 100, background: 'white', border: '1px solid #d1d1d6', borderRadius: '18px', padding: '14px', width: '242px', boxShadow: '0 8px 32px rgba(0,0,0,0.10)' }}>
@@ -167,7 +170,7 @@ export default function NewOpenHouseForm({
             )}
           </div>
           <div>
-            <label style={labelStyle}>Open House Hours</label>
+            <label style={labelStyle}>Open House Hours <span style={{ color: '#ff3b30' }}>*</span></label>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input style={inputStyle} type="time" value={form.open_house_start_time} onChange={e => setForm({ ...form, open_house_start_time: e.target.value })} />
               <span style={{ color: '#6e6e73', fontSize: '13px' }}>to</span>
@@ -183,7 +186,10 @@ export default function NewOpenHouseForm({
       </div>
 
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Access code words</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '6px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
+          <span style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Access Code Words</span>
+          <span style={{ fontSize: '11px', color: '#6e6e73' }}><span style={{ color: '#ff3b30' }}>*</span> required field</span>
+        </div>
         <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 16px', lineHeight: '1.5' }}>
           Each visitor gets two codes — one by text, one by email. At the door, ask for the <strong>text code</strong> first (a real phone is hard to fake); accept the email code only if their text didn&apos;t arrive.
         </div>
@@ -191,7 +197,7 @@ export default function NewOpenHouseForm({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
           {/* Text (SMS) code — primary */}
           <div style={{ flex: '1 1 240px', minWidth: 0 }}>
-            <label style={labelStyle}>📱 Text code (SMS) — primary</label>
+            <label style={labelStyle}>📱 Text code (SMS) — primary <span style={{ color: '#ff3b30' }}>*</span></label>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. LOVELY" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
@@ -204,7 +210,7 @@ export default function NewOpenHouseForm({
 
           {/* Email code — fallback */}
           <div style={{ flex: '1 1 240px', minWidth: 0 }}>
-            <label style={labelStyle}>✉️ Email code — fallback</label>
+            <label style={labelStyle}>✉️ Email code — fallback <span style={{ color: '#ff3b30' }}>*</span></label>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. TUDOR" value={form.code_word_email} onChange={e => setForm({ ...form, code_word_email: e.target.value.toUpperCase() })} />

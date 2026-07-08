@@ -28,6 +28,10 @@ describe('buildSmsBody', () => {
     expect(out).toBe('Your code is CATDOG View: https://a.co/x')
     expect(out.length).toBeLessThanOrEqual(SMS_MAX_LENGTH)
   })
+  it('appends a bare URL (no label/colon) when the label is empty', () => {
+    const out = buildSmsBody('Your code is CATDOG', [{ label: '', url: 'https://a.co/x' }])
+    expect(out).toBe('Your code is CATDOG https://a.co/x')
+  })
   it('drops an extra that would exceed SMS_MAX_LENGTH', () => {
     const base = 'x'.repeat(150)
     const out = buildSmsBody(base, [{ label: 'View', url: 'https://example.com/listing' }])

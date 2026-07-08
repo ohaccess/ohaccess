@@ -503,7 +503,7 @@ function ExpiredOpenHouse() {
               Thank you!
             </div>
             <div style={{ fontSize: '14px', color: '#6e6e73', background: '#f5f5f7', borderRadius: '12px', padding: '14px 20px', marginBottom: '16px', lineHeight: '1.6' }}>
-Your access code was texted to your phone, with a backup code sent to your email. <br/><br/>At the door, show or mention your text code to the host to gain access.
+The access code was sent to your phone, with a backup code sent to your email. <br/><br/>At the door, share your SMS code with the host to be granted access.
             </div>
             <div style={{ fontSize: '15px', color: '#6e6e73', marginBottom: '14px' }}>
               {openHouse.property_address}<br />

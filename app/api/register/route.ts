@@ -292,10 +292,11 @@ export async function POST(request: Request) {
     // message even if it pushes us to 2 segments for very long addresses —
     // TCPA opt-out signaling is more important than the marginal cost.
     const smsBody = buildSmsBody(
-      `Your TEXT entry code for ${streetAddress} is "${smsCodeWord}". Show this text at the door. Reply STOP to opt out.`,
+      `SMS code for ${streetAddress} is "${smsCodeWord}". Share code with host for access. Reply STOP to opt out.`,
       [
-        ...(listingShortUrl ? [{ label: 'Listing', url: listingShortUrl }] : []),
-        ...(agentShortUrl ? [{ label: 'Agent', url: agentShortUrl }] : []),
+        // Bare URL (no "Listing:" label) — the label cost 9 chars, which was
+        // enough to push long addresses past the single-segment budget.
+        ...(listingShortUrl ? [{ label: '', url: listingShortUrl }] : []),
       ]
     )
 
@@ -328,6 +329,8 @@ export async function POST(request: Request) {
     const agentBrokerage = escapeHtml(agent?.brokerage || '')
     const agentDisplayEmail = escapeHtml(agent?.display_email || '')
     const agentPhone = escapeHtml(agent?.phone || '')
+    // Dialable form for the tel: link; null if the number can't be normalized.
+    const agentPhoneTel = normalizePhone(agent?.phone)
     const headshotUrl = safeUrl(agent?.headshot_url)
 
     // Team/brokerage members inherit their team's branding (logo + header
@@ -373,7 +376,7 @@ export async function POST(request: Request) {
               <div style="font-size: 11px; color: #6e6e73; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Your Email Access Code</div>
               <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #1d1d1f;"><q>${escapeHtml(emailCodeWord)}</q></div>
               <div style="font-size: 12px; color: #6e6e73; margin-top: 8px;">Share this code with the host at the door to gain access.</div>
-              <div style="font-size: 11px; color: #6e6e73; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e5ea;">📱 We also texted you a separate code. If the host asks for your <strong>text code</strong>, check your phone&apos;s messages.</div>
+              <div style="font-size: 11px; color: #6e6e73; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e5ea;">📱 We also texted you a separate code. If the host asks for your <strong>SMS code</strong>, check your phone&apos;s messages.</div>
             </div>
             <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 13px; color: #6e6e73; line-height: 1.8;">
               <strong style="color: #1d1d1f;">${escapeHtml(fullAddress)}</strong><br/>
@@ -390,7 +393,7 @@ export async function POST(request: Request) {
                   <div style="font-size: 14px; font-weight: 700; color: #1d1d1f;">${agentName}</div>
                   <div style="font-size: 12px; color: #6e6e73;">${agentBrokerage}</div>
                   ${agentDisplayEmail ? `<div style="font-size: 12px; color: #0071e3;">${agentDisplayEmail}</div>` : ''}
-                  ${agentPhone ? `<div style="font-size: 12px; color: #6e6e73;">${agentPhone}</div>` : ''}
+                  ${agentPhone ? `<div style="font-size: 12px;">${agentPhoneTel ? `<a href="tel:${escapeHtml(agentPhoneTel)}" style="color: #0071e3; text-decoration: none;">${agentPhone}</a>` : `<span style="color: #6e6e73;">${agentPhone}</span>`}</div>` : ''}
                   ${agentShortUrl ? `<div><a href="${escapeHtml(agentShortUrl)}" style="font-size: 12px; color: #0071e3;">Agent information</a></div>` : ''}
                 </div>
               </div>
