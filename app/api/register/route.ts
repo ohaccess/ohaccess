@@ -126,8 +126,6 @@ export async function POST(request: Request) {
     const emailCodeWord = openHouse.code_word_email || openHouse.code_word
     const streetAddress = openHouse.street_address || openHouse.property_address
     const fullAddress = openHouse.property_address
-    // Registration timestamp for the CRM lead email (the agent-alert SMS
-    // omits it — the text arrives in real time).
     const now = new Date().toLocaleString('en-US', {
       timeZone: 'America/Chicago',
       dateStyle: 'short',
@@ -449,9 +447,9 @@ export async function POST(request: Request) {
       } catch { /* skip link on failure */ }
 
       await twilioClient.messages.create({
-        // Kept lean so long names/emails still fit one segment: no timestamp
-        // (the text arrives in real time) and a bare verify/notes link.
-        body: `ohACCESS: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${phone}, ${email}, Timeline: ${purchasingTimeline}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
+        // Kept lean so long names/emails still fit one segment: short prefix
+        // and a bare verify/notes link (no label).
+        body: `ohACCESS: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${phone}, ${email}, Timeline: ${purchasingTimeline}, Time: ${now}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
         from: process.env.TWILIO_PHONE_NUMBER!,
         to: agent.phone
       })
