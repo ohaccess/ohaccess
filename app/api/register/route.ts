@@ -78,8 +78,13 @@ export async function POST(request: Request) {
 
     const ip = getClientIp(request)
 
-    // Rate limits — per phone, per open house, per IP.
-    const phoneLimit = await checkRateLimit(`phone:${phone}`, 'register', 2, 3600)
+    // Rate limits — per phone, per open house, per IP. Generous enough that a
+    // buyer touring many open houses in one afternoon never hits them; tight
+    // enough to stop SMS-bombing a victim's number or running up send costs.
+    // Key on the normalized number so "(415) 867-5309" and "4158675309"
+    // share one bucket.
+    const normalizedPhone = normalizePhone(phone)
+    const phoneLimit = await checkRateLimit(`phone:${normalizedPhone || phone}`, 'register', 8, 3600)
     if (!phoneLimit.allowed) {
       return NextResponse.json(
         { error: 'Too many registrations for this phone number. Please try again later.' },
@@ -87,7 +92,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const ohLimit = await checkRateLimit(`oh:${openHouseId}`, 'register', 30, 3600)
+    const ohLimit = await checkRateLimit(`oh:${openHouseId}`, 'register', 60, 3600)
     if (!ohLimit.allowed) {
       return NextResponse.json(
         { error: 'This open house has reached its registration limit for the hour. Please try again later.' },
@@ -95,7 +100,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const ipLimit = await checkRateLimit(`ip:${ip}`, 'register', 20, 3600)
+    const ipLimit = await checkRateLimit(`ip:${ip}`, 'register', 60, 3600)
     if (!ipLimit.allowed) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
@@ -155,7 +160,6 @@ export async function POST(request: Request) {
     // Has this number opted out of SMS (replied STOP) on any prior open house,
     // for any agent? If so we suppress the code-word text (Twilio would reject
     // it with error 21610 anyway) and flag the visitor. Email still goes out.
-    const normalizedPhone = normalizePhone(phone)
     let phoneOptedOut = false
     if (normalizedPhone) {
       const { data: optOut } = await supabase
