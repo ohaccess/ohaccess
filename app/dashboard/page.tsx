@@ -848,6 +848,7 @@ export default function Dashboard() {
           accentColor={accentColor}
           onAccent={onAccent}
           accentBtnBorder={accentBtnBorder}
+          logoUrl={profile?.logo_url || ''}
         />
       )}
 
