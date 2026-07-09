@@ -40,7 +40,7 @@ export default function QrModal({
             {data.oh.street_address || data.oh.property_address}
           </div>
           <div style={{ fontSize: '13px', color: '#6e6e73' }}>
-            {data.oh.open_house_date} · {data.oh.open_house_hours}
+            {data.oh.open_house_date}{data.oh.open_house_hours ? ` · ${data.oh.open_house_hours}` : ''}
           </div>
         </div>
 

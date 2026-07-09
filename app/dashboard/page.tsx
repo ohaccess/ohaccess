@@ -337,6 +337,39 @@ export default function Dashboard() {
     return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
   }
 
+  // Fetch (creating on first use) the agent's permanent QR link and open the
+  // same QR modal used for per-open-house codes. The link never changes; the
+  // /r redirect resolves it to the next/latest open house at scan time.
+  const openPermanentQr = async () => {
+    try {
+      const res = await fetch('/api/agent-qr', { headers: await authHeaders() })
+      const json = await res.json()
+      if (!res.ok) {
+        showToast(json.error || 'Could not load your permanent QR code.', 'error')
+        return
+      }
+      const qrRes = await fetch(`/api/qrcode?url=${encodeURIComponent(json.shortUrl)}`)
+      const blob = await qrRes.blob()
+      const dataUrl = await new Promise<string>(resolve => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(blob)
+      })
+      setQrModal({
+        oh: {
+          property_address: 'My Permanent QR Code',
+          open_house_date: 'Always points to your next open house',
+          open_house_hours: ''
+        },
+        url: json.shortUrl,
+        dataUrl,
+        blob
+      })
+    } catch {
+      showToast('Could not load your permanent QR code.', 'error')
+    }
+  }
+
   const getAddressSuggestions = async (value: string) => {
     if (value.length < 3) { setShowSuggestions(false); return }
     try {
@@ -729,6 +762,7 @@ export default function Dashboard() {
             setEditingOH={setEditingOH}
             resetForm={resetForm}
             setQrModal={setQrModal}
+            openPermanentQr={openPermanentQr}
             setDeleteConfirm={setDeleteConfirm}
             setVisitorModal={setVisitorModal}
             showToast={showToast}

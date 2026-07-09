@@ -163,6 +163,7 @@ export default function OpenHouseList({
   setEditingOH,
   resetForm,
   setQrModal,
+  openPermanentQr,
   setDeleteConfirm,
   setVisitorModal,
   showToast,
@@ -191,6 +192,7 @@ export default function OpenHouseList({
   setEditingOH: (oh: any) => void
   resetForm: () => void
   setQrModal: (v: any) => void
+  openPermanentQr: () => Promise<void>
   setDeleteConfirm: (id: string | null) => void
   setVisitorModal: (v: any) => void
   showToast: (message: string, type?: 'success' | 'error') => void
@@ -225,9 +227,14 @@ export default function OpenHouseList({
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f' }}>Your open houses</div>
-        <button disabled={locked} onClick={() => { if (guardLocked()) return; setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          + New open house
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button disabled={locked} onClick={() => { if (guardLocked()) return; openPermanentQr() }} title="One QR code that always points to your next open house — print it once, reuse it forever" style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            📌 My QR code
+          </button>
+          <button disabled={locked} onClick={() => { if (guardLocked()) return; setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            + New open house
+          </button>
+        </div>
       </div>
 
       {openHouses.length === 0 ? (
