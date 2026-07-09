@@ -132,7 +132,7 @@ export default function NewOpenHouseForm({
           </div>
           <div>
             <label style={labelStyle}>Square Footage</label>
-            <input style={inputStyle} type="text" placeholder="2,450 sq ft" value={form.square_footage} onChange={e => setForm({ ...form, square_footage: e.target.value })} />
+            <input style={inputStyle} type="text" placeholder="2,450" value={form.square_footage} onChange={e => setForm({ ...form, square_footage: e.target.value })} />
           </div>
           <div>
             <label style={labelStyle}>Bedrooms</label>
@@ -176,10 +176,10 @@ export default function NewOpenHouseForm({
               <span style={{ color: '#6e6e73', fontSize: '13px' }}>to</span>
               <input style={inputStyle} type="time" value={form.open_house_end_time} onChange={e => setForm({ ...form, open_house_end_time: e.target.value })} />
             </div>
-            <div style={{ fontSize: '11px', color: '#aeaeb2', marginTop: '4px' }}>We&apos;ll email you a visitor report about 30 minutes after it ends.</div>
+            <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px' }}>We&apos;ll email you a visitor report about 30 minutes after it ends.</div>
           </div>
           <div>
-            <label style={labelStyle}>Listing URL (your site, Zill*w, H*omes)</label>
+            <label style={labelStyle}>Listing URL (your site, Zill*w, H*mes.com, etc.)</label>
             <input style={inputStyle} type="url" placeholder="https://yourbrokerage.com/listing" value={form.listing_url} onChange={e => setForm({ ...form, listing_url: e.target.value })} />
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function NewOpenHouseForm({
           <span style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Access Code Words</span>
           <span style={{ fontSize: '11px', color: '#6e6e73' }}><span style={{ color: '#ff3b30' }}>*</span> required field</span>
         </div>
-        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 16px', lineHeight: '1.5' }}>
+        <div style={{ fontSize: '13px', color: '#6e6e73', margin: '12px 0 16px', lineHeight: '1.5' }}>
           Each visitor gets two codes — one by text, one by email. At the door, ask for the <strong>text code</strong> first (a real phone is hard to fake); accept the email code only if their text didn&apos;t arrive.
         </div>
 

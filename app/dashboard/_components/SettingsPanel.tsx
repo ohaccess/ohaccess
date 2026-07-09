@@ -411,7 +411,7 @@ export default function SettingsPanel({
             {profile?.brokerage_id ? (
               <>
                 <input style={{ ...inputStyle, background: '#ececf0', color: '#8e8e93', cursor: 'not-allowed' }} type="text" placeholder="Managed by your team" value={profile?.brokerage || ''} disabled readOnly />
-                <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '4px' }}>
+                <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px' }}>
                   🔒 Managed by your team.{isTeamAdmin ? ' Set the team name in the Team tab.' : ''}
                 </div>
               </>
@@ -422,7 +422,7 @@ export default function SettingsPanel({
           <div>
             <label style={labelStyle}>Display Email (shown to visitors)</label>
             <input style={inputStyle} type="email" placeholder="sarah@premierre.com" value={profile?.display_email || ''} onChange={e => setProfile({ ...profile, display_email: e.target.value })} />
-            <div style={{ fontSize: '11px', color: profile?.display_email?.trim() ? '#6e6e73' : '#b25e00', marginTop: '4px', lineHeight: '1.4' }}>
+            <div style={{ fontSize: '12px', color: profile?.display_email?.trim() ? '#6e6e73' : '#b25e00', marginTop: '4px', lineHeight: '1.4' }}>
               {profile?.display_email?.trim()
                 ? 'Where visitor replies and your copy of each sign-in are sent.'
                 : '⚠ Recommended — set this so replies and your sign-in copies go here, keeping your private login email hidden from visitors.'}
@@ -453,7 +453,7 @@ export default function SettingsPanel({
           <div>
             <label style={labelStyle}>Agent Landing Page URL</label>
             <input style={inputStyle} type="url" placeholder="https://yourwebsite.com/bio" value={profile?.landing_page_url || ''} onChange={e => setProfile({ ...profile, landing_page_url: e.target.value })} />
-            <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '4px' }}>Your bio page, Instagram, or Linktree. Appears in visitor emails and texts.</div>
+            <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px' }}>Your bio page, Instagram, or Linktree. Appears in visitor emails and texts.</div>
           </div>
           <div>
             <label style={labelStyle}>Agent Headshot URL</label>

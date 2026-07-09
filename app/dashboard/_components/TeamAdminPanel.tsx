@@ -347,7 +347,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
       <div style={card}>
         <div style={cardHeader}>Team branding</div>
         <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px' }}>
-          Your logo and colors appear on every team member&apos;s visitor emails. Only you (the team lead) can change these.
+          Your logo and colors appear on every team member&apos;s visitor emails and printable branded signs. Only you (the team lead) can change these.
         </div>
 
         <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px' }}>Team name</label>
