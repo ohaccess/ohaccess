@@ -355,7 +355,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
 
         <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '6px' }}>Team logo URL</label>
         <input style={inputStyle} type="url" placeholder="https://yoursite.com/logo.png" value={logo} onChange={e => setLogo(e.target.value)} />
-        <div style={{ fontSize: '11px', color: '#aeaeb2', marginTop: '6px', marginBottom: logo ? '10px' : '18px' }}>
+        <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '6px', marginBottom: logo ? '10px' : '18px' }}>
           Paste a direct image URL (ending in .png, .jpg, or .svg). Leave blank to remove. Appears on every team member&apos;s visitor emails and registration forms.
         </div>
         {logo && (
