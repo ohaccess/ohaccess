@@ -71,10 +71,23 @@ export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: st
   const [message, setMessage] = useState('Loading map…')
   const [unmapped, setUnmapped] = useState<string[]>([])
   const [counts, setCounts] = useState<Record<PinStatus, number> | null>(null)
+  const [visible, setVisible] = useState<Record<PinStatus, boolean>>({ current: true, future: true, past: true })
+  // Markers grouped by status so the legend chips can show/hide them, and the
+  // map instance so toggled-on markers re-attach to it.
+  const markersRef = useRef<Record<PinStatus, any[]>>({ current: [], future: [], past: [] })
+  const mapRef = useRef<any>(null)
   // The tab-switch callback changes identity between renders; keep the latest
   // in a ref so marker listeners registered once always call the current one.
   const viewAgentRef = useRef(onViewAgent)
   viewAgentRef.current = onViewAgent
+
+  const toggleStatus = (s: PinStatus) => {
+    setVisible((v) => {
+      const next = { ...v, [s]: !v[s] }
+      for (const m of markersRef.current[s]) m.setMap(next[s] ? mapRef.current : null)
+      return next
+    })
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -111,7 +124,10 @@ export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: st
         zoom: 4,
         mapTypeControl: false,
         streetViewControl: false,
+        zoomControl: true,
+        fullscreenControl: true,
       })
+      mapRef.current = map
       const info = new g.maps.InfoWindow()
 
       const bounds = new g.maps.LatLngBounds()
@@ -126,6 +142,7 @@ export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: st
           zIndex: pin.status === 'past' ? 1 : pin.status === 'future' ? 2 : 3,
         })
         bounds.extend(marker.getPosition())
+        markersRef.current[pin.status].push(marker)
         marker.addListener('click', () => {
           const holder = document.createElement('div')
           holder.innerHTML = infoWindowHtml(pin)
@@ -173,12 +190,32 @@ export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: st
         <div style={{ padding: '14px 0', fontSize: 14, color: SUB }}>{message}</div>
       )}
       {counts && (
-        <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', margin: '0 0 12px', fontSize: 13, color: SUB }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '0 0 12px' }}>
           {(['current', 'future', 'past'] as PinStatus[]).map((s) => (
-            <span key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: STATUS_META[s].color, display: 'inline-block' }} />
-              {STATUS_META[s].label} ({counts[s]})
-            </span>
+            <button
+              key={s}
+              onClick={() => toggleStatus(s)}
+              title={visible[s] ? `Hide ${STATUS_META[s].label.toLowerCase()} pins` : `Show ${STATUS_META[s].label.toLowerCase()} pins`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 13,
+                fontWeight: 600,
+                fontFamily: 'inherit',
+                color: visible[s] ? '#1d1d1f' : '#b0b0b5',
+                background: visible[s] ? '#f5f5f7' : 'white',
+                border: `1px solid ${visible[s] ? '#d1d1d6' : BORDER}`,
+                borderRadius: 999,
+                padding: '6px 12px',
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: STATUS_META[s].color, display: 'inline-block', opacity: visible[s] ? 1 : 0.3 }} />
+              <span style={{ textDecoration: visible[s] ? 'none' : 'line-through' }}>
+                {STATUS_META[s].label} ({counts[s]})
+              </span>
+            </button>
           ))}
         </div>
       )}
