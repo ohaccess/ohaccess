@@ -5,7 +5,7 @@ import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { IMPERSONATION_KEY } from '../_components/ImpersonationBanner'
 import { timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type SortState, type Sortable } from '@/lib/sort'
-import OpenHouseMap from './_components/OpenHouseMap'
+import OpenHouseMap from '@/app/_components/OpenHouseMap'
 
 type Stats = {
   totalAgents: number

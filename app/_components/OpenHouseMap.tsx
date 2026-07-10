@@ -1,11 +1,19 @@
 'use client'
 
-// The admin Map tab: a Google Map of every open house in the system, with
-// color-coded pins — blue = upcoming, green = happening now, gray = past.
-// Clicking a pin shows times, the listing link, and the agent's contact
-// info, plus a button that jumps to that agent in the Agents tab. The Maps
-// JS script is already loaded globally in app/layout.tsx, so this only
-// waits for it.
+// The open-house map: every open house in the system, color-coded pins —
+// blue = upcoming, green = happening now, gray = past — with clickable
+// legend chips to show/hide each group. Clicking a pin shows times, the
+// listing link, and the agent's contact info.
+//
+// Two modes:
+//   - Admin Map tab (default): fetches with the admin's session token and
+//     offers a "View agent in admin" button (via onViewAgent) plus the
+//     copyable share link when MAP_SHARE_CODE is configured.
+//   - Secret-link share page: pass shareCode; fetches the public-by-code
+//     endpoint, no login, no admin-only buttons.
+//
+// The Maps JS script is already loaded globally in app/layout.tsx, so this
+// only waits for it.
 
 import { useEffect, useRef, useState } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
@@ -46,7 +54,7 @@ function pinIcon(status: PinStatus): { url: string; scaledSize: unknown } {
   }
 }
 
-function infoWindowHtml(pin: Pin): string {
+function infoWindowHtml(pin: Pin, withAgentButton: boolean): string {
   const e = escapeHtml
   const status = STATUS_META[pin.status]
   const phoneDigits = pin.agent.phone.replace(/[^\d+]/g, '')
@@ -60,18 +68,26 @@ function infoWindowHtml(pin: Pin): string {
         <div style="font-weight: 700;">${e(pin.agent.name)}</div>
         ${pin.agent.phone ? `<div><a href="tel:${e(phoneDigits)}" style="color: #0071e3; text-decoration: none;">${e(pin.agent.phone)}</a></div>` : ''}
         ${pin.agent.email ? `<div><a href="mailto:${e(pin.agent.email)}" style="color: #0071e3; text-decoration: none;">${e(pin.agent.email)}</a></div>` : ''}
-        <button data-view-agent style="margin-top: 6px; font-size: 12px; font-weight: 600; color: #1d1d1f; background: #f5f5f7; border: 1px solid #d1d1d6; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-family: inherit;">View agent in admin →</button>
+        ${withAgentButton ? `<button data-view-agent style="margin-top: 6px; font-size: 12px; font-weight: 600; color: #1d1d1f; background: #f5f5f7; border: 1px solid #d1d1d6; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-family: inherit;">View agent in admin →</button>` : ''}
       </div>
     </div>`
 }
 
-export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: string) => void }) {
+export default function OpenHouseMap({
+  shareCode,
+  onViewAgent,
+}: {
+  shareCode?: string
+  onViewAgent?: (search: string) => void
+}) {
   const mapDiv = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [message, setMessage] = useState('Loading map…')
   const [unmapped, setUnmapped] = useState<string[]>([])
   const [counts, setCounts] = useState<Record<PinStatus, number> | null>(null)
   const [visible, setVisible] = useState<Record<PinStatus, boolean>>({ current: true, future: true, past: true })
+  const [share, setShare] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
   // Markers grouped by status so the legend chips can show/hide them, and the
   // map instance so toggled-on markers re-attach to it.
   const markersRef = useRef<Record<PinStatus, any[]>>({ current: [], future: [], past: [] })
@@ -89,6 +105,15 @@ export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: st
     })
   }
 
+  const copyShare = async () => {
+    if (!share) return
+    try {
+      await navigator.clipboard.writeText(share)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch { /* clipboard unavailable — the link is still selectable */ }
+  }
+
   useEffect(() => {
     let cancelled = false
 
@@ -104,14 +129,19 @@ export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: st
       })
 
     const run = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { window.location.href = '/login'; return }
-
-      const res = await fetch('/api/admin/map', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
+      let res: Response
+      if (shareCode) {
+        res = await fetch(`/api/map/${encodeURIComponent(shareCode)}`)
+        if (res.status === 404) throw new Error('This map link is not valid.')
+      } else {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) { window.location.href = '/login'; return }
+        res = await fetch('/api/admin/map', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+      }
       if (!res.ok) throw new Error('Could not load open houses')
-      const { pins, unmapped: missed }: { pins: Pin[]; unmapped: string[] } = await res.json()
+      const { pins, unmapped: missed, shareUrl }: { pins: Pin[]; unmapped: string[]; shareUrl?: string | null } = await res.json()
 
       await waitForGoogle()
       if (cancelled || !mapDiv.current) return
@@ -145,10 +175,10 @@ export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: st
         markersRef.current[pin.status].push(marker)
         marker.addListener('click', () => {
           const holder = document.createElement('div')
-          holder.innerHTML = infoWindowHtml(pin)
+          holder.innerHTML = infoWindowHtml(pin, !!viewAgentRef.current)
           holder.querySelector('[data-view-agent]')?.addEventListener('click', () => {
             info.close()
-            viewAgentRef.current(pin.agent.email || pin.agent.name)
+            viewAgentRef.current?.(pin.agent.email || pin.agent.name)
           })
           info.setContent(holder)
           info.open({ map, anchor: marker })
@@ -168,6 +198,7 @@ export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: st
         past: pins.filter((p) => p.status === 'past').length,
       })
       setUnmapped(missed)
+      setShare(shareUrl || null)
       setMessage(pins.length === 0 ? 'No open houses to map yet.' : '')
       setStatus('ready')
     }
@@ -179,7 +210,7 @@ export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: st
     })
 
     return () => { cancelled = true }
-  }, [])
+  }, [shareCode])
 
   return (
     <div style={{ marginTop: 18 }}>
@@ -190,7 +221,7 @@ export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: st
         <div style={{ padding: '14px 0', fontSize: 14, color: SUB }}>{message}</div>
       )}
       {counts && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '0 0 12px' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', margin: '0 0 12px' }}>
           {(['current', 'future', 'past'] as PinStatus[]).map((s) => (
             <button
               key={s}
@@ -217,6 +248,26 @@ export default function OpenHouseMap({ onViewAgent }: { onViewAgent: (search: st
               </span>
             </button>
           ))}
+          {share && (
+            <button
+              onClick={copyShare}
+              title={share}
+              style={{
+                marginLeft: 'auto',
+                fontSize: 13,
+                fontWeight: 600,
+                fontFamily: 'inherit',
+                color: '#0071e3',
+                background: 'white',
+                border: `1px solid #d1d1d6`,
+                borderRadius: 999,
+                padding: '6px 12px',
+                cursor: 'pointer',
+              }}
+            >
+              {copied ? 'Link copied ✓' : 'Copy shareable link'}
+            </button>
+          )}
         </div>
       )}
       <div
