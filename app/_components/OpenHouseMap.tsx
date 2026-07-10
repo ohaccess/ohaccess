@@ -18,6 +18,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { escapeHtml } from '@/lib/escape-html'
+import { googleCalendarUrl } from '@/lib/register-helpers'
 
 type PinStatus = 'past' | 'current' | 'future'
 type Pin = {
@@ -25,6 +26,8 @@ type Pin = {
   address: string
   date: string
   hours: string
+  startAt: string | null
+  endAt: string | null
   listingUrl: string | null
   status: PinStatus
   lat: number
@@ -58,11 +61,17 @@ function infoWindowHtml(pin: Pin, withAgentButton: boolean): string {
   const e = escapeHtml
   const status = STATUS_META[pin.status]
   const phoneDigits = pin.agent.phone.replace(/[^\d+]/g, '')
+  // The calendar icon links to a prefilled Google Calendar event when the
+  // open house has structured times (legacy rows without them keep the
+  // plain icon).
+  const calIcon = pin.startAt
+    ? `<a href="${e(googleCalendarUrl(`Open House — ${pin.address}`.trim(), pin.startAt, pin.endAt || pin.startAt, pin.address))}" target="_blank" rel="noopener" title="Add to Google Calendar" style="text-decoration: none;">📅</a>`
+    : '📅'
   return `
     <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; font-size: 13px; line-height: 1.7; max-width: 260px; color: #1d1d1f;">
       <div style="display: inline-block; font-size: 11px; font-weight: 700; color: white; background: ${status.color}; border-radius: 999px; padding: 1px 9px; margin-bottom: 4px;">${status.label}</div>
       <div style="font-weight: 700;">${e(pin.address)}</div>
-      <div style="color: ${SUB};">📅 ${e(pin.date)}<br/>🕒 ${e(pin.hours)}</div>
+      <div style="color: ${SUB};">${calIcon} ${e(pin.date)}<br/>🕒 ${e(pin.hours)}</div>
       ${pin.listingUrl ? `<div><a href="${e(pin.listingUrl)}" target="_blank" rel="noopener" style="color: #0071e3;">View listing →</a></div>` : ''}
       <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid ${BORDER};">
         <div style="font-weight: 700;">${e(pin.agent.name)}</div>

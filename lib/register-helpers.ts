@@ -86,6 +86,12 @@ function calendarStamp(iso: string): string {
   return new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
 }
 
+// Prefilled "add event" link for Google Calendar. Shared by the visitor
+// email's upcoming-open-houses section and the map pin cards.
+export function googleCalendarUrl(title: string, startIso: string, endIso: string, location: string): string {
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${calendarStamp(startIso)}/${calendarStamp(endIso)}&location=${encodeURIComponent(location)}`
+}
+
 // Builds the "Upcoming Open Houses" block for the visitor email: the agent's
 // (and their team's) open houses over the next 10 days, pre-filtered/sorted by
 // the caller. Each row shows day · time · city, a Google-Maps-linked address,
@@ -110,7 +116,7 @@ export function buildUpcomingOpenHousesHtml(houses: UpcomingOpenHouse[], appUrl:
       const start = oh.start_at
       const end = oh.end_at || oh.start_at
       const title = `Open House — ${address}`.trim()
-      const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${calendarStamp(start)}/${calendarStamp(end)}&location=${encodeURIComponent(address)}`
+      const googleUrl = googleCalendarUrl(title, start, end, address)
       const outlookUrl = `https://outlook.live.com/calendar/0/action/compose?rru=addevent&subject=${encodeURIComponent(title)}&startdt=${encodeURIComponent(start)}&enddt=${encodeURIComponent(end)}&location=${encodeURIComponent(address)}`
       const appleUrl = `${appUrl}/api/open-house/${oh.id}/calendar`
       calendarLine = `<div style="font-size: 12px; color: #6e6e73; margin-top: 2px;">📅 Add to calendar: <a href="${e(googleUrl)}" style="color: #0071e3;">Google</a> &middot; <a href="${e(outlookUrl)}" style="color: #0071e3;">Outlook</a> &middot; <a href="${e(appleUrl)}" style="color: #0071e3;">Apple</a></div>`

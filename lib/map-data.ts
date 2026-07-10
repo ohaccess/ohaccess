@@ -15,6 +15,8 @@ export type MapPin = {
   address: string
   date: string
   hours: string
+  startAt: string | null
+  endAt: string | null
   listingUrl: string | null
   status: PinStatus
   lat: number
@@ -91,6 +93,8 @@ export async function buildMapPayload(): Promise<MapPayload | null> {
         address,
         date: oh.open_house_date || '',
         hours: oh.open_house_hours || '',
+        startAt: oh.start_at || null,
+        endAt: oh.end_at || null,
         listingUrl: /^https?:\/\//i.test(oh.listing_url || '') ? oh.listing_url : null,
         status: pinStatus(oh, now),
         agent: {
