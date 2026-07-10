@@ -5,6 +5,7 @@ import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { IMPERSONATION_KEY } from '../_components/ImpersonationBanner'
 import { timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type SortState, type Sortable } from '@/lib/sort'
+import OpenHouseMap from './_components/OpenHouseMap'
 
 type Stats = {
   totalAgents: number
@@ -78,7 +79,7 @@ type Payload = {
   generatedAt: string
 }
 
-type Tab = 'overview' | 'agents' | 'openhouses' | 'visitors'
+type Tab = 'overview' | 'agents' | 'openhouses' | 'visitors' | 'map'
 type OHFilter = 'all' | 'upcoming' | 'past'
 
 // ---- styling tokens (match existing app) ----
@@ -710,10 +711,11 @@ export default function AdminDashboard() {
             <TabButton id="agents" tab={tab} setTab={selectTab} label={`Agents (${data.agents.length})`} />
             <TabButton id="openhouses" tab={tab} setTab={selectTab} label={`Open Houses (${data.openHouses.length})`} />
             <TabButton id="visitors" tab={tab} setTab={selectTab} label={`Visitors (${data.visitors.length})`} />
+            <TabButton id="map" tab={tab} setTab={selectTab} label={`Map (${data.stats.totalOpenHouses})`} />
           </div>
 
-          {/* Controls row (search + filters + export) */}
-          {tab !== 'overview' && (
+          {/* Controls row (search + filters + export) — not for the map tab */}
+          {tab !== 'overview' && tab !== 'map' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0', flexWrap: 'wrap' }}>
               <input
                 value={query}
@@ -850,6 +852,15 @@ export default function AdminDashboard() {
             <OpenHousesTable rows={filteredOpenHouses} onDelete={deleteOpenHouse} deletingId={deletingOHId} />
           )}
           {tab === 'visitors' && <VisitorsTable rows={filteredVisitors} />}
+
+          {tab === 'map' && (
+            <OpenHouseMap
+              onViewAgent={(search) => {
+                setTab('agents')
+                setQuery(search)
+              }}
+            />
+          )}
         </>
       )}
     </main>
