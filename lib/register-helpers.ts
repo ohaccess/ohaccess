@@ -66,6 +66,78 @@ export function agentCopyRecipients(
   return { cc: cc ? [cc] : [], bcc: bcc ? [bcc] : [] }
 }
 
+// One row of the "Upcoming Open Houses" section in the visitor's code email.
+// Fields mirror the open_houses columns the register route selects.
+export type UpcomingOpenHouse = {
+  id: string
+  property_address: string | null
+  city: string | null
+  open_house_date: string | null
+  open_house_hours: string | null
+  listing_price: string | null
+  bedrooms: string | null
+  bathrooms: string | null
+  start_at: string | null
+  end_at: string | null
+}
+
+// Compact UTC stamp for Google Calendar links: 2026-07-18T18:00:00Z -> 20260718T180000Z
+function calendarStamp(iso: string): string {
+  return new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+}
+
+// Builds the "Upcoming Open Houses" block for the visitor email: the agent's
+// (and their team's) open houses over the next 10 days, pre-filtered/sorted by
+// the caller. Each row shows day · time · city, a Google-Maps-linked address,
+// price + beds/baths, and add-to-calendar links (Google/Outlook are prefill
+// URLs; Apple has no URL scheme, so it points at our downloadable .ics
+// endpoint). Returns '' when there's nothing upcoming — the email simply
+// omits the section. All values are agent-entered, so everything is escaped.
+export function buildUpcomingOpenHousesHtml(houses: UpcomingOpenHouse[], appUrl: string): string {
+  if (houses.length === 0) return ''
+  const e = escapeHtml
+
+  const items = houses.map(oh => {
+    const address = oh.property_address || ''
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
+    const when = [oh.open_house_date, oh.open_house_hours, oh.city]
+      .filter(Boolean).map(v => e(String(v))).join(' &middot; ')
+
+    // Calendar links need concrete times; legacy rows without end_at fall back
+    // to a zero-length event rather than losing the buttons entirely.
+    let calendarLine = ''
+    if (oh.start_at) {
+      const start = oh.start_at
+      const end = oh.end_at || oh.start_at
+      const title = `Open House — ${address}`.trim()
+      const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${calendarStamp(start)}/${calendarStamp(end)}&location=${encodeURIComponent(address)}`
+      const outlookUrl = `https://outlook.live.com/calendar/0/action/compose?rru=addevent&subject=${encodeURIComponent(title)}&startdt=${encodeURIComponent(start)}&enddt=${encodeURIComponent(end)}&location=${encodeURIComponent(address)}`
+      const appleUrl = `${appUrl}/api/open-house/${oh.id}/calendar`
+      calendarLine = `<div style="font-size: 12px; color: #6e6e73; margin-top: 2px;">📅 Add to calendar: <a href="${e(googleUrl)}" style="color: #0071e3;">Google</a> &middot; <a href="${e(outlookUrl)}" style="color: #0071e3;">Outlook</a> &middot; <a href="${e(appleUrl)}" style="color: #0071e3;">Apple</a></div>`
+    }
+
+    const facts = [
+      oh.listing_price ? `💰 ${e(oh.listing_price)}` : '',
+      oh.bedrooms ? `🛏 ${e(oh.bedrooms)} bed` : '',
+      oh.bathrooms ? `🛁 ${e(oh.bathrooms)} bath` : '',
+    ].filter(Boolean).join(' &middot; ')
+
+    return `
+              <div style="padding: 10px 0; border-top: 1px solid #e5e5ea; font-size: 13px; line-height: 1.7;">
+                <div style="color: #1d1d1f; font-weight: 700;">${when}</div>
+                ${address ? `<div><a href="${e(mapsUrl)}" style="color: #0071e3;">${e(address)}</a></div>` : ''}
+                ${facts ? `<div style="color: #6e6e73;">${facts}</div>` : ''}
+                ${calendarLine}
+              </div>`
+  }).join('')
+
+  return `
+            <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+              <div style="font-size: 11px; color: #6e6e73; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 8px;">Upcoming Open Houses</div>
+              <div style="font-size: 12px; color: #6e6e73; text-align: center; margin-bottom: 6px;">Come see us again — here's where we'll be next.</div>${items}
+            </div>`
+}
+
 // Builds the lead-notification email we send to an agent's CRM intake address.
 // Two layers of coverage:
 //   1. A clearly-labeled human-readable body — every CRM email parser (Follow Up

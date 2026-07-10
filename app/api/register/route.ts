@@ -13,8 +13,10 @@ import {
   isHexColor,
   isEmail,
   buildCrmLeadEmail,
+  buildUpcomingOpenHousesHtml,
   agentCopyRecipients,
   SMS_MAX_LENGTH,
+  type UpcomingOpenHouse,
 } from '@/lib/register-helpers'
 import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 
@@ -361,6 +363,50 @@ export async function POST(request: Request) {
     // display email (fallback login), hidden BCC to their login as a backup.
     const agentCopy = agentCopyRecipients(agent?.display_email, agent?.email)
 
+    // "Upcoming Open Houses" section: the next 5 open houses over the next 10
+    // days from this agent (plus their team, when they're on one), kept to the
+    // same state as the one just visited, soonest first. Scoped to agent+team
+    // only — never brokerage-wide — so one agent's email doesn't market a
+    // stranger's listing to their lead. Best-effort: a lookup failure just
+    // means the email goes out without the section.
+    let upcomingHtml = ''
+    try {
+      let agentIds: string[] = [openHouse.agent_id]
+      if (agent?.brokerage_id) {
+        const { data: teammates } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('brokerage_id', agent.brokerage_id)
+        if (teammates && teammates.length > 0) {
+          agentIds = teammates.map(t => t.id)
+          if (!agentIds.includes(openHouse.agent_id)) agentIds.push(openHouse.agent_id)
+        }
+      }
+
+      const nowIso = new Date().toISOString()
+      const horizonIso = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+      let query = supabase
+        .from('open_houses')
+        .select('id, property_address, city, open_house_date, open_house_hours, listing_price, bedrooms, bathrooms, start_at, end_at')
+        .in('agent_id', agentIds)
+        .neq('id', openHouseId)
+        .gte('start_at', nowIso)
+        .lte('start_at', horizonIso)
+        .order('start_at', { ascending: true })
+        .order('city', { ascending: true })
+        .limit(5)
+      // Case-insensitive state match ("TX" vs "tx"); wildcard chars stripped
+      // since ilike would treat them as patterns. No state on the visited open
+      // house (legacy rows) -> skip the filter rather than the whole section.
+      const state = (openHouse.state || '').trim().replace(/[%_]/g, '')
+      if (state) query = query.ilike('state', state)
+
+      const { data: upcoming } = await query
+      upcomingHtml = buildUpcomingOpenHousesHtml((upcoming || []) as UpcomingOpenHouse[], APP_URL)
+    } catch (err) {
+      console.error('Upcoming open houses lookup failed:', err)
+    }
+
     const visitorEmail = await resend.emails.send({
       from: 'ohACCESS <noreply@mail.ohaccess.com>',
       to: email,
@@ -405,6 +451,7 @@ export async function POST(request: Request) {
               </div>
               ${logoUrl ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; text-align: center;"><img src="${escapeHtml(logoUrl)}" style="max-height:80px;width:80%;object-fit:contain;" /></div>` : ''}
             </div>
+            ${upcomingHtml}
             <div style="margin-top: 16px; padding: 12px; background: #f5f5f7; border-radius: 8px; font-size: 11px; color: #6e6e73; text-align: center; line-height: 1.6;">
               By registering you agreed to the ohACCESS <a href="https://ohaccess.com/terms" style="color: #6e6e73;">Terms of Service</a>.<br/>
               You consent to be contacted by the listing agent.<br/>

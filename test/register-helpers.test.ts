@@ -7,8 +7,10 @@ import {
   isHexColor,
   isEmail,
   buildCrmLeadEmail,
+  buildUpcomingOpenHousesHtml,
   agentCopyRecipients,
   SMS_MAX_LENGTH,
+  type UpcomingOpenHouse,
 } from '@/lib/register-helpers'
 
 describe('generateCode', () => {
@@ -120,6 +122,80 @@ describe('buildCrmLeadEmail', () => {
     const html = buildCrmLeadEmail({ ...base, firstName: '<script>alert(1)</script>' })
     expect(html).not.toContain('<script>alert(1)</script>')
     expect(html).toContain('&lt;script&gt;')
+  })
+})
+
+describe('buildUpcomingOpenHousesHtml', () => {
+  const APP_URL = 'https://www.ohaccess.com'
+  const oh: UpcomingOpenHouse = {
+    id: 'oh-123',
+    property_address: '123 Main St, Austin, TX 78701',
+    city: 'Austin',
+    open_house_date: 'Sat, Jul 18, 2026',
+    open_house_hours: '1:00 PM – 3:00 PM',
+    listing_price: '$625,000',
+    bedrooms: '4',
+    bathrooms: '3',
+    start_at: '2026-07-18T18:00:00+00:00',
+    end_at: '2026-07-18T20:00:00+00:00',
+  }
+
+  it('returns an empty string when there are no upcoming open houses', () => {
+    expect(buildUpcomingOpenHousesHtml([], APP_URL)).toBe('')
+  })
+
+  it('shows day, time, and city plus price and beds/baths', () => {
+    const html = buildUpcomingOpenHousesHtml([oh], APP_URL)
+    expect(html).toContain('Upcoming Open Houses')
+    expect(html).toContain('Sat, Jul 18, 2026 &middot; 1:00 PM – 3:00 PM &middot; Austin')
+    expect(html).toContain('$625,000')
+    expect(html).toContain('4 bed')
+    expect(html).toContain('3 bath')
+  })
+
+  it('links the address to Google Maps', () => {
+    const html = buildUpcomingOpenHousesHtml([oh], APP_URL)
+    expect(html).toContain('https://www.google.com/maps/search/?api=1&amp;query=123%20Main%20St')
+  })
+
+  it('builds Google, Outlook, and Apple (.ics) calendar links with UTC times', () => {
+    const html = buildUpcomingOpenHousesHtml([oh], APP_URL)
+    expect(html).toContain('calendar.google.com/calendar/render')
+    expect(html).toContain('20260718T180000Z/20260718T200000Z')
+    expect(html).toContain('outlook.live.com/calendar/0/action/compose')
+    expect(html).toContain(`${APP_URL}/api/open-house/oh-123/calendar`)
+  })
+
+  it('omits calendar links when a legacy row has no start time', () => {
+    const html = buildUpcomingOpenHousesHtml([{ ...oh, start_at: null, end_at: null }], APP_URL)
+    expect(html).not.toContain('Add to calendar')
+    expect(html).toContain('Austin') // the listing itself still renders
+  })
+
+  it('skips missing fields without leaving dangling separators', () => {
+    const html = buildUpcomingOpenHousesHtml(
+      [{ ...oh, listing_price: null, bedrooms: null, bathrooms: null, city: null }],
+      APP_URL
+    )
+    expect(html).toContain('Sat, Jul 18, 2026 &middot; 1:00 PM – 3:00 PM</div>')
+    expect(html).not.toContain('💰')
+    expect(html).not.toContain('bed')
+  })
+
+  it('escapes agent-entered fields (no raw HTML injection)', () => {
+    const html = buildUpcomingOpenHousesHtml(
+      [{ ...oh, listing_price: '<script>alert(1)</script>' }],
+      APP_URL
+    )
+    expect(html).not.toContain('<script>alert(1)</script>')
+    expect(html).toContain('&lt;script&gt;')
+  })
+
+  it('renders one row per open house', () => {
+    const html = buildUpcomingOpenHousesHtml([oh, { ...oh, id: 'oh-456', city: 'Round Rock' }], APP_URL)
+    expect(html).toContain('oh-123/calendar')
+    expect(html).toContain('oh-456/calendar')
+    expect(html).toContain('Round Rock')
   })
 })
 
