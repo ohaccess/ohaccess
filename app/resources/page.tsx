@@ -9,10 +9,15 @@ export default function Resources() {
         .resources-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
         .tips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
         .resources-header h1 { font-size: 36px; }
+        .howto-row { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; margin-bottom: 36px; }
+        .howto-row.flip .howto-img { order: 2; }
+        .howto-img img { width: 100%; height: auto; display: block; border-radius: 16px; border: 1px solid #e5e5ea; }
         @media (max-width: 768px) {
           .resources-grid { grid-template-columns: 1fr; }
           .tips-grid { grid-template-columns: 1fr; }
           .resources-header h1 { font-size: 26px; }
+          .howto-row { grid-template-columns: 1fr; gap: 14px; }
+          .howto-row.flip .howto-img { order: 0; }
         }
       `}</style>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -42,6 +47,79 @@ export default function Resources() {
           <p style={{ fontSize: '16px', color: '#6e6e73', maxWidth: '560px', margin: '0 auto', lineHeight: '1.6' }}>
             Free templates, guides, and tools to help you get the most out of ohACCESS at every open house.
           </p>
+        </div>
+
+        {/* The story — why ohACCESS exists and how it works */}
+        <div style={{ marginBottom: '56px' }}>
+          <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
+            🏡 How ohACCESS works
+          </div>
+          <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '24px' }}>
+            From the paper sign-in sheet you know too well to clean, verified leads — here&apos;s the whole story.
+          </div>
+
+          <div className="howto-row">
+            <div className="howto-img">
+              <img src="/resources/paper-signin.jpg" alt="Agent deciphering a messy paper open-house sign-in sheet with fake names and illegible handwriting" />
+            </div>
+            <div>
+              <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>The problem you already know</div>
+              <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
+                Paper sign-in sheets are messy, unreadable, and frankly a liability. Illegible handwriting. Fake names. Phone numbers off by one digit. No email verification. And when the open house is over, you&apos;re left deciphering chicken scratch. There&apos;s a better way.
+              </div>
+            </div>
+          </div>
+
+          <div className="howto-row flip">
+            <div className="howto-img">
+              <img src="/resources/scan-checkin.jpg" alt="Visitor scanning the ohACCESS QR code sign with their phone before entering an open house" />
+            </div>
+            <div>
+              <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Verified check-in, right on their phone</div>
+              <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
+                ohACCESS replaces your paper sheet with a QR-code digital check-in. Visitors scan the sign outside before they enter and complete a quick, verified registration — name, email, phone, and buying timeline — all clean, accurate, and captured instantly. A unique code word is texted to their phone on the spot, and you get a text with their details. They share the code word with you at the door. <strong style={{ color: '#1d1d1f' }}>Bad or fake information = no code word = no entry.</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="howto-row">
+            <div className="howto-img">
+              <img src="/resources/leads-goodbye.jpg" alt="Agent waving goodbye to happy open-house visitors while the ohACCESS dashboard builds the visitor log" />
+            </div>
+            <div>
+              <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Your leads, organized in real time</div>
+              <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
+                While you&apos;re greeting buyers and doing what you do best, ohACCESS is quietly building your contact list. Every visitor is timestamped and organized in a clean dashboard. And it gets better — ohACCESS connects to your existing CRM, so leads flow straight in. No data entry. No copy-paste.
+              </div>
+            </div>
+          </div>
+
+          <div className="howto-row flip">
+            <div className="howto-img">
+              <img src="/resources/deterrence.jpg" alt="A hooded figure reconsidering at the ohACCESS verification sign outside an open house" />
+            </div>
+            <div>
+              <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Deterrence and accountability — built in</div>
+              <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
+                Open houses invite strangers into someone&apos;s home. That&apos;s the reality. ohACCESS creates a verified digital record of every person who enters — a simple but powerful gate that tells every visitor upfront this is a verified environment. Bad actors like the path of least resistance, and the code word system is often enough to make them walk away entirely. It protects you, your seller, and the property — with zero extra effort on your part.
+              </div>
+            </div>
+          </div>
+
+          <div className="howto-row">
+            <div className="howto-img">
+              <img src="/resources/sign-out-front.jpg" alt="ohACCESS QR code sign standing in front of a home before an open house" />
+            </div>
+            <div>
+              <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Getting started is simple</div>
+              <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.9' }}>
+                ✅ Create a free account — it takes about 2 minutes<br />
+                ✅ Set up your open house and print your branded QR sign (built in)<br />
+                ✅ Your visitors check in digitally before entering<br />
+                ✅ You leave with clean, verified lead data — no deciphering required
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* How to use section */}
