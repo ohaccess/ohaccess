@@ -140,7 +140,7 @@ export function buildUpcomingOpenHousesHtml(houses: UpcomingOpenHouse[], appUrl:
   return `
             <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
               <div style="font-size: 11px; color: #6e6e73; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 8px;">Upcoming Open Houses</div>
-              <div style="font-size: 12px; color: #6e6e73; text-align: center; margin-bottom: 6px;">Come see us again — here's where we'll be next.</div>${items}
+              <div style="font-size: 12px; color: #6e6e73; text-align: center; margin-bottom: 6px;">Come explore our other listings.</div>${items}
             </div>`
 }
 
