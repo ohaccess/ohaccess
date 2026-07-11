@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { usPhoneError } from '@/lib/phone'
+import { STRINGS, LANGS, TIMELINE_VALUES, detectLang, saveLang, type Lang } from '@/lib/register-i18n'
 
 export default function RegisterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
@@ -10,6 +11,10 @@ export default function RegisterPage({ params }: { params: Promise<{ id: string 
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [selectedTimeline, setSelectedTimeline] = useState('')
+  // Visitor-facing copy is translated; lang starts as English on the server
+  // render and snaps to the saved/device language on mount.
+  const [lang, setLang] = useState<Lang>('en')
+  const [langOpen, setLangOpen] = useState(false)
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -189,6 +194,17 @@ function ExpiredOpenHouse() {
 }
   const [errors, setErrors] = useState<any>({})
 
+  const t = STRINGS[lang]
+  const chooseLang = (code: Lang) => {
+    setLang(code)
+    saveLang(code)
+    setLangOpen(false)
+    // Re-worded error messages would be stale in the old language.
+    setErrors({})
+  }
+
+  useEffect(() => { setLang(detectLang()) }, [])
+
   useEffect(() => {
     const fetchOpenHouse = async () => {
       // Fetch via a server route that returns ONLY safe display fields (no
@@ -220,14 +236,22 @@ function ExpiredOpenHouse() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)
   }
 
+  // usPhoneError's specific messages ("area code can't start with...") only
+  // exist in English; other languages get the generic translated message.
+  const phoneErrMsg = (value: string) => {
+    const err = usPhoneError(value)
+    if (!err) return null
+    return lang === 'en' ? err : t.errPhone
+  }
+
   const validate = () => {
     const newErrors: any = {}
     const nameParts = `${form.firstName} ${form.lastName}`.trim().split(' ').filter(w => w.length > 0)
-    if (nameParts.length < 2) newErrors.name = 'Please enter your first and last name'
-    if (!validateEmail(form.email)) newErrors.email = 'Please enter a valid email address'
-    const phoneErr = usPhoneError(form.phone)
+    if (nameParts.length < 2) newErrors.name = t.errName
+    if (!validateEmail(form.email)) newErrors.email = t.errEmail
+    const phoneErr = phoneErrMsg(form.phone)
     if (phoneErr) newErrors.phone = phoneErr
-    if (!selectedTimeline) newErrors.timeline = 'Please select a purchasing timeline'
+    if (!selectedTimeline) newErrors.timeline = t.errTimeline
     return newErrors
   }
 
@@ -256,10 +280,12 @@ function ExpiredOpenHouse() {
       if (data.success) {
         setSubmitted(true)
       } else {
-        setErrors({ submit: data.error || 'Something went wrong. Please try again.' })
+        // Server errors (rate limits, trial caps) are specific and
+        // English-only; show them verbatim rather than a vaguer translation.
+        setErrors({ submit: data.error || t.errSubmit })
       }
     } catch {
-      setErrors({ submit: 'Something went wrong. Please try again.' })
+      setErrors({ submit: t.errSubmit })
     } finally {
       setSubmitting(false)
     }
@@ -267,7 +293,7 @@ function ExpiredOpenHouse() {
 
   if (loading) return (
     <main style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      <div style={{ fontSize: '16px', color: '#6e6e73' }}>Loading...</div>
+      <div style={{ fontSize: '16px', color: '#6e6e73' }}>{t.loading}</div>
     </main>
   )
 
@@ -309,19 +335,63 @@ function ExpiredOpenHouse() {
     marginTop: '13px'
   }
 
-  const timelines = ['0–3 Months', '3–6 Months', '6–12 Months', '12+ Months']
+  const timelines = TIMELINE_VALUES
 
   return (
     <main style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: '40px' }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
 
       {/* Header */}
-      <div style={{ background: primaryColor, width: '100%', padding: '22px 20px 16px', textAlign: 'center' }}>
+      <div style={{ background: primaryColor, width: '100%', padding: '22px 20px 16px', textAlign: 'center', position: 'relative' }}>
         <div style={{ fontSize: '20px', fontWeight: '200', color: onPrimary, letterSpacing: '-0.5px' }}>
           oh<span style={{ fontWeight: '700' }}>ACCESS</span>
         </div>
         <div style={{ fontSize: '11px', color: primaryIsLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
-          Secure open house registration
+          {t.tagline}
+        </div>
+
+        {/* Language picker — flag button, top right */}
+        <div style={{ position: 'absolute', top: '18px', right: '14px', textAlign: 'left' }}>
+          <button
+            onClick={() => setLangOpen(o => !o)}
+            aria-label="Choose language"
+            style={{
+              fontSize: '20px',
+              lineHeight: 1,
+              background: primaryIsLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.14)',
+              border: primaryIsLight ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '9px',
+              padding: '6px 8px',
+              cursor: 'pointer'
+            }}
+          >
+            {LANGS.find(l => l.code === lang)?.flag}
+          </button>
+          {langOpen && (
+            <div style={{ position: 'absolute', right: 0, top: '42px', background: 'white', border: '1px solid #d1d1d6', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.14)', padding: '6px', zIndex: 10, minWidth: '160px' }}>
+              {LANGS.map(l => (
+                <div
+                  key={l.code}
+                  onClick={() => chooseLang(l.code)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '9px',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#1d1d1f',
+                    fontWeight: lang === l.code ? '700' : '400',
+                    background: lang === l.code ? '#f5f5f7' : 'transparent'
+                  }}
+                >
+                  <span style={{ fontSize: '17px' }}>{l.flag}</span> {l.label}
+                  {lang === l.code && <span style={{ marginLeft: 'auto', fontSize: '12px' }}>✓</span>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -345,21 +415,21 @@ function ExpiredOpenHouse() {
             {/* Name fields */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div>
-                <label style={labelStyle}>First Name <span style={{ color: '#ff3b30' }}>*</span></label>
+                <label style={labelStyle}>{t.firstName} <span style={{ color: '#ff3b30' }}>*</span></label>
                 <input
                   style={{ ...inputStyle, border: errors.name ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
                   type="text"
-                  placeholder="First"
+                  placeholder={t.firstNamePlaceholder}
                   value={form.firstName}
                   onChange={e => setForm({ ...form, firstName: e.target.value })}
                 />
               </div>
               <div>
-                <label style={labelStyle}>Last Name <span style={{ color: '#ff3b30' }}>*</span></label>
+                <label style={labelStyle}>{t.lastName} <span style={{ color: '#ff3b30' }}>*</span></label>
                 <input
                   style={{ ...inputStyle, border: errors.name ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
                   type="text"
-                  placeholder="Last"
+                  placeholder={t.lastNamePlaceholder}
                   value={form.lastName}
                   onChange={e => setForm({ ...form, lastName: e.target.value })}
                 />
@@ -368,11 +438,11 @@ function ExpiredOpenHouse() {
             {errors.name && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.name}</div>}
 
             {/* Email */}
-            <label style={labelStyle}>Valid Email Address <span style={{ color: '#ff3b30' }}>*</span></label>
+            <label style={labelStyle}>{t.email} <span style={{ color: '#ff3b30' }}>*</span></label>
             <input
               style={{ ...inputStyle, border: errors.email ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
               type="email"
-              placeholder="you@email.com"
+              placeholder={t.emailPlaceholder}
               value={form.email}
               onChange={e => {
                 setForm({ ...form, email: e.target.value })
@@ -380,14 +450,14 @@ function ExpiredOpenHouse() {
               }}
               onBlur={() => {
                 if (!validateEmail(form.email) && form.email) {
-                  setErrors({ ...errors, email: 'Please enter a valid email address' })
+                  setErrors({ ...errors, email: t.errEmail })
                 }
               }}
             />
             {errors.email && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.email}</div>}
 
             {/* Phone */}
-            <label style={labelStyle}>Valid Phone Number <span style={{ color: '#ff3b30' }}>*</span></label>
+            <label style={labelStyle}>{t.phone} <span style={{ color: '#ff3b30' }}>*</span></label>
             <input
               style={{ ...inputStyle, border: errors.phone ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
               type="tel"
@@ -399,51 +469,52 @@ function ExpiredOpenHouse() {
                 // Flag a bad number the moment a full one is entered; stay quiet
                 // while they're still typing.
                 const complete = next.replace(/\D/g, '').length >= 10
-                setErrors({ ...errors, phone: complete ? usPhoneError(next) : null })
+                setErrors({ ...errors, phone: complete ? phoneErrMsg(next) : null })
               }}
               onBlur={() => {
-                if (form.phone) setErrors({ ...errors, phone: usPhoneError(form.phone) })
+                if (form.phone) setErrors({ ...errors, phone: phoneErrMsg(form.phone) })
               }}
             />
             {errors.phone && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.phone}</div>}
 
-            {/* Timeline */}
-            <label style={labelStyle}>Purchasing Timeline <span style={{ color: '#ff3b30' }}>*</span></label>
+            {/* Timeline — the submitted value stays the English
+                TIMELINE_VALUES entry; only the visible label is translated. */}
+            <label style={labelStyle}>{t.timeline} <span style={{ color: '#ff3b30' }}>*</span></label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '4px' }}>
-              {timelines.map(t => (
+              {timelines.map((tv, i) => (
                 <div
-                  key={t}
-                  onClick={() => { setSelectedTimeline(t); setErrors({ ...errors, timeline: null }) }}
+                  key={tv}
+                  onClick={() => { setSelectedTimeline(tv); setErrors({ ...errors, timeline: null }) }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '7px',
-                    background: selectedTimeline === t ? '#f0f0f0' : '#f5f5f7',
-                    border: selectedTimeline === t ? `1px solid ${primaryText}` : '1px solid #d1d1d6',
+                    background: selectedTimeline === tv ? '#f0f0f0' : '#f5f5f7',
+                    border: selectedTimeline === tv ? `1px solid ${primaryText}` : '1px solid #d1d1d6',
                     borderRadius: '9px',
                     padding: '9px 11px',
                     cursor: 'pointer',
                     fontSize: '12px',
-                    color: selectedTimeline === t ? primaryText : '#6e6e73',
-                    fontWeight: selectedTimeline === t ? '600' : '400'
+                    color: selectedTimeline === tv ? primaryText : '#6e6e73',
+                    fontWeight: selectedTimeline === tv ? '600' : '400'
                   }}
                 >
                   <div style={{
                     width: '13px',
                     height: '13px',
                     borderRadius: '50%',
-                    border: selectedTimeline === t ? `1.5px solid ${primaryText}` : '1.5px solid #d1d1d6',
-                    background: selectedTimeline === t ? primaryColor : 'transparent',
+                    border: selectedTimeline === tv ? `1.5px solid ${primaryText}` : '1.5px solid #d1d1d6',
+                    background: selectedTimeline === tv ? primaryColor : 'transparent',
                     flexShrink: 0,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    {selectedTimeline === t && (
+                    {selectedTimeline === tv && (
                       <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: onPrimary }} />
                     )}
                   </div>
-                  {t}
+                  {t.timelines[i]}
                 </div>
               ))}
             </div>
@@ -469,7 +540,7 @@ function ExpiredOpenHouse() {
                 opacity: submitting ? 0.7 : 1
               }}
             >
-              {submitting ? 'Sending your code...' : 'Request Access Code →'}
+              {submitting ? t.submitting : t.requestBtn}
             </button>
 
             {errors.submit && (
@@ -480,17 +551,20 @@ function ExpiredOpenHouse() {
 
             {/* TOS */}
             <div style={{ marginTop: '14px', padding: '13px 15px', background: '#f5f5f7', borderRadius: '10px', fontSize: '12px', color: '#48484a', lineHeight: '1.6', textAlign: 'left', border: '1px solid #e5e5ea' }}>
-              By entering your number and tapping <strong style={{ color: '#1d1d1f' }}>Request Access Code</strong>, you agree to receive a one-time SMS access code from ohACCESS to enter this open house. Message &amp; data rates may apply. Reply STOP to opt out, HELP for help.<br /><br />
-              You also agree to the{' '}
+              {t.consentSms.split('{button}')[0]}
+              <strong style={{ color: '#1d1d1f' }}>{t.requestBtnName}</strong>
+              {t.consentSms.split('{button}')[1]}<br /><br />
+              {t.agreePrefix}
               <a href="/terms" style={{ color: '#1d1d1f', fontWeight: '700', textDecoration: 'underline' }}>
-                ohACCESS Terms of Service & Privacy Policy
-              </a>, and consent to be contacted by the listing agent via phone, text, and email about this and other properties.
+                {t.termsLink}
+              </a>{t.agreeSuffix}
+              {t.englishGoverns && <> {t.englishGoverns}</>}
             </div>
 
             {/* Alternative to acceptance — preserves the validity of consent
                 by giving the visitor an obvious, named alternative path. */}
             <div style={{ marginTop: '10px', padding: '13px 15px', background: '#fdfaf3', borderRadius: '10px', fontSize: '12px', color: '#48484a', lineHeight: '1.6', textAlign: 'left', border: '1px solid #ead9ad' }}>
-              <strong style={{ color: '#1d1d1f' }}>Prefer not to register?</strong> You&apos;re welcome to schedule a private showing of this — or any — listed property with the buyer&apos;s agent of your choice. Under NAR rules effective August&nbsp;17,&nbsp;2024, you&apos;ll need a written buyer representation agreement with that agent before they can show you the home; most agents can prepare one on the spot. ohACCESS registration is required only to attend today&apos;s open house.
+              <strong style={{ color: '#1d1d1f' }}>{t.narTitle}</strong> {t.narBody}
             </div>
           </>
         ) : (
@@ -500,23 +574,23 @@ function ExpiredOpenHouse() {
               ✓
             </div>
             <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>
-              Thank you!
+              {t.thankYou}
             </div>
             <div style={{ fontSize: '14px', color: '#6e6e73', background: '#f5f5f7', borderRadius: '12px', padding: '14px 20px', marginBottom: '16px', lineHeight: '1.6' }}>
-The access code was sent to your phone, with a backup code sent to your email. <br/><br/>At the door, share your SMS code with the host to be granted access.
+{t.sentBody1} <br/><br/>{t.sentBody2}
             </div>
             <div style={{ fontSize: '15px', color: '#6e6e73', marginBottom: '14px' }}>
               {openHouse.property_address}<br />
               {openHouse.open_house_date} · {openHouse.open_house_hours}
             </div>
             <div style={{ fontSize: '12px', color: accentText, fontWeight: '600' }}>
-                ✓ Access code was sent to your phone.
+                {t.checkPhone}
               </div>
               <div style={{ fontSize: '12px', color: accentText, fontWeight: '600', marginTop: '4px' }}>
-                ✓ Backup code was sent to your email.
+                {t.checkEmail}
               </div>
               <div style={{ fontSize: '12px', color: accentText, fontWeight: '600', marginTop: '4px' }}>
-                ✓ Agent has been notified of your arrival.
+                {t.checkAgent}
               </div>
           </div>
         )}
