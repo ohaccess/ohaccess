@@ -122,7 +122,10 @@ function buildReminderHtml(args: {
     <div style="background:${e(primary)};border-radius:14px;padding:20px 22px;color:white;">
       <div style="font-size:18px;font-weight:200;letter-spacing:-0.5px;">oh<span style="font-weight:700;">ACCESS</span></div>
       <div style="font-size:20px;font-weight:700;margin-top:8px;">Your open house is coming up</div>
-      <div style="font-size:13px;opacity:0.7;margin-top:2px;">${e(address)}</div>
+      <!-- Pre-wrapped in a white, underline-free anchor so mail clients'
+           address auto-linking can't restyle it link-blue against the dark
+           header (the tappable Maps link lives in "When & where" below). -->
+      <div style="font-size:13px;opacity:0.7;margin-top:2px;"><a href="${e(mapsUrl)}" style="color:#ffffff;text-decoration:none;">${e(address)}</a></div>
     </div>
 
     <div style="font-size:14px;margin-top:20px;">Hi ${e(agentName)}, a quick heads-up and pre-flight checklist ahead of your open house.</div>
