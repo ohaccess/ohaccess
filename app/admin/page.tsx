@@ -25,6 +25,7 @@ type Agent = {
   id: string
   name: string
   email: string
+  phone: string
   brokerage: string
   tier: string
   role: string
@@ -53,6 +54,7 @@ type OpenHouse = {
   end_at: string | null
   status: string
   code_word: string
+  when: 'past' | 'current' | 'future'
   isPast: boolean
   visitorCount: number
   created_at: string
@@ -80,7 +82,7 @@ type Payload = {
 }
 
 type Tab = 'overview' | 'agents' | 'openhouses' | 'visitors' | 'map'
-type OHFilter = 'all' | 'upcoming' | 'past'
+type OHFilter = 'all' | 'live' | 'upcoming' | 'past'
 
 // ---- styling tokens (match existing app) ----
 const INK = '#1d1d1f'
@@ -571,6 +573,9 @@ export default function AdminDashboard() {
 
   const q = query.trim().toLowerCase()
 
+  // Phone search matches on digits so "(817) 555-1234", "817-555-1234", and
+  // "8175551234" all find the same agent.
+  const qDigits = q.replace(/\D/g, '')
   const filteredAgents = useMemo(() => {
     if (!data) return []
     return data.agents.filter(
@@ -578,6 +583,7 @@ export default function AdminDashboard() {
         !q ||
         a.name.toLowerCase().includes(q) ||
         a.email.toLowerCase().includes(q) ||
+        (qDigits.length >= 4 && a.phone.replace(/\D/g, '').includes(qDigits)) ||
         a.brokerage.toLowerCase().includes(q) ||
         a.referral_source.toLowerCase().includes(q)
     )
@@ -586,7 +592,12 @@ export default function AdminDashboard() {
   const filteredOpenHouses = useMemo(() => {
     if (!data) return []
     return data.openHouses
-      .filter((o) => (ohFilter === 'all' ? true : ohFilter === 'past' ? o.isPast : !o.isPast))
+      .filter((o) =>
+        ohFilter === 'all' ? true :
+        ohFilter === 'live' ? o.when === 'current' :
+        ohFilter === 'upcoming' ? o.when === 'future' :
+        o.when === 'past'
+      )
       .filter(
         (o) =>
           !q ||
@@ -700,7 +711,7 @@ export default function AdminDashboard() {
                 accent="#cc0000"
               />
             )}
-            <Kpi label="Open Houses" value={data.stats.totalOpenHouses} sub={`${data.stats.upcomingOpenHouses} upcoming · ${data.stats.pastOpenHouses} past`} />
+            <Kpi label="Open Houses" value={data.stats.totalOpenHouses} sub={`${data.stats.upcomingOpenHouses} live/upcoming · ${data.stats.pastOpenHouses} past`} />
             <Kpi label="Total Visitors" value={data.stats.totalVisitors} sub={`+${data.stats.visitorsThisWeek} this week`} accent={BLUE} />
             <Kpi label="Verified Visitors" value={data.stats.verifiedVisitors} sub={`${data.stats.totalVisitors - data.stats.verifiedVisitors} unverified`} />
           </div>
@@ -739,7 +750,7 @@ export default function AdminDashboard() {
               />
               {tab === 'openhouses' && (
                 <div style={{ display: 'flex', gap: 4 }}>
-                  {(['all', 'upcoming', 'past'] as OHFilter[]).map((f) => (
+                  {(['all', 'live', 'upcoming', 'past'] as OHFilter[]).map((f) => (
                     <button
                       key={f}
                       onClick={() => setOhFilter(f)}
@@ -855,9 +866,14 @@ export default function AdminDashboard() {
 
           {tab === 'map' && (
             <OpenHouseMap
-              onViewAgent={(search) => {
+              onViewAgent={(agent) => {
                 setTab('agents')
-                setQuery(search)
+                // The pin shows the agent's PUBLIC display email, which can
+                // differ from the login email the Agents table carries — so
+                // resolve by id to the login email the search will match.
+                // Fallbacks (phone digits, then name) cover odd data.
+                const match = data.agents.find((a) => a.id === agent.id)
+                setQuery(match?.email || agent.phone.replace(/\D/g, '') || agent.name)
               }}
             />
           )}
@@ -902,7 +918,7 @@ function exportCurrent(
         o.agentName,
         o.start_at ? fmtDateTime(o.start_at) : o.open_house_date,
         o.open_house_hours,
-        o.isPast ? 'Past' : 'Upcoming',
+        o.when === 'current' ? 'Live now' : o.when === 'future' ? 'Upcoming' : 'Past',
         o.code_word,
         o.listing_price,
         o.visitorCount,
@@ -1238,7 +1254,7 @@ const OH_ACC: Record<string, (o: OpenHouse) => Sortable> = {
       : o.open_house_date && !Number.isNaN(Date.parse(o.open_house_date))
       ? Date.parse(o.open_house_date)
       : new Date(o.created_at).getTime(),
-  status: (o) => (o.isPast ? 1 : 0),
+  status: (o) => (o.when === 'current' ? 0 : o.when === 'future' ? 1 : 2),
   code_word: (o) => o.code_word,
   visitorCount: (o) => o.visitorCount,
 }
@@ -1281,10 +1297,12 @@ function OpenHousesTable({
               {o.open_house_hours && !o.start_at && <div style={{ fontSize: 12, color: SUB }}>{o.open_house_hours}</div>}
             </td>
             <td style={td}>
-              {o.isPast ? (
-                <Badge text="Past" color={SUB} bg="#f0f0f2" />
+              {o.when === 'current' ? (
+                <Badge text="Live now" color={GREEN} bg="#e6f6ec" />
+              ) : o.when === 'future' ? (
+                <Badge text="Upcoming" color={BLUE} bg="#e8f1fd" />
               ) : (
-                <Badge text="Upcoming" color={GREEN} bg="#e6f6ec" />
+                <Badge text="Past" color={SUB} bg="#f0f0f2" />
               )}
             </td>
             <td style={{ ...td, fontFamily: 'monospace' }}>{o.code_word || '—'}</td>

@@ -87,7 +87,7 @@ export default function OpenHouseMap({
   onViewAgent,
 }: {
   shareCode?: string
-  onViewAgent?: (search: string) => void
+  onViewAgent?: (agent: { id: string; name: string; phone: string; email: string }) => void
 }) {
   const mapDiv = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
@@ -187,7 +187,7 @@ export default function OpenHouseMap({
           holder.innerHTML = infoWindowHtml(pin, !!viewAgentRef.current)
           holder.querySelector('[data-view-agent]')?.addEventListener('click', () => {
             info.close()
-            viewAgentRef.current?.(pin.agent.email || pin.agent.name)
+            viewAgentRef.current?.(pin.agent)
           })
           info.setContent(holder)
           info.open({ map, anchor: marker })

@@ -1,11 +1,13 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser, isAdmin } from '@/lib/auth'
+import { ohStatus } from '@/lib/oh-status'
 
 type ProfileRow = {
   id: string
   full_name: string | null
   email: string | null
+  phone: string | null
   brokerage: string | null
   brokerage_id: string | null
   tier: string | null
@@ -63,7 +65,7 @@ export async function GET(request: Request) {
     supabase
       .from('profiles')
       .select(
-        'id, full_name, email, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, bonus_visitors, referral_source, created_at'
+        'id, full_name, email, phone, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, bonus_visitors, referral_source, created_at'
       )
       .order('created_at', { ascending: false }),
     supabase
@@ -128,23 +130,6 @@ export async function GET(request: Request) {
     if (oh.agent_id) openHousesByAgent.set(oh.agent_id, (openHousesByAgent.get(oh.agent_id) || 0) + 1)
   }
 
-  // Start of "today" (server tz) for day-level comparison of legacy dates.
-  const startOfToday = new Date(now)
-  startOfToday.setHours(0, 0, 0, 0)
-
-  // Classify an open house as past or upcoming/present.
-  const isPastOpenHouse = (oh: OpenHouseRow): boolean => {
-    if (oh.end_at) return new Date(oh.end_at).getTime() < now
-    if (oh.start_at) return new Date(oh.start_at).getTime() < now
-    // Legacy rows have no machine-readable time — fall back to the free-text
-    // date (e.g. "Sunday, May 24, 2026"). Past if its day is before today.
-    if (oh.open_house_date) {
-      const t = Date.parse(oh.open_house_date)
-      if (!Number.isNaN(t)) return t < startOfToday.getTime()
-    }
-    return (oh.status || '').toLowerCase() === 'archived'
-  }
-
   // A team MEMBER (not the owner/admin) who still has an active personal
   // subscription that isn't already winding down is being double-charged: the
   // team covers their seat AND Stripe is still billing them. Flag for one-click
@@ -161,6 +146,7 @@ export async function GET(request: Request) {
     id: p.id,
     name: agentName.get(p.id) || 'Unknown',
     email: p.email || '',
+    phone: p.phone || '',
     brokerage: p.brokerage || '',
     tier: p.tier || 'free',
     role: p.role || 'agent',
@@ -179,22 +165,28 @@ export async function GET(request: Request) {
   }))
 
   // ---- Open houses ----
-  const openHouseRows = openHouses.map((oh) => ({
-    id: oh.id,
-    address: ohAddress.get(oh.id) || 'Untitled listing',
-    agentId: oh.agent_id || '',
-    agentName: oh.agent_id ? agentName.get(oh.agent_id) || 'Unknown' : 'Unknown',
-    listing_price: oh.listing_price || '',
-    open_house_date: oh.open_house_date || '',
-    open_house_hours: oh.open_house_hours || '',
-    start_at: oh.start_at,
-    end_at: oh.end_at,
-    status: oh.status || '',
-    code_word: oh.code_word || '',
-    isPast: isPastOpenHouse(oh),
-    visitorCount: visitorsByOpenHouse.get(oh.id) || 0,
-    created_at: oh.created_at,
-  }))
+  // Three-way when: past / current (live right now) / future — same shared
+  // helper the Map tab pins use, so table badges and pin colors always agree.
+  const openHouseRows = openHouses.map((oh) => {
+    const when = ohStatus(oh, now)
+    return {
+      id: oh.id,
+      address: ohAddress.get(oh.id) || 'Untitled listing',
+      agentId: oh.agent_id || '',
+      agentName: oh.agent_id ? agentName.get(oh.agent_id) || 'Unknown' : 'Unknown',
+      listing_price: oh.listing_price || '',
+      open_house_date: oh.open_house_date || '',
+      open_house_hours: oh.open_house_hours || '',
+      start_at: oh.start_at,
+      end_at: oh.end_at,
+      status: oh.status || '',
+      code_word: oh.code_word || '',
+      when,
+      isPast: when === 'past',
+      visitorCount: visitorsByOpenHouse.get(oh.id) || 0,
+      created_at: oh.created_at,
+    }
+  })
 
   // ---- Visitors ----
   const visitorRows = visitors.map((v) => ({

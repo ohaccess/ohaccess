@@ -1,4 +1,5 @@
 import { supabaseAdmin as supabase } from './supabase-admin'
+import { ohStatus, type OhStatus } from './oh-status'
 
 // Shared data source for the open-house map: every open house in the system
 // with geocoded coordinates, a past/current/future status, and agent contact
@@ -9,7 +10,7 @@ import { supabaseAdmin as supabase } from './supabase-admin'
 // of silently vanishing from the map.
 
 type PinAgent = { id: string; name: string; phone: string; email: string }
-export type PinStatus = 'past' | 'current' | 'future'
+export type PinStatus = OhStatus
 export type MapPin = {
   id: string
   address: string
@@ -46,28 +47,6 @@ async function geocode(address: string): Promise<{ lat: number; lng: number } | 
   }
 }
 
-// Where does this open house sit relative to now? Structured start_at/end_at
-// when present; legacy rows fall back to the free-text date (counted as
-// "current" for its whole day, matching how /r/[code] treats day precision).
-function pinStatus(
-  oh: { start_at: string | null; end_at: string | null; open_house_date: string | null },
-  now: number
-): PinStatus {
-  const start = oh.start_at ? Date.parse(oh.start_at) : NaN
-  const end = oh.end_at ? Date.parse(oh.end_at) : NaN
-  if (!Number.isNaN(start)) {
-    if (now < start) return 'future'
-    if (!Number.isNaN(end) && now <= end) return 'current'
-    return 'past'
-  }
-  const day = oh.open_house_date ? Date.parse(oh.open_house_date) : NaN
-  if (!Number.isNaN(day)) {
-    if (now < day) return 'future'
-    if (now <= day + 24 * 60 * 60 * 1000) return 'current'
-  }
-  return 'past'
-}
-
 export async function buildMapPayload(): Promise<MapPayload | null> {
   const { data: rows, error } = await supabase
     .from('open_houses')
@@ -96,7 +75,7 @@ export async function buildMapPayload(): Promise<MapPayload | null> {
         startAt: oh.start_at || null,
         endAt: oh.end_at || null,
         listingUrl: /^https?:\/\//i.test(oh.listing_url || '') ? oh.listing_url : null,
-        status: pinStatus(oh, now),
+        status: ohStatus(oh, now),
         agent: {
           id: profile?.id || oh.agent_id || '',
           name: profile?.full_name || 'Unknown agent',
