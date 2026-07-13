@@ -89,7 +89,9 @@ function buildReminderHtml(args: {
   accent: string
   logoUrl: string | null
   ohQrUrl: string
+  ohSignUrl: string
   universalQrUrl: string | null
+  universalSignUrl: string | null
   smsSample: string
   emailCodeWord: string
   referralUrl: string | null
@@ -97,7 +99,8 @@ function buildReminderHtml(args: {
   const e = escapeHtml
   const {
     agentName, address, streetAddress, dayLine, timeLine, primary, accent,
-    logoUrl, ohQrUrl, universalQrUrl, smsSample, emailCodeWord, referralUrl,
+    logoUrl, ohQrUrl, ohSignUrl, universalQrUrl, universalSignUrl,
+    smsSample, emailCodeWord, referralUrl,
   } = args
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 
@@ -142,10 +145,17 @@ function buildReminderHtml(args: {
     <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
       ${sectionTitle('Bring your sign')}
       <div style="font-size:14px;line-height:1.7;">
-        Pack your ohACCESS sign with the QR code — either works:
+        Pack your ohACCESS sign with the QR code — either code works:
         <div style="margin-top:6px;">
-          • <a href="${e(ohQrUrl)}" style="color:${e(accent)};font-weight:600;">Download this open house's QR code</a><br/>
-          ${universalQrUrl ? `• <a href="${e(universalQrUrl)}" style="color:${e(accent)};font-weight:600;">Download your universal QR code</a> <span style="color:#6e6e73;">(never goes stale — it always points to your next open house)</span>` : ''}
+          <strong>This open house's QR:</strong>
+          <a href="${e(ohSignUrl)}" style="color:${e(accent)};font-weight:600;">🖨 Print branded sign</a>
+          <span style="color:#aeaeb2;">·</span>
+          <a href="${e(ohQrUrl)}" style="color:${e(accent)};font-weight:600;">download QR only (PNG)</a><br/>
+          ${universalQrUrl && universalSignUrl ? `<strong>Your universal QR:</strong>
+          <a href="${e(universalSignUrl)}" style="color:${e(accent)};font-weight:600;">🖨 Print branded sign</a>
+          <span style="color:#aeaeb2;">·</span>
+          <a href="${e(universalQrUrl)}" style="color:${e(accent)};font-weight:600;">download QR only (PNG)</a>
+          <span style="color:#6e6e73;">(never goes stale — it always points to your next open house)</span>` : ''}
         </div>
       </div>
       <div style="font-size:13px;color:#6e6e73;line-height:1.6;margin-top:10px;">
@@ -261,13 +271,16 @@ async function handle(request: Request) {
       if (brokerage?.logo_url) brandLogo = brokerage.logo_url
     }
 
-    // QR download links: the per-event code, plus the agent's permanent code
-    // (created lazily here if they've never opened the QR panel).
+    // Sign + QR links for the per-event code and the agent's permanent code
+    // (created lazily here if they've never opened the QR panel). /api/sign
+    // serves the same printable branded sign as the dashboard QR modal.
     const ohQrUrl = `${APP_URL}/api/qrcode?url=${encodeURIComponent(`https://ohaccess.com/register/${oh.id}`)}`
+    const ohSignUrl = `${APP_URL}/api/sign?oh=${oh.id}`
     const agentQrCode = await getOrCreateShortUrl(oh.agent_id, 'agent_qr', () => 'https://ohaccess.com')
     const universalQrUrl = agentQrCode
       ? `${APP_URL}/api/qrcode?url=${encodeURIComponent(`https://ohaccess.com/r/${agentQrCode}`)}`
       : null
+    const universalSignUrl = agentQrCode ? `${APP_URL}/api/sign?code=${agentQrCode}` : null
 
     // Referral nudge is Pro-only by design — team/brokerage members don't pay
     // their own renewal, so there's nothing for the reward to attach to
@@ -300,7 +313,9 @@ async function handle(request: Request) {
       accent: agent?.accent_color && isHexColor(agent.accent_color) ? agent.accent_color : '#0071e3',
       logoUrl: safeUrl(brandLogo) || null,
       ohQrUrl,
+      ohSignUrl,
       universalQrUrl,
+      universalSignUrl,
       smsSample,
       emailCodeWord,
       referralUrl,
