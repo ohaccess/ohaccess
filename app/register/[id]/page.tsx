@@ -42,7 +42,7 @@ function ExpiredOpenHouse() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email)) newErrors.email = 'Please enter a valid email'
     const phoneErr = usPhoneError(form.phone)
     if (phoneErr) newErrors.phone = phoneErr
-    if (!form.zip.trim()) newErrors.zip = 'Please enter your zip code'
+    if (!form.zip.trim()) newErrors.zip = 'Please enter your zip / postal code'
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return }
 
     setSubmitting(true)
@@ -148,14 +148,14 @@ function ExpiredOpenHouse() {
             </div>
 
             <div>
-              <label style={labelStyle}>Zip Code <span style={{ color: '#ff3b30' }}>*</span></label>
+              <label style={labelStyle}>Zip / Postal Code <span style={{ color: '#ff3b30' }}>*</span></label>
               <input
                 style={{ ...inputStyle, border: errors.zip ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
                 type="text"
                 placeholder="75201"
                 value={form.zip}
                 onChange={e => { setForm({ ...form, zip: e.target.value }); setErrors({ ...errors, zip: null }) }}
-                maxLength={5}
+                maxLength={7}
               />
               {errors.zip && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.zip}</div>}
             </div>

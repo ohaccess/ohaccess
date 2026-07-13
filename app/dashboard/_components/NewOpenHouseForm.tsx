@@ -119,11 +119,11 @@ export default function NewOpenHouseForm({
             <input style={inputStyle} type="text" placeholder="Auto-filled" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} />
           </div>
           <div>
-            <label style={labelStyle}>State <span style={{ color: '#ff3b30' }}>*</span></label>
+            <label style={labelStyle}>State / Province <span style={{ color: '#ff3b30' }}>*</span></label>
             <input style={inputStyle} type="text" placeholder="Auto-filled" value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} />
           </div>
           <div>
-            <label style={labelStyle}>Zip Code</label>
+            <label style={labelStyle}>Zip / Postal Code</label>
             <input style={inputStyle} type="text" placeholder="Auto-filled" value={form.zip_code} onChange={e => setForm({ ...form, zip_code: e.target.value })} />
           </div>
           <div>

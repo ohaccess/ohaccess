@@ -26,7 +26,7 @@ export function normalizePhone(input: string | null | undefined): string | null 
 export function usPhoneError(input: string | null | undefined): string | null {
   const raw = (input || '').replace(/\D/g, '')
   const d = raw.length === 11 && raw.startsWith('1') ? raw.slice(1) : raw
-  if (d.length < 10) return 'Please enter a 10-digit US phone number.'
+  if (d.length < 10) return 'Please enter a 10-digit US or Canadian phone number.'
   if (d.length > 10) return 'That number has too many digits.'
   const area = d.slice(0, 3)
   const exch = d.slice(3, 6)

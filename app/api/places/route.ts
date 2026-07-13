@@ -80,7 +80,9 @@ export async function GET(request: Request) {
   }
 
   const res = await fetch(
-    `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input!)}&types=address&components=country:us&key=${apiKey}`
+    // US + Canada — Canadian components map cleanly (province -> state
+    // short_name like ON, postal code -> zip).
+    `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input!)}&types=address&components=${encodeURIComponent('country:us|country:ca')}&key=${apiKey}`
   )
   const data = await res.json()
   if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
