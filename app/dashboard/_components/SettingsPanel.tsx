@@ -332,6 +332,83 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
   )
 }
 
+// "Refer an agent" — PRO-ONLY by design (Dave's call): team/brokerage seats
+// are paid by the company, so a renewal-credit reward has nothing to attach
+// to. The API enforces the same gate server-side; this section simply doesn't
+// render for anyone else. The link is created lazily on first open of
+// Settings and is stable forever after.
+function ReferralSection({ profile }: { profile: any }) {
+  const [link, setLink] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const eligible = profile?.tier === 'pro' && !isExpiredPrepaidAccess(profile)
+
+  useEffect(() => {
+    if (!eligible || link) return
+    let cancelled = false
+    const load = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      try {
+        const res = await fetch('/api/referral-link', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled && data.shortUrl) setLink(data.shortUrl)
+      } catch { /* card just stays hidden on failure */ }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [eligible, link])
+
+  if (!eligible || !link) return null
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch { /* clipboard unavailable — the link is still selectable */ }
+  }
+
+  // Share buttons open the AGENT'S own mail/messages app with a pre-written
+  // note — the invite comes from them personally (converts better) and never
+  // touches our email domain (protects code-word deliverability).
+  const shareMessage = `I've been using ohACCESS to run verified open-house sign-ins — visitors scan a QR code and I get clean, verified leads with no paper sheet. Here's my link if you want to try it: ${link}`
+  const mailHref = `mailto:?subject=${encodeURIComponent('Try ohACCESS for your open houses')}&body=${encodeURIComponent(shareMessage)}`
+  // `?&body=` is the cross-platform form both iOS and Android accept.
+  const smsHref = `sms:?&body=${encodeURIComponent(shareMessage)}`
+  const shareBtnStyle: CSSProperties = { display: 'inline-block', background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '9px', padding: '10px 14px', fontSize: '13px', fontWeight: '700', textDecoration: 'none', fontFamily: "'Plus Jakarta Sans', sans-serif" }
+
+  return (
+    <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+      <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
+        🎁 Refer an agent
+      </div>
+      <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '12px' }}>
+        Share your personal link with other agents. When someone you refer becomes a paying ohACCESS subscriber, you earn <strong style={{ color: '#1d1d1f' }}>a free month of Pro</strong> — added onto your annual or 2-year plan, or a $15 credit on your next bill if you&apos;re month-to-month.
+      </div>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <input
+          readOnly
+          value={link}
+          onFocus={(e) => e.target.select()}
+          style={{ flex: '1 1 220px', background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '9px', padding: '10px 12px', fontSize: '13px', color: '#1d1d1f', fontFamily: 'monospace' }}
+        />
+        <button
+          onClick={copy}
+          style={{ background: '#1d1d1f', color: 'white', border: 'none', borderRadius: '9px', padding: '10px 18px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        >
+          {copied ? 'Copied ✓' : 'Copy link'}
+        </button>
+        <a href={mailHref} style={shareBtnStyle}>✉️ Email it</a>
+        <a href={smsHref} style={shareBtnStyle}>💬 Text it</a>
+      </div>
+    </div>
+  )
+}
+
 export default function SettingsPanel({
   profile,
   setProfile,
@@ -398,6 +475,8 @@ export default function SettingsPanel({
           onChanged={onSubscriptionChanged}
         />
       )}
+
+      <ReferralSection profile={profile} />
 
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agent profile</div>
