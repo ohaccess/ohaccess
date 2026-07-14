@@ -41,6 +41,7 @@ function buildReportHtml(args: {
 }): string {
   const { agentName, address, primary, accent, logoUrl, visitors, tz } = args
   const verified = visitors.filter(v => v.verified).length
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 
   // Group by timeline, preserving the priority order then "Other".
   const groups: { label: string; rows: Visitor[] }[] = []
@@ -76,7 +77,10 @@ function buildReportHtml(args: {
     <div style="background:${escapeHtml(primary)};border-radius:14px;padding:20px 22px;color:white;">
       <div style="font-size:18px;font-weight:200;letter-spacing:-0.5px;">oh<span style="font-weight:700;">ACCESS</span></div>
       <div style="font-size:20px;font-weight:700;margin-top:8px;">Your open house report</div>
-      <div style="font-size:13px;opacity:0.7;margin-top:2px;">${escapeHtml(address)}</div>
+      <!-- Pre-wrapped in a white, underline-free anchor so mail clients'
+           address auto-linking can't restyle it link-blue against the dark
+           header (same fix as the reminder email). -->
+      <div style="font-size:13px;opacity:0.7;margin-top:2px;"><a href="${escapeHtml(mapsUrl)}" style="color:#ffffff;text-decoration:none;">${escapeHtml(address)}</a></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:16px;">
       <div style="flex:1;background:#f5f5f7;border-radius:12px;padding:14px;text-align:center;">
