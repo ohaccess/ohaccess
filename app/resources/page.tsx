@@ -201,14 +201,14 @@ export default function Resources() {
             🪧 Open house essentials
           </div>
           <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
-            Our favorite sign stands and displays for showing your QR welcome sign at the door — and guiding visitors in from the street.
+            Our favorite sign stands and displays for showing your QR welcome sign on the approach to the entrance — placed where visitors can&apos;t miss it — and guiding them in from the street.
           </div>
 
           <div className="resources-grid">
             {[
-              { emoji: '🪧', name: 'A-Frame Sidewalk Sign', body: 'Double-sided sidewalk sign to guide visitors from the street to your door. Slide in a poster with your QR code and address.', url: 'https://amzn.to/4v48sQg' },
+              { emoji: '🪧', name: 'A-Frame Sidewalk Sign', body: 'Double-sided sidewalk sign to guide visitors from the street to your door. Slide in a poster with your QR code.', url: 'https://amzn.to/4v48sQg' },
               { emoji: '🏷️', name: 'Pedestal Sign Holder', body: 'Weighted floor stand for an 8.5×11" sign — ideal for your QR welcome sign right at the entrance. Adjustable height, portrait or landscape.', url: 'https://amzn.to/4vgxnAr' },
-              { emoji: '🖼️', name: 'Poster Easel Stand', body: 'Lightweight, collapsible tripod easel — a simple, budget-friendly way to prop up a foam-board welcome sign indoors.', url: 'https://amzn.to/4eNmLnH' },
+              { emoji: '🖼️', name: 'Poster Easel Stand', body: 'Lightweight, collapsible tripod easel — a simple, budget-friendly way to prop up a foam-board welcome sign indoors — ideal in condominium/apartment situations.', url: 'https://amzn.to/4eNmLnH' },
               // Hidden until there are more items to keep the grid rows even. To restore, uncomment:
               // { emoji: '✨', name: 'Gold Sign Easel', body: 'Elegant adjustable gold easel for a premium welcome sign at higher-end listings. Holds signs, posters, and framed displays.', url: 'https://amzn.to/4xZoSw4' },
             ].map(item => (
@@ -244,7 +244,7 @@ export default function Resources() {
               { emoji: '🏷️', title: 'Choose a memorable code word', body: 'Pick a code word related to the property — like ACREAGE or LAKEHOUSE. Easier for visitors to remember.' },
               { emoji: '👤', title: 'Add your landing page URL', body: 'Add your bio page, website, or Instagram in Settings so every visitor email includes a link to your profile.' },
               { emoji: '🔔', title: 'Watch for agent alerts', body: 'You receive an instant SMS when a visitor registers — so you know who\'s coming before they reach the door. Tap the link in the alert to verify the visitor and save private notes.' },
-              { emoji: '📊', title: 'Export after every open house', body: 'Export your visitor log to CSV immediately after and import into your CRM while leads are fresh.' },
+              { emoji: '📊', title: 'Export after every open house', body: 'Export your visitor log to CSV immediately after and import into your CRM while leads are fresh. Better yet, connect your CRM under Settings → "Send leads to your CRM" and every sign-in flows there automatically.' },
             ].map(tip => (
               <div key={tip.title} style={{ background: 'white', borderRadius: '14px', border: '1px solid #d1d1d6', padding: '16px' }}>
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>{tip.emoji}</div>
