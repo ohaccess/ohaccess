@@ -169,7 +169,7 @@ function buildReminderHtml(args: {
       ${sectionTitle('At the door')}
       <div style="font-size:14px;line-height:1.7;">
         ohACCESS works best when <strong>everyone</strong> scans — it's the security layer between the
-        street and your seller's home. Politely insist each visitor completes the form and shows you
+        street and your seller's home. Politely insist each visitor completes the form and shares
         their code word before touring. A script that works:
       </div>
       <div style="border-left:3px solid ${e(accent)};padding:8px 12px;margin-top:10px;font-size:14px;line-height:1.7;color:#1d1d1f;font-style:italic;">
@@ -180,7 +180,7 @@ function buildReminderHtml(args: {
       <div style="font-size:13px;color:#6e6e73;margin-top:8px;">If someone hesitates:</div>
       <div style="border-left:3px solid ${e(accent)};padding:8px 12px;margin-top:6px;font-size:14px;line-height:1.7;color:#1d1d1f;font-style:italic;">
         "Totally fair — it's required for everyone who walks through, myself included. It just confirms
-        who's in the home today; your info comes straight to me and is never sold or shared."
+        who's in the home today; your info comes straight to me and is never sold."
       </div>
     </div>
 
@@ -200,7 +200,7 @@ function buildReminderHtml(args: {
         <div style="font-size:12px;color:#6e6e73;margin-top:8px;">…plus the property details and your contact card.</div>
       </div>
       <div style="font-size:13px;line-height:1.6;margin-top:10px;color:#1d1d1f;">
-        Visitors show you the code word — that's your confirmation their contact info is real and they're checked in.
+        Visitors share the code word — that's your confirmation their contact info is real and they're checked in.
       </div>
     </div>
 

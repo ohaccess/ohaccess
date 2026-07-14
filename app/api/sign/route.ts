@@ -57,7 +57,21 @@ export async function GET(request: Request) {
     }
 
     if (!agentId || !qrTarget) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      // Friendly page instead of raw JSON — these links live in reminder
+      // emails, so a deleted open house (or a mail-app-mangled link) lands
+      // a human here, not a machine.
+      return new NextResponse(`<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>ohACCESS</title></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;justify-content:center;padding:48px 24px;">
+  <div style="max-width:420px;text-align:center;">
+    <div style="font-size:28px;font-weight:200;letter-spacing:-0.5px;">oh<span style="font-weight:700;">ACCESS</span></div>
+    <div style="font-size:16px;font-weight:700;margin-top:20px;">This sign link isn't available</div>
+    <div style="font-size:14px;color:#6e6e73;margin-top:8px;line-height:1.6;">The open house it points to may have been removed. You can print a sign anytime from your dashboard — open your open house card and tap "QR Code".</div>
+    <a href="https://www.ohaccess.com/dashboard" style="display:inline-block;margin-top:20px;background:#1d1d1f;color:#ffffff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:14px;font-weight:600;">Go to dashboard</a>
+  </div>
+</body>
+</html>`, { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
     }
 
     const { data: agent } = await supabase
