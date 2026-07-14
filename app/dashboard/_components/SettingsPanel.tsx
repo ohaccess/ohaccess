@@ -332,19 +332,20 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
   )
 }
 
-// "Refer an agent" — PRO-ONLY by design (Dave's call): team/brokerage seats
-// are paid by the company, so a renewal-credit reward has nothing to attach
-// to. The API enforces the same gate server-side; this section simply doesn't
-// render for anyone else. The link is created lazily on first open of
-// Settings and is stable forever after.
+// "Refer an agent" — shown to EVERY agent (Dave's call, 2026-07): tracking is
+// decoupled from reward, so free and team/brokerage agents can share their
+// link and referrals accrue under their code. Only the reward wording varies:
+// self-paid Pro agents earn credit now; everyone else banks it until they're
+// on their own Pro plan. The link is created lazily on first open of Settings
+// and is stable forever after.
 function ReferralSection({ profile }: { profile: any }) {
   const [link, setLink] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
-  const eligible = profile?.tier === 'pro' && !isExpiredPrepaidAccess(profile)
+  const earnsCreditNow = profile?.tier === 'pro' && !isExpiredPrepaidAccess(profile)
 
   useEffect(() => {
-    if (!eligible || link) return
+    if (link) return
     let cancelled = false
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -360,9 +361,9 @@ function ReferralSection({ profile }: { profile: any }) {
     }
     load()
     return () => { cancelled = true }
-  }, [eligible, link])
+  }, [link])
 
-  if (!eligible || !link) return null
+  if (!link) return null
 
   const copy = async () => {
     try {
@@ -387,7 +388,11 @@ function ReferralSection({ profile }: { profile: any }) {
         🎁 Refer an agent
       </div>
       <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '12px' }}>
-        Share your personal link with other agents. When someone you refer becomes a paying ohACCESS subscriber, you earn <strong style={{ color: '#1d1d1f' }}>a free month of Pro</strong> — added onto your annual or 2-year plan, or a $15 credit on your next bill if you&apos;re month-to-month.
+        {earnsCreditNow ? (
+          <>Share your personal link with other agents. When someone you refer becomes a paying ohACCESS subscriber, you earn <strong style={{ color: '#1d1d1f' }}>a free month of Pro</strong> — added onto your annual or 2-year plan, or a $15 credit on your next bill if you&apos;re month-to-month.</>
+        ) : (
+          <>Share your personal link with other agents. When someone you refer becomes a paying ohACCESS subscriber, you earn <strong style={{ color: '#1d1d1f' }}>a free month of Pro</strong> — banked for you and applied once you&apos;re on your own Pro plan.</>
+        )}
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
         <input
