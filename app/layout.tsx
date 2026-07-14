@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import RefCapture from "./_components/RefCapture";
 import ImpersonationBanner from "./_components/ImpersonationBanner";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
         <RefCapture />
         <ImpersonationBanner />
         {children}
+        <Analytics />
         <Script
           src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&v=weekly&libraries=places`}
           strategy="afterInteractive"
