@@ -524,9 +524,9 @@ export default function SettingsPanel({
 
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Branding & photos</div>
-        <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px' }}>
+        <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px', lineHeight: '1.5' }}>
           Paste direct image URLs ending in .jpg or .png. Headshot and logo appear in visitor emails.
-          <strong style={{ color: '#1d1d1f' }}> Tip: Upload your photo to <a href="https://imgur.com" target="_blank" style={{ color: '#0071e3' }}>imgur.com</a> for a reliable direct link.</strong>
+          <strong style={{ color: '#1d1d1f' }}> Tip: if your headshot or logo is already online (your brokerage site, agent profile, etc.), right-click the image and choose &ldquo;Copy Image Address&rdquo; (press and hold on a phone), then paste it here.</strong> Or upload the photo to <a href="https://imgur.com" target="_blank" style={{ color: '#0071e3' }}>imgur.com</a> for a reliable direct link.
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
           <div>
@@ -553,6 +553,7 @@ export default function SettingsPanel({
             ) : (
               <>
                 <input style={inputStyle} type="url" placeholder="https://yoursite.com/logo.png" value={profile?.logo_url || ''} onChange={e => setProfile({ ...profile, logo_url: e.target.value })} />
+                <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px' }}>A logo with a transparent or white background looks best in emails and on your printed sign.</div>
                 {profile?.logo_url && (
                   <div style={{ marginTop: '8px', background: '#f5f5f7', borderRadius: '8px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '52px', border: '1px solid #d1d1d6' }}>
                     <img
