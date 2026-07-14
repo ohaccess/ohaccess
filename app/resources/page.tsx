@@ -134,7 +134,7 @@ export default function Resources() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
               { step: '1', title: 'Create your open house in the dashboard', body: 'Enter the property address, date, hours, and listing URL. Create or auto-generate a code word.' },
-              { step: '2', title: 'Download and print your QR code', body: 'Click "QR Code" on your open house card. Download the PNG, add it to the Canva template or your own custom sign. Print enough copies for each entry.' },
+              { step: '2', title: 'Print your QR sign', body: 'Click "QR Code" on your open house card, then "Print branded sign" for a ready-to-print sign in your branding. Or download the PNG and add it to the Canva template or your own custom sign. Print enough copies for each entry.' },
               { step: '3', title: 'Set up your welcome sign', body: 'Use a pedestal sign holder, easel, or A-frame poster and display the QR code with instructions prominently before the entrance.' },
               { step: '4', title: 'Greet visitors at the door', body: 'Ask visitors for their code word as they arrive. Only visitors who registered with real contact info will have received the code.' },
               { step: '5', title: 'Review your visitor log', body: 'After the open house, check your dashboard for the full verified visitor log. Export to CSV and import into your CRM.' },
