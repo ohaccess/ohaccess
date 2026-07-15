@@ -117,15 +117,15 @@ function GiftForm() {
             <form onSubmit={startCheckout}>
               <div style={{ marginBottom: '14px' }}>
                 <label style={labelStyle}>Your name</label>
-                <input style={inputStyle} type="text" placeholder="Margaret Sheehan" value={giverName} onChange={(e) => setGiverName(e.target.value)} maxLength={80} />
+                <input style={inputStyle} type="text" placeholder="Maegan Sheehan" value={giverName} onChange={(e) => setGiverName(e.target.value)} maxLength={80} />
               </div>
               <div style={{ marginBottom: '14px' }}>
                 <label style={labelStyle}>Agent&apos;s name <span style={{ fontWeight: 400 }}>(optional)</span></label>
-                <input style={inputStyle} type="text" placeholder="Sarah Connelly" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} maxLength={80} />
+                <input style={inputStyle} type="text" placeholder="Skylar Whitton" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} maxLength={80} />
               </div>
               <div style={{ marginBottom: '14px' }}>
                 <label style={labelStyle}>Agent&apos;s email <span style={{ fontWeight: 400 }}>(optional — we&apos;ll email them the gift; leave blank to deliver it yourself)</span></label>
-                <input style={inputStyle} type="email" placeholder="sarah@example.com" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} maxLength={200} />
+                <input style={inputStyle} type="email" placeholder="skylar@example.com" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} maxLength={200} />
               </div>
               <div style={{ marginBottom: '18px' }}>
                 <label style={labelStyle}>Gift note <span style={{ fontWeight: 400 }}>(optional)</span></label>
