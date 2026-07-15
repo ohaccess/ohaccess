@@ -7,6 +7,7 @@ import { escapeHtml } from '@/lib/escape-html'
 import { notifyAdmins } from '@/lib/notify-admin'
 import { ensureManagedBrokerage } from '@/lib/team'
 import { MIN_BROKERAGE_SEATS } from '@/lib/billing-plans'
+import { generateGiftCode } from '@/lib/gift'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -143,7 +144,136 @@ function isoOrNull(unixSeconds: number | null | undefined): string | null {
   return new Date(unixSeconds * 1000).toISOString()
 }
 
+// A completed GIFT checkout (metadata.gift='true' from /api/gift/checkout).
+// The giver has no profile — mint a claim code, record the purchase, and email
+// the claim link: always to the giver, and gift-wrapped to the recipient too
+// when the giver provided their email. Idempotent two ways: stripe_events
+// dedupes the event, and gift_purchases.stripe_session_id is UNIQUE so a
+// replay can never mint a second code for the same payment.
+async function handleGiftPurchase(session: Stripe.Checkout.Session) {
+  const giverEmail = session.customer_details?.email ?? null
+  const giverName = (session.metadata?.giver_name || session.customer_details?.name || '').trim()
+  const recipientName = (session.metadata?.recipient_name || '').trim()
+  const recipientEmail = (session.metadata?.recipient_email || '').trim()
+  const note = (session.metadata?.gift_note || '').trim()
+
+  let code: string | null = null
+  for (let i = 0; i < 10; i++) {
+    const candidate = generateGiftCode()
+    const { data } = await supabase
+      .from('gift_purchases')
+      .select('id')
+      .eq('code', candidate)
+      .maybeSingle()
+    if (!data) { code = candidate; break }
+  }
+  if (!code) throw new Error('Could not generate a unique gift code')
+
+  const { error: insertError } = await supabase.from('gift_purchases').insert({
+    code,
+    stripe_session_id: session.id,
+    amount_cents: session.amount_total,
+    currency: session.currency,
+    giver_name: giverName || null,
+    giver_email: giverEmail,
+    recipient_name: recipientName || null,
+    recipient_email: recipientEmail || null,
+    gift_note: note || null,
+  })
+  if (insertError) {
+    // 23505 on stripe_session_id = this payment already has its code (replay).
+    if ((insertError as { code?: string }).code === '23505') return
+    throw insertError
+  }
+
+  const claimUrl = `${APP_URL}/gift/claim?code=${code}`
+  const giverFirst = escapeHtml(giverName.split(' ')[0] || 'there')
+  const recipientLabel = recipientName ? escapeHtml(recipientName) : 'your agent'
+  const noteHtml = note
+    ? `<div style="background: #f5f5f7; border-radius: 10px; padding: 14px 16px; margin: 16px 0; font-style: italic;">&ldquo;${escapeHtml(note)}&rdquo;</div>`
+    : ''
+  const codeBlock = `
+    <div style="text-align: center; margin: 24px 0;">
+      <a href="${claimUrl}" style="background: #c9963a; color: #1d1d1f; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700;">Claim this gift</a>
+      <div style="margin-top: 14px; font-size: 12px; color: #6e6e73;">Gift code (works at ohaccess.com/gift/claim):</div>
+      <div style="font-family: monospace; font-size: 18px; font-weight: 700; letter-spacing: 1px; margin-top: 4px;">${code}</div>
+    </div>`
+  const emailShell = (inner: string) => `
+    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
+      <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
+        <div style="font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
+      </div>
+      <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; color: #1d1d1f; font-size: 14px; line-height: 1.6;">
+        ${inner}
+      </div>
+    </div>`
+
+  // Giver: their copy of the claim link + code, so they can deliver the gift
+  // however they like (forward, text, or tuck the code into a card).
+  if (giverEmail) {
+    try {
+      await resend.emails.send({
+        from: 'ohACCESS <noreply@mail.ohaccess.com>',
+        to: giverEmail,
+        replyTo: 'support@ohaccess.com',
+        subject: 'Your ohACCESS gift is ready to give 🎁',
+        html: emailShell(`
+          <p>Hi ${giverFirst},</p>
+          <p>Thank you! Your gift of <strong>1 year of ohACCESS Pro</strong> for ${recipientLabel} is paid and ready.</p>
+          ${codeBlock}
+          ${recipientEmail
+            ? `<p>We've also emailed the gift directly to <strong>${escapeHtml(recipientEmail)}</strong> — the copy above is yours in case you'd like to deliver it personally too.</p>`
+            : `<p>Deliver it however you like: forward this email, text the claim link, or write the gift code inside a card. Whoever uses the code gets the year — so share it only with your agent.</p>`}
+          <p style="font-size: 13px; color: #6e6e73;">This was a one-time payment — nothing renews and your card will never be charged again. Questions? Just reply to this email.</p>
+        `),
+      })
+    } catch (e) {
+      console.error('gift purchase: giver email failed', e)
+    }
+  }
+
+  // Recipient: the gift-wrapped version, when the giver told us who it's for.
+  if (recipientEmail) {
+    try {
+      await resend.emails.send({
+        from: 'ohACCESS <noreply@mail.ohaccess.com>',
+        to: recipientEmail,
+        replyTo: 'support@ohaccess.com',
+        subject: `${giverName || 'Someone'} gave you a year of ohACCESS Pro 🎁`,
+        html: emailShell(`
+          <p>Hi${recipientName ? ` ${escapeHtml(recipientName.split(' ')[0])}` : ''},</p>
+          <p><strong>${escapeHtml(giverName || 'Someone who believes in you')}</strong> just gave you <strong>1 year of ohACCESS Pro</strong> — verified open-house sign-ins with unlimited visitor registrations, instant SMS lead alerts, and more.</p>
+          ${noteHtml}
+          ${codeBlock}
+          <p style="font-size: 13px; color: #6e6e73;">New to ohACCESS? The claim link walks you through creating your free account first — the gift year applies the moment you're in. Questions? Just reply to this email.</p>
+        `),
+      })
+    } catch (e) {
+      console.error('gift purchase: recipient email failed', e)
+    }
+  }
+
+  const amount =
+    session.amount_total != null
+      ? `${(session.amount_total / 100).toFixed(2)} ${String(session.currency || 'usd').toUpperCase()}`
+      : '—'
+  await notifyAdmins(
+    `🎁 Gift purchased: 1 year of Pro (${amount})`,
+    `<p>Someone just bought a 1-year Pro gift.</p>
+     <p><strong>Giver:</strong> ${escapeHtml(giverName || '—')} (${escapeHtml(giverEmail ?? 'no email')})<br/>
+     <strong>Recipient:</strong> ${escapeHtml(recipientName || '—')} (${escapeHtml(recipientEmail || 'delivered by giver')})<br/>
+     <strong>Code:</strong> ${code}</p>`
+  )
+}
+
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  // Gift checkouts have no buyer profile — route them before profile
+  // resolution, or the lookup below would log a false error.
+  if (session.metadata?.gift === 'true') {
+    await handleGiftPurchase(session)
+    return
+  }
+
   const profileId = await findProfileId(
     session.metadata?.profile_id,
     typeof session.customer === 'string' ? session.customer : session.customer?.id
@@ -171,9 +301,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     })
   } else if (session.mode === 'payment') {
     // LEGACY branch: the 2-year term used to be sold as a one-time charge with
-    // a locally computed access window. No new checkout produces payment mode
-    // anymore (everything is a subscription) — this stays only so replaying a
-    // historical event remains safe and correct.
+    // a locally computed access window. The only payment-mode checkouts today
+    // are GIFTS, and those return early above (metadata.gift) — this stays
+    // only so replaying a historical event remains safe and correct.
     const days = Number(session.metadata?.access_duration_days ?? 0)
     const periodEnd = days > 0 ? new Date(Date.now() + days * 86_400_000).toISOString() : null
     await updateProfile(profileId, {

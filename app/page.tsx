@@ -344,6 +344,18 @@ export default function Home() {
           <p style={{ fontSize: '12px', color: '#6e6e73', textAlign: 'center', marginTop: '28px', fontStyle: 'italic' }}>
             * 2-year pricing is a founding-member offer available for a limited time only. Paid upfront and renews automatically every 2 years — we&apos;ll email you before each renewal, and you can cancel anytime. More than 100 agents? <a href="/contact" style={{ color: '#0071e3' }}>Contact us</a> for custom pricing.
           </p>
+
+          {/* Gift banner — the giver (family, colleague, broker) is the audience, not the agent */}
+          <div style={{ marginTop: '28px', background: 'white', border: '1px solid #d1d1d6', borderRadius: '18px', padding: '24px 28px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '18px', flexWrap: 'wrap', textAlign: 'center' }}>
+            <div style={{ fontSize: '32px' }}>🎁</div>
+            <div style={{ maxWidth: '440px' }}>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>Know a real estate agent?</div>
+              <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.5' }}>Give them a year of ohACCESS Pro — one payment, never auto-renews. Perfect for new licensees.</div>
+            </div>
+            <Link href="/gift" style={{ display: 'inline-block', background: '#c9963a', color: '#1d1d1f', padding: '12px 22px', borderRadius: '10px', fontSize: '14px', fontWeight: '700', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              Give a gift →
+            </Link>
+          </div>
         </div>
       </section>
 

@@ -133,6 +133,9 @@ function LoginForm() {
         confirmUrl.searchParams.set('interval', intervalParam!)
         if (planParam === 'brokerage' && seatsParam) confirmUrl.searchParams.set('seats', seatsParam)
       }
+      // Preserve the post-login destination (e.g. a gift-claim link) through
+      // the confirmation roundtrip, same as plan/interval above.
+      if (safeNext) confirmUrl.searchParams.set('next', safeNext)
       // Pull the referral source from the cookie set by RefCapture (if any)
       // and stash it on the auth user. This survives the email-confirmation
       // hop even when the confirm link opens in a different browser.
