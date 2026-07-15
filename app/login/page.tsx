@@ -366,6 +366,10 @@ function LoginForm() {
                 <a href="/reset-password" style={{ color: '#aeaeb2', fontSize: '12px', textDecoration: 'none' }}>
                   Forgot your password?
                 </a>
+                <div style={{ marginTop: '8px', fontSize: '12px', color: '#aeaeb2' }}>
+                  Need to change your login email? Contact{' '}
+                  <a href="mailto:support@ohaccess.com" style={{ color: '#6e6e73', textDecoration: 'none' }}>support@ohaccess.com</a>
+                </div>
               </div>
             )}
 
