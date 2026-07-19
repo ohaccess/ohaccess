@@ -105,6 +105,8 @@ const fmtDateTime = (iso: string | null) =>
       })
     : '—'
 const fmtLogin = (iso: string | null) => (iso ? fmtDateTime(iso) : 'Never')
+const fmtTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 
 function downloadCSV(filename: string, headers: string[], rows: (string | number)[][]) {
   const esc = (v: string | number) => {
@@ -1293,7 +1295,7 @@ function OpenHousesTable({
             </td>
             <td style={tdSub}>{o.agentName}</td>
             <td style={td}>
-              <div>{o.start_at ? fmtDateTime(o.start_at) : o.open_house_date || '—'}</div>
+              <div>{o.start_at ? `${fmtDateTime(o.start_at)}${o.end_at ? ` – ${fmtTime(o.end_at)}` : ''}` : o.open_house_date || '—'}</div>
               {o.open_house_hours && !o.start_at && <div style={{ fontSize: 12, color: SUB }}>{o.open_house_hours}</div>}
             </td>
             <td style={td}>
