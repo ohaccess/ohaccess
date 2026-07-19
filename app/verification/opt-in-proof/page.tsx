@@ -91,7 +91,7 @@ export default function OptInProof() {
           </p>
           <p>
             &ldquo;You also agree to the <strong>ohACCESS Terms of Service &amp; Privacy Policy</strong>, and consent to be
-            contacted by the listing agent via phone, text, and email about this and other properties.&rdquo;
+            contacted by the host agent via phone, text, and email about this and other properties.&rdquo;
           </p>
         </div>
 
