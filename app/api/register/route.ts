@@ -15,6 +15,7 @@ import {
   buildCrmLeadEmail,
   buildUpcomingOpenHousesHtml,
   agentCopyRecipients,
+  isVirtualNumber,
   SMS_MAX_LENGTH,
   type UpcomingOpenHouse,
 } from '@/lib/register-helpers'
@@ -527,7 +528,10 @@ export async function POST(request: Request) {
       await twilioClient.messages.create({
         // Kept lean so long names/emails still fit one segment: short prefix
         // and a bare verify/notes link (no label).
-        body: `ohACCESS: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${phone}, ${email}, Timeline: ${purchasingTimeline}, Time: ${now}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
+        // VoIP flag (plain text, not emoji — emoji forces UCS-2 encoding and
+        // triples SMS cost). nonFixedVoip = TextNow/Google Voice-style app
+        // number, worth extra scrutiny at the door.
+        body: `ohACCESS: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${phone}${isVirtualNumber(phoneLineType) ? ' (VoIP/internet number - verify ID)' : ''}, ${email}, Timeline: ${purchasingTimeline}, Time: ${now}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
         from: process.env.TWILIO_PHONE_NUMBER!,
         to: agent.phone
       })

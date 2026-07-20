@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { timelineStyle } from '@/lib/timeline'
+import { isVirtualNumber } from '@/lib/register-helpers'
 
 // A hard delivery failure reported by Resend (email) or Twilio (SMS) means the
 // visitor's contact info is likely bad.
@@ -9,6 +10,7 @@ const deliveryFailed = (status: string | null | undefined): boolean =>
   status === 'bounced' || status === 'complained' || status === 'undelivered' || status === 'failed'
 const failBadge = { marginLeft: '8px', background: '#fff0f0', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 const optedOutBadge = { marginLeft: '8px', background: '#f2f2f7', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+const voipBadge = { marginLeft: '8px', background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 
 // Shared visitor detail + notes editor. Used both in the dashboard panel
 // (modal) and on the standalone mobile /visitor/[id] page, so the verify
@@ -69,12 +71,21 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
   const deleteVisitor = async () => {
     setDeleting(true)
     setDeleteError(false)
-    // RLS (visitors_owner_all) restricts deletes to the owning agent, same as the
-    // verify/notes writes above — an agent can only ever delete their own visitors.
-    const { error } = await supabase.from('visitors').delete().eq('id', visitor.id)
-    setDeleting(false)
-    if (error) { setDeleteError(true); return }
-    onDelete?.()
+    // Server-side delete (owner-checked) so the record is archived first —
+    // a dashboard delete must not destroy the record of who was in the house.
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`/api/visitor/${visitor.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session?.access_token || ''}` },
+      })
+      setDeleting(false)
+      if (!res.ok) { setDeleteError(true); return }
+      onDelete?.()
+    } catch {
+      setDeleting(false)
+      setDeleteError(true)
+    }
   }
 
   const label = { display: 'block', fontSize: '11px', fontWeight: 600, color: '#6e6e73', textTransform: 'uppercase' as const, letterSpacing: '0.5px', marginBottom: '4px' }
@@ -91,7 +102,7 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
       </div>
 
       <div style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
-        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{visitor.sms_opted_out ? <span style={optedOutBadge} title="This number replied STOP — do not contact">🚫 opted out</span> : deliveryFailed(visitor.sms_status) ? <span style={failBadge} title="Text could not be delivered to this number">⚠ text undelivered</span> : null}</div>
+        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{visitor.sms_opted_out ? <span style={optedOutBadge} title="This number replied STOP — do not contact">🚫 opted out</span> : deliveryFailed(visitor.sms_status) ? <span style={failBadge} title="Text could not be delivered to this number">⚠ text undelivered</span> : null}{isVirtualNumber(visitor.phone_line_type) && <span style={voipBadge} title="Internet/VoIP number (TextNow, Google Voice, …), not a carrier mobile line. Many are legitimate — consider extra ID verification.">⚠ VoIP number</span>}</div>
         <div><div style={label}>Email</div><a href={`mailto:${visitor.email}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600, wordBreak: 'break-all' }}>{visitor.email || '—'}</a>{deliveryFailed(visitor.email_status) && <span style={failBadge} title="Email bounced — this address may be invalid">⚠ email bounced</span>}</div>
         <div><div style={label}>Registered</div><div style={{ fontSize: '14px', color: '#1d1d1f' }}>{visitor.registered_at ? new Date(visitor.registered_at).toLocaleString() : '—'}</div></div>
       </div>

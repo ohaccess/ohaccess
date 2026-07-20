@@ -192,3 +192,13 @@ Registered: ${e(lead.registeredAt)}
 </body>
 </html>`
 }
+
+// Is this Twilio Lookup line type an internet/VoIP app number (TextNow,
+// Google Voice, Pinger, ...) — the classic "burner app" signal? Only
+// nonFixedVoip: fixedVoip is cable-company home phone service (Comcast
+// Voice etc.), a perfectly normal residential line. Plenty of legitimate
+// people use VoIP numbers too, so surface this as "extra scrutiny
+// suggested", never as an accusation.
+export function isVirtualNumber(lineType: string | null | undefined): boolean {
+  return lineType === 'nonFixedVoip'
+}

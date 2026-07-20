@@ -9,6 +9,7 @@ import {
   buildCrmLeadEmail,
   buildUpcomingOpenHousesHtml,
   agentCopyRecipients,
+  isVirtualNumber,
   SMS_MAX_LENGTH,
   type UpcomingOpenHouse,
 } from '@/lib/register-helpers'
@@ -242,5 +243,21 @@ describe('agentCopyRecipients', () => {
       bcc: ['login@agent.com'],
     })
     expect(agentCopyRecipients(null, null)).toEqual({ cc: [], bcc: [] })
+  })
+})
+
+describe('isVirtualNumber', () => {
+  it('flags only nonFixedVoip (burner-app numbers)', () => {
+    expect(isVirtualNumber('nonFixedVoip')).toBe(true)
+  })
+  it('does not flag real mobile, landline, or cable-company VoIP lines', () => {
+    expect(isVirtualNumber('mobile')).toBe(false)
+    expect(isVirtualNumber('landline')).toBe(false)
+    expect(isVirtualNumber('fixedVoip')).toBe(false)
+  })
+  it('treats missing lookup data as not flagged', () => {
+    expect(isVirtualNumber(null)).toBe(false)
+    expect(isVirtualNumber(undefined)).toBe(false)
+    expect(isVirtualNumber('')).toBe(false)
   })
 })
