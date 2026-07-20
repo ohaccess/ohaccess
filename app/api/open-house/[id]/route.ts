@@ -2,6 +2,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { getClientIp } from '@/lib/rate-limit'
+import { archiveVisitorsForOpenHouse } from '@/lib/visitor-archive'
 
 // GET: public, read-only display data for the visitor registration page.
 // Returns ONLY safe fields — never the secret code_word/code_word_email, and
@@ -85,6 +86,18 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!oh) return NextResponse.json({ error: 'Open house not found' }, { status: 404 })
   if (oh.agent_id !== user.id) {
     return NextResponse.json({ error: 'That open house is not yours' }, { status: 403 })
+  }
+
+  // Archive the visitor log BEFORE deleting it (visitor_archive, migration
+  // 026): a dashboard cleanup must not destroy the record of who was inside
+  // the house. Retained up to 3 years per Privacy Policy §5; wiped when the
+  // agent's account is deleted. If archiving fails, abort the delete — never
+  // silently lose the log.
+  try {
+    await archiveVisitorsForOpenHouse(id)
+  } catch (err) {
+    console.error('Visitor archive failed, aborting open-house delete', err)
+    return NextResponse.json({ error: 'Could not delete open house' }, { status: 500 })
   }
 
   // Delete children first (FK order), then the open house itself.

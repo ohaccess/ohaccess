@@ -95,6 +95,9 @@ export async function POST(request: Request) {
   try {
     // Children first, then parents.
     await del('visitors', supabase.from('visitors').delete().eq('agent_id', userId))
+    // Archived visitor logs go too — Privacy Policy §5 promises visitor data
+    // is deleted when the hosting agent's account is deleted.
+    await del('visitor_archive', supabase.from('visitor_archive').delete().eq('agent_id', userId))
     await del('short_urls', supabase.from('short_urls').delete().eq('agent_id', userId))
     await del('open_houses', supabase.from('open_houses').delete().eq('agent_id', userId))
     if (ownedIds.length) {

@@ -43,7 +43,10 @@ export async function POST(request: Request) {
     .eq('open_house_id', openHouseId)
 
   try {
-    // Children first, then the open house itself.
+    // Children first, then the open house itself. DELIBERATELY no
+    // visitor_archive copy here (unlike the agent-facing delete): the admin
+    // path is the true hard-delete for test-data cleanup and for honoring a
+    // visitor's data-deletion request.
     await del('visitors', supabase.from('visitors').delete().eq('open_house_id', openHouseId))
     await del('short_urls', supabase.from('short_urls').delete().eq('open_house_id', openHouseId))
     await del('open_house', supabase.from('open_houses').delete().eq('id', openHouseId))
