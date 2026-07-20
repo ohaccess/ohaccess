@@ -1,6 +1,7 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth'
+import { getClientIp } from '@/lib/rate-limit'
 
 // GET: public, read-only display data for the visitor registration page.
 // Returns ONLY safe fields — never the secret code_word/code_word_email, and
@@ -8,7 +9,7 @@ import { getAuthenticatedUser } from '@/lib/auth'
 // service role so it works once RLS locks the open_houses/profiles tables to
 // their owners. This is what replaced the old anon `select('*, profiles(*)')`
 // that leaked the access codes and full agent profile to anyone.
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
   const { data: oh, error } = await supabase
@@ -19,6 +20,23 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   if (error || !oh) {
     return NextResponse.json({ error: 'Open house not found' }, { status: 404 })
+  }
+
+  // Scan log: every load of the register form records IP + device +
+  // timestamp (qr_scans, migration 025), so a QR scan leaves a forensic
+  // trail even when the visitor abandons the form. Best-effort — a logging
+  // failure must never break the page. Rows older than the 3-year visitor
+  // retention window are purged opportunistically (rate_limits pattern).
+  const { error: scanErr } = await supabase.from('qr_scans').insert({
+    open_house_id: oh.id,
+    agent_id: oh.agent_id,
+    ip_address: getClientIp(request),
+    user_agent: request.headers.get('user-agent'),
+  })
+  if (scanErr) console.error('qr_scans log failed:', scanErr)
+  if (Math.random() < 0.01) {
+    const cutoff = new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000).toISOString()
+    await supabase.from('qr_scans').delete().lt('created_at', cutoff)
   }
 
   const { data: agent } = await supabase
