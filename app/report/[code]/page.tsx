@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 const FONT = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif"
 
-function NotAvailable() {
+function NotAvailable({ rateLimited = false }: { rateLimited?: boolean }) {
   return (
     <div style={{ background: '#f5f5f7', minHeight: '100vh', fontFamily: FONT }}>
       <main style={{ maxWidth: 560, margin: '0 auto', padding: '48px 20px', textAlign: 'center' }}>
@@ -27,9 +27,13 @@ function NotAvailable() {
           oh<span style={{ fontWeight: 300 }}>ACCESS</span>
         </div>
         <div style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 18, padding: '36px 24px', marginTop: 24 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#1d1d1f' }}>This report isn&apos;t available</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#1d1d1f' }}>
+            {rateLimited ? 'One moment' : "This report isn't available"}
+          </div>
           <div style={{ fontSize: 13, color: '#6e6e73', marginTop: 8, lineHeight: 1.5 }}>
-            The link may be incorrect, or the open house it belonged to has been removed.
+            {rateLimited
+              ? 'This page is getting a lot of requests right now — please try again in a few minutes.'
+              : 'The link may be incorrect, or the open house it belonged to has been removed.'}
           </div>
         </div>
       </main>
@@ -45,7 +49,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
   const h = await headers()
   const ip = (h.get('x-forwarded-for') || 'unknown').split(',')[0].trim()
   const limit = await checkRateLimit(`ip:${ip}`, 'seller-report', 60, 3600)
-  if (!limit.allowed) return <NotAvailable />
+  if (!limit.allowed) return <NotAvailable rateLimited />
 
   const { data: link } = await supabase
     .from('short_urls')
@@ -91,20 +95,23 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
   const agentContactEmail = agent?.display_email || agent?.email || null
 
   return (
-    <div style={{ background: '#f5f5f7', minHeight: '100vh', fontFamily: FONT, color: '#1d1d1f' }}>
+    // White at the top fading into the usual page gray — brokerage logos are
+    // drawn for white backgrounds, so the logo floats on the white zone above
+    // the branded card instead of inside it (per Dave).
+    <div style={{ background: 'linear-gradient(#ffffff 0px, #ffffff 120px, #f5f5f7 300px)', backgroundColor: '#f5f5f7', minHeight: '100vh', fontFamily: FONT, color: '#1d1d1f' }}>
       <main style={{ maxWidth: 560, margin: '0 auto', padding: '28px 16px 48px' }}>
+
+        {/* Brokerage/agent logo, centered above the card on the white zone */}
+        {brandLogo && (
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={brandLogo} alt="" style={{ maxHeight: 56, maxWidth: 220, objectFit: 'contain', display: 'inline-block' }} />
+          </div>
+        )}
 
         {/* Branded header */}
         <div style={{ background: brandColor, borderRadius: 18, padding: '24px 22px', color: 'white' }}>
-          {brandLogo ? (
-            // White chip behind the logo — agent logos are usually drawn for
-            // light backgrounds, and a dark logo would vanish on a dark brand
-            // header (Dave's own did exactly that).
-            <div style={{ display: 'inline-block', background: 'white', borderRadius: 10, padding: '8px 14px', marginBottom: 12 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={brandLogo} alt="" style={{ maxHeight: 40, maxWidth: 170, objectFit: 'contain', display: 'block' }} />
-            </div>
-          ) : (
+          {!brandLogo && (
             <div style={{ fontSize: 18, fontWeight: 200, letterSpacing: -0.5, marginBottom: 10 }}>
               oh<span style={{ fontWeight: 700 }}>ACCESS</span>
             </div>
