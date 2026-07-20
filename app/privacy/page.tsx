@@ -19,7 +19,7 @@ export default function Privacy() {
         <div style={{ marginBottom: '40px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#6e6e73', marginBottom: '8px' }}>ohACCESS Legal</div>
           <h1 style={{ fontSize: '40px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '8px' }}>Privacy Policy</h1>
-          <div style={{ fontSize: '13px', color: '#6e6e73' }}>Applies to both open house visitors and ohACCESS account holders · Version 1.1 · Effective Date: June 1, 2026 · ohaccess.com</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73' }}>Applies to both open house visitors and ohACCESS account holders · Version 1.2 · Effective Date: July 19, 2026 · ohaccess.com</div>
         </div>
 
         {/* Tab links */}
@@ -56,6 +56,7 @@ export default function Privacy() {
               <li style={{ marginBottom: '8px' }}>Date, time, and property address of the open house attended</li>
               <li style={{ marginBottom: '8px' }}>Device type and browser information (collected automatically)</li>
               <li style={{ marginBottom: '8px' }}>IP address (collected automatically)</li>
+              <li style={{ marginBottom: '8px' }}>Phone number metadata obtained from our telecommunications provider, including carrier name and line type (e.g., mobile, landline, or VoIP), used for verification, security, and fraud-prevention purposes</li>
               <li style={{ marginBottom: '8px' }}>Automatically-collected usage data and technical information related to your session and usage data, date and time of access to the website, device type and operating system, internet service provider, browser type and version, and internet protocol address</li>
             </ul>
             <p><strong>From Subscribers (real estate agents, teams, and brokerages) (collectively &ldquo;Subscriber Data&rdquo;):</strong></p>
@@ -84,6 +85,7 @@ export default function Privacy() {
               <li style={{ marginBottom: '8px' }}>Provide the hosting Agent with your contact information and purchasing timeline for follow-up</li>
               <li style={{ marginBottom: '8px' }}>Share your information with authorized third-party business partners with your consent as described in Section 4</li>
               <li style={{ marginBottom: '8px' }}>Maintain records of open house attendance</li>
+              <li style={{ marginBottom: '8px' }}>Detect, prevent, and investigate fraud, misuse, security incidents, and threats to the safety of property owners, agents, and other visitors</li>
               <li style={{ marginBottom: '8px' }}>Improve the ohACCESS platform and user experience</li>
               <li style={{ marginBottom: '8px' }}>Comply with legal obligations</li>
             </ul>
@@ -120,7 +122,7 @@ export default function Privacy() {
             <p style={{ marginTop: '12px' }}><strong>Service Providers (Sub-processors):</strong> ohACCESS uses the following service providers who process data on our behalf. Each is bound by data protection terms substantially similar to those in this Policy:</p>
             <ul style={{ paddingLeft: '24px', marginTop: '8px', marginBottom: '12px' }}>
               <li style={{ marginBottom: '8px' }}><strong>Supabase, Inc.</strong> — Secure database storage and authentication</li>
-              <li style={{ marginBottom: '8px' }}><strong>Twilio Inc.</strong> — SMS delivery</li>
+              <li style={{ marginBottom: '8px' }}><strong>Twilio Inc.</strong> — SMS delivery and phone number verification/lookup services</li>
               <li style={{ marginBottom: '8px' }}><strong>Resend, Inc.</strong> — Email delivery</li>
               <li style={{ marginBottom: '8px' }}><strong>Stripe, Inc.</strong> — Payment processing (Stripe is responsible for the security of full payment card data)</li>
               <li style={{ marginBottom: '8px' }}><strong>Vercel, Inc.</strong> — Platform hosting</li>

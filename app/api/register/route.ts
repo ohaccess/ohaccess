@@ -172,6 +172,29 @@ export async function POST(request: Request) {
       phoneOptedOut = !!optOut
     }
 
+    // Carrier + line type via Twilio Lookup (~$0.008/call). Line type is the
+    // burner-number signal: "nonFixedVoip" means a TextNow/Google Voice-style
+    // app number rather than a real mobile line. Best-effort with a hard 3s
+    // cap — a slow or failed lookup must never block the sign-in.
+    let phoneCarrier: string | null = null
+    let phoneLineType: string | null = null
+    if (normalizedPhone) {
+      try {
+        const lookup = await Promise.race([
+          twilioClient.lookups.v2
+            .phoneNumbers(normalizedPhone)
+            .fetch({ fields: 'line_type_intelligence' }),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('lookup timeout')), 3000)
+          ),
+        ])
+        phoneCarrier = lookup.lineTypeIntelligence?.carrierName ?? null
+        phoneLineType = lookup.lineTypeIntelligence?.type ?? null
+      } catch (err) {
+        console.error('Twilio Lookup failed:', err)
+      }
+    }
+
     // Save visitor
     const { data: visitorRow, error: visitorError } = await supabase
       .from('visitors')
@@ -184,7 +207,13 @@ export async function POST(request: Request) {
         phone: phone,
         purchasing_timeline: purchasingTimeline,
         sms_opted_out: phoneOptedOut,
-        source: 'ohaccess'
+        source: 'ohaccess',
+        // Security metadata (Privacy Policy §2): request origin + phone
+        // intelligence, kept for fraud prevention and lawful requests.
+        ip_address: ip,
+        user_agent: request.headers.get('user-agent'),
+        phone_carrier: phoneCarrier,
+        phone_line_type: phoneLineType,
       })
       .select('id')
       .single()
