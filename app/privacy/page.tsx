@@ -19,7 +19,7 @@ export default function Privacy() {
         <div style={{ marginBottom: '40px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#6e6e73', marginBottom: '8px' }}>ohACCESS Legal</div>
           <h1 style={{ fontSize: '40px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '8px' }}>Privacy Policy</h1>
-          <div style={{ fontSize: '13px', color: '#6e6e73' }}>Applies to both open house visitors and ohACCESS account holders · Version 1.2 · Effective Date: July 19, 2026 · ohaccess.com</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73' }}>Applies to both open house visitors and ohACCESS account holders · Version 1.3 · Effective Date: July 20, 2026 · ohaccess.com</div>
         </div>
 
         {/* Tab links */}
@@ -134,7 +134,8 @@ export default function Privacy() {
           </Section>
 
           <Section title="5. Data Retention">
-            <p>We retain visitor registration data for up to <strong>3 years</strong> from the date of collection, or until the hosting Agent deletes their ohACCESS account, whichever comes first. After this period, data is permanently deleted from our systems.</p>
+            <p>We retain visitor registration data for up to <strong>3 years</strong> from the date of collection. After this period, data is permanently deleted from our systems.</p>
+            <p style={{ marginTop: '12px' }}>Automatically collected technical information relating to Open House Visitors — including IP address, device and browser information, and phone number metadata such as carrier name and line type — is retained on the same schedule: up to <strong>3 years</strong> from the date of collection.</p>
             <p style={{ marginTop: '12px' }}>Agent account data is retained for the duration of the account and for up to 2 years following account closure for legal and compliance purposes. If any subscriber wishes to retain a copy of their data, they should request a copy prior to such deletion timeline either through your account dashboard or by emailing privacy@ohaccess.com.</p>
             <p style={{ marginTop: '12px' }}>You may request deletion of your data at any time by contacting privacy@ohaccess.com. We will process deletion requests within 30 days, subject to any legal obligations to retain certain records.</p>
           </Section>
