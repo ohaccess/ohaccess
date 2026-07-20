@@ -73,8 +73,27 @@ type Visitor = {
   agentName: string
 }
 
+type WindowCounts = { lifetime: number; last12mo: number; last30d: number }
+
+type AbandonedScan = {
+  scanned_at: string
+  openHouseAddress: string
+  agentName: string
+  ip_address: string
+  user_agent: string
+}
+
+type Funnel = {
+  openHousesCreated: WindowCounts
+  visitorsLogged: WindowCounts
+  scans: WindowCounts
+  conversionPct30d: number | null
+  abandonedScans: AbandonedScan[]
+}
+
 type Payload = {
   stats: Stats
+  funnel?: Funnel
   agents: Agent[]
   openHouses: OpenHouse[]
   visitors: Visitor[]
@@ -1411,6 +1430,51 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
           <Line key={v.id} left={v.name} sub={v.openHouseAddress} right={fmtDate(v.registered_at)} />
         ))}
       </Panel>
+
+      {/* Lifetime marketing numbers — live tables + deletion archives, so an
+          agent cleaning up their dashboard doesn't shrink these. */}
+      {data.funnel && (
+        <Panel title="Lifetime Numbers">
+          <FunnelRow label="Open houses created" counts={data.funnel.openHousesCreated} />
+          <FunnelRow label="Visitors logged" counts={data.funnel.visitorsLogged} />
+          <FunnelRow label="QR scans (form loads)" counts={data.funnel.scans} />
+          {data.funnel.conversionPct30d !== null && (
+            <div style={{ fontSize: 12, color: SUB, paddingTop: 8, borderTop: '1px solid #f0f0f2' }}>
+              Scan → registration (30 days): <strong style={{ color: INK }}>{data.funnel.conversionPct30d}%</strong>
+              {' '}· scans logged since Jul 20, 2026
+            </div>
+          )}
+        </Panel>
+      )}
+
+      {data.funnel && (
+        <Panel title="Scanned, Didn't Register">
+          {data.funnel.abandonedScans.length === 0 && <Muted>No abandoned scans yet.</Muted>}
+          {data.funnel.abandonedScans.slice(0, 8).map((s, i) => (
+            <Line
+              key={`${s.scanned_at}-${i}`}
+              left={s.openHouseAddress}
+              sub={`${s.agentName} · ${s.ip_address} · ${s.user_agent.slice(0, 40)}`}
+              right={fmtDate(s.scanned_at)}
+            />
+          ))}
+          <div style={{ fontSize: 11, color: SUB, paddingTop: 8 }}>
+            Includes agent test scans, bots, and repeat loads — timestamps are what matter.
+          </div>
+        </Panel>
+      )}
+    </div>
+  )
+}
+
+function FunnelRow({ label, counts }: { label: string; counts: WindowCounts }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '8px 0', borderTop: '1px solid #f0f0f2', gap: 12 }}>
+      <div style={{ fontSize: 13, fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: 12, color: SUB, whiteSpace: 'nowrap' }}>
+        <strong style={{ color: INK, fontSize: 15 }}>{counts.lifetime.toLocaleString()}</strong>
+        {' '}lifetime · {counts.last12mo.toLocaleString()} 12mo · {counts.last30d.toLocaleString()} 30d
+      </div>
     </div>
   )
 }

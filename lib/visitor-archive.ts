@@ -4,14 +4,15 @@ import { supabaseAdmin as supabase } from './supabase-admin'
 // years from the date of collection") and the qr_scans purge.
 const RETENTION_MS = 3 * 365 * 24 * 60 * 60 * 1000
 
-// Copy an open house's visitor log into visitor_archive before the rows are
-// deleted, so an agent's dashboard cleanup can't destroy the record of who
-// was inside the house. Throws on failure — callers must abort the delete
-// rather than silently lose the log. Returns the number of rows archived.
+// Copy an open house's visitor log into visitor_archive AND the listing
+// record into open_house_archive before the rows are deleted, so an agent's
+// dashboard cleanup can't destroy the record of who was inside the house or
+// the lifetime created/logged stats. Throws on failure — callers must abort
+// the delete rather than silently lose the log. Returns rows archived.
 export async function archiveVisitorsForOpenHouse(openHouseId: string): Promise<number> {
   const { data: oh } = await supabase
     .from('open_houses')
-    .select('property_address, agent_id')
+    .select('property_address, street_address, listing_price, start_at, end_at, created_at, agent_id')
     .eq('id', openHouseId)
     .maybeSingle()
 
@@ -22,6 +23,24 @@ export async function archiveVisitorsForOpenHouse(openHouseId: string): Promise<
     )
     .eq('open_house_id', openHouseId)
   if (readErr) throw new Error(`visitor_archive read: ${readErr.message}`)
+
+  // Archive the listing record itself (open_house_archive, migration 027) —
+  // even a zero-visitor open house counts toward lifetime marketing stats.
+  if (oh) {
+    const { error: ohArchiveErr } = await supabase.from('open_house_archive').insert({
+      open_house_id: openHouseId,
+      agent_id: oh.agent_id ?? null,
+      property_address: oh.property_address ?? null,
+      street_address: oh.street_address ?? null,
+      listing_price: oh.listing_price ?? null,
+      start_at: oh.start_at ?? null,
+      end_at: oh.end_at ?? null,
+      visitor_count: visitors?.length ?? 0,
+      oh_created_at: oh.created_at ?? null,
+    })
+    if (ohArchiveErr) throw new Error(`open_house_archive insert: ${ohArchiveErr.message}`)
+  }
+
   if (!visitors || visitors.length === 0) return 0
 
   const now = Date.now()

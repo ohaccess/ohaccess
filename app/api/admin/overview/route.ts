@@ -48,7 +48,19 @@ type VisitorRow = {
   purchasing_timeline: string | null
   verified: boolean | null
   registered_at: string | null
+  ip_address: string | null
 }
+
+type ScanRow = {
+  open_house_id: string | null
+  agent_id: string | null
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string
+}
+
+// Lifetime / last-12-months / last-30-days counts for the marketing funnel.
+type WindowCounts = { lifetime: number; last12mo: number; last30d: number }
 
 const PAYING_STATUSES = new Set(['active', 'trialing', 'past_due'])
 
@@ -77,7 +89,7 @@ export async function GET(request: Request) {
     supabase
       .from('visitors')
       .select(
-        'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, verified, registered_at'
+        'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, verified, registered_at, ip_address'
       )
       .order('registered_at', { ascending: false }),
   ])
@@ -102,6 +114,62 @@ export async function GET(request: Request) {
 
   const now = Date.now()
   const weekAgo = now - 7 * 24 * 60 * 60 * 1000
+  const d30Iso = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const m12Iso = new Date(now - 365 * 24 * 60 * 60 * 1000).toISOString()
+
+  // ---- Lifetime funnel (live tables + the deletion archives + qr_scans) ----
+  // Archives keep dashboard cleanup from erasing history, so lifetime counts
+  // = live rows + archived rows. Count queries (head:true) keep this cheap.
+  const countRows = async (table: string, dateCol: string, sinceIso?: string) => {
+    let q = supabase.from(table).select('id', { count: 'exact', head: true })
+    if (sinceIso) q = q.gte(dateCol, sinceIso)
+    const { count } = await q
+    return count || 0
+  }
+  const windowed = async (
+    liveCount: (sinceIso?: string) => number,
+    archiveTable: string | null,
+    archiveDateCol: string
+  ): Promise<WindowCounts> => {
+    const [aLife, a12, a30] = archiveTable
+      ? await Promise.all([
+          countRows(archiveTable, archiveDateCol),
+          countRows(archiveTable, archiveDateCol, m12Iso),
+          countRows(archiveTable, archiveDateCol, d30Iso),
+        ])
+      : [0, 0, 0]
+    return {
+      lifetime: liveCount() + aLife,
+      last12mo: liveCount(m12Iso) + a12,
+      last30d: liveCount(d30Iso) + a30,
+    }
+  }
+
+  const inWindow = (dates: (string | null)[], sinceIso?: string) =>
+    sinceIso ? dates.filter((d) => d && d >= sinceIso).length : dates.length
+
+  const ohDates = openHouses.map((oh) => oh.created_at)
+  const visitorDates = visitors.map((v) => v.registered_at)
+  const [openHousesCreated, visitorsLogged, scanCounts] = await Promise.all([
+    windowed((s) => inWindow(ohDates, s), 'open_house_archive', 'oh_created_at'),
+    windowed((s) => inWindow(visitorDates, s), 'visitor_archive', 'registered_at'),
+    (async (): Promise<WindowCounts> => ({
+      lifetime: await countRows('qr_scans', 'created_at'),
+      last12mo: await countRows('qr_scans', 'created_at', m12Iso),
+      last30d: await countRows('qr_scans', 'created_at', d30Iso),
+    }))(),
+  ])
+
+  // Recent scans that never became a registration ("scanned but didn't
+  // submit"): a scan converts when a visitor row exists for the same open
+  // house from the same IP. Matched against live visitors only — good
+  // enough for a recent-activity view.
+  const { data: recentScansData } = await supabase
+    .from('qr_scans')
+    .select('open_house_id, agent_id, ip_address, user_agent, created_at')
+    .order('created_at', { ascending: false })
+    .limit(200)
+  const recentScans = (recentScansData || []) as ScanRow[]
 
   // Lookup maps
   const agentName = new Map<string, string>()
@@ -229,8 +297,44 @@ export async function GET(request: Request) {
     verifiedVisitors,
   }
 
+  // ---- Scan funnel ----
+  // A scan "converted" when a visitor registered for the same open house
+  // from the same IP (visitors carry ip_address since migration 024, so
+  // older scans/visitors without one just can't match — shown as-is).
+  const convertedKeys = new Set(
+    visitors
+      .filter((v) => v.open_house_id && v.ip_address)
+      .map((v) => `${v.open_house_id}|${v.ip_address}`)
+  )
+  const abandonedScans = recentScans
+    .filter(
+      (s) => !(s.open_house_id && s.ip_address && convertedKeys.has(`${s.open_house_id}|${s.ip_address}`))
+    )
+    .slice(0, 30)
+    .map((s) => ({
+      scanned_at: s.created_at,
+      openHouseAddress: s.open_house_id ? ohAddress.get(s.open_house_id) || '(deleted open house)' : '—',
+      agentName: s.agent_id ? agentName.get(s.agent_id) || 'Unknown' : 'Unknown',
+      ip_address: s.ip_address || '—',
+      user_agent: (s.user_agent || '—').slice(0, 80),
+    }))
+
+  const funnel = {
+    openHousesCreated,
+    visitorsLogged,
+    scans: scanCounts,
+    // Registrations per scan, 30-day window — the honest conversion read
+    // (lifetime mixes pre-scan-log history and reads artificially high).
+    conversionPct30d:
+      scanCounts.last30d > 0
+        ? Math.round((visitorsLogged.last30d / scanCounts.last30d) * 100)
+        : null,
+    abandonedScans,
+  }
+
   return NextResponse.json({
     stats,
+    funnel,
     agents,
     openHouses: openHouseRows,
     visitors: visitorRows,
