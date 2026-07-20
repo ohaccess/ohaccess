@@ -1,0 +1,212 @@
+import type { Metadata } from 'next'
+import { headers } from 'next/headers'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { timelineStyle } from '@/lib/timeline'
+import { buildSellerReportStats } from '@/lib/seller-report'
+import { safeUrl } from '@/lib/register-helpers'
+
+// The shareable seller report card: a PII-free summary of one open house
+// (visitor count, buyer timelines, scan funnel) that the hosting agent sends
+// to their seller. Reachable only by its /report/<code> link; shows counts
+// and timelines, never visitor names or contact info. The short_urls row
+// rides the open-house delete cascade, so the link dies with the event.
+
+export const metadata: Metadata = {
+  title: 'Open House Report · ohACCESS',
+  robots: { index: false, follow: false },
+}
+
+const FONT = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif"
+
+function NotAvailable() {
+  return (
+    <div style={{ background: '#f5f5f7', minHeight: '100vh', fontFamily: FONT }}>
+      <main style={{ maxWidth: 560, margin: '0 auto', padding: '48px 20px', textAlign: 'center' }}>
+        <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5, color: '#1d1d1f' }}>
+          oh<span style={{ fontWeight: 300 }}>ACCESS</span>
+        </div>
+        <div style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 18, padding: '36px 24px', marginTop: 24 }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#1d1d1f' }}>This report isn&apos;t available</div>
+          <div style={{ fontSize: 13, color: '#6e6e73', marginTop: 8, lineHeight: 1.5 }}>
+            The link may be incorrect, or the open house it belonged to has been removed.
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+export default async function SellerReportPage({ params }: { params: Promise<{ code: string }> }) {
+  const { code } = await params
+
+  // Same public-page rate limiting as /map/[code]'s API — a wrong code shows
+  // the friendly not-available page, and guessing is throttled per IP.
+  const h = await headers()
+  const ip = (h.get('x-forwarded-for') || 'unknown').split(',')[0].trim()
+  const limit = await checkRateLimit(`ip:${ip}`, 'seller-report', 60, 3600)
+  if (!limit.allowed) return <NotAvailable />
+
+  const { data: link } = await supabase
+    .from('short_urls')
+    .select('open_house_id')
+    .eq('code', code)
+    .eq('url_type', 'seller_report')
+    .maybeSingle()
+  if (!link?.open_house_id) return <NotAvailable />
+
+  const { data: oh } = await supabase
+    .from('open_houses')
+    .select('id, property_address, open_house_date, open_house_hours, listing_url, agent_id')
+    .eq('id', link.open_house_id)
+    .maybeSingle()
+  if (!oh) return <NotAvailable />
+
+  const [{ data: visitors }, { count: scanCount }, { data: agent }] = await Promise.all([
+    supabase.from('visitors').select('purchasing_timeline').eq('open_house_id', oh.id),
+    supabase.from('qr_scans').select('id', { count: 'exact', head: true }).eq('open_house_id', oh.id),
+    supabase
+      .from('profiles')
+      .select('full_name, email, display_email, phone, brokerage, brokerage_id, primary_color, accent_color, logo_url')
+      .eq('id', oh.agent_id)
+      .maybeSingle(),
+  ])
+
+  // Team/brokerage members inherit their team's branding, matching every
+  // other visitor-facing surface (register page, emails, printed sign).
+  let brandColor = agent?.primary_color || '#1d1d1f'
+  let brandLogo = safeUrl(agent?.logo_url)
+  if (agent?.brokerage_id) {
+    const { data: brokerage } = await supabase
+      .from('brokerages')
+      .select('primary_color, logo_url')
+      .eq('id', agent.brokerage_id)
+      .maybeSingle()
+    if (brokerage?.primary_color) brandColor = brokerage.primary_color
+    if (safeUrl(brokerage?.logo_url)) brandLogo = safeUrl(brokerage?.logo_url)
+  }
+  const listingUrl = safeUrl(oh.listing_url)
+
+  const stats = buildSellerReportStats(visitors ?? [], scanCount ?? 0)
+  const agentContactEmail = agent?.display_email || agent?.email || null
+
+  return (
+    <div style={{ background: '#f5f5f7', minHeight: '100vh', fontFamily: FONT, color: '#1d1d1f' }}>
+      <main style={{ maxWidth: 560, margin: '0 auto', padding: '28px 16px 48px' }}>
+
+        {/* Branded header */}
+        <div style={{ background: brandColor, borderRadius: 18, padding: '24px 22px', color: 'white' }}>
+          {brandLogo ? (
+            // White chip behind the logo — agent logos are usually drawn for
+            // light backgrounds, and a dark logo would vanish on a dark brand
+            // header (Dave's own did exactly that).
+            <div style={{ display: 'inline-block', background: 'white', borderRadius: 10, padding: '8px 14px', marginBottom: 12 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={brandLogo} alt="" style={{ maxHeight: 40, maxWidth: 170, objectFit: 'contain', display: 'block' }} />
+            </div>
+          ) : (
+            <div style={{ fontSize: 18, fontWeight: 200, letterSpacing: -0.5, marginBottom: 10 }}>
+              oh<span style={{ fontWeight: 700 }}>ACCESS</span>
+            </div>
+          )}
+          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>Open House Report</div>
+          <div style={{ fontSize: 14, opacity: 0.85, marginTop: 6 }}>{oh.property_address}</div>
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 2 }}>
+            {[oh.open_house_date, oh.open_house_hours].filter(Boolean).join(' · ')}
+          </div>
+        </div>
+
+        {/* Headline stats */}
+        <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+          <div style={{ flex: 1, background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '18px 14px', textAlign: 'center' }}>
+            <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: -1 }}>{stats.total}</div>
+            <div style={{ fontSize: 11, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>
+              Registered {stats.total === 1 ? 'visitor' : 'visitors'}
+            </div>
+          </div>
+          {stats.soonCount > 0 && (
+            <div style={{ flex: 1, background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '18px 14px', textAlign: 'center' }}>
+              <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: -1, color: '#b84800' }}>{stats.soonCount}</div>
+              <div style={{ fontSize: 11, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>
+                Buying within 6 months
+              </div>
+            </div>
+          )}
+        </div>
+
+        {stats.total > 0 ? (
+          <>
+            <div style={{ background: '#e8f9ee', border: '1px solid #b2f0c8', borderRadius: 12, padding: '11px 14px', marginTop: 10, fontSize: 12.5, color: '#1a7a3c', fontWeight: 600, lineHeight: 1.45 }}>
+              ✓ Every visitor&apos;s identity was verified at sign-in with a one-time code sent to their
+              phone and email — no fake names, no unreadable sign-in sheets.
+            </div>
+
+            {/* Timeline breakdown */}
+            <div style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '18px 20px', marginTop: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
+                When visitors plan to buy
+              </div>
+              {stats.groups.map(g => {
+                const c = timelineStyle(g.label)
+                const pct = Math.round((g.count / stats.total) * 100)
+                return (
+                  <div key={g.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                    <span style={{ background: c.bg, color: c.color, padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', minWidth: 92, textAlign: 'center' }}>
+                      {g.label}
+                    </span>
+                    <div style={{ flex: 1, background: '#f2f2f7', borderRadius: 6, height: 8, overflow: 'hidden' }}>
+                      <div style={{ width: `${Math.max(pct, 4)}%`, height: '100%', background: c.color, borderRadius: 6 }} />
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, minWidth: 20, textAlign: 'right' }}>{g.count}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        ) : (
+          <div style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '22px 20px', marginTop: 10, fontSize: 13, color: '#6e6e73', textAlign: 'center' }}>
+            No registrations were recorded for this event.
+          </div>
+        )}
+
+        {/* Scan funnel — only when the scan log covers this event */}
+        {stats.funnel && (
+          <div style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '16px 20px', marginTop: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+              Interest at the door
+            </div>
+            <div style={{ fontSize: 13, lineHeight: 1.5 }}>
+              <strong>{stats.funnel.scans}</strong> {stats.funnel.scans === 1 ? 'person' : 'people'} scanned
+              the QR code · <strong>{stats.funnel.registered}</strong> completed registration
+            </div>
+          </div>
+        )}
+
+        {/* Prepared by */}
+        {agent?.full_name && (
+          <div style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '16px 20px', marginTop: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+              Hosted by
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>{agent.full_name}</div>
+            {agent.brokerage && <div style={{ fontSize: 12.5, color: '#6e6e73', marginTop: 2 }}>{agent.brokerage}</div>}
+            <div style={{ fontSize: 12.5, marginTop: 6, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              {agent.phone && <a href={`tel:${agent.phone}`} style={{ color: brandColor, fontWeight: 600, textDecoration: 'none' }}>{agent.phone}</a>}
+              {agentContactEmail && <a href={`mailto:${agentContactEmail}`} style={{ color: brandColor, fontWeight: 600, textDecoration: 'none' }}>{agentContactEmail}</a>}
+            </div>
+            {listingUrl && (
+              <div style={{ marginTop: 8 }}>
+                <a href={listingUrl} style={{ fontSize: 12.5, color: brandColor, fontWeight: 700 }}>View the listing →</a>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div style={{ textAlign: 'center', marginTop: 22, fontSize: 11, color: '#aeaeb2' }}>
+          Powered by <a href="https://www.ohaccess.com" style={{ color: '#6e6e73', fontWeight: 700, textDecoration: 'none' }}>ohACCESS.com</a> · Patent Pending
+          <div style={{ marginTop: 3 }}>Visitor identities verified · Contact details are shared only with the hosting agent</div>
+        </div>
+      </main>
+    </div>
+  )
+}

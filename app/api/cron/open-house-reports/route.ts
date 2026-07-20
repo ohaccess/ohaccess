@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { escapeHtml } from '@/lib/escape-html'
 import { TIMELINE_ORDER } from '@/lib/timeline'
+import { getOrCreateSellerReportCode } from '@/lib/report-link'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -38,8 +39,9 @@ function buildReportHtml(args: {
   logoUrl: string | null
   visitors: Visitor[]
   tz: string | null
+  reportUrl: string | null
 }): string {
-  const { agentName, address, primary, accent, logoUrl, visitors, tz } = args
+  const { agentName, address, primary, accent, logoUrl, visitors, tz, reportUrl } = args
   const verified = visitors.filter(v => v.verified).length
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 
@@ -96,6 +98,15 @@ function buildReportHtml(args: {
     ${visitors.length === 0
       ? '<div style="margin-top:18px;font-size:13px;color:#6e6e73;">No visitors registered at this open house.</div>'
       : groupHtml}
+    ${reportUrl && visitors.length > 0 ? `
+    <div style="margin-top:24px;background:#f5f5f7;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:14px;font-weight:700;color:#1d1d1f;">📊 Share your results with the seller</div>
+      <div style="font-size:13px;color:#6e6e73;margin-top:4px;line-height:1.5;">
+        A polished report card of this open house — visitor count and buyer timelines only,
+        never your leads' contact info. Sellers love seeing the turnout.
+      </div>
+      <a href="${escapeHtml(reportUrl)}" style="display:inline-block;margin-top:10px;background:${escapeHtml(primary)};color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:8px;">View &amp; share the seller report</a>
+    </div>` : ''}
     <div style="margin-top:24px;padding-top:14px;border-top:1px solid #e5e5ea;font-size:11px;color:#aeaeb2;text-align:center;">
       ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" style="max-height:48px;max-width:160px;object-fit:contain;margin-bottom:8px;" /><br/>` : ''}
       Sent by ohACCESS · Tip: export the full list anytime from your dashboard.
@@ -152,6 +163,10 @@ async function handle(request: Request) {
       .eq('open_house_id', oh.id)
       .order('registered_at', { ascending: true })
 
+    // Shareable seller report card (lazily minted, PII-free by design).
+    const reportCode = await getOrCreateSellerReportCode(oh.id, oh.agent_id)
+    const reportUrl = reportCode ? `https://www.ohaccess.com/report/${reportCode}` : null
+
     const html = buildReportHtml({
       agentName: agent?.full_name || 'there',
       address: oh.property_address || 'your open house',
@@ -160,6 +175,7 @@ async function handle(request: Request) {
       logoUrl: agent?.logo_url || null,
       visitors: (visitors ?? []) as Visitor[],
       tz: oh.timezone,
+      reportUrl,
     })
 
     try {

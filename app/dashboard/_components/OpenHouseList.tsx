@@ -166,6 +166,7 @@ export default function OpenHouseList({
   resetForm,
   setQrModal,
   openPermanentQr,
+  openSellerReport,
   setDeleteConfirm,
   setVisitorModal,
   showToast,
@@ -195,6 +196,7 @@ export default function OpenHouseList({
   resetForm: () => void
   setQrModal: (v: any) => void
   openPermanentQr: () => Promise<void>
+  openSellerReport: (ohId: string) => Promise<void>
   setDeleteConfirm: (id: string | null) => void
   setVisitorModal: (v: any) => void
   showToast: (message: string, type?: 'success' | 'error') => void
@@ -293,7 +295,10 @@ export default function OpenHouseList({
         <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
             <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Visitor log — {selectedOH.property_address}</div>
-            <button disabled={locked} onClick={exportCSV} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button disabled={locked} onClick={() => { if (guardLocked()) return; openSellerReport(selectedOH.id) }} title="A shareable results page for your seller — visitor counts and buyer timelines, no visitor contact info" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>📊 Seller report</button>
+              <button disabled={locked} onClick={exportCSV} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
+            </div>
           </div>
           {visitors.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#6e6e73', padding: '20px', fontSize: '13px' }}>No visitors yet. Share your QR code to get started!</div>

@@ -370,6 +370,26 @@ export default function Dashboard() {
     }
   }
 
+  // Fetch (creating on first use) the shareable seller-report link for an
+  // open house, copy it, and open a preview tab so the agent sees what the
+  // seller will see. The report shows counts and timelines only — no visitor
+  // contact info — so sharing it can't leak the lead list.
+  const openSellerReport = async (ohId: string) => {
+    try {
+      const res = await fetch(`/api/open-house/${ohId}/report-link`, { headers: await authHeaders() })
+      const json = await res.json()
+      if (!res.ok) {
+        showToast(json.error || 'Could not load the seller report link.', 'error')
+        return
+      }
+      try { await navigator.clipboard.writeText(json.url) } catch {}
+      window.open(json.url, '_blank', 'noopener')
+      showToast('Report link copied — text or email it to your seller!')
+    } catch {
+      showToast('Could not load the seller report link.', 'error')
+    }
+  }
+
   const getAddressSuggestions = async (value: string) => {
     if (value.length < 3) { setShowSuggestions(false); return }
     try {
@@ -763,6 +783,7 @@ export default function Dashboard() {
             resetForm={resetForm}
             setQrModal={setQrModal}
             openPermanentQr={openPermanentQr}
+            openSellerReport={openSellerReport}
             setDeleteConfirm={setDeleteConfirm}
             setVisitorModal={setVisitorModal}
             showToast={showToast}
