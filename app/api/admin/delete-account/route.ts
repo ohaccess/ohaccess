@@ -93,11 +93,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Children first, then parents.
+    // Children first, then parents. visitor_archive rows are deliberately
+    // KEPT (Dave, 2026-07-20): Privacy Policy v1.3 retention is a flat 3
+    // years from collection with no account-deletion trigger, so previously
+    // archived visitor records survive account deletion until the monthly
+    // retention purge (/api/cron/data-retention) ages them out.
     await del('visitors', supabase.from('visitors').delete().eq('agent_id', userId))
-    // Archived visitor logs go too — Privacy Policy §5 promises visitor data
-    // is deleted when the hosting agent's account is deleted.
-    await del('visitor_archive', supabase.from('visitor_archive').delete().eq('agent_id', userId))
     await del('short_urls', supabase.from('short_urls').delete().eq('agent_id', userId))
     await del('open_houses', supabase.from('open_houses').delete().eq('agent_id', userId))
     if (ownedIds.length) {
