@@ -30,6 +30,15 @@ export function buildSmsBody(base: string, extras: { label: string; url: string 
   return body
 }
 
+// Twilio signs its status callback over the exact URL it calls. The apex
+// domain (ohaccess.com) 307-redirects to www, and the signature no longer
+// validates after that hop — every callback was bouncing with a 403. So the
+// callback URL must always be the www host, called directly with no redirect.
+export function twilioStatusCallbackUrl(appUrl: string): string {
+  const origin = appUrl.replace(/^https:\/\/ohaccess\.com/i, 'https://www.ohaccess.com')
+  return `${origin.replace(/\/$/, '')}/api/webhooks/twilio-status`
+}
+
 // Only http(s) URLs are allowed to be forwarded/embedded — blocks javascript:,
 // data:, file:, and other schemes (and, for outbound calls, non-web targets).
 export function isHttpUrl(value: string | null | undefined): value is string {

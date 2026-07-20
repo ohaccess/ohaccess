@@ -16,6 +16,7 @@ import {
   buildUpcomingOpenHousesHtml,
   agentCopyRecipients,
   isVirtualNumber,
+  twilioStatusCallbackUrl,
   SMS_MAX_LENGTH,
   type UpcomingOpenHouse,
 } from '@/lib/register-helpers'
@@ -350,7 +351,7 @@ export async function POST(request: Request) {
           to: normalizedPhone || phone,
           // Twilio posts delivery updates (delivered/undelivered/failed) here so we
           // can flag bad numbers on the agent dashboard.
-          statusCallback: `${APP_URL}/api/webhooks/twilio-status`,
+          statusCallback: twilioStatusCallbackUrl(APP_URL),
         })
       } catch (err) {
         // Twilio rejected the number outright (invalid / unreachable). Don't fail

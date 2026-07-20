@@ -10,6 +10,7 @@ import {
   buildUpcomingOpenHousesHtml,
   agentCopyRecipients,
   isVirtualNumber,
+  twilioStatusCallbackUrl,
   SMS_MAX_LENGTH,
   type UpcomingOpenHouse,
 } from '@/lib/register-helpers'
@@ -259,5 +260,23 @@ describe('isVirtualNumber', () => {
     expect(isVirtualNumber(null)).toBe(false)
     expect(isVirtualNumber(undefined)).toBe(false)
     expect(isVirtualNumber('')).toBe(false)
+  })
+})
+
+describe('twilioStatusCallbackUrl', () => {
+  it('rewrites the apex domain to www so the callback never hits the 307 redirect', () => {
+    expect(twilioStatusCallbackUrl('https://ohaccess.com')).toBe(
+      'https://www.ohaccess.com/api/webhooks/twilio-status'
+    )
+  })
+  it('leaves the www domain untouched', () => {
+    expect(twilioStatusCallbackUrl('https://www.ohaccess.com')).toBe(
+      'https://www.ohaccess.com/api/webhooks/twilio-status'
+    )
+  })
+  it('leaves other origins (local dev) untouched and strips a trailing slash', () => {
+    expect(twilioStatusCallbackUrl('http://localhost:3000/')).toBe(
+      'http://localhost:3000/api/webhooks/twilio-status'
+    )
   })
 })
