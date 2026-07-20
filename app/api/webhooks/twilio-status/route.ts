@@ -2,13 +2,14 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import twilio from 'twilio'
 import { normalizePhone } from '@/lib/phone'
+import { twilioStatusCallbackUrl } from '@/lib/register-helpers'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ohaccess.com'
-const CALLBACK_URL = `${APP_URL}/api/webhooks/twilio-status`
+const CALLBACK_URL = twilioStatusCallbackUrl(APP_URL)
 
 // Twilio posts SMS delivery updates as form-encoded data and signs them with
 // X-Twilio-Signature (HMAC over the exact callback URL + sorted params).
