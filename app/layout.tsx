@@ -19,6 +19,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ohACCESS",
   description: "Open House Visitor Verification System",
+  // Link previews (iMessage, Facebook, LinkedIn, X). Copy per Dave.
+  openGraph: {
+    title: "ohACCESS – Verified Open House Check-In",
+    description:
+      "Replace paper sign-in sheets with verified QR-code digital check-in. Know exactly who walked through your open house.",
+    url: "https://ohaccess.com",
+    type: "website",
+    images: ["https://ohaccess.com/og-image.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["https://ohaccess.com/og-image.png"],
+  },
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
