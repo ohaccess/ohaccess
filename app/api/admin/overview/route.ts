@@ -319,16 +319,23 @@ export async function GET(request: Request) {
       user_agent: (s.user_agent || '—').slice(0, 80),
     }))
 
+  // Conversion = share of the last 30 days' scans that became a registration
+  // (same open house + IP). Deliberately scan-based, NOT registrations÷scans:
+  // registrations predate the scan log (live since 2026-07-20), so that ratio
+  // reads absurdly high (1,000%+) until the log has 30 days of history.
+  // recentScans is capped at 200, so with heavy traffic this becomes a
+  // most-recent-200 sample — fine for a dashboard read.
+  const d30Ms = Date.now() - 30 * 24 * 60 * 60 * 1000
+  const scans30 = recentScans.filter((s) => new Date(s.created_at).getTime() >= d30Ms)
+  const converted30 = scans30.filter(
+    (s) => s.open_house_id && s.ip_address && convertedKeys.has(`${s.open_house_id}|${s.ip_address}`)
+  ).length
+
   const funnel = {
     openHousesCreated,
     visitorsLogged,
     scans: scanCounts,
-    // Registrations per scan, 30-day window — the honest conversion read
-    // (lifetime mixes pre-scan-log history and reads artificially high).
-    conversionPct30d:
-      scanCounts.last30d > 0
-        ? Math.round((visitorsLogged.last30d / scanCounts.last30d) * 100)
-        : null,
+    conversionPct30d: scans30.length > 0 ? Math.round((converted30 / scans30.length) * 100) : null,
     abandonedScans,
   }
 
