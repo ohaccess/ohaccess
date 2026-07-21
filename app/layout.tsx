@@ -17,8 +17,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ohACCESS",
-  description: "Open House Visitor Verification System",
+  metadataBase: new URL("https://www.ohaccess.com"),
+  title: {
+    default: "ohACCESS – Verified Open House Check-In for Real Estate Agents",
+    template: "%s · ohACCESS",
+  },
+  description:
+    "Replace paper sign-in sheets with verified QR-code digital check-in. Know exactly who walked through your open house.",
+  // Self-referencing canonical on every page, resolved against metadataBase
+  // (www is the canonical host — the apex 308s to it).
+  alternates: { canonical: "./" },
   // Link previews (iMessage, Facebook, LinkedIn, X). Copy per Dave.
   openGraph: {
     title: "ohACCESS – Verified Open House Check-In",

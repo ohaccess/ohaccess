@@ -1,3 +1,10 @@
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Subscriber Agreement',
+  description: 'Master service agreement for ohACCESS subscribers — agents, teams, and brokerages.',
+}
+
 export default function SubscriberTerms() {
   return (
     <main style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#ffffff', color: '#1d1d1f', minHeight: '100vh' }}>

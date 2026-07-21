@@ -1,3 +1,10 @@
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Visitor Terms of Service',
+  description: 'Terms of service for open house visitors using ohACCESS check-in.',
+}
+
 export default function Terms() {
   return (
     <main style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#ffffff', color: '#1d1d1f', minHeight: '100vh' }}>
