@@ -28,17 +28,22 @@ export const metadata: Metadata = {
   // (www is the canonical host — the apex 308s to it).
   alternates: { canonical: "./" },
   // Link previews (iMessage, Facebook, LinkedIn, X). Copy per Dave.
+  // og:image/og:url MUST be the www host: the apex 307-redirects to www and
+  // Facebook's crawler drops redirected images (same trap that broke the
+  // Stripe webhook and Twilio status callbacks). Explicit width/height lets
+  // FB render the image on the very first share instead of after an async
+  // re-scrape.
   openGraph: {
     title: "ohACCESS – Verified Open House Check-In",
     description:
       "Replace paper sign-in sheets with verified QR-code digital check-in. Know exactly who walked through your open house.",
-    url: "https://ohaccess.com",
+    url: "https://www.ohaccess.com",
     type: "website",
-    images: ["https://ohaccess.com/og-image.png"],
+    images: [{ url: "https://www.ohaccess.com/og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://ohaccess.com/og-image.png"],
+    images: ["https://www.ohaccess.com/og-image.png"],
   },
   icons: {
     icon: [
