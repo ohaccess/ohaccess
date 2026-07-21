@@ -51,9 +51,9 @@ export async function generateMetadata({ params }: { params: Promise<{ code: str
       description,
       url: `https://www.ohaccess.com/report/${code}`,
       type: 'website',
-      images: ['https://ohaccess.com/og-image.png'],
+      images: [{ url: 'https://www.ohaccess.com/og-image.png', width: 1200, height: 630 }],
     },
-    twitter: { card: 'summary_large_image', images: ['https://ohaccess.com/og-image.png'] },
+    twitter: { card: 'summary_large_image', images: ['https://www.ohaccess.com/og-image.png'] },
   }
 }
 
