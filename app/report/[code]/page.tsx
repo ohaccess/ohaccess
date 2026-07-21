@@ -5,6 +5,7 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { timelineStyle } from '@/lib/timeline'
 import { buildSellerReportStats } from '@/lib/seller-report'
 import { safeUrl } from '@/lib/register-helpers'
+import ShareLink from './ShareLink'
 
 // The shareable seller report card: a PII-free summary of one open house
 // (visitor count, buyer timelines, scan funnel) that the hosting agent sends
@@ -208,6 +209,11 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
             )}
           </div>
         )}
+
+        <ShareLink
+          url={`https://www.ohaccess.com/report/${code}`}
+          title={`Open House Report — ${oh.property_address}`}
+        />
 
         <div style={{ textAlign: 'center', marginTop: 22, fontSize: 11, color: '#aeaeb2' }}>
           Powered by <a href="https://www.ohaccess.com" style={{ color: '#6e6e73', fontWeight: 700, textDecoration: 'none' }}>ohACCESS.com</a> · Patent Pending

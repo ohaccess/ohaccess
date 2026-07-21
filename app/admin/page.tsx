@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
+import { deviceLabel } from '@/lib/ua-label'
 import { IMPERSONATION_KEY } from '../_components/ImpersonationBanner'
 import { timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type SortState, type Sortable } from '@/lib/sort'
@@ -1435,9 +1436,13 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
           agent cleaning up their dashboard doesn't shrink these. */}
       {data.funnel && (
         <Panel title="Lifetime Numbers">
-          <FunnelRow label="Open houses created" counts={data.funnel.openHousesCreated} />
-          <FunnelRow label="Visitors logged" counts={data.funnel.visitorsLogged} />
-          <FunnelRow label="QR scans (form loads)" counts={data.funnel.scans} />
+          <FunnelTable
+            rows={[
+              { label: 'Open houses created', counts: data.funnel.openHousesCreated },
+              { label: 'Visitors logged', counts: data.funnel.visitorsLogged },
+              { label: 'QR scans (form loads)', counts: data.funnel.scans },
+            ]}
+          />
           {data.funnel.conversionPct30d !== null && (
             <div style={{ fontSize: 12, color: SUB, paddingTop: 8, borderTop: '1px solid #f0f0f2' }}>
               Scan → registration (30 days): <strong style={{ color: INK }}>{data.funnel.conversionPct30d}%</strong>
@@ -1451,12 +1456,17 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
         <Panel title="Scanned, Didn't Register">
           {data.funnel.abandonedScans.length === 0 && <Muted>No abandoned scans yet.</Muted>}
           {data.funnel.abandonedScans.slice(0, 8).map((s, i) => (
-            <Line
-              key={`${s.scanned_at}-${i}`}
-              left={s.openHouseAddress}
-              sub={`${s.agentName} · ${s.ip_address} · ${s.user_agent.slice(0, 40)}`}
-              right={fmtDate(s.scanned_at)}
-            />
+            <div key={`${s.scanned_at}-${i}`} style={{ padding: '8px 0', borderTop: '1px solid #f0f0f2' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {s.openHouseAddress}
+                </div>
+                <div style={{ fontSize: 12, color: SUB, whiteSpace: 'nowrap' }}>{fmtDateTime(s.scanned_at)}</div>
+              </div>
+              <div style={{ fontSize: 12, color: SUB, marginTop: 2 }}>
+                {s.agentName} · {deviceLabel(s.user_agent)} · {s.ip_address}
+              </div>
+            </div>
           ))}
           <div style={{ fontSize: 11, color: SUB, paddingTop: 8 }}>
             Includes agent test scans, bots, and repeat loads — timestamps are what matter.
@@ -1467,14 +1477,24 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
   )
 }
 
-function FunnelRow({ label, counts }: { label: string; counts: WindowCounts }) {
+// Aligned grid: one labeled row per metric, three right-aligned number
+// columns under Lifetime / 12 mo / 30 d headers.
+function FunnelTable({ rows }: { rows: { label: string; counts: WindowCounts }[] }) {
+  const num = { textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' as const }
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '8px 0', borderTop: '1px solid #f0f0f2', gap: 12 }}>
-      <div style={{ fontSize: 13, fontWeight: 600 }}>{label}</div>
-      <div style={{ fontSize: 12, color: SUB, whiteSpace: 'nowrap' }}>
-        <strong style={{ color: INK, fontSize: 15 }}>{counts.lifetime.toLocaleString()}</strong>
-        {' '}lifetime · {counts.last12mo.toLocaleString()} 12mo · {counts.last30d.toLocaleString()} 30d
-      </div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', columnGap: 18, rowGap: 0, alignItems: 'baseline' }}>
+      <div />
+      {['Lifetime', '12 mo', '30 d'].map(h => (
+        <div key={h} style={{ ...num, fontSize: 10, fontWeight: 700, color: SUB, textTransform: 'uppercase', letterSpacing: 0.5, paddingBottom: 4 }}>{h}</div>
+      ))}
+      {rows.map(r => (
+        <Fragment key={r.label}>
+          <div style={{ fontSize: 13, fontWeight: 600, padding: '8px 0', borderTop: '1px solid #f0f0f2' }}>{r.label}</div>
+          <div style={{ ...num, fontSize: 15, fontWeight: 700, color: INK, padding: '8px 0', borderTop: '1px solid #f0f0f2' }}>{r.counts.lifetime.toLocaleString()}</div>
+          <div style={{ ...num, fontSize: 13, color: SUB, padding: '8px 0', borderTop: '1px solid #f0f0f2' }}>{r.counts.last12mo.toLocaleString()}</div>
+          <div style={{ ...num, fontSize: 13, color: SUB, padding: '8px 0', borderTop: '1px solid #f0f0f2' }}>{r.counts.last30d.toLocaleString()}</div>
+        </Fragment>
+      ))}
     </div>
   )
 }
