@@ -13,9 +13,48 @@ import ShareLink from './ShareLink'
 // and timelines, never visitor names or contact info. The short_urls row
 // rides the open-house delete cascade, so the link dies with the event.
 
-export const metadata: Metadata = {
-  title: 'Open House Report · ohACCESS',
-  robots: { index: false, follow: false },
+// Per-report link previews: when an agent texts the report to their seller,
+// the card shows the property address instead of the generic site preview.
+// Stays noindex — reachable by link only. Falls back to a generic title on
+// unknown codes.
+export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
+  const { code } = await params
+  const generic: Metadata = {
+    title: 'Open House Report',
+    robots: { index: false, follow: false },
+  }
+
+  const { data: link } = await supabase
+    .from('short_urls')
+    .select('open_house_id')
+    .eq('code', code)
+    .eq('url_type', 'seller_report')
+    .maybeSingle()
+  if (!link?.open_house_id) return generic
+
+  const { data: oh } = await supabase
+    .from('open_houses')
+    .select('property_address')
+    .eq('id', link.open_house_id)
+    .maybeSingle()
+  if (!oh?.property_address) return generic
+
+  const title = `Open House Report — ${oh.property_address}`
+  const description =
+    'Verified visitor turnout and buyer timelines for this open house, powered by ohACCESS.'
+  return {
+    title,
+    description,
+    robots: { index: false, follow: false },
+    openGraph: {
+      title,
+      description,
+      url: `https://www.ohaccess.com/report/${code}`,
+      type: 'website',
+      images: ['https://ohaccess.com/og-image.png'],
+    },
+    twitter: { card: 'summary_large_image', images: ['https://ohaccess.com/og-image.png'] },
+  }
 }
 
 const FONT = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif"
