@@ -52,6 +52,10 @@ export default function Dashboard() {
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
   const [totalVisitors, setTotalVisitors] = useState<number | null>(null)
   const [teamStatus, setTeamStatus] = useState<{ subscription_status: string | null } | null>(null)
+  // Covered by a PAYING sponsor (billing_status 'active') — Pro-level access,
+  // like membership on a paying team. Display/branding sponsorship alone
+  // (unpaid sponsor) doesn't unlock anything.
+  const [sponsorCovered, setSponsorCovered] = useState(false)
 
   const primaryColor = profile?.primary_color || '#1d1d1f'
   const accentColor = profile?.accent_color || '#0071e3'
@@ -97,7 +101,8 @@ export default function Dashboard() {
   // and are already over the cap.
   const trialLimit = trialLimitFor(profile)
   const isPaidTier =
-    ['pro', 'team', 'brokerage'].includes(profile?.tier || 'free') && !prepaidExpired
+    (['pro', 'team', 'brokerage'].includes(profile?.tier || 'free') && !prepaidExpired) ||
+    sponsorCovered
   const locked = !isPaidTier && (totalVisitors ?? 0) >= trialLimit
   const guardLocked = (): boolean => {
     if (locked) {
@@ -196,6 +201,18 @@ export default function Dashboard() {
       const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
       if (data) {
         setProfile(data)
+        // Paying sponsor coverage (RLS lets a sponsored agent read their own
+        // sponsor's row). Best-effort: a lookup failure just means no unlock.
+        if (data.sponsor_id) {
+          const { data: sp } = await supabase
+            .from('sponsors')
+            .select('billing_status')
+            .eq('id', data.sponsor_id)
+            .maybeSingle()
+          setSponsorCovered(sp?.billing_status === 'active')
+        } else {
+          setSponsorCovered(false)
+        }
       } else {
         // Auto-create profile if it doesn't exist. Pull the referral source
         // from auth user_metadata first (set at signup, survives email
