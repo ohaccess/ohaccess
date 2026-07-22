@@ -141,6 +141,7 @@ export default function SponsorDashboard() {
 
   // Agents tab
   const [invites, setInvites] = useState<Invite[]>([])
+  const [seatLimit, setSeatLimit] = useState(10)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteBusy, setInviteBusy] = useState(false)
   const [removeConfirm, setRemoveConfirm] = useState<string | null>(null)
@@ -176,6 +177,7 @@ export default function SponsorDashboard() {
       if (!res.ok) return
       const json = await res.json()
       setInvites(json.invites || [])
+      if (json.seatLimit) setSeatLimit(json.seatLimit)
     } catch { /* leave list as-is */ }
   }, [authHeaders])
 
@@ -586,7 +588,7 @@ export default function SponsorDashboard() {
               <div style={{ ...cardHeader, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span>Invite an agent</span>
                 <span style={{ fontSize: '12px', fontWeight: 400, color: '#6e6e73' }}>
-                  {agents.length + invites.length} of 10 seats used
+                  {agents.length + invites.length} of {seatLimit} seats used
                 </span>
               </div>
               <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
