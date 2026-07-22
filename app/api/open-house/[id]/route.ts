@@ -42,9 +42,26 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   const { data: agent } = await supabase
     .from('profiles')
-    .select('full_name, primary_color, accent_color')
+    .select('full_name, primary_color, accent_color, sponsor_id')
     .eq('id', oh.agent_id)
     .maybeSingle()
+
+  // Sponsor disclosure: when the agent has an accepted sponsor, the sign-in
+  // form must NAME them in the consent language. Only the public display name
+  // is exposed — no contact info, no ids.
+  let sponsorName: string | null = null
+  if (agent?.sponsor_id) {
+    const { data: sponsor } = await supabase
+      .from('sponsors')
+      .select('full_name, company')
+      .eq('id', agent.sponsor_id)
+      .maybeSingle()
+    if (sponsor?.full_name) {
+      sponsorName = sponsor.company
+        ? `${sponsor.full_name} (${sponsor.company})`
+        : sponsor.full_name
+    }
+  }
 
   // Shape matches what the page expects: open-house fields with a nested
   // `profiles` object for the agent's branding. agent_id is intentionally
@@ -64,6 +81,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       primary_color: agent?.primary_color ?? null,
       accent_color: agent?.accent_color ?? null,
     },
+    sponsor: sponsorName ? { name: sponsorName } : null,
   })
 }
 

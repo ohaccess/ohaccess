@@ -414,6 +414,79 @@ function ReferralSection({ profile }: { profile: any }) {
   )
 }
 
+// Shown only when the agent has an active sponsor (a 3rd-party provider whose
+// card rides below theirs in visitor emails). The agent accepted this via the
+// emailed invite; this section lets them see who it is and end it anytime.
+function SponsorshipSection({ profile, setProfile, agentId, showToast }: {
+  profile: any
+  setProfile: (p: any) => void
+  agentId: string
+  showToast: (message: string, type?: 'success' | 'error') => void
+}) {
+  const [sponsor, setSponsor] = useState<{ full_name: string | null; company: string | null } | null>(null)
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (!profile?.sponsor_id) return
+    supabase
+      .from('sponsors')
+      .select('full_name, company')
+      .eq('id', profile.sponsor_id)
+      .maybeSingle()
+      .then(({ data }: { data: { full_name: string | null; company: string | null } | null }) => setSponsor(data))
+  }, [profile?.sponsor_id])
+
+  const endSponsorship = async () => {
+    setBusy(true)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ sponsor_id: null })
+      .eq('id', agentId)
+    setBusy(false)
+    setConfirming(false)
+    if (error) {
+      showToast('Could not end the sponsorship. Please try again.', 'error')
+      return
+    }
+    setProfile({ ...profile, sponsor_id: null })
+    showToast('Sponsorship ended.')
+  }
+
+  const label = sponsor
+    ? (sponsor.company ? `${sponsor.full_name} (${sponsor.company})` : sponsor.full_name)
+    : '…'
+
+  return (
+    <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+      <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Sponsorship</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '12px', flexWrap: 'wrap' as const }}>
+        <div style={{ fontSize: '13px', color: '#48484a', lineHeight: '1.6' }}>
+          Sponsored by <strong style={{ color: '#1d1d1f' }}>{label}</strong>.<br />
+          <span style={{ fontSize: '12px', color: '#6e6e73' }}>
+            Their card appears below yours in visitor emails, and your sign-in form names them in the consent language.
+          </span>
+        </div>
+        {confirming ? (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', color: '#6e6e73' }}>End sponsorship?</span>
+            <button onClick={endSponsorship} disabled={busy} style={{ background: '#cc0000', color: 'white', border: 'none', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy ? 0.7 : 1 }}>
+              {busy ? '…' : 'Yes, end it'}
+            </button>
+            <button onClick={() => setConfirming(false)} style={{ background: 'none', border: 'none', color: '#6e6e73', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setConfirming(true)} style={{ background: 'white', border: '1px solid #d1d1d6', color: '#cc0000', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            End sponsorship
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function SettingsPanel({
   profile,
   setProfile,
@@ -526,6 +599,10 @@ export default function SettingsPanel({
           </div>
         </div>
       </div>
+
+      {profile?.sponsor_id && (
+        <SponsorshipSection profile={profile} setProfile={setProfile} agentId={agentId} showToast={showToast} />
+      )}
 
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Branding & photos</div>

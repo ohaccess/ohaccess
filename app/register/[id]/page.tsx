@@ -557,7 +557,18 @@ function ExpiredOpenHouse() {
               {t.agreePrefix}
               <a href="/terms" style={{ color: '#1d1d1f', fontWeight: '700', textDecoration: 'underline' }}>
                 {t.termsLink}
-              </a>{t.agreeSuffix}
+              </a>
+              {openHouse.sponsor?.name ? (
+                // Sponsored open house: the consent line explicitly names
+                // today's sponsor alongside the host agent.
+                <>
+                  {t.agreeSuffixSponsored.split('{sponsor}')[0]}
+                  <strong style={{ color: '#1d1d1f' }}>{openHouse.sponsor.name}</strong>
+                  {t.agreeSuffixSponsored.split('{sponsor}')[1]}
+                </>
+              ) : (
+                t.agreeSuffix
+              )}
               {t.englishGoverns && <> {t.englishGoverns}</>}
             </div>
 
