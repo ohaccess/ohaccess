@@ -583,7 +583,12 @@ export default function SponsorDashboard() {
             </div>
 
             <div style={card}>
-              <div style={cardHeader}>Invite an agent</div>
+              <div style={{ ...cardHeader, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>Invite an agent</span>
+                <span style={{ fontSize: '12px', fontWeight: 400, color: '#6e6e73' }}>
+                  {agents.length + invites.length} of 10 seats used
+                </span>
+              </div>
               <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
                 <input
                   style={{ ...inputStyle, flex: 1 }}

@@ -140,12 +140,16 @@ export async function POST(request: Request) {
       logo_url: string | null
       landing_page_url: string | null
     } | null = null
+    // Does a PAYING sponsor cover this agent? (Team-equivalent billing —
+    // an active sponsor's agents get Pro-level access, like team members.)
+    let sponsorCovered = false
     if (agent?.sponsor_id) {
       const { data: sponsorRow } = await supabase
         .from('sponsors')
-        .select('id, full_name, company, display_email, phone, license_number, headshot_url, logo_url, landing_page_url')
+        .select('id, full_name, company, display_email, phone, license_number, headshot_url, logo_url, landing_page_url, billing_status')
         .eq('id', agent.sponsor_id)
         .maybeSingle()
+      sponsorCovered = sponsorRow?.billing_status === 'active'
       // A sponsor with no name never showed on the sign-in form — treat as none.
       if (sponsorRow?.full_name) sponsor = sponsorRow
     }
@@ -172,7 +176,10 @@ export async function POST(request: Request) {
     // lapsed agents are capped server-side and don't get the paid product for
     // free. Real Stripe subscriptions auto-renew and never trip this.
     const prepaidExpired = isExpiredPrepaidAccess(agent)
-    const isPro = ['pro', 'team', 'brokerage'].includes(agentTier) && !prepaidExpired
+    // An agent covered by a paying sponsor gets Pro-level access (no trial
+    // cap), same as a member of a paying team.
+    const isPro =
+      (['pro', 'team', 'brokerage'].includes(agentTier) && !prepaidExpired) || sponsorCovered
 
     // Trial cap check — BEFORE creating the visitor row, so over-quota
     // requests can't pollute the agent's visitor log. The cap is 25 plus any

@@ -73,6 +73,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 })
   }
 
+  // Team-equivalent seat cap: a sponsorship covers up to 10 agents
+  // (accepted + pending invites), matching the Team plan it's billed as.
+  const SEAT_LIMIT = 10
+  const { count: agentCount } = await supabase
+    .from('profiles')
+    .select('*', { count: 'exact', head: true })
+    .eq('sponsor_id', sponsor.id)
+  const { count: pendingCount } = await supabase
+    .from('sponsor_invitations')
+    .select('*', { count: 'exact', head: true })
+    .eq('sponsor_id', sponsor.id)
+    .is('accepted_at', null)
+    .gt('expires_at', new Date().toISOString())
+  if ((agentCount ?? 0) + (pendingCount ?? 0) >= SEAT_LIMIT) {
+    return NextResponse.json(
+      { error: `Your sponsorship covers up to ${SEAT_LIMIT} agents. Remove an agent or revoke a pending invite first.` },
+      { status: 409 }
+    )
+  }
+
   // Already sponsored by this sponsor?
   const { data: existingAgent } = await supabase
     .from('profiles')
