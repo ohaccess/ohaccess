@@ -16,7 +16,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 async function getSponsorForUser(userId: string) {
   const { data } = await supabase
     .from('sponsors')
-    .select('id, full_name, company')
+    .select('id, full_name, company, seat_limit')
     .eq('owner_id', userId)
     .maybeSingle()
   return data
@@ -44,7 +44,11 @@ export async function GET(request: Request) {
     .eq('sponsor_id', sponsor.id)
     .order('full_name', { ascending: true })
 
-  return NextResponse.json({ invites: invites ?? [], agents: agents ?? [] })
+  return NextResponse.json({
+    invites: invites ?? [],
+    agents: agents ?? [],
+    seatLimit: sponsor.seat_limit ?? 10,
+  })
 }
 
 // POST: invite an agent by email. The agent must explicitly accept before the
@@ -73,9 +77,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 })
   }
 
-  // Team-equivalent seat cap: a sponsorship covers up to 10 agents
-  // (accepted + pending invites), matching the Team plan it's billed as.
-  const SEAT_LIMIT = 10
+  // Seat cap: accepted agents + pending invites vs the sponsor's own limit
+  // (default 10 = the flat Team-equivalent plan; raised per sponsor when
+  // they move to per-seat pricing — no code change needed).
+  const seatLimit = sponsor.seat_limit ?? 10
   const { count: agentCount } = await supabase
     .from('profiles')
     .select('*', { count: 'exact', head: true })
@@ -86,9 +91,9 @@ export async function POST(request: Request) {
     .eq('sponsor_id', sponsor.id)
     .is('accepted_at', null)
     .gt('expires_at', new Date().toISOString())
-  if ((agentCount ?? 0) + (pendingCount ?? 0) >= SEAT_LIMIT) {
+  if ((agentCount ?? 0) + (pendingCount ?? 0) >= seatLimit) {
     return NextResponse.json(
-      { error: `Your sponsorship covers up to ${SEAT_LIMIT} agents. Remove an agent or revoke a pending invite first.` },
+      { error: `Your sponsorship covers up to ${seatLimit} agents. Remove an agent or revoke a pending invite first — or contact support@ohaccess.com to add seats.` },
       { status: 409 }
     )
   }
