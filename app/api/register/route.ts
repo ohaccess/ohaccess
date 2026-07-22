@@ -138,11 +138,12 @@ export async function POST(request: Request) {
       license_number: string | null
       headshot_url: string | null
       logo_url: string | null
+      landing_page_url: string | null
     } | null = null
     if (agent?.sponsor_id) {
       const { data: sponsorRow } = await supabase
         .from('sponsors')
-        .select('id, full_name, company, display_email, phone, license_number, headshot_url, logo_url')
+        .select('id, full_name, company, display_email, phone, license_number, headshot_url, logo_url, landing_page_url')
         .eq('id', agent.sponsor_id)
         .maybeSingle()
       // A sponsor with no name never showed on the sign-in form — treat as none.
@@ -356,6 +357,18 @@ export async function POST(request: Request) {
       )
     }
 
+    // Sponsor's "More information" link — same tracked-short-link pattern as
+    // the agent's, so the sponsor card's link clicks are measurable too.
+    let sponsorShortUrl: string | null = null
+    if (sponsor && isHttpUrl(sponsor.landing_page_url)) {
+      sponsorShortUrl = await createShortUrl(
+        sponsor.landing_page_url!,
+        openHouse.agent_id,
+        openHouseId,
+        'sponsor'
+      )
+    }
+
     // ① VISITOR SMS — keep under SMS_MAX_LENGTH where possible so Twilio
     // bills 1 segment. The "Reply STOP to opt out" line stays in the base
     // message even if it pushes us to 2 segments for very long addresses —
@@ -446,6 +459,7 @@ export async function POST(request: Request) {
                   ${sponsorEmail ? `<div style="font-size: 12px; color: #0071e3;">${sponsorEmail}</div>` : ''}
                   ${sponsorPhone ? `<div style="font-size: 12px;">${sponsorPhoneTel ? `<a href="tel:${escapeHtml(sponsorPhoneTel)}" style="color: #0071e3; text-decoration: none;">${sponsorPhone}</a>` : `<span style="color: #6e6e73;">${sponsorPhone}</span>`}</div>` : ''}
                   ${sponsorLicense ? `<div style="font-size: 11px; color: #6e6e73;">${sponsorLicense}</div>` : ''}
+                  ${sponsorShortUrl ? `<div><a href="${escapeHtml(sponsorShortUrl)}" style="font-size: 12px; color: #0071e3;">Sponsor information</a></div>` : ''}
                 </div>
               </div>
               ${sponsorLogo ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #ead9ad; text-align: center;"><img src="${escapeHtml(sponsorLogo)}" style="max-height:60px;width:70%;object-fit:contain;" /></div>` : ''}
