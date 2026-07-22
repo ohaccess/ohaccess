@@ -145,6 +145,7 @@ export default function Dashboard() {
     if (!session) {
       const { data: refreshData } = await supabase.auth.refreshSession()
       if (!refreshData.session) { window.location.href = '/login'; return }
+      if (await isSponsorAccount(refreshData.session.user.id)) { window.location.href = '/sponsor/dashboard'; return }
       setUser(refreshData.session.user)
       await loadProfile(refreshData.session.user.id)
       await loadOpenHouses(refreshData.session.user.id)
@@ -153,12 +154,20 @@ export default function Dashboard() {
       setLoading(false)
       return
     }
+    if (await isSponsorAccount(session.user.id)) { window.location.href = '/sponsor/dashboard'; return }
     setUser(session.user)
     await loadProfile(session.user.id)
     await loadOpenHouses(session.user.id)
     await loadVisitorCount(session.user.id)
     await loadTeamStatus()
     setLoading(false)
+  }
+
+  // Sponsor accounts (lenders etc.) share /login but have their own dashboard.
+  // RLS lets a user read only their own sponsors row, so this is cheap and safe.
+  const isSponsorAccount = async (userId: string) => {
+    const { data } = await supabase.from('sponsors').select('id').eq('owner_id', userId).maybeSingle()
+    return !!data
   }
 
   // Team billing health (drives the "contact your admin" banner for members).

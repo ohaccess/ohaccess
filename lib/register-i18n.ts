@@ -53,6 +53,10 @@ export interface RegisterStrings {
   agreePrefix: string
   termsLink: string
   agreeSuffix: string
+  // Used instead of agreeSuffix when the host agent has an accepted sponsor
+  // (3rd-party provider). Contains {sponsor}; rendered with the sponsor's
+  // name (bolded) substituted in, so consent explicitly names them.
+  agreeSuffixSponsored: string
   englishGoverns: string
   narTitle: string
   narBody: string
@@ -88,6 +92,7 @@ const en: RegisterStrings = {
   agreePrefix: 'You also agree to the ',
   termsLink: 'ohACCESS Terms of Service & Privacy Policy',
   agreeSuffix: ', and consent to be contacted by the host agent via phone, text, and email about this and other properties.',
+  agreeSuffixSponsored: ", and consent to be contacted by the host agent and today's sponsor, {sponsor}, via phone, text, and email about this and other properties.",
   englishGoverns: '',
   narTitle: 'Prefer not to register?',
   narBody: "You're welcome to schedule a private showing of this — or any — listed property with the buyer's agent of your choice. Under NAR rules effective August 17, 2024, you'll need a written buyer representation agreement with that agent before they can show you the home; most agents can prepare one on the spot. ohACCESS registration is required only to attend today's open house.",
@@ -123,6 +128,7 @@ const es: RegisterStrings = {
   agreePrefix: 'También aceptas los ',
   termsLink: 'Términos de Servicio y Política de Privacidad de ohACCESS',
   agreeSuffix: ', y das tu consentimiento para que el agente anfitrión te contacte por teléfono, mensaje de texto y correo electrónico sobre esta y otras propiedades.',
+  agreeSuffixSponsored: ', y das tu consentimiento para que el agente anfitrión y el patrocinador de hoy, {sponsor}, te contacten por teléfono, mensaje de texto y correo electrónico sobre esta y otras propiedades.',
   englishGoverns: 'En caso de discrepancia, la versión en inglés de los Términos prevalece.',
   narTitle: '¿Prefieres no registrarte?',
   narBody: 'Puedes programar una visita privada de esta —o cualquier— propiedad listada con el agente de compradores que elijas. Según las reglas de NAR vigentes desde el 17 de agosto de 2024, necesitarás un acuerdo escrito de representación de comprador con ese agente antes de que pueda mostrarte la casa; la mayoría de los agentes pueden prepararlo en el momento. El registro de ohACCESS solo se requiere para asistir a la casa abierta de hoy.',
@@ -158,6 +164,7 @@ const vi: RegisterStrings = {
   agreePrefix: 'Bạn cũng đồng ý với ',
   termsLink: 'Điều khoản Dịch vụ và Chính sách Bảo mật của ohACCESS',
   agreeSuffix: ', và đồng ý để chuyên viên môi giới chủ trì liên hệ với bạn qua điện thoại, tin nhắn và email về bất động sản này và các bất động sản khác.',
+  agreeSuffixSponsored: ', và đồng ý để chuyên viên môi giới chủ trì cùng nhà tài trợ hôm nay, {sponsor}, liên hệ với bạn qua điện thoại, tin nhắn và email về bất động sản này và các bất động sản khác.',
   englishGoverns: 'Nếu có khác biệt, bản tiếng Anh của Điều khoản sẽ được áp dụng.',
   narTitle: 'Không muốn đăng ký?',
   narBody: 'Bạn có thể đặt lịch xem riêng bất động sản này — hoặc bất kỳ bất động sản đang niêm yết nào — với chuyên viên môi giới bên mua mà bạn chọn. Theo quy định của NAR có hiệu lực từ ngày 17/8/2024, bạn cần có thỏa thuận đại diện bên mua bằng văn bản với chuyên viên đó trước khi họ có thể dẫn bạn xem nhà; hầu hết đều có thể chuẩn bị ngay tại chỗ. Đăng ký ohACCESS chỉ bắt buộc để tham dự open house hôm nay.',
@@ -193,6 +200,7 @@ const zh: RegisterStrings = {
   agreePrefix: '您还同意 ',
   termsLink: 'ohACCESS 服务条款和隐私政策',
   agreeSuffix: '，并同意接待经纪人通过电话、短信和电子邮件就本房产及其他房产与您联系。',
+  agreeSuffixSponsored: '，并同意接待经纪人及今日赞助商 {sponsor} 通过电话、短信和电子邮件就本房产及其他房产与您联系。',
   englishGoverns: '如有歧义，以条款的英文版本为准。',
   narTitle: '不想登记？',
   narBody: '您可以选择自己信任的买方经纪人，预约私下参观这套房——或任何在售房源。根据 2024 年 8 月 17 日生效的 NAR 规定，经纪人带您看房前需与您签署书面买方代理协议；大多数经纪人可当场准备。ohACCESS 登记仅用于参加今天的开放看房。',
@@ -228,6 +236,7 @@ const ko: RegisterStrings = {
   agreePrefix: '또한 ',
   termsLink: 'ohACCESS 서비스 약관 및 개인정보 처리방침',
   agreeSuffix: '에 동의하며, 호스트 에이전트가 이 매물 및 다른 매물에 관해 전화, 문자, 이메일로 연락하는 데 동의합니다.',
+  agreeSuffixSponsored: '에 동의하며, 호스트 에이전트와 오늘의 스폰서 {sponsor}이(가) 이 매물 및 다른 매물에 관해 전화, 문자, 이메일로 연락하는 데 동의합니다.',
   englishGoverns: '해석에 차이가 있을 경우 약관의 영문본이 우선합니다.',
   narTitle: '등록을 원하지 않으세요?',
   narBody: '원하시는 바이어 에이전트와 함께 이 매물 — 또는 다른 어떤 매물이든 — 개인 쇼잉을 예약하실 수 있습니다. 2024년 8월 17일부터 시행된 NAR 규정에 따라, 에이전트가 집을 보여드리기 전에 서면 바이어 대리 계약이 필요하며, 대부분의 에이전트가 현장에서 바로 준비해 드릴 수 있습니다. ohACCESS 등록은 오늘 오픈하우스 참석에만 필요합니다.',
@@ -263,6 +272,7 @@ const hi: RegisterStrings = {
   agreePrefix: 'आप ',
   termsLink: 'ohACCESS सेवा की शर्तों और गोपनीयता नीति',
   agreeSuffix: ' से भी सहमत होते हैं, और इस बात की सहमति देते हैं कि होस्ट एजेंट इस और अन्य संपत्तियों के बारे में आपसे फ़ोन, टेक्स्ट और ईमेल द्वारा संपर्क कर सकते हैं।',
+  agreeSuffixSponsored: ' से भी सहमत होते हैं, और इस बात की सहमति देते हैं कि होस्ट एजेंट और आज के प्रायोजक, {sponsor}, इस और अन्य संपत्तियों के बारे में आपसे फ़ोन, टेक्स्ट और ईमेल द्वारा संपर्क कर सकते हैं।',
   englishGoverns: 'किसी भी विसंगति की स्थिति में शर्तों का अंग्रेज़ी संस्करण मान्य होगा।',
   narTitle: 'पंजीकरण नहीं करना चाहते?',
   narBody: 'आप अपनी पसंद के बायर एजेंट के साथ इस — या किसी भी — सूचीबद्ध संपत्ति की निजी शोइंग निर्धारित कर सकते हैं। 17 अगस्त 2024 से प्रभावी NAR नियमों के अनुसार, एजेंट द्वारा घर दिखाने से पहले आपको उनके साथ लिखित बायर प्रतिनिधित्व समझौता करना होगा; अधिकांश एजेंट इसे मौके पर ही तैयार कर सकते हैं। ohACCESS पंजीकरण केवल आज के ओपन हाउस में शामिल होने के लिए आवश्यक है।',

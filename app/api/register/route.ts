@@ -124,6 +124,34 @@ export async function POST(request: Request) {
     }
 
     const agent = openHouse.profiles
+
+    // Active sponsor (3rd-party provider, e.g. a mortgage lender) — the agent
+    // accepted this link explicitly. The sponsor's card renders below the
+    // agent's in the visitor email, and the sign-in form named them in the
+    // consent language, so the visitor row records who was disclosed.
+    let sponsor: {
+      id: string
+      full_name: string | null
+      company: string | null
+      display_email: string | null
+      phone: string | null
+      license_number: string | null
+      headshot_url: string | null
+      logo_url: string | null
+    } | null = null
+    if (agent?.sponsor_id) {
+      const { data: sponsorRow } = await supabase
+        .from('sponsors')
+        .select('id, full_name, company, display_email, phone, license_number, headshot_url, logo_url')
+        .eq('id', agent.sponsor_id)
+        .maybeSingle()
+      // A sponsor with no name never showed on the sign-in form — treat as none.
+      if (sponsorRow?.full_name) sponsor = sponsorRow
+    }
+    const sponsorConsentName = sponsor
+      ? (sponsor.company ? `${sponsor.full_name} (${sponsor.company})` : sponsor.full_name)
+      : null
+
     // Two code words: the SMS (text) word is primary; the email word is a
     // fallback. Legacy open houses only have code_word, so reuse it for email.
     const smsCodeWord = openHouse.code_word
@@ -216,6 +244,10 @@ export async function POST(request: Request) {
         user_agent: request.headers.get('user-agent'),
         phone_carrier: phoneCarrier,
         phone_line_type: phoneLineType,
+        // Consent audit: which sponsor was disclosed on the sign-in form.
+        // sponsor_name is a snapshot so the record survives later edits.
+        sponsor_id: sponsor?.id ?? null,
+        sponsor_name: sponsorConsentName,
       })
       .select('id')
       .single()
@@ -390,6 +422,39 @@ export async function POST(request: Request) {
     const headerColor = isHexColor(brandColor) ? brandColor : '#1d1d1f'
     const logoUrl = safeUrl(brandLogo)
 
+    // "Sponsored by" card — rendered directly below the agent's card + logo.
+    // Same escaping rules as the agent block: every sponsor-controlled field
+    // goes through escapeHtml/safeUrl before touching the HTML.
+    let sponsorHtml = ''
+    if (sponsor) {
+      const sponsorName = escapeHtml(sponsor.full_name || '')
+      const sponsorCompany = escapeHtml(sponsor.company || '')
+      const sponsorEmail = escapeHtml(sponsor.display_email || '')
+      const sponsorPhone = escapeHtml(sponsor.phone || '')
+      const sponsorPhoneTel = normalizePhone(sponsor.phone)
+      const sponsorLicense = escapeHtml(sponsor.license_number || '')
+      const sponsorHeadshot = safeUrl(sponsor.headshot_url)
+      const sponsorLogo = safeUrl(sponsor.logo_url)
+      sponsorHtml = `
+            <div style="background: #fdfaf3; border: 1px solid #ead9ad; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+              <div style="font-size: 10px; font-weight: 700; color: #8a6a1f; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Sponsored by</div>
+              <div style="display: flex; align-items: center;">
+                ${sponsorHeadshot ? `<img src="${escapeHtml(sponsorHeadshot)}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #ead9ad;margin-right:16px;" />` : ''}
+                <div>
+                  <div style="font-size: 14px; font-weight: 700; color: #1d1d1f;">${sponsorName}</div>
+                  ${sponsorCompany ? `<div style="font-size: 12px; color: #6e6e73;">${sponsorCompany}</div>` : ''}
+                  ${sponsorEmail ? `<div style="font-size: 12px; color: #0071e3;">${sponsorEmail}</div>` : ''}
+                  ${sponsorPhone ? `<div style="font-size: 12px;">${sponsorPhoneTel ? `<a href="tel:${escapeHtml(sponsorPhoneTel)}" style="color: #0071e3; text-decoration: none;">${sponsorPhone}</a>` : `<span style="color: #6e6e73;">${sponsorPhone}</span>`}</div>` : ''}
+                  ${sponsorLicense ? `<div style="font-size: 11px; color: #6e6e73;">${sponsorLicense}</div>` : ''}
+                </div>
+              </div>
+              ${sponsorLogo ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #ead9ad; text-align: center;"><img src="${escapeHtml(sponsorLogo)}" style="max-height:60px;width:70%;object-fit:contain;" /></div>` : ''}
+              <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ead9ad; font-size: 10px; color: #8a6a1f; line-height: 1.5; text-align: center;">
+                You are not required to use ${sponsorCompany || sponsorName} for any service. You are free to shop around.
+              </div>
+            </div>`
+    }
+
     // The agent's copy of the visitor's code email: visible CC to their public
     // display email (fallback login), hidden BCC to their login as a backup.
     const agentCopy = agentCopyRecipients(agent?.display_email, agent?.email)
@@ -482,10 +547,11 @@ export async function POST(request: Request) {
               </div>
               ${logoUrl ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; text-align: center;"><img src="${escapeHtml(logoUrl)}" style="max-height:80px;width:80%;object-fit:contain;" /></div>` : ''}
             </div>
+            ${sponsorHtml}
             ${upcomingHtml}
             <div style="margin-top: 16px; padding: 12px; background: #f5f5f7; border-radius: 8px; font-size: 11px; color: #6e6e73; text-align: center; line-height: 1.6;">
               By registering you agreed to the ohACCESS <a href="https://ohaccess.com/terms" style="color: #6e6e73;">Terms of Service</a>.<br/>
-              You consent to be contacted by the host agent.<br/>
+              You consent to be contacted by the host agent${sponsorConsentName ? ` and today's sponsor, ${escapeHtml(sponsorConsentName)}` : ''}.<br/>
               Reply STOP to any text to opt out · <a href="https://ohaccess.com/privacy" style="color: #6e6e73;">Privacy Policy</a><br/>
               <em style="color: #6e6e73;">Heads up: opting out blocks access codes for all future ohACCESS open houses.</em>
             </div>
