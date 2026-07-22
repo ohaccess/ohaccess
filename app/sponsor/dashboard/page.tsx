@@ -212,6 +212,7 @@ export default function SponsorDashboard() {
           license_number: '',
           headshot_url: '',
           logo_url: '',
+          landing_page_url: '',
         })
         setActivityLoading(false)
       }
@@ -259,6 +260,7 @@ export default function SponsorDashboard() {
       license_number: sponsor.license_number || null,
       headshot_url: sponsor.headshot_url || null,
       logo_url: sponsor.logo_url || null,
+      landing_page_url: sponsor.landing_page_url || null,
     }
     const { data, error } = isNew
       ? await supabase.from('sponsors').insert({ ...row, owner_id: user.id }).select().single()
@@ -690,6 +692,11 @@ export default function SponsorDashboard() {
                   <label style={labelStyle}>License Number</label>
                   <input style={inputStyle} type="text" placeholder="NMLS #123456" value={sponsor?.license_number || ''} onChange={e => setSponsor({ ...sponsor, license_number: e.target.value })} />
                   <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px' }}>Include the license type, e.g. &ldquo;NMLS #123456&rdquo;.</div>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={labelStyle}>Landing Page URL</label>
+                  <input style={inputStyle} type="url" placeholder="https://yourwebsite.com/about" value={sponsor?.landing_page_url || ''} onChange={e => setSponsor({ ...sponsor, landing_page_url: e.target.value })} />
+                  <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px' }}>Your bio page or website. Appears as a &ldquo;Sponsor information&rdquo; link on your card in visitor emails.</div>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Headshot URL</label>
