@@ -170,10 +170,11 @@ export default function TheRecord() {
     if (!reduced && matchMedia('(hover: none)').matches) {
       cmpIO = new IntersectionObserver(es => es.forEach(e => {
         const el = e.target as HTMLElement
-        const cls = el.classList.contains('rec-cmp-win') ? 'rec-cmp-win-active' : 'rec-cmp-active'
+        const cls = el.classList.contains('rec-cmp-win') ? 'rec-cmp-win-active'
+          : el.classList.contains('rec-safety') ? 'rec-safety-active' : 'rec-cmp-active'
         el.classList.toggle(cls, e.isIntersecting)
       }), { rootMargin: '-40% 0px -40% 0px' })
-      root.querySelectorAll<HTMLElement>('.rec-cmp, .rec-cmp-win').forEach(el => cmpIO!.observe(el))
+      root.querySelectorAll<HTMLElement>('.rec-cmp, .rec-cmp-win, .rec-safety').forEach(el => cmpIO!.observe(el))
     }
 
     return () => {
@@ -210,6 +211,8 @@ export default function TheRecord() {
         .rec-cmp:hover,.rec-cmp-active{transform:scale(.97)}
         .rec-cmp-win{transition:transform .25s,box-shadow .25s}
         .rec-cmp-win:hover,.rec-cmp-win-active{transform:scale(1.03);box-shadow:0 22px 52px rgba(29,29,31,.35)}
+        .rec-safety{transition:transform .25s,box-shadow .25s}
+        .rec-safety:hover,.rec-safety-active{transform:translateY(-4px);box-shadow:0 14px 32px rgba(29,29,31,.1)}
         .rec-tier{transition:transform .25s,box-shadow .25s}
         .rec-tier:hover{transform:translateY(-4px);box-shadow:0 14px 32px rgba(29,29,31,.1)}
         .rec-tier-dark:hover{box-shadow:0 18px 40px rgba(29,29,31,.35)}
@@ -230,7 +233,7 @@ export default function TheRecord() {
 
         {/* nav */}
         <div style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '16px clamp(20px,5vw,48px)', background: 'rgba(29,29,31,.82)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,.1)' }}>
-          <div style={{ fontWeight: 800, fontSize: '18px', color: '#fff', letterSpacing: '-.02em' }}>oh<span style={{ color: '#c9963a' }}>ACCESS</span></div>
+          <div onClick={() => { setMenuOpen(false); window.scrollTo({ top: 0 }) }} style={{ fontWeight: 800, fontSize: '18px', color: '#fff', letterSpacing: '-.02em', cursor: 'pointer' }}>oh<span style={{ color: '#c9963a' }}>ACCESS</span></div>
           <div className="rec-nav-links">
             {NAV_LINKS.map(l => <a key={l.href} href={l.href} style={{ padding: '8px 0' }}>{l.label}</a>)}
             <Link href="/login" style={{ padding: '8px 0' }}>Sign-In</Link>
@@ -434,7 +437,7 @@ export default function TheRecord() {
                 { title: 'You’re never in the dark', body: 'Instant new-visitor alerts tell you who’s walking in — name and timeline — before you let them in.' },
                 { title: 'A record for the seller, too', body: 'A complete, verified log of who was inside the home — accountability the paper sheet never offered.' },
               ].map(c => (
-                <div key={c.title} data-reveal="1" style={{ background: '#fff', borderRadius: '14px', padding: '26px 26px 28px' }}>
+                <div key={c.title} data-reveal="1" className="rec-safety" style={{ background: '#fff', borderRadius: '14px', padding: '26px 26px 28px' }}>
                   <div style={{ fontSize: '15px', fontWeight: 800, color: '#1d1d1f' }}>{c.title}</div>
                   <div style={{ fontSize: '14px', lineHeight: 1.55, color: '#6e6e73', marginTop: '7px' }}>{c.body}</div>
                 </div>
