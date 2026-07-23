@@ -168,7 +168,10 @@ export default function TheRecord() {
   }, [])
 
   return (
-    <div ref={rootRef} style={{ background: '#1d1d1f', fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif", WebkitFontSmoothing: 'antialiased' }}>
+    // overflow:clip (not hidden — hidden would break the sticky nav) stops
+    // iOS Safari from extending the document's scroll area past the footer
+    // for transformed/animated descendants (phantom white space below footer).
+    <div ref={rootRef} style={{ background: '#1d1d1f', fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif", WebkitFontSmoothing: 'antialiased', overflow: 'clip' }}>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
