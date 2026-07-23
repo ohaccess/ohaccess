@@ -12,9 +12,12 @@
 //   - Secret-link share page: pass shareCode; fetches the public-by-code
 //     endpoint, no login, no admin-only buttons.
 //
-// The Maps JS script is already loaded globally in app/layout.tsx, so this
-// only waits for it.
+// This component owns the Maps JS <Script> tag (it was global in
+// app/layout.tsx until 2026-07-23, costing ~200KB on every page) — the
+// admin Map tab and /map/[code] are the only Maps JS consumers, so it
+// loads here and the effect below polls window.google until it's ready.
 
+import Script from 'next/script'
 import { useEffect, useRef, useState } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { escapeHtml } from '@/lib/escape-html'
@@ -223,6 +226,10 @@ export default function OpenHouseMap({
 
   return (
     <div style={{ marginTop: 18 }}>
+      <Script
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&v=weekly&libraries=places`}
+        strategy="afterInteractive"
+      />
       {status !== 'ready' && (
         <div style={{ padding: '14px 0', fontSize: 14, color: status === 'error' ? '#cc0000' : SUB }}>{message}</div>
       )}
