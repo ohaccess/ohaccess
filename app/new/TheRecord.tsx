@@ -285,10 +285,10 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
 
         {/* marquee ticker */}
         <div style={{ background: '#c9963a', overflow: 'hidden', padding: '13px 0', whiteSpace: 'nowrap' }}>
-          <div style={{ display: 'inline-flex', gap: 0, animation: 'om-marquee 22s linear infinite' }}>
+          <div style={{ display: 'inline-flex', gap: 0, animation: 'om-marquee 28s linear infinite' }}>
             {[0, 1].map(i => (
               <div key={i} style={{ display: 'inline-flex', gap: '48px', paddingRight: '48px', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#1d1d1f' }}>
-                <span>No real phone → no code word → no entry</span><span>·</span><span>Live visitor log</span><span>·</span><span>Instant alerts</span><span>·</span><span>CRM delivery</span><span>·</span><span>Seller report card</span><span>·</span>
+                <span>An Open House is an invitation — not an open door</span><span>·</span><span>No real phone → no code word → no entry</span><span>·</span><span>Live visitor log</span><span>·</span><span>Instant alerts</span><span>·</span><span>CRM delivery</span><span>·</span><span>Seller report card</span><span>·</span>
               </div>
             ))}
           </div>
@@ -433,7 +433,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
         <div id="safety" style={{ background: '#f5f5f7', padding: sectionPad }}>
           <div style={{ maxWidth: '980px', margin: '0 auto' }}>
             <div style={eyebrow}>Safety</div>
-            <div data-reveal="1" style={{ fontSize: 'clamp(30px,4.2vw,52px)', fontWeight: 800, letterSpacing: '-.035em', lineHeight: 1.04, color: '#1d1d1f', textWrap: 'balance' }}>You host strangers in an empty house every weekend. <span style={{ color: '#6e6e73' }}>A verified name at the door changes who shows up.</span></div>
+            <div data-reveal="1" style={{ fontSize: 'clamp(30px,4.2vw,52px)', fontWeight: 800, letterSpacing: '-.035em', lineHeight: 1.04, color: '#1d1d1f', textWrap: 'balance' }}>You owe it to your sellers to protect their home. <span style={{ color: '#6e6e73' }}>You owe it to yourself to protect <em>you</em>.</span></div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,260px),1fr))', gap: '16px', marginTop: '40px' }}>
               {[
                 { title: 'Deterrence at the door', body: 'Anyone entering knows their identity is verified and on the record. People behave differently when they’re not anonymous.' },
