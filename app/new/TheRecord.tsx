@@ -48,6 +48,7 @@ const eyebrow: React.CSSProperties = { fontSize: '13px', fontWeight: 700, letter
 export default function TheRecord() {
   const rootRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [billing, setBilling] = useState<'monthly' | 'annual' | '2year'>('monthly')
 
   useEffect(() => {
     const root = rootRef.current
@@ -471,35 +472,67 @@ export default function TheRecord() {
         {/* pricing */}
         <div id="pricing" style={{ background: '#fff', padding: sectionPad }}>
           <div style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', marginBottom: '8px' }}>Priced like a lockbox, not like software.</div>
-          <div style={{ fontSize: '16px', color: '#6e6e73', marginBottom: '32px' }}>Start free. One verified lead pays for decades.</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,230px),1fr))', gap: '16px' }}>
-            <div data-reveal="1" className="rec-tier" style={{ border: '1px solid #e5e5ea', borderRadius: '14px', padding: '28px 24px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#6e6e73' }}>Trial</div>
-              <div style={{ fontSize: '34px', fontWeight: 800, color: '#1d1d1f', margin: '12px 0 2px' }}>Free</div>
-              <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>25 registrations · no credit card</div>
-              <div style={{ fontSize: '13.5px', lineHeight: 1.7, color: '#1d1d1f' }}>Full Pro features<br />SMS + email delivery<br />Visitor log + CSV</div>
-            </div>
-            <div data-reveal="1" className="rec-tier rec-tier-dark" style={{ background: '#1d1d1f', borderRadius: '14px', padding: '28px 24px', position: 'relative' }}>
-              <div style={{ position: 'absolute', top: '14px', right: '14px', background: '#c9963a', color: '#1d1d1f', fontSize: '10px', fontWeight: 800, letterSpacing: '.1em', padding: '5px 10px', borderRadius: '5px' }}>MOST POPULAR</div>
-              <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#c9963a', width: 'fit-content' }}>Pro</div>
-              <div style={{ fontSize: '34px', fontWeight: 800, color: '#fff', margin: '12px 0 2px' }}>$15<span style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.6)' }}>/mo</span></div>
-              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.6)', marginBottom: '16px' }}>For the active agent</div>
-              <div style={{ fontSize: '13.5px', lineHeight: 1.7, color: '#fff' }}>Unlimited open houses<br />Unlimited registrations<br />Instant SMS alerts · CRM sync</div>
-            </div>
-            <div data-reveal="1" className="rec-tier" style={{ border: '1px solid #e5e5ea', borderRadius: '14px', padding: '28px 24px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#6e6e73' }}>Team</div>
-              <div style={{ fontSize: '34px', fontWeight: 800, color: '#1d1d1f', margin: '12px 0 2px' }}>$120<span style={{ fontSize: '15px', fontWeight: 600, color: '#6e6e73' }}>/mo</span></div>
-              <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>2–10 agents</div>
-              <div style={{ fontSize: '13.5px', lineHeight: 1.7, color: '#1d1d1f' }}>All Pro features<br />Brand customization<br />Team logo</div>
-            </div>
-            <div data-reveal="1" className="rec-tier" style={{ border: '1px solid #e5e5ea', borderRadius: '14px', padding: '28px 24px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#6e6e73' }}>Brokerage</div>
-              <div style={{ fontSize: '34px', fontWeight: 800, color: '#1d1d1f', margin: '12px 0 2px' }}>$11<span style={{ fontSize: '15px', fontWeight: 600, color: '#6e6e73' }}>/agent/mo</span></div>
-              <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>11–100 agents</div>
-              <div style={{ fontSize: '13.5px', lineHeight: 1.7, color: '#1d1d1f' }}>All Team features<br />Branded visitor emails<br />Add agents anytime</div>
-            </div>
+          <div style={{ fontSize: '16px', color: '#6e6e73', marginBottom: '24px' }}>Start free. One verified lead pays for decades.</div>
+          <div style={{ display: 'inline-flex', background: '#f5f5f7', borderRadius: '10px', padding: '4px', gap: '2px', marginBottom: '28px', flexWrap: 'wrap' }}>
+            {(['monthly', 'annual', '2year'] as const).map(b => (
+              <button key={b} onClick={() => setBilling(b)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px', fontWeight: 700, background: billing === b ? '#1d1d1f' : 'transparent', color: billing === b ? '#fff' : '#6e6e73' }}>
+                {b === 'monthly' ? 'Monthly' : b === 'annual' ? 'Annual' : '2 Years*'}
+                {b === 'annual' && <span style={{ marginLeft: '6px', background: '#30d158', color: '#fff', fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '10px' }}>2 MOS FREE</span>}
+                {b === '2year' && <span style={{ marginLeft: '6px', background: '#c9963a', color: '#1d1d1f', fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '10px' }}>BEST VALUE</span>}
+              </button>
+            ))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '40px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,230px),1fr))', gap: '16px' }}>
+            {([
+              {
+                name: 'Trial', dark: false,
+                desc: 'Try the full Pro experience',
+                price: { monthly: 'Free', annual: 'Free', '2year': 'Free' },
+                per: { monthly: '', annual: '', '2year': '' },
+                note: { monthly: '25 registrations · no credit card', annual: '25 registrations · no credit card', '2year': '25 registrations · no credit card' },
+                features: <>Full Pro features<br />SMS + email delivery<br />Visitor log + CSV</>,
+              },
+              {
+                name: 'Pro', dark: true,
+                desc: 'For the active agent',
+                price: { monthly: '$15', annual: '$12.50', '2year': '$10' },
+                per: { monthly: '/mo', annual: '/mo', '2year': '/mo' },
+                note: { monthly: ' ', annual: 'Billed $150/yr — 2 months free', '2year': '$240 every 2 years — year 2 half off' },
+                features: <>Unlimited open houses<br />Unlimited registrations<br />Instant SMS alerts · CRM sync</>,
+              },
+              {
+                name: 'Team', dark: false,
+                desc: '2–10 agents',
+                price: { monthly: '$120', annual: '$100', '2year': '$80' },
+                per: { monthly: '/mo', annual: '/mo', '2year': '/mo' },
+                note: { monthly: ' ', annual: 'Billed $1,200/yr — 2 months free', '2year': '$1,920 every 2 years — year 2 half off' },
+                features: <>All Pro features<br />Brand customization<br />Team logo</>,
+              },
+              {
+                name: 'Brokerage', dark: false,
+                desc: '11–100 agents',
+                price: { monthly: '$11', annual: '$110', '2year': '$176' },
+                per: { monthly: '/agent/mo', annual: '/agent/yr', '2year': '/agent/2yr' },
+                note: { monthly: ' ', annual: '2 months free', '2year': 'Year 2 half off' },
+                features: <>All Team features<br />Branded visitor emails<br />Add agents anytime</>,
+              },
+            ] as const).map(tier => (
+              <div key={tier.name} data-reveal="1" className={tier.dark ? 'rec-tier rec-tier-dark' : 'rec-tier'} style={tier.dark
+                ? { background: '#1d1d1f', borderRadius: '14px', padding: '28px 24px', position: 'relative' }
+                : { border: '1px solid #e5e5ea', borderRadius: '14px', padding: '28px 24px' }}>
+                {tier.dark && <div style={{ position: 'absolute', top: '14px', right: '14px', background: '#c9963a', color: '#1d1d1f', fontSize: '10px', fontWeight: 800, letterSpacing: '.1em', padding: '5px 10px', borderRadius: '5px' }}>MOST POPULAR</div>}
+                <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: tier.dark ? '#c9963a' : '#6e6e73', width: 'fit-content' }}>{tier.name}</div>
+                <div style={{ fontSize: '12.5px', color: tier.dark ? 'rgba(255,255,255,.5)' : '#a8a8ad', marginTop: '2px' }}>{tier.desc}</div>
+                <div style={{ fontSize: '34px', fontWeight: 800, color: tier.dark ? '#fff' : '#1d1d1f', margin: '10px 0 2px' }}>{tier.price[billing]}<span style={{ fontSize: '15px', fontWeight: 600, color: tier.dark ? 'rgba(255,255,255,.6)' : '#6e6e73' }}>{tier.per[billing]}</span></div>
+                <div style={{ fontSize: '13px', color: tier.dark ? 'rgba(255,255,255,.6)' : '#6e6e73', marginBottom: '16px' }}>{tier.note[billing]}</div>
+                <div style={{ fontSize: '13.5px', lineHeight: 1.7, color: tier.dark ? '#fff' : '#1d1d1f' }}>{tier.features}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: '12px', color: '#6e6e73', textAlign: 'center', marginTop: '24px', fontStyle: 'italic' }}>
+            * 2-year pricing is a founding-member offer available for a limited time only. Paid upfront and renews automatically every 2 years — we&apos;ll email you before each renewal, and you can cancel anytime. More than 100 agents? <a href="/contact" style={{ color: '#c9963a' }}>Contact us</a> for custom pricing.
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
             <Link href="/login?signup=true" className="rec-btn" style={{ background: '#1d1d1f', color: '#fff', fontWeight: 700, fontSize: '16px', padding: '16px 34px', borderRadius: '8px' }}>Verify your first open house free →</Link>
           </div>
         </div>
