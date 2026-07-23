@@ -16,13 +16,13 @@ const STEPS = [
 ]
 
 const SCENES = [
-  { time: '0:00–0:08', title: 'The sign goes up.', body: 'Sunday morning. An agent sets the open-house sign and QR placard at a sunlit front door.', vo: '“Every open house starts the same way — a sign in the yard, and strangers at the door.”' },
+  { time: '0:00–0:08', title: 'The sign goes up.', body: 'Sunday morning. An agent sets the Open House sign and QR placard at a sunlit front door.', vo: '“Every Open House starts the same way — a sign in the yard, and strangers at the door.”' },
   { time: '0:08–0:16', title: 'The old record.', body: 'Close-up of a paper sign-in sheet: scribbles, a fake “M. Mouse,” a number with nine digits.', vo: '“For decades, the record of who walked in looked like this. Fake names. Dead numbers. Ink you can’t read.”' },
-  { time: '0:16–0:30', title: 'Thirty seconds at the door.', body: 'A couple arrives. She scans the QR sign; a clean mobile form fills in thirty seconds.', vo: '“ohACCESS changes that in thirty seconds. Visitors scan and register at the door…”' },
-  { time: '0:30–0:42', title: 'The code word.', body: 'Her phone buzzes: “Your code word is MAGNOLIA.” The same message lands in her email.', vo: '“…and receive a one-time code word — sent to their real phone and real email. Fake info? No code. No entry.”' },
-  { time: '0:42–0:56', title: '“Magnolia.”', body: 'She says the word at the door. The agent’s phone has already shown her name and 0–3 month timeline.', vo: '“The agent knows who’s walking in before they say hello — verified, timelined, and logged.”' },
+  { time: '0:16–0:30', title: 'Thirty seconds at the door.', body: 'A couple arrives. She scans the QR sign; a clean mobile form fills in thirty seconds.', vo: <>“<strong>ohACCESS</strong> changes that in thirty seconds. Visitors scan and register at the door…”</> },
+  { time: '0:30–0:42', title: 'The code word.', body: 'Her phone buzzes: “Your code word is MAGNOLIA.” A backup code word lands in her email.', vo: '“…and receive a one-time code word — sent to the provided phone and email. Fake info? No code. No entry.”' },
+  { time: '0:42–0:56', title: '“Magnolia.”', body: 'She says the word at the door. The agent’s phone has already shown her name and 0–3 month timeline.', vo: '“The agent knows who’s walking in before they say Hello — verified and logged.”' },
   { time: '0:56–1:10', title: 'Doors close, work’s done.', body: 'That evening: the dashboard’s visitor log; leads appearing inside a CRM, one by one.', vo: '“When the doors close, the work is already done — every lead verified and delivered to your CRM.”' },
-  { time: '1:10–1:25', title: 'Proof for the seller.', body: 'The agent texts the seller a report card: 14 verified visitors, 5 buying within 3 months.', vo: '“And the seller gets proof it was worth opening their door. ohACCESS. The verified open house. Patent pending.”', dark: true },
+  { time: '1:10–1:25', title: 'Proof for the seller.', body: 'The agent texts the seller a report card: 14 verified visitors, 5 buying within 3 months.', vo: <>“And the seller gets proof it was worth opening their door. <strong>ohACCESS</strong>. The verified Open House.”</>, dark: true },
 ]
 
 const LOG_ROWS = [
@@ -212,10 +212,10 @@ export default function TheRecord() {
           <div style={{ fontWeight: 800, fontSize: '18px', color: '#fff', letterSpacing: '-.02em' }}>oh<span style={{ color: '#c9963a' }}>ACCESS</span></div>
           <div className="rec-nav-links">
             {NAV_LINKS.map(l => <a key={l.href} href={l.href} style={{ padding: '8px 0' }}>{l.label}</a>)}
-            <Link href="/login" style={{ padding: '8px 0' }}>Sign in</Link>
+            <Link href="/login" style={{ padding: '8px 0' }}>Sign-In</Link>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <Link href="/login?signup=true" className="rec-btn" style={{ background: '#c9963a', color: '#1d1d1f', fontWeight: 700, fontSize: '13.5px', padding: '11px 18px', borderRadius: '6px', whiteSpace: 'nowrap' }}>Start free</Link>
+            <Link href="/login?signup=true" className="rec-btn" style={{ background: '#c9963a', color: '#1d1d1f', fontWeight: 700, fontSize: '13.5px', padding: '11px 18px', borderRadius: '6px', whiteSpace: 'nowrap' }}>Start Free</Link>
             <button className="rec-burger" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu" style={{ background: 'none', border: 'none', color: '#fff', fontSize: '22px', cursor: 'pointer', padding: '4px 6px' }}>{menuOpen ? '✕' : '☰'}</button>
           </div>
         </div>
@@ -224,7 +224,7 @@ export default function TheRecord() {
         {menuOpen && (
           <div style={{ position: 'sticky', top: '64px', zIndex: 49, background: '#2a2a2c', padding: '16px clamp(20px,5vw,48px)', display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.85)', borderBottom: '1px solid rgba(255,255,255,.1)' }}>
             {NAV_LINKS.map(l => <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)}>{l.label}</a>)}
-            <Link href="/login" onClick={() => setMenuOpen(false)}>Sign in</Link>
+            <Link href="/login" onClick={() => setMenuOpen(false)}>Sign-In</Link>
           </div>
         )}
 
@@ -235,9 +235,9 @@ export default function TheRecord() {
             <h1 style={{ fontSize: 'clamp(42px,6.4vw,76px)', lineHeight: .98, fontWeight: 800, letterSpacing: '-.035em', textWrap: 'balance', margin: 0 }}>
               <span style={{ display: 'inline-block', animation: 'om-rise .7s .12s both' }}>The clipboard</span> <span style={{ display: 'inline-block', animation: 'om-rise .7s .22s both' }}>has been</span> <span style={{ display: 'inline-block', color: '#c9963a', animation: 'om-rise .7s .34s both' }}>lying to you.</span>
             </h1>
-            <p style={{ fontSize: 'clamp(16px,1.6vw,19px)', lineHeight: 1.55, color: 'rgba(255,255,255,.72)', margin: '24px 0 32px', maxWidth: '44ch', animation: 'om-rise .7s .45s both' }}>Fake names. Dead numbers. Ink nobody can read. ohACCESS verifies every open-house visitor at the door with a one-time code word — sent to a phone and email that actually work.</p>
+            <p style={{ fontSize: 'clamp(16px,1.6vw,19px)', lineHeight: 1.55, color: 'rgba(255,255,255,.72)', margin: '24px 0 32px', maxWidth: '44ch', animation: 'om-rise .7s .45s both' }}>Fake names. Dead numbers. Ink nobody can read. <strong>ohACCESS</strong> verifies every Open House visitor at the door with a one-time code word — sent to a phone and email that actually work.</p>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap', animation: 'om-rise .7s .55s both' }}>
-              <Link href="/login?signup=true" className="rec-btn" style={{ background: '#c9963a', color: '#1d1d1f', fontWeight: 700, fontSize: '16px', padding: '15px 28px', borderRadius: '8px' }}>Start free — 25 check-ins</Link>
+              <Link href="/login?signup=true" className="rec-btn" style={{ background: '#c9963a', color: '#1d1d1f', fontWeight: 700, fontSize: '16px', padding: '15px 28px', borderRadius: '8px' }}>Start Free — 25 check-ins</Link>
               <a href="#film" style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.8)', borderBottom: '1px solid rgba(255,255,255,.35)', paddingBottom: '2px' }}>Watch 90 seconds ↓</a>
             </div>
             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.45)', marginTop: '16px', animation: 'om-rise .7s .62s both' }}>No credit card. Verified leads by Sunday.</div>
@@ -271,7 +271,7 @@ export default function TheRecord() {
         <div id="how" style={{ background: '#fff', padding: sectionPad, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,340px),1fr))', gap: 'clamp(32px,5vw,72px)' }}>
           <div style={{ position: 'sticky', top: '96px', alignSelf: 'start' }}>
             <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#6e6e73' }}>How it works</div>
-            <div style={{ fontSize: 'clamp(30px,3.4vw,42px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', marginTop: '12px', lineHeight: 1.05 }}>Ten seconds to understand.<br /><span style={{ color: '#c9963a' }}>Thirty to check in.</span></div>
+            <div style={{ fontSize: 'clamp(30px,3.4vw,42px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', marginTop: '12px', lineHeight: 1.05 }}>Ten seconds to understand.<br /><span style={{ color: '#c9963a' }}>Thirty to check-in.</span></div>
             <div style={{ marginTop: '22px', height: '3px', width: '120px', background: '#ececf0', borderRadius: '2px' }}>
               <div data-stepbar="1" style={{ height: '3px', width: '20%', background: '#c9963a', borderRadius: '2px', transition: 'width .4s' }} />
             </div>
@@ -294,7 +294,7 @@ export default function TheRecord() {
         <div id="film" style={{ background: '#f5f5f7', padding: 'clamp(56px,8vw,96px) 0' }}>
           <div style={{ padding: '0 clamp(20px,5vw,48px)' }}>
             <div style={{ ...eyebrow, marginBottom: '10px' }}>The 90-second film</div>
-            <div style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', maxWidth: '24ch' }}>One open house, from yard sign to seller report.</div>
+            <div style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', maxWidth: '24ch' }}>One Open House, from yard sign to seller report.</div>
           </div>
           {/* FILM SLOT — replace the poster with the final poster frame and wire
               the play button to a native <video> when the film is delivered. */}
@@ -393,7 +393,7 @@ export default function TheRecord() {
               <div style={{ fontSize: '16px', fontWeight: 800, color: '#c9963a' }}>ohACCESS</div>
               <div style={{ fontSize: '12.5px', color: 'rgba(255,255,255,.5)', margin: '2px 0 16px' }}>Verified at the door</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', lineHeight: 1.5, color: 'rgba(255,255,255,.9)' }}>
-                {['Code word proves phone + email are real — before entry', 'Every visitor logged, timelined, delivered to your CRM', 'Seller report card proves the turnout was real'].map(t => (
+                {['Code word proves phone + email are real — before entry', 'Every visitor logged, timeline captured, delivered to your CRM', 'Seller report card proves the turnout was real'].map(t => (
                   <div key={t} style={{ display: 'flex', gap: '9px' }}><span style={{ color: '#30d158', fontWeight: 800 }}>✓</span><span>{t}</span></div>
                 ))}
               </div>
@@ -419,7 +419,7 @@ export default function TheRecord() {
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: '16px', color: '#6e6e73', marginTop: '20px' }}>ohACCESS is a deterrence layer — not a substitute for your safety practices or brokerage protocols.</div>
+            <div style={{ fontSize: '16px', color: '#6e6e73', marginTop: '20px' }}><strong>ohACCESS</strong> is a deterrence layer — not a substitute for your safety practices or brokerage protocols.</div>
           </div>
         </div>
 
@@ -428,9 +428,9 @@ export default function TheRecord() {
           <div>
             <div style={eyebrow}>The seller report card</div>
             <div style={{ fontSize: 'clamp(32px,4vw,44px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, maxWidth: '18ch' }}>The text that wins your next listing.</div>
-            <p style={{ fontSize: 'clamp(15px,1.5vw,17px)', lineHeight: 1.6, color: 'rgba(255,255,255,.7)', margin: '22px 0 28px', maxWidth: '46ch' }}>After every open house, ohACCESS builds a report you can send the homeowner in one tap: verified turnout, buyer timelines, proof the afternoon was worth it. Sellers talk. So do their neighbors.</p>
+            <p style={{ fontSize: 'clamp(15px,1.5vw,17px)', lineHeight: 1.6, color: 'rgba(255,255,255,.7)', margin: '22px 0 28px', maxWidth: '46ch' }}>After every Open House, <strong>ohACCESS</strong> builds a report you can send the homeowner in one tap: verified turnout, buyer timelines, proof the afternoon was worth it. Sellers talk. So do their neighbors.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px', fontWeight: 600 }}>
-              {['Verified visitor count — no padding, no guesses', 'Buyer timelines: who’s buying in 0–3 months', 'Delivered automatically after the event'].map(t => (
+              {['Verified visitor count — full transparency, no guesses', 'Buyer timelines: who’s buying in 0–3 months', 'Sharable with your seller in one tap'].map(t => (
                 <div key={t} style={{ display: 'flex', gap: '10px', alignItems: 'baseline' }}><span style={{ color: '#30d158', fontWeight: 800 }}>✓</span><span>{t}</span></div>
               ))}
             </div>
@@ -442,7 +442,7 @@ export default function TheRecord() {
                 <div style={{ background: '#fff', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,.06)' }}>
                   <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#c9963a' }}>Seller report card</div>
                   <div style={{ fontSize: '17px', fontWeight: 800, color: '#1d1d1f', marginTop: '6px' }}>412 Larchmont Ave</div>
-                  <div style={{ fontSize: '12.5px', color: '#6e6e73' }}>Open house · Sun July 19, 1–4 PM</div>
+                  <div style={{ fontSize: '12.5px', color: '#6e6e73' }}>Open House · Sun July 19, 1–4 PM</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', margin: '18px 0 4px' }}>
                     <span data-count="14" style={{ fontSize: '42px', fontWeight: 800, color: '#1d1d1f', letterSpacing: '-.03em' }}>0</span>
                     <span style={{ fontSize: '13px', fontWeight: 600, color: '#30d158' }}>verified visitors</span>
@@ -462,7 +462,7 @@ export default function TheRecord() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ fontSize: '10.5px', color: '#a8a8ad', marginTop: '16px', textAlign: 'center' }}>Powered by ohACCESS · Patent Pending</div>
+                  <div style={{ fontSize: '10.5px', color: '#a8a8ad', marginTop: '16px', textAlign: 'center' }}>Powered by <strong>ohACCESS</strong> · Patent Pending</div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
                   <div style={{ background: '#c9963a', color: '#1d1d1f', fontSize: '13px', fontWeight: 700, padding: '9px 16px', borderRadius: '16px 16px 4px 16px' }}>Great turnout Sunday! Full report above 👆</div>
@@ -475,7 +475,7 @@ export default function TheRecord() {
         {/* pricing */}
         <div id="pricing" style={{ background: '#fff', padding: sectionPad }}>
           <div style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', marginBottom: '8px' }}>Priced like a lockbox, not like software.</div>
-          <div style={{ fontSize: '16px', color: '#6e6e73', marginBottom: '24px' }}>Start free. One verified lead pays for decades.</div>
+          <div style={{ fontSize: '16px', color: '#6e6e73', marginBottom: '24px' }}>Start Free. One verified lead pays for decades.</div>
           <div style={{ display: 'inline-flex', background: '#f5f5f7', borderRadius: '10px', padding: '4px', gap: '2px', marginBottom: '28px', flexWrap: 'wrap' }}>
             {(['monthly', 'annual', '2year'] as const).map(b => (
               <button key={b} onClick={() => setBilling(b)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px', fontWeight: 700, background: billing === b ? '#1d1d1f' : 'transparent', color: billing === b ? '#fff' : '#6e6e73' }}>
@@ -501,7 +501,7 @@ export default function TheRecord() {
                 price: { monthly: '$15', annual: '$12.50', '2year': '$10' },
                 per: { monthly: '/mo', annual: '/mo', '2year': '/mo' },
                 note: { monthly: ' ', annual: 'Billed $150/yr — 2 months free', '2year': '$240 every 2 years — year 2 half off' },
-                features: <>Unlimited open houses<br />Unlimited registrations<br />Instant SMS alerts · CRM sync</>,
+                features: <>Unlimited Open Houses<br />Unlimited registrations<br />Instant SMS alerts · CRM sync</>,
               },
               {
                 name: 'Team', dark: false,
@@ -536,7 +536,7 @@ export default function TheRecord() {
             * 2-year pricing is a founding-member offer available for a limited time only. Paid upfront and renews automatically every 2 years — we&apos;ll email you before each renewal, and you can cancel anytime. More than 100 agents? <a href="/contact" style={{ color: '#c9963a' }}>Contact us</a> for custom pricing.
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
-            <Link href="/login?signup=true" className="rec-btn" style={{ background: '#1d1d1f', color: '#fff', fontWeight: 700, fontSize: '16px', padding: '16px 34px', borderRadius: '8px' }}>Verify your first open house free →</Link>
+            <Link href="/login?signup=true" className="rec-btn" style={{ background: '#1d1d1f', color: '#fff', fontWeight: 700, fontSize: '16px', padding: '16px 34px', borderRadius: '8px' }}>Verify your first Open House free →</Link>
           </div>
         </div>
 
@@ -548,7 +548,7 @@ export default function TheRecord() {
             <a href="/privacy" className="rec-link">Privacy</a>
             <a href="/contact" className="rec-link">Contact</a>
           </div>
-          <div style={{ fontSize: '12.5px', color: 'rgba(255,255,255,.5)' }}>© 2026 ohACCESS · Patent Pending</div>
+          <div style={{ fontSize: '12.5px', color: 'rgba(255,255,255,.5)' }}>© 2026 <strong>ohACCESS</strong> · Patent Pending</div>
         </div>
       </div>
     </div>
