@@ -45,10 +45,13 @@ const NAV_LINKS = [
 const sectionPad = 'clamp(56px,8vw,96px) clamp(20px,5vw,48px)'
 const eyebrow: React.CSSProperties = { fontSize: '13px', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#c9963a', marginBottom: '14px' }
 
-export default function TheRecord() {
+// showFilm=false (the homepage, until the 90-second film is delivered) hides
+// the #film section plus the nav link and hero anchor that point to it.
+export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [billing, setBilling] = useState<'monthly' | 'annual' | '2year'>('monthly')
+  const navLinks = showFilm ? NAV_LINKS : NAV_LINKS.filter(l => l.href !== '#film')
 
   useEffect(() => {
     const root = rootRef.current
@@ -235,7 +238,7 @@ export default function TheRecord() {
         <div style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '16px clamp(20px,5vw,48px)', background: 'rgba(29,29,31,.82)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,.1)' }}>
           <div onClick={() => { setMenuOpen(false); window.scrollTo({ top: 0 }) }} style={{ fontWeight: 800, fontSize: '18px', color: '#fff', letterSpacing: '-.02em', cursor: 'pointer' }}>oh<span style={{ color: '#c9963a' }}>ACCESS</span></div>
           <div className="rec-nav-links">
-            {NAV_LINKS.map(l => <a key={l.href} href={l.href} style={{ padding: '8px 0' }}>{l.label}</a>)}
+            {navLinks.map(l => <a key={l.href} href={l.href} style={{ padding: '8px 0' }}>{l.label}</a>)}
             <Link href="/login" style={{ padding: '8px 0' }}>Sign-In</Link>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -247,7 +250,7 @@ export default function TheRecord() {
         {/* mobile menu */}
         {menuOpen && (
           <div style={{ position: 'sticky', top: '64px', zIndex: 49, background: '#2a2a2c', padding: '16px clamp(20px,5vw,48px)', display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.85)', borderBottom: '1px solid rgba(255,255,255,.1)' }}>
-            {NAV_LINKS.map(l => <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)}>{l.label}</a>)}
+            {navLinks.map(l => <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)}>{l.label}</a>)}
             <Link href="/login" onClick={() => setMenuOpen(false)}>Sign-In</Link>
           </div>
         )}
@@ -262,7 +265,7 @@ export default function TheRecord() {
             <p style={{ fontSize: 'clamp(16px,1.6vw,19px)', lineHeight: 1.55, color: 'rgba(255,255,255,.72)', margin: '24px 0 32px', maxWidth: '44ch', animation: 'om-rise .7s .45s both' }}>Fake names. Dead numbers. Ink nobody can read. <strong>ohACCESS</strong> verifies every Open House visitor at the door with a one-time code word — sent to a phone and email that actually work.</p>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap', animation: 'om-rise .7s .55s both' }}>
               <Link href="/login?signup=true" className="rec-btn" style={{ background: '#c9963a', color: '#1d1d1f', fontWeight: 700, fontSize: '16px', padding: '15px 28px', borderRadius: '8px' }}>Start Free — 25 check-ins</Link>
-              <a href="#film" style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.8)', borderBottom: '1px solid rgba(255,255,255,.35)', paddingBottom: '2px' }}>Watch 90 seconds ↓</a>
+              {showFilm && <a href="#film" style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.8)', borderBottom: '1px solid rgba(255,255,255,.35)', paddingBottom: '2px' }}>Watch 90 seconds ↓</a>}
             </div>
             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.45)', marginTop: '16px', animation: 'om-rise .7s .62s both' }}>No credit card. Verified leads by Sunday.</div>
           </div>
@@ -314,8 +317,8 @@ export default function TheRecord() {
           </div>
         </div>
 
-        {/* the 90-second film */}
-        <div id="film" style={{ background: '#f5f5f7', padding: 'clamp(56px,8vw,96px) 0' }}>
+        {/* the 90-second film — hidden on the homepage until the film is delivered */}
+        {showFilm && <div id="film" style={{ background: '#f5f5f7', padding: 'clamp(56px,8vw,96px) 0' }}>
           <div style={{ padding: '0 clamp(20px,5vw,48px)' }}>
             <div style={{ ...eyebrow, marginBottom: '10px' }}>The 90-second film</div>
             <div style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', maxWidth: '24ch' }}>One Open House, from yard sign to seller report.</div>
@@ -345,7 +348,7 @@ export default function TheRecord() {
               </div>
             ))}
           </div>
-        </div>
+        </div>}
 
         {/* live log → CRM */}
         <div id="leads" style={{ background: '#1d1d1f', color: '#fff', padding: sectionPad, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,340px),1fr))', gap: 'clamp(36px,5vw,64px)', alignItems: 'center' }}>
