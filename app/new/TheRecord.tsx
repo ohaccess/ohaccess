@@ -82,7 +82,15 @@ export default function TheRecord() {
       el.style.transform = 'translateY(26px)'
       el.style.transition = 'opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1)'
     })
-    const show = (el: HTMLElement) => { el.style.opacity = '1'; el.style.transform = 'none' }
+    // Clear the inline transform (rather than pinning 'none') once revealed —
+    // an inline value would permanently override the CSS hover/scroll scale
+    // effects on the comparison and pricing cards. The inline transition is
+    // dropped after the rise-in finishes for the same reason.
+    const show = (el: HTMLElement) => {
+      el.style.opacity = '1'
+      el.style.transform = ''
+      setTimeout(() => { el.style.transition = '' }, 750)
+    }
     const io = new IntersectionObserver(es => es.forEach(e => {
       if (!e.isIntersecting) return
       io.unobserve(e.target)
@@ -156,9 +164,22 @@ export default function TheRecord() {
     }), { rootMargin: '-40% 0px -40% 0px' })
     steps.forEach(el => spy.observe(el))
 
+    // comparison cards: hover handles desktop; on touch devices (no hover)
+    // the card crossing the center band of the screen gets the same effect
+    let cmpIO: IntersectionObserver | undefined
+    if (!reduced && matchMedia('(hover: none)').matches) {
+      cmpIO = new IntersectionObserver(es => es.forEach(e => {
+        const el = e.target as HTMLElement
+        const cls = el.classList.contains('rec-cmp-win') ? 'rec-cmp-win-active' : 'rec-cmp-active'
+        el.classList.toggle(cls, e.isIntersecting)
+      }), { rootMargin: '-40% 0px -40% 0px' })
+      root.querySelectorAll<HTMLElement>('.rec-cmp, .rec-cmp-win').forEach(el => cmpIO!.observe(el))
+    }
+
     return () => {
       removeEventListener('scroll', onScroll)
       io.disconnect(); animIO.disconnect(); spy.disconnect()
+      if (cmpIO) cmpIO.disconnect()
       if (logIO) logIO.disconnect()
       logTicks.forEach(clearTimeout)
       if (logSettle) clearTimeout(logSettle)
@@ -186,9 +207,9 @@ export default function TheRecord() {
         .rec-play{transition:transform .2s}
         .rec-play:hover{transform:scale(1.08)}
         .rec-cmp{transition:transform .25s}
-        .rec-cmp:hover{transform:scale(.97)}
+        .rec-cmp:hover,.rec-cmp-active{transform:scale(.97)}
         .rec-cmp-win{transition:transform .25s,box-shadow .25s}
-        .rec-cmp-win:hover{transform:scale(1.03);box-shadow:0 22px 52px rgba(29,29,31,.35)}
+        .rec-cmp-win:hover,.rec-cmp-win-active{transform:scale(1.03);box-shadow:0 22px 52px rgba(29,29,31,.35)}
         .rec-tier{transition:transform .25s,box-shadow .25s}
         .rec-tier:hover{transform:translateY(-4px);box-shadow:0 14px 32px rgba(29,29,31,.1)}
         .rec-tier-dark:hover{box-shadow:0 18px 40px rgba(29,29,31,.35)}
