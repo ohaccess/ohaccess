@@ -336,7 +336,7 @@ export default function TheRecord() {
             </div>
           </div>
           <div data-reveal="1" style={{ justifySelf: 'center', width: 'min(92vw,440px)', background: '#fff', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 30px 80px rgba(0,0,0,.45)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #ececf0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: '#f5f5f7', borderBottom: '1px solid #ececf0' }}>
               <div>
                 <div style={{ fontSize: '14px', fontWeight: 800, color: '#1d1d1f' }}>412 Larchmont Ave · Live</div>
                 <div style={{ fontSize: '11.5px', color: '#6e6e73' }}>Sunday 2:47 PM · doors open</div>
