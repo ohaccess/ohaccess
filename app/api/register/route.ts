@@ -69,6 +69,10 @@ export async function POST(request: Request) {
       openHouseId
     } = body
 
+    // Language the visitor registered in (for the dashboard flag). Validate
+    // against the known set; anything else falls back to English.
+    const visitorLang = ['en', 'es', 'vi', 'zh', 'ko', 'hi'].includes(body.lang) ? body.lang : 'en'
+
     if (!firstName || !lastName || !email || !phone || !openHouseId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
@@ -250,6 +254,7 @@ export async function POST(request: Request) {
         email: email,
         phone: phone,
         purchasing_timeline: purchasingTimeline,
+        lang: visitorLang,
         sms_opted_out: phoneOptedOut,
         source: 'ohaccess',
         feedback_token: feedbackToken,

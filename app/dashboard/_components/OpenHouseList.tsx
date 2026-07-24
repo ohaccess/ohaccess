@@ -4,6 +4,7 @@ import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { timelineStyle, timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type Sortable } from '@/lib/sort'
 import { isVirtualNumber } from '@/lib/register-helpers'
+import { langMeta } from '@/lib/register-i18n'
 
 // The main "Dashboard" view: stat cards, the agent's open-house cards (with
 // QR / copy / edit / delete actions), and the visitor log for the selected
@@ -322,6 +323,7 @@ export default function OpenHouseList({
                   {sortedVisitors.map((v, i) => (
                     <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
+                        <span title={`Registered in ${langMeta(v.lang).label}`} style={{ marginRight: '6px' }}>{langMeta(v.lang).flag}</span>
                         <button onClick={() => setVisitorModal(v)} style={{ background: 'none', border: 'none', padding: 0, color: accentText, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px', textAlign: 'left' }}>
                           {v.first_name} {v.last_name}{v.notes ? ' 📝' : ''}
                         </button>
