@@ -343,6 +343,9 @@ function ExpiredOpenHouse() {
   const primaryText = readableOnLight(primaryColor)
   const primaryBtnBorder = fillBorder(primaryColor)
   const accentText = readableOnLight(accentColor)
+  // Text/symbols sitting ON an accent-filled shape (checkmark, selected rating
+  // and price buttons): white on dark brand colors, black on light ones.
+  const onAccent = onColor(accentColor)
   const accentBtnBorder = fillBorder(accentColor)
 
   const inputStyle = {
@@ -614,17 +617,17 @@ function ExpiredOpenHouse() {
           </>
         ) : (
           /* Success screen */
-          <div style={{ textAlign: 'center', padding: '32px 20px' }}>
-            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: accentColor, border: accentBtnBorder, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px' }}>
+          <div style={{ textAlign: 'center', padding: '16px 18px 22px' }}>
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: accentColor, border: accentBtnBorder, color: onAccent, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', fontSize: '24px' }}>
               ✓
             </div>
             <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>
               {t.thankYou}
             </div>
-            <div style={{ fontSize: '14px', color: '#6e6e73', background: '#f5f5f7', borderRadius: '12px', padding: '14px 20px', marginBottom: '16px', lineHeight: '1.6' }}>
+            <div style={{ fontSize: '14px', color: '#6e6e73', background: '#f5f5f7', borderRadius: '12px', padding: '12px 16px', marginBottom: '12px', lineHeight: '1.5' }}>
 {t.sentBody1} <br/><br/>{t.sentBody2}
             </div>
-            <div style={{ fontSize: '15px', color: '#6e6e73', marginBottom: '14px' }}>
+            <div style={{ fontSize: '15px', color: '#6e6e73', marginBottom: '10px' }}>
               {openHouse.property_address}<br />
               {openHouse.open_house_date} · {openHouse.open_house_hours}
             </div>
@@ -641,19 +644,19 @@ function ExpiredOpenHouse() {
             {/* Post-visit feedback — optional, asked "after your tour". Answers
                 are aggregated PII-free into the seller report. */}
             {feedbackToken && (
-              <div style={{ marginTop: '22px', paddingTop: '20px', borderTop: '1px solid #e5e5ea', textAlign: 'left' }}>
+              <div style={{ marginTop: '14px', paddingTop: '16px', borderTop: '1px solid #e5e5ea', textAlign: 'left' }}>
                 {fbDone ? (
                   <div style={{ background: '#e8f9ee', border: '1px solid #b2f0c8', borderRadius: '12px', padding: '14px 16px', fontSize: '13.5px', color: '#1a7a3c', fontWeight: 600, lineHeight: 1.5, textAlign: 'center' }}>
                     {t.feedbackThanks}
                   </div>
                 ) : (
                   <>
-                    <div style={{ fontSize: '13.5px', color: '#1d1d1f', lineHeight: 1.55, marginBottom: '16px' }}>
+                    <div style={{ fontSize: '13.5px', color: '#1d1d1f', lineHeight: 1.5, marginBottom: '12px' }}>
                       <strong>{t.feedbackAfter}</strong>{t.feedbackIntro.split('{after}')[1]}
                     </div>
 
                     {/* Q1 — overall rating, 1–10 */}
-                    <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#1d1d1f', lineHeight: 1.5, marginBottom: '10px' }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#1d1d1f', lineHeight: 1.45, marginBottom: '8px' }}>
                       {t.feedbackQ1}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '5px' }}>
@@ -664,7 +667,7 @@ function ExpiredOpenHouse() {
                             key={n}
                             type="button"
                             onClick={() => setFbRating(n)}
-                            style={{ aspectRatio: '1', minWidth: 0, borderRadius: '9px', border: on ? accentBtnBorder : '1px solid #d1d1d6', background: on ? accentColor : '#f5f5f7', color: on ? accentText : '#1d1d1f', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 0 }}
+                            style={{ aspectRatio: '1', minWidth: 0, borderRadius: '9px', border: on ? accentBtnBorder : '1px solid #d1d1d6', background: on ? accentColor : '#f5f5f7', color: on ? onAccent : '#1d1d1f', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 0 }}
                           >
                             {n}
                           </button>
@@ -677,7 +680,7 @@ function ExpiredOpenHouse() {
                     </div>
 
                     {/* Q2 — price sentiment */}
-                    <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#1d1d1f', lineHeight: 1.5, margin: '18px 0 10px' }}>
+                    <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#1d1d1f', lineHeight: 1.45, margin: '14px 0 8px' }}>
                       {t.feedbackQ2}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
@@ -688,7 +691,7 @@ function ExpiredOpenHouse() {
                             key={i}
                             type="button"
                             onClick={() => setFbPriceIdx(i)}
-                            style={{ borderRadius: '9px', border: on ? accentBtnBorder : '1px solid #d1d1d6', background: on ? accentColor : '#f5f5f7', color: on ? accentText : '#1d1d1f', fontSize: '13px', fontWeight: 700, padding: '11px 6px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                            style={{ borderRadius: '9px', border: on ? accentBtnBorder : '1px solid #d1d1d6', background: on ? accentColor : '#f5f5f7', color: on ? onAccent : '#1d1d1f', fontSize: '13px', fontWeight: 700, padding: '11px 6px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                           >
                             {lbl}
                           </button>
@@ -706,7 +709,7 @@ function ExpiredOpenHouse() {
                       type="button"
                       onClick={submitFeedback}
                       disabled={fbSubmitting || fbRating === null || fbPriceIdx === null}
-                      style={{ marginTop: '16px', width: '100%', background: (fbRating !== null && fbPriceIdx !== null) ? primaryColor : '#e8e8ed', color: (fbRating !== null && fbPriceIdx !== null) ? onPrimary : '#aeaeb2', border: (fbRating !== null && fbPriceIdx !== null) ? primaryBtnBorder : 'none', borderRadius: '12px', padding: '13px', fontSize: '15px', fontWeight: 700, cursor: (fbSubmitting || fbRating === null || fbPriceIdx === null) ? 'default' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: fbSubmitting ? 0.7 : 1 }}
+                      style={{ marginTop: '14px', width: '100%', background: (fbRating !== null && fbPriceIdx !== null) ? primaryColor : '#e8e8ed', color: (fbRating !== null && fbPriceIdx !== null) ? onPrimary : '#aeaeb2', border: (fbRating !== null && fbPriceIdx !== null) ? primaryBtnBorder : 'none', borderRadius: '12px', padding: '13px', fontSize: '15px', fontWeight: 700, cursor: (fbSubmitting || fbRating === null || fbPriceIdx === null) ? 'default' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: fbSubmitting ? 0.7 : 1 }}
                     >
                       {fbSubmitting ? t.feedbackSubmitting : t.feedbackSubmit}
                     </button>
