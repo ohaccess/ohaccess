@@ -51,5 +51,38 @@ describe('buildSellerReportStats', () => {
     expect(stats.groups).toEqual([])
     expect(stats.soonCount).toBe(0)
     expect(stats.funnel).toBeNull()
+    expect(stats.feedback).toBeNull()
+  })
+
+  it('returns null feedback when nobody answered', () => {
+    expect(buildSellerReportStats([v('0–3 Months'), v(null)], 0).feedback).toBeNull()
+  })
+
+  it('aggregates feedback: mean rating (one decimal) and price sentiment counts', () => {
+    const fb = (timeline: string | null, rating: number | null, price: string | null) => ({
+      purchasing_timeline: timeline,
+      feedback_rating: rating,
+      feedback_price: price,
+    })
+    const stats = buildSellerReportStats(
+      [
+        fb('0–3 Months', 8, 'Too High'),
+        fb('3–6 Months', 7, 'Reasonable'),
+        fb('6–12 Months', 6, 'Too High'),
+        fb('12+ Months', null, null), // registered but left no feedback
+      ],
+      0
+    )
+    expect(stats.feedback).toEqual({
+      responses: 3,
+      avgRating: 7, // (8+7+6)/3
+      price: { high: 2, reasonable: 1, low: 0 },
+    })
+  })
+
+  it('rounds the average rating to one decimal', () => {
+    const fb = (rating: number) => ({ purchasing_timeline: null, feedback_rating: rating, feedback_price: 'Reasonable' })
+    const stats = buildSellerReportStats([fb(8), fb(9), fb(9)], 0) // 26/3 = 8.666…
+    expect(stats.feedback?.avgRating).toBe(8.7)
   })
 })

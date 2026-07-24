@@ -28,6 +28,11 @@ export const LANGS: { code: Lang; flag: string; label: string }[] = [
 // translated (lib/timeline ranks on these exact strings).
 export const TIMELINE_VALUES = ['0–3 Months', '3–6 Months', '6–12 Months', '12+ Months'] as const
 
+// Stored in visitors.feedback_price — never translated. The three price buttons
+// display feedbackPrices[i] but submit FEEDBACK_PRICE_VALUES[i], so aggregation
+// and the DB CHECK constraint stay on these exact English strings.
+export const FEEDBACK_PRICE_VALUES = ['Too High', 'Reasonable', 'Too Low'] as const
+
 export interface RegisterStrings {
   tagline: string
   loading: string
@@ -66,6 +71,21 @@ export interface RegisterStrings {
   checkPhone: string
   checkEmail: string
   checkAgent: string
+  // Post-visit feedback card on the success screen. feedbackIntro contains
+  // {after}; rendered with feedbackAfter bolded (Dave's "After your tour…").
+  feedbackIntro: string
+  feedbackAfter: string
+  feedbackQ1: string
+  feedbackQ2: string
+  feedbackScaleLow: string
+  feedbackScaleHigh: string
+  // Display labels for the three price buttons; submitted values stay English
+  // (FEEDBACK_PRICE_VALUES), like the timeline.
+  feedbackPrices: [string, string, string]
+  feedbackSubmit: string
+  feedbackSubmitting: string
+  feedbackThanks: string
+  feedbackError: string
 }
 
 const en: RegisterStrings = {
@@ -102,6 +122,17 @@ const en: RegisterStrings = {
   checkPhone: '✓ Access code was sent to your phone.',
   checkEmail: '✓ Backup code was sent to your email.',
   checkAgent: '✓ Agent has been notified of your arrival.',
+  feedbackIntro: '{after} your tour, please provide feedback to the following questions.',
+  feedbackAfter: 'After',
+  feedbackQ1: 'Considering the features, location, and condition of the home, how would you rate it overall?',
+  feedbackQ2: 'Considering the features, location, and condition of the home, how do you feel about the price?',
+  feedbackScaleLow: 'Poor',
+  feedbackScaleHigh: 'Excellent',
+  feedbackPrices: ['Too High', 'Reasonable', 'Too Low'],
+  feedbackSubmit: 'Submit feedback',
+  feedbackSubmitting: 'Sending…',
+  feedbackThanks: 'Thank you! Your feedback was shared with the agent for the seller.',
+  feedbackError: 'Could not save your feedback. Please try again.',
 }
 
 const es: RegisterStrings = {
@@ -138,6 +169,17 @@ const es: RegisterStrings = {
   checkPhone: '✓ El código de acceso fue enviado a tu teléfono.',
   checkEmail: '✓ El código de respaldo fue enviado a tu correo.',
   checkAgent: '✓ El agente ha sido notificado de tu llegada.',
+  feedbackIntro: '{after} de tu recorrido, por favor responde las siguientes preguntas.',
+  feedbackAfter: 'Después',
+  feedbackQ1: 'Considerando las características, la ubicación y el estado de la casa, ¿cómo la calificarías en general?',
+  feedbackQ2: 'Considerando las características, la ubicación y el estado de la casa, ¿qué opinas del precio?',
+  feedbackScaleLow: 'Mala',
+  feedbackScaleHigh: 'Excelente',
+  feedbackPrices: ['Muy alto', 'Razonable', 'Muy bajo'],
+  feedbackSubmit: 'Enviar comentarios',
+  feedbackSubmitting: 'Enviando…',
+  feedbackThanks: '¡Gracias! Tus comentarios se compartieron con el agente para el vendedor.',
+  feedbackError: 'No se pudieron guardar tus comentarios. Por favor intenta de nuevo.',
 }
 
 const vi: RegisterStrings = {
@@ -174,6 +216,17 @@ const vi: RegisterStrings = {
   checkPhone: '✓ Mã vào cửa đã được gửi đến điện thoại của bạn.',
   checkEmail: '✓ Mã dự phòng đã được gửi đến email của bạn.',
   checkAgent: '✓ Chuyên viên môi giới đã được thông báo về sự có mặt của bạn.',
+  feedbackIntro: '{after} khi tham quan, vui lòng trả lời các câu hỏi sau.',
+  feedbackAfter: 'Sau',
+  feedbackQ1: 'Xét về đặc điểm, vị trí và tình trạng của ngôi nhà, bạn đánh giá tổng thể như thế nào?',
+  feedbackQ2: 'Xét về đặc điểm, vị trí và tình trạng của ngôi nhà, bạn thấy mức giá thế nào?',
+  feedbackScaleLow: 'Kém',
+  feedbackScaleHigh: 'Xuất sắc',
+  feedbackPrices: ['Quá cao', 'Hợp lý', 'Quá thấp'],
+  feedbackSubmit: 'Gửi phản hồi',
+  feedbackSubmitting: 'Đang gửi…',
+  feedbackThanks: 'Cảm ơn bạn! Phản hồi của bạn đã được chia sẻ với chuyên viên môi giới cho người bán.',
+  feedbackError: 'Không thể lưu phản hồi của bạn. Vui lòng thử lại.',
 }
 
 const zh: RegisterStrings = {
@@ -210,6 +263,17 @@ const zh: RegisterStrings = {
   checkPhone: '✓ 门禁码已发送到您的手机。',
   checkEmail: '✓ 备用码已发送到您的邮箱。',
   checkAgent: '✓ 经纪人已收到您到访的通知。',
+  feedbackIntro: '{after}，请回答以下问题。',
+  feedbackAfter: '参观后',
+  feedbackQ1: '综合考虑房屋的特点、位置和状况，您对它的总体评价如何？',
+  feedbackQ2: '综合考虑房屋的特点、位置和状况，您觉得价格如何？',
+  feedbackScaleLow: '较差',
+  feedbackScaleHigh: '极好',
+  feedbackPrices: ['偏高', '合理', '偏低'],
+  feedbackSubmit: '提交反馈',
+  feedbackSubmitting: '正在提交…',
+  feedbackThanks: '谢谢！您的反馈已分享给经纪人以转告卖家。',
+  feedbackError: '无法保存您的反馈，请重试。',
 }
 
 const ko: RegisterStrings = {
@@ -246,6 +310,17 @@ const ko: RegisterStrings = {
   checkPhone: '✓ 출입 코드가 휴대폰으로 전송되었습니다.',
   checkEmail: '✓ 예비 코드가 이메일로 전송되었습니다.',
   checkAgent: '✓ 에이전트에게 도착이 통지되었습니다.',
+  feedbackIntro: '{after}, 아래 질문에 답변해 주세요.',
+  feedbackAfter: '둘러보신 후',
+  feedbackQ1: '집의 특징, 위치, 상태를 고려할 때 전반적으로 어떻게 평가하시겠어요?',
+  feedbackQ2: '집의 특징, 위치, 상태를 고려할 때 가격에 대해 어떻게 생각하세요?',
+  feedbackScaleLow: '나쁨',
+  feedbackScaleHigh: '훌륭함',
+  feedbackPrices: ['너무 높음', '적절함', '너무 낮음'],
+  feedbackSubmit: '피드백 제출',
+  feedbackSubmitting: '보내는 중…',
+  feedbackThanks: '감사합니다! 남겨 주신 의견은 판매자를 위해 에이전트에게 전달되었습니다.',
+  feedbackError: '피드백을 저장하지 못했습니다. 다시 시도해 주세요.',
 }
 
 const hi: RegisterStrings = {
@@ -282,6 +357,17 @@ const hi: RegisterStrings = {
   checkPhone: '✓ एक्सेस कोड आपके फ़ोन पर भेज दिया गया है।',
   checkEmail: '✓ बैकअप कोड आपके ईमेल पर भेज दिया गया है।',
   checkAgent: '✓ एजेंट को आपके आगमन की सूचना दे दी गई है।',
+  feedbackIntro: '{after}, कृपया नीचे दिए गए प्रश्नों के उत्तर दें।',
+  feedbackAfter: 'दौरे के बाद',
+  feedbackQ1: 'घर की विशेषताओं, स्थान और स्थिति को ध्यान में रखते हुए, आप इसे कुल मिलाकर कैसे आंकेंगे?',
+  feedbackQ2: 'घर की विशेषताओं, स्थान और स्थिति को ध्यान में रखते हुए, आपको कीमत के बारे में कैसा लगता है?',
+  feedbackScaleLow: 'खराब',
+  feedbackScaleHigh: 'उत्कृष्ट',
+  feedbackPrices: ['बहुत ज़्यादा', 'उचित', 'बहुत कम'],
+  feedbackSubmit: 'प्रतिक्रिया भेजें',
+  feedbackSubmitting: 'भेजा जा रहा है…',
+  feedbackThanks: 'धन्यवाद! आपकी प्रतिक्रिया विक्रेता के लिए एजेंट के साथ साझा कर दी गई है।',
+  feedbackError: 'आपकी प्रतिक्रिया सहेजी नहीं जा सकी। कृपया फिर से प्रयास करें।',
 }
 
 export const STRINGS: Record<Lang, RegisterStrings> = { en, es, vi, zh, ko, hi }

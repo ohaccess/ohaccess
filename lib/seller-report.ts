@@ -18,12 +18,26 @@ export interface SellerReportStats {
   // for this event (the qr_scans table is younger than some open houses, so a
   // scan count below the registration count means the log missed the event).
   funnel: { scans: number; registered: number } | null
+  // Post-visit feedback, aggregated PII-free, or null when nobody answered.
+  // avgRating is the mean of the 1–10 overall ratings (one decimal); price is
+  // the count of each sentiment. responses = visitors who submitted feedback.
+  feedback: {
+    responses: number
+    avgRating: number
+    price: { high: number; reasonable: number; low: number }
+  } | null
 }
 
 const OTHER_LABEL = 'Other'
 
+export interface SellerReportVisitor {
+  purchasing_timeline: string | null
+  feedback_rating?: number | null
+  feedback_price?: string | null
+}
+
 export function buildSellerReportStats(
-  visitors: { purchasing_timeline: string | null }[],
+  visitors: SellerReportVisitor[],
   scanCount: number
 ): SellerReportStats {
   const total = visitors.length
@@ -45,5 +59,23 @@ export function buildSellerReportStats(
   const funnel =
     scanCount > 0 && scanCount >= total ? { scans: scanCount, registered: total } : null
 
-  return { total, groups, soonCount, funnel }
+  // A response requires both answers (the form submits them together), so a
+  // numeric rating is a reliable marker of a completed feedback row.
+  const rated = visitors
+    .map(v => v.feedback_rating)
+    .filter((r): r is number => typeof r === 'number')
+  const feedback =
+    rated.length > 0
+      ? {
+          responses: rated.length,
+          avgRating: Math.round((rated.reduce((a, b) => a + b, 0) / rated.length) * 10) / 10,
+          price: {
+            high: visitors.filter(v => v.feedback_price === 'Too High').length,
+            reasonable: visitors.filter(v => v.feedback_price === 'Reasonable').length,
+            low: visitors.filter(v => v.feedback_price === 'Too Low').length,
+          },
+        }
+      : null
+
+  return { total, groups, soonCount, funnel, feedback }
 }
