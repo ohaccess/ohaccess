@@ -170,11 +170,11 @@ function buildReminderHtml(args: {
       <div style="font-size:14px;line-height:1.7;">
         ohACCESS works best when <strong>everyone</strong> scans — it's the security layer between the
         street and your seller's home. Politely insist each visitor completes the form and shares
-        their code word before touring. A script that works:
+        their codeword before touring. A script that works:
       </div>
       <div style="border-left:3px solid ${e(accent)};padding:8px 12px;margin-top:10px;font-size:14px;line-height:1.7;color:#1d1d1f;font-style:italic;">
         "Welcome in! Real quick before you head through — we ask every visitor to scan the sign and
-        grab today's code word. It's a security step the sellers asked for, it takes about 20 seconds,
+        grab today's codeword. It's a security step the sellers asked for, it takes about 20 seconds,
         and then the home is all yours to explore."
       </div>
       <div style="font-size:13px;color:#6e6e73;margin-top:8px;">If someone hesitates:</div>
@@ -186,7 +186,7 @@ function buildReminderHtml(args: {
 
     <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
       ${sectionTitle('What your visitors will receive')}
-      <div style="font-size:13px;color:#6e6e73;margin-bottom:8px;">These are live samples using this open house's actual code words.</div>
+      <div style="font-size:13px;color:#6e6e73;margin-bottom:8px;">These are live samples using this open house's actual codewords.</div>
       <div style="font-size:12px;color:#6e6e73;margin-bottom:4px;">Text message:</div>
       <div style="background:#e5e5ea;border-radius:16px;padding:10px 14px;font-size:14px;line-height:1.5;color:#1d1d1f;max-width:420px;">
         ${e(smsSample)}
@@ -200,7 +200,7 @@ function buildReminderHtml(args: {
         <div style="font-size:12px;color:#6e6e73;margin-top:8px;">…plus the property details and your contact card.</div>
       </div>
       <div style="font-size:13px;line-height:1.6;margin-top:10px;color:#1d1d1f;">
-        Visitors share the code word — that's your confirmation their contact info is real and they're checked in.
+        Visitors share the codeword — that's your confirmation their contact info is real and they're checked in.
       </div>
     </div>
 
@@ -295,7 +295,7 @@ async function handle(request: Request) {
     // route: same SMS base copy, same email subject/code box. Legacy open
     // houses only have code_word, so reuse it for email.
     const streetAddress = oh.street_address || oh.property_address || ''
-    const smsSample = `SMS code at ${streetAddress} is "${oh.code_word || ''}". Share code w/ host for access. Reply STOP to opt out.`
+    const smsSample = `Codeword for ${streetAddress} is "${oh.code_word || ''}". Share with host for access. Reply STOP to opt out.`
     const emailCodeWord = oh.code_word_email || oh.code_word || ''
 
     const dayLine = fmtDay(oh.start_at, oh.timezone)

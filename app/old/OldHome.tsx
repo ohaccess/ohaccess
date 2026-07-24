@@ -105,7 +105,7 @@ export default function Home() {
             <span style={{ color: '#c9963a' }}>is finished.</span>
           </h1>
           <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.6', marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px' }}>
-            ohACCESS verifies every open house visitor&apos;s contact information in real time — via a code word sent to their phone and email. Fake info? No code. No entry.
+            ohACCESS verifies every open house visitor&apos;s contact information in real time — via a codeword sent to their phone and email. Fake info? No code. No entry.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', padding: '0 16px' }}>
             <Link href="/login?signup=true" style={{ background: '#c9963a', color: '#1d1d1f', padding: '16px 32px', borderRadius: '12px', textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '340px', lineHeight: '1.4' }}>
@@ -154,9 +154,9 @@ export default function Home() {
           </div>
           <div className="grid-4">
             {[
-              { step: '1', title: 'Create your open house', body: 'Enter your listing details and choose a secret code word. A unique QR code is generated instantly.' },
+              { step: '1', title: 'Create your open house', body: 'Enter your listing details and choose a secret codeword. A unique QR code is generated instantly.' },
               { step: '2', title: 'Buyer scans the QR code', body: 'A mobile form loads. They enter their name, valid email, valid phone number, and buying timeline.' },
-              { step: '3', title: 'Code word is delivered', body: 'A text and email with the code word hits their phone instantly. Fake info = no code = no entry.' },
+              { step: '3', title: 'Codeword is delivered', body: 'A text and email with the codeword hits their phone instantly. Fake info = no code = no entry.' },
               { step: '4', title: 'Agent is notified', body: "You receive an instant SMS with the visitor's full details — before they even reach the door. Tap the link in the alert to verify the visitor and save private notes." },
             ].map(item => (
               <div key={item.step} style={{ background: '#f5f5f7', borderRadius: '18px', padding: '24px' }}>
@@ -228,7 +228,7 @@ export default function Home() {
           <div className="grid-3">
             {[
               { emoji: '📱', title: 'QR code per open house', body: 'Every listing gets a unique QR code. Display it at the entrance — buyers scan and register in seconds.' },
-              { emoji: '✅', title: 'Real-time verification', body: 'Code word delivered instantly via SMS and email. No valid contact info = no access code.' },
+              { emoji: '✅', title: 'Real-time verification', body: 'Codeword delivered instantly via SMS and email. No valid contact info = no access code.' },
               { emoji: '🔔', title: 'Instant agent alerts', body: 'Know who is walking in before they reach the door. Name, phone, email, and buying timeline — instantly. Tap the alert link to verify them and add private notes.' },
               { emoji: '📋', title: 'Verified visitor log', body: 'Every registration saved automatically. Mark visitors as verified at the door and export to CSV.' },
               { emoji: '🔗', title: 'Automatic CRM sync', body: 'Every verified sign-in lands in your CRM as a new lead automatically — Follow Up Boss, kvCORE, Lofty, and more. CSV export too.' },

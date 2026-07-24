@@ -187,7 +187,7 @@ export default function NewOpenHouseForm({
 
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '6px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
-          <span style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Access Code Words</span>
+          <span style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Access Codewords</span>
           <span style={{ fontSize: '11px', color: '#6e6e73' }}><span style={{ color: '#ff3b30' }}>*</span> required field</span>
         </div>
         <div style={{ fontSize: '13px', color: '#6e6e73', margin: '12px 0 16px', lineHeight: '1.5' }}>

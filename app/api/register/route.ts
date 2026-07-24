@@ -388,9 +388,11 @@ export async function POST(request: Request) {
     // message even if it pushes us to 2 segments for very long addresses —
     // TCPA opt-out signaling is more important than the marginal cost.
     const smsBody = buildSmsBody(
-      // "at" before the address (not "for") so iPhone data detectors link it
-      // to Apple Maps — street-only addresses need that context cue.
-      `SMS code at ${streetAddress} is "${smsCodeWord}". Share code w/ host for access. Reply STOP to opt out.`,
+      // Copy per Dave. NOTE: "for" (not "at") before the address means iPhone
+      // data detectors will NOT auto-link it to Apple Maps — street-only
+      // addresses need "at" as the context cue. Flagged to Dave; switch the
+      // word back to "at" here if the tappable-address link is wanted.
+      `Codeword for ${streetAddress} is "${smsCodeWord}". Share with host for access. Reply STOP to opt out.`,
       [
         // Bare URL (no "Listing:" label) — the label cost 9 chars, which was
         // enough to push long addresses past the single-segment budget.

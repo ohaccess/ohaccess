@@ -77,7 +77,7 @@ export default function Resources() {
             <div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Verified check-in, right on their phone</div>
               <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
-                ohACCESS replaces your paper sheet with a QR-code digital check-in. Visitors scan the sign outside before they enter and complete a quick, verified registration — name, email, phone, and buying timeline — all clean, accurate, and captured instantly. A unique code word is texted to their phone on the spot, and you get a text with their details. They share the code word with you at the door. <strong style={{ color: '#1d1d1f' }}>Bad or fake information = no code word = no entry.</strong>
+                ohACCESS replaces your paper sheet with a QR-code digital check-in. Visitors scan the sign outside before they enter and complete a quick, verified registration — name, email, phone, and buying timeline — all clean, accurate, and captured instantly. A unique codeword is texted to their phone on the spot, and you get a text with their details. They share the codeword with you at the door. <strong style={{ color: '#1d1d1f' }}>Bad or fake information = no codeword = no entry.</strong>
               </div>
             </div>
           </div>
@@ -101,7 +101,7 @@ export default function Resources() {
             <div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Deterrence and accountability — built in</div>
               <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
-                Open houses invite strangers into someone&apos;s home. That&apos;s the reality. ohACCESS creates a verified digital record of every person who enters — a simple but powerful gate that tells every visitor upfront this is a verified environment. Bad actors like the path of least resistance, and the code word system is often enough to make them walk away entirely. It protects you, your seller, and the property — with zero extra effort on your part.
+                Open houses invite strangers into someone&apos;s home. That&apos;s the reality. ohACCESS creates a verified digital record of every person who enters — a simple but powerful gate that tells every visitor upfront this is a verified environment. Bad actors like the path of least resistance, and the codeword system is often enough to make them walk away entirely. It protects you, your seller, and the property — with zero extra effort on your part.
               </div>
             </div>
           </div>
@@ -133,10 +133,10 @@ export default function Resources() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
-              { step: '1', title: 'Create your open house in the dashboard', body: 'Enter the property address, date, hours, and listing URL. Create or auto-generate a code word.' },
+              { step: '1', title: 'Create your open house in the dashboard', body: 'Enter the property address, date, hours, and listing URL. Create or auto-generate a codeword.' },
               { step: '2', title: 'Print your QR sign', body: 'Click "QR Code" on your open house card, then "Print branded sign" for a ready-to-print sign in your branding. Or download the PNG and add it to the Canva template or your own custom sign. Print enough copies for each entry.' },
               { step: '3', title: 'Set up your welcome sign', body: 'Use a pedestal sign holder, easel, or A-frame poster and display the QR code with instructions prominently before the entrance.' },
-              { step: '4', title: 'Greet visitors at the door', body: 'Ask visitors for their code word as they arrive. Only visitors who registered with real contact info will have received the code.' },
+              { step: '4', title: 'Greet visitors at the door', body: 'Ask visitors for their codeword as they arrive. Only visitors who registered with real contact info will have received the code.' },
               { step: '5', title: 'Review your visitor log', body: 'After the open house, check your dashboard for the full verified visitor log. Export to CSV and import into your CRM.' },
             ].map(item => (
               <div key={item.step} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', background: 'white', borderRadius: '14px', border: '1px solid #d1d1d6', padding: '16px 20px' }}>
@@ -241,7 +241,7 @@ export default function Resources() {
             {[
               { emoji: '🪧', title: 'Use a pedestal, easel, or A-frame sign', body: 'Prominently display the QR code with instructions on a pedestal sign holder, easel, or A-frame poster well before the entrance.' },
               { emoji: '🔗', title: 'Add your listing URL', body: 'Include a link to the full listing so visitors can review details before and after the open house.' },
-              { emoji: '🏷️', title: 'Choose a memorable code word', body: 'Pick a code word related to the property — like ACREAGE or LAKEHOUSE. Easier for visitors to remember.' },
+              { emoji: '🏷️', title: 'Choose a memorable codeword', body: 'Pick a codeword related to the property — like ACREAGE or LAKEHOUSE. Easier for visitors to remember.' },
               { emoji: '👤', title: 'Add your landing page URL', body: 'Add your bio page, website, or Instagram in Settings so every visitor email includes a link to your profile.' },
               { emoji: '🔔', title: 'Watch for agent alerts', body: 'You receive an instant SMS when a visitor registers — so you know who\'s coming before they reach the door. Tap the link in the alert to verify the visitor and save private notes.' },
               { emoji: '📊', title: 'Export after every open house', body: 'Export your visitor log to CSV immediately after and import into your CRM while leads are fresh. Better yet, connect your CRM under Settings → "Send leads to your CRM" and every sign-in flows there automatically.' },
