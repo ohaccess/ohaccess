@@ -61,12 +61,37 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
     let logTicks: ReturnType<typeof setTimeout>[] = []
     let logSettle: ReturnType<typeof setTimeout> | undefined
 
+    // how-it-works scroll-spy: recomputed from scroll position every frame.
+    // (The original IntersectionObserver version fired out of order on fast
+    // scrolls and lit two steps at once — the active step is now simply the
+    // last one whose top has crossed the reading line, so it can't skip.)
+    const steps = Array.from(root.querySelectorAll<HTMLElement>('[data-step]'))
+    const stepBar = root.querySelector<HTMLElement>('[data-stepbar]')
+    const stepLabel = root.querySelector<HTMLElement>('[data-steplabel]')
+    let activeStep = 0
+    const updateSpy = () => {
+      let current = 1
+      const line = innerHeight * 0.55
+      steps.forEach(el => { if (el.getBoundingClientRect().top <= line) current = +(el.dataset.step || 1) })
+      if (current === activeStep) return
+      activeStep = current
+      steps.forEach(el => {
+        const on = +(el.dataset.step || 0) === current
+        el.style.opacity = on ? '1' : '.35'
+        const numeral = el.firstElementChild as HTMLElement | null
+        if (numeral) numeral.style.transform = on ? 'scale(1.08)' : 'none'
+      })
+      if (stepBar) stepBar.style.width = (current * 20) + '%'
+      if (stepLabel) stepLabel.textContent = 'Step ' + current + ' of 5'
+    }
+
     // scroll progress + hero parallax
     const prog = root.querySelector<HTMLElement>('[data-progress]')
     const onScroll = () => {
       const h = document.documentElement
       const p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)
       if (prog) prog.style.width = (p * 100).toFixed(2) + '%'
+      updateSpy()
       if (!reduced) root.querySelectorAll<HTMLElement>('[data-parallax]').forEach(el => {
         const parent = el.parentElement
         if (!parent) return
@@ -151,22 +176,6 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
     // fallback: everything visible after 4s regardless
     const fallback = setTimeout(() => reveals.forEach(show), 4000)
 
-    // how-it-works scroll-spy
-    const steps = Array.from(root.querySelectorAll<HTMLElement>('[data-step]'))
-    const bar = root.querySelector<HTMLElement>('[data-stepbar]')
-    const label = root.querySelector<HTMLElement>('[data-steplabel]')
-    const spy = new IntersectionObserver(es => es.forEach(e => {
-      const el = e.target as HTMLElement, n = +(el.dataset.step || 0)
-      el.style.opacity = e.isIntersecting ? '1' : '.35'
-      const numeral = el.firstElementChild as HTMLElement | null
-      if (numeral) numeral.style.transform = e.isIntersecting ? 'scale(1.08)' : 'none'
-      if (e.isIntersecting) {
-        if (bar) bar.style.width = (n * 20) + '%'
-        if (label) label.textContent = 'Step ' + n + ' of 5'
-      }
-    }), { rootMargin: '-40% 0px -40% 0px' })
-    steps.forEach(el => spy.observe(el))
-
     // comparison cards: hover handles desktop; on touch devices (no hover)
     // the card crossing the center band of the screen gets the same effect
     let cmpIO: IntersectionObserver | undefined
@@ -182,7 +191,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
 
     return () => {
       removeEventListener('scroll', onScroll)
-      io.disconnect(); animIO.disconnect(); spy.disconnect()
+      io.disconnect(); animIO.disconnect()
       if (cmpIO) cmpIO.disconnect()
       if (logIO) logIO.disconnect()
       logTicks.forEach(clearTimeout)
