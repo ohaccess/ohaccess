@@ -193,7 +193,7 @@ function buildReminderHtml(args: {
       </div>
       <div style="font-size:12px;color:#6e6e73;margin:12px 0 4px;">Email:</div>
       <div style="background:#ffffff;border:1px solid #e5e5ea;border-radius:10px;padding:12px 14px;max-width:420px;">
-        <div style="font-size:12px;color:#6e6e73;">Subject: Your ohACCESS email code: ${e(emailCodeWord)}</div>
+        <div style="font-size:12px;color:#6e6e73;">Subject: Your ohACCESS codeword: ${e(emailCodeWord)}</div>
         <div style="border:2px dashed #d2d2d7;border-radius:10px;padding:10px;text-align:center;margin-top:8px;">
           <div style="font-size:22px;font-weight:700;letter-spacing:3px;color:#1d1d1f;"><q>${e(emailCodeWord)}</q></div>
         </div>
@@ -295,7 +295,7 @@ async function handle(request: Request) {
     // route: same SMS base copy, same email subject/code box. Legacy open
     // houses only have code_word, so reuse it for email.
     const streetAddress = oh.street_address || oh.property_address || ''
-    const smsSample = `Codeword for ${streetAddress} is "${oh.code_word || ''}". Share with host for access. Reply STOP to opt out.`
+    const smsSample = `Codeword at ${streetAddress} is "${oh.code_word || ''}". Share with host for access. Reply STOP to opt out.`
     const emailCodeWord = oh.code_word_email || oh.code_word || ''
 
     const dayLine = fmtDay(oh.start_at, oh.timezone)
