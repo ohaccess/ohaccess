@@ -17,7 +17,7 @@ export default function OptInProof() {
           </div>
         </a>
         <div style={{ fontSize: '12px', fontWeight: '600', color: '#c9963a', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          Verified Visitor Check-In
+          Verified Open House Check-In
         </div>
       </nav>
 
