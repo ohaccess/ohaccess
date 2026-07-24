@@ -52,7 +52,7 @@ export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; primaryC
   <div class="sign">
     <div class="brandhead">${logoUrl
       ? `<img class="logo" src="${logoUrl}" alt="Logo" onerror="this.style.display='none';document.getElementById('wm').style.display='block'"><div class="wordmark" id="wm" style="display:none">oh<b>ACCESS</b></div>`
-      : `<div class="wordmark">oh<b>ACCESS</b></div><div class="tagline">VERIFIED VISITOR CHECK-IN</div>`}</div>
+      : `<div class="wordmark">oh<b>ACCESS</b></div><div class="tagline">VERIFIED OPEN HOUSE CHECK-IN</div>`}</div>
     <hr class="rule">
     <div class="banner">YOUR ATTENTION PLEASE</div>
     <div class="lead">For the safety of the host, the property, and other guests, the owner of this property is requiring that <em>all</em> visitors scan the QR-code and complete the form <em>before</em> entering.</div>
@@ -64,7 +64,7 @@ export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; primaryC
     <hr class="rule">
     <div class="footer-powered">Powered by</div>
     <div class="footer-brand">ohACCESS.com</div>
-    <div class="footer-tag">VERIFIED VISITOR CHECK-IN</div>
+    <div class="footer-tag">VERIFIED OPEN HOUSE CHECK-IN</div>
   </div>
   <script>window.onload = function () { setTimeout(function () { window.print() }, 500) }</script>
 </body>
