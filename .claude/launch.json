@@ -1,0 +1,13 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ohaccess-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "/Users/davesheehan/Desktop/ohaccess-app",
+      "port": 3000,
+      "autoPort": true
+    }
+  ]
+}

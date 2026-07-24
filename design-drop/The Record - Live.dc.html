@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+html{scroll-behavior:smooth}
+body{margin:0;background:#1d1d1f;font-family:'Plus Jakarta Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}a:hover{color:#c9963a}
+@keyframes om-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes om-rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes om-pulse{0%,100%{box-shadow:0 0 0 0 rgba(48,209,88,.5)}50%{box-shadow:0 0 0 8px rgba(48,209,88,0)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+
+<div style="position:fixed;top:0;left:0;right:0;height:3px;z-index:99;background:rgba(255,255,255,.08)"><div data-progress="1" style="height:3px;width:0%;background:linear-gradient(90deg,#c9963a,#e0b25e)"></div></div>
+
+<!-- nav -->
+<div style="position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:16px clamp(20px,5vw,48px);background:rgba(29,29,31,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.1)">
+  <div style="font-weight:800;font-size:18px;color:#fff;letter-spacing:-.02em">oh<span style="color:#c9963a">ACCESS</span></div>
+  <div style="display:flex;gap:26px;font-size:13.5px;font-weight:600;color:rgba(255,255,255,.75)"><a href="#how" style="padding:8px 0">How It Works</a><a href="#film" style="padding:8px 0">The Film</a><a href="#safety" style="padding:8px 0">Safety</a><a href="#report" style="padding:8px 0">Seller Report</a><a href="#pricing" style="padding:8px 0">Pricing</a></div>
+  <div style="background:#c9963a;color:#1d1d1f;font-weight:700;font-size:13.5px;padding:11px 18px;border-radius:6px;cursor:pointer">Start free</div>
+</div>
+
+<!-- hero -->
+<div style="background:#1d1d1f;color:#fff;padding:clamp(48px,8vw,96px) clamp(20px,5vw,48px) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:clamp(28px,4vw,48px);align-items:end;overflow:hidden">
+  <div style="padding-bottom:clamp(40px,6vw,80px)">
+    <div style="font-size:12px;font-weight:700;letter-spacing:.22em;color:#c9963a;text-transform:uppercase;margin-bottom:22px;animation:om-rise .7s .05s both">For real estate agents · Patent pending</div>
+    <div style="font-size:clamp(42px,6.4vw,76px);line-height:.98;font-weight:800;letter-spacing:-.035em;text-wrap:balance">
+      <span style="display:inline-block;animation:om-rise .7s .12s both">The clipboard</span> <span style="display:inline-block;animation:om-rise .7s .22s both">has been</span> <span style="display:inline-block;color:#c9963a;animation:om-rise .7s .34s both">lying to you.</span>
+    </div>
+    <p style="font-size:clamp(16px,1.6vw,19px);line-height:1.55;color:rgba(255,255,255,.72);margin:24px 0 32px;max-width:44ch;animation:om-rise .7s .45s both">Fake names. Dead numbers. Ink nobody can read. ohACCESS verifies every open-house visitor at the door with a one-time code word — sent to a phone and email that actually work.</p>
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;animation:om-rise .7s .55s both">
+      <span style="background:#c9963a;color:#1d1d1f;font-weight:700;font-size:16px;padding:15px 28px;border-radius:8px;cursor:pointer;transition:transform .2s" style-hover="transform:translateY(-2px)">Start free — 25 check-ins</span>
+      <a href="#film" style="font-size:15px;font-weight:600;color:rgba(255,255,255,.8);border-bottom:1px solid rgba(255,255,255,.35);padding-bottom:2px">Watch 90 seconds ↓</a>
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,.45);margin-top:16px;animation:om-rise .7s .62s both">No credit card. Verified leads by Sunday.</div>
+  </div>
+  <div style="height:clamp(360px,44vw,560px);position:relative">
+    <div data-parallax="0.12" style="position:absolute;inset:0;will-change:transform">
+      <image-slot id="live-hero" shape="rect" placeholder="PHOTO — visitor at a sunlit front door, phone raised to scan the QR sign"></image-slot>
+    </div>
+    <div data-reveal="1" style="position:absolute;left:clamp(-16px,-1vw,-10px);bottom:36px;background:rgba(29,29,31,.9);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 18px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 32px rgba(0,0,0,.4)">
+      <div style="width:10px;height:10px;border-radius:50%;background:#30d158;animation:om-pulse 2s infinite"></div>
+      <div><div style="font-size:13.5px;font-weight:700;color:#fff">New visitor verified</div><div style="font-size:12px;color:rgba(255,255,255,.6)">Sarah M. · buying in 0–3 months</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- marquee ticker -->
+<div style="background:#c9963a;overflow:hidden;padding:13px 0;white-space:nowrap">
+  <div style="display:inline-flex;gap:0;animation:om-marquee 22s linear infinite">
+    <div style="display:inline-flex;gap:48px;padding-right:48px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1d1d1f"><span>No real phone → no code word → no entry</span><span>·</span><span>Live visitor log</span><span>·</span><span>Instant alerts</span><span>·</span><span>CRM delivery</span><span>·</span><span>Seller report card</span><span>·</span></div>
+    <div style="display:inline-flex;gap:48px;padding-right:48px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1d1d1f"><span>No real phone → no code word → no entry</span><span>·</span><span>Live visitor log</span><span>·</span><span>Instant alerts</span><span>·</span><span>CRM delivery</span><span>·</span><span>Seller report card</span><span>·</span></div>
+  </div>
+</div>
+
+<!-- how it works: scroll-spy steps -->
+<div id="how" style="background:#fff;padding:clamp(56px,8vw,96px) clamp(20px,5vw,48px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:clamp(32px,5vw,72px)">
+  <div style="position:sticky;top:96px;align-self:start">
+    <div style="font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#6e6e73">How it works</div>
+    <div style="font-size:clamp(30px,3.4vw,42px);font-weight:800;letter-spacing:-.03em;color:#1d1d1f;margin-top:12px;line-height:1.05">Ten seconds to understand.<br><span style="color:#c9963a">Thirty to check in.</span></div>
+    <div style="margin-top:22px;height:3px;width:120px;background:#ececf0;border-radius:2px"><div data-stepbar="1" style="height:3px;width:20%;background:#c9963a;border-radius:2px;transition:width .4s"></div></div>
+    <div data-steplabel="1" style="font-size:13px;font-weight:700;color:#6e6e73;margin-top:10px">Step 1 of 5</div>
+  </div>
+  <div style="display:flex;flex-direction:column">
+    <div data-step="1" style="display:flex;gap:clamp(16px,3vw,28px);padding:clamp(24px,3vw,36px) 0;border-bottom:1px solid #e5e5ea;align-items:baseline;transition:opacity .4s;opacity:.35">
+      <div style="font-size:clamp(40px,5vw,56px);font-weight:800;color:#c9963a;letter-spacing:-.03em;width:64px;flex:none;transition:transform .4s">1</div>
+      <div><div style="font-size:clamp(18px,2vw,22px);font-weight:700;color:#1d1d1f">Scan</div><div style="font-size:15px;line-height:1.55;color:#6e6e73;margin-top:5px;max-width:44ch">The visitor scans the QR sign at the door. No app to download, nothing to install.</div></div>
+    </div>
+    <div data-step="2" style="display:flex;gap:clamp(16px,3vw,28px);padding:clamp(24px,3vw,36px) 0;border-bottom:1px solid #e5e5ea;align-items:baseline;transition:opacity .4s;opacity:.35">
+      <div style="font-size:clamp(40px,5vw,56px);font-weight:800;color:#c9963a;letter-spacing:-.03em;width:64px;flex:none;transition:transform .4s">2</div>
+      <div><div style="font-size:clamp(18px,2vw,22px);font-weight:700;color:#1d1d1f">Register</div><div style="font-size:15px;line-height:1.55;color:#6e6e73;margin-top:5px;max-width:44ch">A 30-second form: name, phone, email, and buying timeline.</div></div>
+    </div>
+    <div data-step="3" style="display:flex;gap:clamp(16px,3vw,28px);padding:clamp(24px,3vw,36px) 0;border-bottom:1px solid #e5e5ea;align-items:baseline;transition:opacity .4s;opacity:.35">
+      <div style="font-size:clamp(40px,5vw,56px);font-weight:800;color:#c9963a;letter-spacing:-.03em;width:64px;flex:none;transition:transform .4s">3</div>
+      <div><div style="font-size:clamp(18px,2vw,22px);font-weight:700;color:#1d1d1f">Code word</div><div style="font-size:15px;line-height:1.55;color:#6e6e73;margin-top:5px;max-width:44ch">A one-time code word lands by text <em>and</em> email — instantly. Fake contact info receives nothing.</div></div>
+    </div>
+    <div data-step="4" style="display:flex;gap:clamp(16px,3vw,28px);padding:clamp(24px,3vw,36px) 0;border-bottom:1px solid #e5e5ea;align-items:baseline;transition:opacity .4s;opacity:.35">
+      <div style="font-size:clamp(40px,5vw,56px);font-weight:800;color:#c9963a;letter-spacing:-.03em;width:64px;flex:none;transition:transform .4s">4</div>
+      <div><div style="font-size:clamp(18px,2vw,22px);font-weight:700;color:#1d1d1f">Verified entry</div><div style="font-size:15px;line-height:1.55;color:#6e6e73;margin-top:5px;max-width:44ch">They share the code word with you to come in. Real contact, real person, on the record.</div></div>
+    </div>
+    <div data-step="5" style="display:flex;gap:clamp(16px,3vw,28px);padding:clamp(24px,3vw,36px) 0;align-items:baseline;transition:opacity .4s;opacity:.35">
+      <div style="font-size:clamp(40px,5vw,56px);font-weight:800;color:#30d158;letter-spacing:-.03em;width:64px;flex:none;transition:transform .4s">5</div>
+      <div><div style="font-size:clamp(18px,2vw,22px);font-weight:700;color:#1d1d1f">Leads land</div><div style="font-size:15px;line-height:1.55;color:#6e6e73;margin-top:5px;max-width:44ch">Live log, instant alerts, CRM sync, and a post-event report — automatic.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- film: horizontal snap filmstrip -->
+<div id="film" style="background:#f5f5f7;padding:clamp(56px,8vw,96px) 0">
+  <div style="padding:0 clamp(20px,5vw,48px)">
+    <div style="font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#c9963a;margin-bottom:10px">The 90-second film</div>
+    <div style="font-size:clamp(28px,3.4vw,38px);font-weight:800;letter-spacing:-.03em;color:#1d1d1f;max-width:24ch">One open house, from yard sign to seller report.</div>
+  </div>
+  <div data-reveal="1" style="margin:36px clamp(20px,5vw,48px) 0;position:relative;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#1d1d1f;box-shadow:0 24px 64px rgba(29,29,31,.3)">
+    <image-slot id="film-poster" shape="rect" placeholder="POSTER FRAME — golden-hour front door, QR sign silhouetted (final video drops in here)"></image-slot>
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:linear-gradient(to top,rgba(29,29,31,.55),rgba(29,29,31,.15));pointer-events:none">
+      <div style="width:84px;height:84px;border-radius:50%;background:#c9963a;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 34px rgba(0,0,0,.4);pointer-events:auto;cursor:pointer;transition:transform .2s" style-hover="transform:scale(1.08)">
+        <div style="width:0;height:0;border-style:solid;border-width:14px 0 14px 24px;border-color:transparent transparent transparent #1d1d1f;margin-left:6px"></div>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:#fff;letter-spacing:.04em">WATCH THE FILM · 1:30</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:44px clamp(20px,5vw,48px) 0">
+    <div style="font-size:15px;font-weight:700;color:#1d1d1f">Read the story, scene by scene</div>
+    <div style="font-size:13px;font-weight:600;color:#6e6e73">scroll the strip →</div>
+  </div>
+  <div data-reveal="1" style="display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:36px clamp(20px,5vw,48px) 12px;scrollbar-width:thin">
+    <div style="flex:none;width:min(72vw,290px);scroll-snap-align:start;background:#fff;border-radius:14px;padding:22px 22px 24px;box-shadow:0 2px 10px rgba(0,0,0,.05)">
+      <div style="font-size:12px;font-weight:800;color:#c9963a;letter-spacing:.06em">SCENE 1 · 0:00–0:08</div>
+      <div style="font-size:17px;font-weight:800;color:#1d1d1f;margin:10px 0 8px">The sign goes up.</div>
+      <div style="font-size:14px;line-height:1.55;color:#1d1d1f">Sunday morning. An agent sets the open-house sign and QR placard at a sunlit front door.</div>
+      <div style="font-size:13.5px;line-height:1.55;color:#6e6e73;font-style:italic;margin-top:12px;border-left:2px solid #c9963a;padding-left:12px">“Every open house starts the same way — a sign in the yard, and strangers at the door.”</div>
+    </div>
+    <div style="flex:none;width:min(72vw,290px);scroll-snap-align:start;background:#fff;border-radius:14px;padding:22px 22px 24px;box-shadow:0 2px 10px rgba(0,0,0,.05)">
+      <div style="font-size:12px;font-weight:800;color:#c9963a;letter-spacing:.06em">SCENE 2 · 0:08–0:16</div>
+      <div style="font-size:17px;font-weight:800;color:#1d1d1f;margin:10px 0 8px">The old record.</div>
+      <div style="font-size:14px;line-height:1.55;color:#1d1d1f">Close-up of a paper sign-in sheet: scribbles, a fake “M. Mouse,” a number with nine digits.</div>
+      <div style="font-size:13.5px;line-height:1.55;color:#6e6e73;font-style:italic;margin-top:12px;border-left:2px solid #c9963a;padding-left:12px">“For decades, the record of who walked in looked like this. Fake names. Dead numbers. Ink you can’t read.”</div>
+    </div>
+    <div style="flex:none;width:min(72vw,290px);scroll-snap-align:start;background:#fff;border-radius:14px;padding:22px 22px 24px;box-shadow:0 2px 10px rgba(0,0,0,.05)">
+      <div style="font-size:12px;font-weight:800;color:#c9963a;letter-spacing:.06em">SCENE 3 · 0:16–0:30</div>
+      <div style="font-size:17px;font-weight:800;color:#1d1d1f;margin:10px 0 8px">Thirty seconds at the door.</div>
+      <div style="font-size:14px;line-height:1.55;color:#1d1d1f">A couple arrives. She scans the QR sign; a clean mobile form fills in thirty seconds.</div>
+      <div style="font-size:13.5px;line-height:1.55;color:#6e6e73;font-style:italic;margin-top:12px;border-left:2px solid #c9963a;padding-left:12px">“ohACCESS changes that in thirty seconds. Visitors scan and register at the door…”</div>
+    </div>
+    <div style="flex:none;width:min(72vw,290px);scroll-snap-align:start;background:#fff;border-radius:14px;padding:22px 22px 24px;box-shadow:0 2px 10px rgba(0,0,0,.05)">
+      <div style="font-size:12px;font-weight:800;color:#c9963a;letter-spacing:.06em">SCENE 4 · 0:30–0:42</div>
+      <div style="font-size:17px;font-weight:800;color:#1d1d1f;margin:10px 0 8px">The code word.</div>
+      <div style="font-size:14px;line-height:1.55;color:#1d1d1f">Her phone buzzes: “Your code word is MAGNOLIA.” The same message lands in her email.</div>
+      <div style="font-size:13.5px;line-height:1.55;color:#6e6e73;font-style:italic;margin-top:12px;border-left:2px solid #c9963a;padding-left:12px">“…and receive a one-time code word — sent to their real phone and real email. Fake info? No code. No entry.”</div>
+    </div>
+    <div style="flex:none;width:min(72vw,290px);scroll-snap-align:start;background:#fff;border-radius:14px;padding:22px 22px 24px;box-shadow:0 2px 10px rgba(0,0,0,.05)">
+      <div style="font-size:12px;font-weight:800;color:#c9963a;letter-spacing:.06em">SCENE 5 · 0:42–0:56</div>
+      <div style="font-size:17px;font-weight:800;color:#1d1d1f;margin:10px 0 8px">“Magnolia.”</div>
+      <div style="font-size:14px;line-height:1.55;color:#1d1d1f">She says the word at the door. The agent’s phone has already shown her name and 0–3 month timeline.</div>
+      <div style="font-size:13.5px;line-height:1.55;color:#6e6e73;font-style:italic;margin-top:12px;border-left:2px solid #c9963a;padding-left:12px">“The agent knows who’s walking in before they say hello — verified, timelined, and logged.”</div>
+    </div>
+    <div style="flex:none;width:min(72vw,290px);scroll-snap-align:start;background:#fff;border-radius:14px;padding:22px 22px 24px;box-shadow:0 2px 10px rgba(0,0,0,.05)">
+      <div style="font-size:12px;font-weight:800;color:#c9963a;letter-spacing:.06em">SCENE 6 · 0:56–1:10</div>
+      <div style="font-size:17px;font-weight:800;color:#1d1d1f;margin:10px 0 8px">Doors close, work’s done.</div>
+      <div style="font-size:14px;line-height:1.55;color:#1d1d1f">That evening: the dashboard’s visitor log; leads appearing inside a CRM, one by one.</div>
+      <div style="font-size:13.5px;line-height:1.55;color:#6e6e73;font-style:italic;margin-top:12px;border-left:2px solid #c9963a;padding-left:12px">“When the doors close, the work is already done — every lead verified and delivered to your CRM.”</div>
+    </div>
+    <div style="flex:none;width:min(72vw,290px);scroll-snap-align:start;background:#1d1d1f;border-radius:14px;padding:22px 22px 24px">
+      <div style="font-size:12px;font-weight:800;color:#c9963a;letter-spacing:.06em">SCENE 7 · 1:10–1:25</div>
+      <div style="font-size:17px;font-weight:800;color:#fff;margin:10px 0 8px">Proof for the seller.</div>
+      <div style="font-size:14px;line-height:1.55;color:rgba(255,255,255,.85)">The agent texts the seller a report card: 14 verified visitors, 5 buying within 3 months.</div>
+      <div style="font-size:13.5px;line-height:1.55;color:rgba(255,255,255,.6);font-style:italic;margin-top:12px;border-left:2px solid #c9963a;padding-left:12px">“And the seller gets proof it was worth opening their door. ohACCESS. The verified open house. Patent pending.”</div>
+    </div>
+  </div>
+</div>
+
+<!-- live log → CRM -->
+<div id="leads" style="background:#1d1d1f;color:#fff;padding:clamp(56px,8vw,96px) clamp(20px,5vw,48px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:clamp(36px,5vw,64px);align-items:center">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#c9963a;margin-bottom:14px">Live log → your CRM</div>
+    <div style="font-size:clamp(30px,4vw,44px);font-weight:800;letter-spacing:-.03em;line-height:1.05;max-width:18ch">Your follow-up list writes itself.</div>
+    <p style="font-size:clamp(15px,1.5vw,17px);line-height:1.6;color:rgba(255,255,255,.7);margin:22px 0 28px;max-width:46ch">Every check-in appears in your live visitor log the moment the code word is issued — name, verified phone and email, buying timeline. When the event ends, the whole list is already in your CRM. No transcribing, no Monday data entry.</p>
+    <div style="display:flex;flex-direction:column;gap:12px;font-size:15px;font-weight:600">
+      <div style="display:flex;gap:10px;align-items:baseline"><span style="color:#30d158;font-weight:800">✓</span><span>Instant alert on every new visitor</span></div>
+      <div style="display:flex;gap:10px;align-items:baseline"><span style="color:#30d158;font-weight:800">✓</span><span>Hot buyers flagged: 0–3 month timelines up top</span></div>
+      <div style="display:flex;gap:10px;align-items:baseline"><span style="color:#30d158;font-weight:800">✓</span><span>Automated post-event report in your inbox</span></div>
+    </div>
+  </div>
+  <div data-reveal="1" style="justify-self:center;width:min(92vw,440px);background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #ececf0">
+      <div><div style="font-size:14px;font-weight:800;color:#1d1d1f">412 Larchmont Ave · Live</div><div style="font-size:11.5px;color:#6e6e73">Sunday 2:47 PM · doors open</div></div>
+      <div style="display:flex;gap:6px;align-items:center;background:#eafaf0;border-radius:999px;padding:6px 12px"><div style="width:8px;height:8px;border-radius:50%;background:#30d158;animation:om-pulse 2s infinite"></div><span style="font-size:11.5px;font-weight:700;color:#1d8f45">14 verified</span></div>
+    </div>
+    <div data-loglist="1" style="position:relative;height:264px">
+      <div data-logrow="1" data-order="0" data-final="1" style="position:absolute;left:0;right:0;top:0;height:66px;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;padding:13px 20px;border-bottom:1px solid #f2f2f5;background:#fff;transition:transform .6s cubic-bezier(.22,1,.36,1),opacity .4s;opacity:0">
+        <div><div style="font-size:13.5px;font-weight:700;color:#1d1d1f">Marcus Lee</div><div style="font-size:11.5px;color:#6e6e73">(415) 555-0290 · verified 2:19 PM</div></div>
+        <span style="font-size:10.5px;font-weight:800;letter-spacing:.04em;background:#eafaf0;color:#1d8f45;padding:4px 9px;border-radius:5px">BUYING 0–3 MO</span>
+      </div>
+      <div data-logrow="1" data-order="1" data-final="3" style="position:absolute;left:0;right:0;top:0;height:66px;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;padding:13px 20px;border-bottom:1px solid #f2f2f5;background:#fff;transition:transform .6s cubic-bezier(.22,1,.36,1),opacity .4s;opacity:0">
+        <div><div style="font-size:13.5px;font-weight:700;color:#1d1d1f">Dana Kowalski</div><div style="font-size:11.5px;color:#6e6e73">(510) 555-0311 · verified 2:26 PM</div></div>
+        <span style="font-size:10.5px;font-weight:800;letter-spacing:.04em;background:#f2f2f5;color:#6e6e73;padding:4px 9px;border-radius:5px">12+ MO</span>
+      </div>
+      <div data-logrow="1" data-order="2" data-final="2" style="position:absolute;left:0;right:0;top:0;height:66px;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;padding:13px 20px;border-bottom:1px solid #f2f2f5;background:#fff;transition:transform .6s cubic-bezier(.22,1,.36,1),opacity .4s;opacity:0">
+        <div><div style="font-size:13.5px;font-weight:700;color:#1d1d1f">James &amp; Priya Rao</div><div style="font-size:11.5px;color:#6e6e73">(628) 555-0447 · verified 2:33 PM</div></div>
+        <span style="font-size:10.5px;font-weight:800;letter-spacing:.04em;background:#fbf6ec;color:#a3782a;padding:4px 9px;border-radius:5px">3–6 MO</span>
+      </div>
+      <div data-logrow="1" data-order="3" data-final="0" style="position:absolute;left:0;right:0;top:0;height:66px;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;padding:13px 20px;border-bottom:1px solid #f2f2f5;background:#fff;transition:transform .6s cubic-bezier(.22,1,.36,1),opacity .4s;opacity:0">
+        <div><div style="font-size:13.5px;font-weight:700;color:#1d1d1f">Sarah Mitchell</div><div style="font-size:11.5px;color:#6e6e73">(415) 555-0182 · verified 2:41 PM</div></div>
+        <span style="font-size:10.5px;font-weight:800;letter-spacing:.04em;background:#eafaf0;color:#1d8f45;padding:4px 9px;border-radius:5px">BUYING 0–3 MO</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 20px;background:#f5f5f7;border-top:1px solid #ececf0">
+      <span style="font-size:12px;font-weight:700;color:#1d1d1f;white-space:nowrap">→ Syncing to your CRM</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span style="font-size:10.5px;font-weight:700;color:#6e6e73;background:#fff;border:1px solid #e5e5ea;border-radius:5px;padding:4px 8px">Follow Up Boss</span>
+        <span style="font-size:10.5px;font-weight:700;color:#6e6e73;background:#fff;border:1px solid #e5e5ea;border-radius:5px;padding:4px 8px">kvCORE</span>
+        <span style="font-size:10.5px;font-weight:700;color:#6e6e73;background:#fff;border:1px solid #e5e5ea;border-radius:5px;padding:4px 8px">Lofty</span>
+        <span style="font-size:10.5px;font-weight:700;color:#6e6e73;background:#fff;border:1px solid #e5e5ea;border-radius:5px;padding:4px 8px">Sierra Interactive</span>
+        <span style="font-size:10.5px;font-weight:700;color:#6e6e73;background:#fff;border:1px solid #e5e5ea;border-radius:5px;padding:4px 8px">Real Geeks</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- comparison -->
+<div style="background:#fff;padding:clamp(56px,8vw,96px) clamp(20px,5vw,48px)">
+  <div style="font-size:clamp(28px,3.4vw,38px);font-weight:800;letter-spacing:-.03em;color:#1d1d1f;margin-bottom:8px">The sign-in sheet, on trial.</div>
+  <div style="font-size:16px;color:#6e6e73;margin-bottom:32px">What actually happens to a visitor’s contact info, three ways.</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px">
+    <div data-reveal="1" style="border:1px solid #e5e5ea;border-radius:14px;padding:26px 26px 28px;transition:transform .25s" style-hover="transform:scale(.97)">
+      <div style="font-size:16px;font-weight:800;color:#1d1d1f">Paper sheet</div>
+      <div style="font-size:12.5px;color:#a8a8ad;margin:2px 0 16px">The clipboard</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5;color:#6e6e73">
+        <div style="display:flex;gap:9px"><span style="color:#c0392b;font-weight:800">✕</span><span>Fake names, made-up numbers, zero verification</span></div>
+        <div style="display:flex;gap:9px"><span style="color:#c0392b;font-weight:800">✕</span><span>Handwriting you decode days later — or never</span></div>
+        <div style="display:flex;gap:9px"><span style="color:#c0392b;font-weight:800">✕</span><span>Never reaches your CRM; looks dated to sellers</span></div>
+      </div>
+    </div>
+    <div data-reveal="1" style="border:1px solid #e5e5ea;border-radius:14px;padding:26px 26px 28px;transition:transform .25s" style-hover="transform:scale(.97)">
+      <div style="font-size:16px;font-weight:800;color:#1d1d1f">Generic form apps</div>
+      <div style="font-size:12.5px;color:#a8a8ad;margin:2px 0 16px">Digital, but unverified</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5;color:#6e6e73">
+        <div style="display:flex;gap:9px"><span style="color:#c9963a;font-weight:800">△</span><span>Typed and legible — but never verified</span></div>
+        <div style="display:flex;gap:9px"><span style="color:#c0392b;font-weight:800">✕</span><span>555-1234 goes in as easily as a real number</span></div>
+        <div style="display:flex;gap:9px"><span style="color:#c0392b;font-weight:800">✕</span><span>Garbage in, garbage out — follow-up dies</span></div>
+      </div>
+    </div>
+    <div data-reveal="1" style="background:#1d1d1f;border-radius:14px;padding:26px 26px 28px;box-shadow:0 16px 40px rgba(29,29,31,.25);transition:transform .25s,box-shadow .25s" style-hover="transform:scale(1.03);box-shadow:0 22px 52px rgba(29,29,31,.35)">
+      <div style="font-size:16px;font-weight:800;color:#c9963a">ohACCESS</div>
+      <div style="font-size:12.5px;color:rgba(255,255,255,.5);margin:2px 0 16px">Verified at the door</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5;color:rgba(255,255,255,.9)">
+        <div style="display:flex;gap:9px"><span style="color:#30d158;font-weight:800">✓</span><span>Code word proves phone + email are real — before entry</span></div>
+        <div style="display:flex;gap:9px"><span style="color:#30d158;font-weight:800">✓</span><span>Every visitor logged, timelined, delivered to your CRM</span></div>
+        <div style="display:flex;gap:9px"><span style="color:#30d158;font-weight:800">✓</span><span>Seller report card proves the turnout was real</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="font-size:16px;color:#6e6e73;margin-top:18px">Doing nothing is worse than all three: no record at all of who was inside the seller’s home.</div>
+</div>
+
+<!-- safety / deterrence -->
+<div id="safety" style="background:#f5f5f7;padding:clamp(56px,8vw,96px) clamp(20px,5vw,48px)">
+  <div style="max-width:980px;margin:0 auto">
+    <div style="font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#c9963a;margin-bottom:14px">Safety</div>
+    <div data-reveal="1" style="font-size:clamp(30px,4.2vw,52px);font-weight:800;letter-spacing:-.035em;line-height:1.04;color:#1d1d1f;text-wrap:balance">You host strangers in an empty house every weekend. <span style="color:#6e6e73">A verified name at the door changes who shows up.</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;margin-top:40px">
+      <div data-reveal="1" style="background:#fff;border-radius:14px;padding:26px 26px 28px">
+        <div style="font-size:15px;font-weight:800;color:#1d1d1f">Deterrence at the door</div>
+        <div style="font-size:14px;line-height:1.55;color:#6e6e73;margin-top:7px">Anyone entering knows their identity is verified and on the record. People behave differently when they’re not anonymous.</div>
+      </div>
+      <div data-reveal="1" style="background:#fff;border-radius:14px;padding:26px 26px 28px">
+        <div style="font-size:15px;font-weight:800;color:#1d1d1f">You’re never in the dark</div>
+        <div style="font-size:14px;line-height:1.55;color:#6e6e73;margin-top:7px">Instant new-visitor alerts tell you who’s walking in — name and timeline — before you let them in.</div>
+      </div>
+      <div data-reveal="1" style="background:#fff;border-radius:14px;padding:26px 26px 28px">
+        <div style="font-size:15px;font-weight:800;color:#1d1d1f">A record for the seller, too</div>
+        <div style="font-size:14px;line-height:1.55;color:#6e6e73;margin-top:7px">A complete, verified log of who was inside the home — accountability the paper sheet never offered.</div>
+      </div>
+    </div>
+    <div style="font-size:16px;color:#6e6e73;margin-top:20px">ohACCESS is a deterrence layer — not a substitute for your safety practices or brokerage protocols.</div>
+  </div>
+</div>
+
+<!-- seller report -->
+<div id="report" style="background:#1d1d1f;color:#fff;padding:clamp(56px,8vw,96px) clamp(20px,5vw,48px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:clamp(36px,5vw,64px);align-items:center">
+  <div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#c9963a;margin-bottom:14px">The seller report card</div>
+    <div style="font-size:clamp(32px,4vw,44px);font-weight:800;letter-spacing:-.03em;line-height:1.05;max-width:18ch">The text that wins your next listing.</div>
+    <p style="font-size:clamp(15px,1.5vw,17px);line-height:1.6;color:rgba(255,255,255,.7);margin:22px 0 28px;max-width:46ch">After every open house, ohACCESS builds a report you can send the homeowner in one tap: verified turnout, buyer timelines, proof the afternoon was worth it. Sellers talk. So do their neighbors.</p>
+    <div style="display:flex;flex-direction:column;gap:12px;font-size:15px;font-weight:600">
+      <div style="display:flex;gap:10px;align-items:baseline"><span style="color:#30d158;font-weight:800">✓</span><span>Verified visitor count — no padding, no guesses</span></div>
+      <div style="display:flex;gap:10px;align-items:baseline"><span style="color:#30d158;font-weight:800">✓</span><span>Buyer timelines: who’s buying in 0–3 months</span></div>
+      <div style="display:flex;gap:10px;align-items:baseline"><span style="color:#30d158;font-weight:800">✓</span><span>Delivered automatically after the event</span></div>
+    </div>
+  </div>
+  <div data-reveal="1" style="justify-self:center;width:min(88vw,320px);background:#000;border-radius:44px;padding:12px;box-shadow:0 30px 80px rgba(0,0,0,.5)">
+    <div style="background:#f5f5f7;border-radius:34px;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;padding:12px 22px 6px;font-size:12px;font-weight:700;color:#1d1d1f"><span>2:47</span><span>▲ ▂ ▆</span></div>
+      <div style="padding:14px 18px 24px">
+        <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.06)">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c9963a">Seller report card</div>
+          <div style="font-size:17px;font-weight:800;color:#1d1d1f;margin-top:6px">412 Larchmont Ave</div>
+          <div style="font-size:12.5px;color:#6e6e73">Open house · Sun July 19, 1–4 PM</div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin:18px 0 4px"><span data-count="14" style="font-size:42px;font-weight:800;color:#1d1d1f;letter-spacing:-.03em">0</span><span style="font-size:13px;font-weight:600;color:#30d158">verified visitors</span></div>
+          <div style="font-size:12px;color:#6e6e73;margin-bottom:14px">Every contact confirmed by phone + email</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:#1d1d1f;margin-bottom:3px"><span>Buying in 0–3 months</span><span>5</span></div><div style="height:7px;border-radius:4px;background:#ececf0"><div data-bar="36" style="width:0%;height:7px;border-radius:4px;background:#30d158;transition:width 1s cubic-bezier(.22,1,.36,1)"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:#1d1d1f;margin-bottom:3px"><span>3–6 months</span><span>4</span></div><div style="height:7px;border-radius:4px;background:#ececf0"><div data-bar="29" style="width:0%;height:7px;border-radius:4px;background:#c9963a;transition:width 1s .15s cubic-bezier(.22,1,.36,1)"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:#1d1d1f;margin-bottom:3px"><span>6+ months / 12+ months</span><span>5</span></div><div style="height:7px;border-radius:4px;background:#ececf0"><div data-bar="36" style="width:0%;height:7px;border-radius:4px;background:#a8a8ad;transition:width 1s .3s cubic-bezier(.22,1,.36,1)"></div></div></div>
+          </div>
+          <div style="font-size:10.5px;color:#a8a8ad;margin-top:16px;text-align:center">Powered by ohACCESS · Patent Pending</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:12px"><div style="background:#c9963a;color:#1d1d1f;font-size:13px;font-weight:700;padding:9px 16px;border-radius:16px 16px 4px 16px">Great turnout Sunday! Full report above 👆</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- pricing -->
+<div id="pricing" style="background:#fff;padding:clamp(56px,8vw,96px) clamp(20px,5vw,48px)">
+  <div style="font-size:clamp(28px,3.4vw,38px);font-weight:800;letter-spacing:-.03em;color:#1d1d1f;margin-bottom:8px">Priced like a lockbox, not like software.</div>
+  <div style="font-size:16px;color:#6e6e73;margin-bottom:32px">Start free. One verified lead pays for decades.</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:16px">
+    <div data-reveal="1" style="border:1px solid #e5e5ea;border-radius:14px;padding:28px 24px;transition:transform .25s,box-shadow .25s" style-hover="transform:translateY(-4px);box-shadow:0 14px 32px rgba(29,29,31,.1)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#6e6e73">Trial</div>
+      <div style="font-size:34px;font-weight:800;color:#1d1d1f;margin:12px 0 2px">Free</div>
+      <div style="font-size:13px;color:#6e6e73;margin-bottom:16px">25 registrations · no credit card</div>
+      <div style="font-size:13.5px;line-height:1.7;color:#1d1d1f">Full Pro features<br>SMS + email delivery<br>Visitor log + CSV</div>
+    </div>
+    <div data-reveal="1" style="background:#1d1d1f;border-radius:14px;padding:28px 24px;position:relative;transition:transform .25s,box-shadow .25s" style-hover="transform:translateY(-4px);box-shadow:0 18px 40px rgba(29,29,31,.35)">
+      <div style="position:absolute;top:14px;right:14px;background:#c9963a;color:#1d1d1f;font-size:10px;font-weight:800;letter-spacing:.1em;padding:5px 10px;border-radius:5px">MOST POPULAR</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c9963a;width:fit-content">Pro</div>
+      <div style="font-size:34px;font-weight:800;color:#fff;margin:12px 0 2px">$15<span style="font-size:15px;font-weight:600;color:rgba(255,255,255,.6)">/mo</span></div>
+      <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:16px">For the active agent</div>
+      <div style="font-size:13.5px;line-height:1.7;color:#fff">Unlimited open houses<br>Unlimited registrations<br>Instant SMS alerts · CRM sync</div>
+    </div>
+    <div data-reveal="1" style="border:1px solid #e5e5ea;border-radius:14px;padding:28px 24px;transition:transform .25s,box-shadow .25s" style-hover="transform:translateY(-4px);box-shadow:0 14px 32px rgba(29,29,31,.1)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#6e6e73">Team</div>
+      <div style="font-size:34px;font-weight:800;color:#1d1d1f;margin:12px 0 2px">$120<span style="font-size:15px;font-weight:600;color:#6e6e73">/mo</span></div>
+      <div style="font-size:13px;color:#6e6e73;margin-bottom:16px">2–10 agents</div>
+      <div style="font-size:13.5px;line-height:1.7;color:#1d1d1f">All Pro features<br>Brand customization<br>Team logo</div>
+    </div>
+    <div data-reveal="1" style="border:1px solid #e5e5ea;border-radius:14px;padding:28px 24px;transition:transform .25s,box-shadow .25s" style-hover="transform:translateY(-4px);box-shadow:0 14px 32px rgba(29,29,31,.1)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#6e6e73">Brokerage</div>
+      <div style="font-size:34px;font-weight:800;color:#1d1d1f;margin:12px 0 2px">$11<span style="font-size:15px;font-weight:600;color:#6e6e73">/agent/mo</span></div>
+      <div style="font-size:13px;color:#6e6e73;margin-bottom:16px">11–100 agents</div>
+      <div style="font-size:13.5px;line-height:1.7;color:#1d1d1f">All Team features<br>Branded visitor emails<br>Add agents anytime</div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:center;margin-top:40px"><span style="background:#1d1d1f;color:#fff;font-weight:700;font-size:16px;padding:16px 34px;border-radius:8px;cursor:pointer;transition:transform .2s" style-hover="transform:translateY(-2px)">Verify your first open house free →</span></div>
+</div>
+
+<!-- footer -->
+<div style="background:#1d1d1f;padding:30px clamp(20px,5vw,48px);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
+  <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85)">Powered by oh<span style="color:#c9963a">ACCESS</span></div>
+  <div style="display:flex;gap:24px;font-size:12.5px;color:rgba(255,255,255,.5)"><span>Visitor Terms</span><span>Privacy</span><span>Contact</span></div>
+  <div style="font-size:12.5px;color:rgba(255,255,255,.5)">© 2026 ohACCESS · Patent Pending</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // scroll progress
+    const prog = document.querySelector('[data-progress]');
+    const onScroll = () => {
+      const h = document.documentElement;
+      const p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+      if (prog) prog.style.width = (p * 100).toFixed(2) + '%';
+      // parallax
+      if (!reduced) document.querySelectorAll('[data-parallax]').forEach(el => {
+        const r = el.parentElement.getBoundingClientRect();
+        const f = parseFloat(el.dataset.parallax);
+        el.style.transform = 'translateY(' + ((r.top + r.height / 2 - innerHeight / 2) * -f).toFixed(1) + 'px)';
+      });
+    };
+    addEventListener('scroll', onScroll, { passive: true });
+    this._onScroll = onScroll; onScroll();
+    // reveals: hide then reveal on intersect
+    const reveals = [...document.querySelectorAll('[data-reveal]')];
+    if (!reduced) reveals.forEach(el => { el.style.opacity = '0'; el.style.transform = 'translateY(26px)'; el.style.transition = 'opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1)'; });
+    const show = el => { el.style.opacity = '1'; el.style.transform = 'none'; };
+    this._io = new IntersectionObserver(es => es.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target; this._io.unobserve(el);
+      show(el);
+    }), { threshold: 0.15 });
+    reveals.forEach(el => this._io.observe(el));
+    // bars + counters: replay forward on scroll-in, reverse on scroll-out
+    const animCount = (c, to) => {
+      cancelAnimationFrame(c._raf);
+      const from = +c.textContent || 0, t0 = performance.now(), dur = 900;
+      if (reduced) { c.textContent = to; return; }
+      const tick = t => {
+        const p = Math.min(1, (t - t0) / dur);
+        c.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) c._raf = requestAnimationFrame(tick);
+      };
+      c._raf = requestAnimationFrame(tick);
+    };
+    const animHosts = reveals.filter(el => el.querySelector('[data-bar],[data-count]'));
+    this._animIO = new IntersectionObserver(es => es.forEach(e => {
+      const inView = e.isIntersecting;
+      e.target.querySelectorAll('[data-bar]').forEach(b => b.style.width = (inView ? b.dataset.bar : 0) + '%');
+      e.target.querySelectorAll('[data-count]').forEach(c => animCount(c, inView ? +c.dataset.count : 0));
+    }), { threshold: 0.35 });
+    animHosts.forEach(el => this._animIO.observe(el));
+    // live-log sequence: rows appear newest-on-top in timestamp order, then reorder hot-first
+    const loglist = document.querySelector('[data-loglist]');
+    if (loglist) {
+      const rows = [...loglist.querySelectorAll('[data-logrow]')].sort((a, b) => +a.dataset.order - +b.dataset.order);
+      const H = 66;
+      const place = (row, slot) => row.style.transform = 'translateY(' + slot * H + 'px)';
+      const reset = () => {
+        clearTimeout(this._logT1); clearTimeout(this._logT2); (this._logTicks || []).forEach(clearTimeout);
+        rows.forEach(r => { r.style.opacity = '0'; place(r, 0); });
+      };
+      const play = () => {
+        reset();
+        if (reduced) { rows.forEach(r => { r.style.opacity = '1'; place(r, +r.dataset.final); }); return; }
+        this._logTicks = rows.map((row, i) => setTimeout(() => {
+          // each new arrival enters at top; earlier rows shift down
+          rows.slice(0, i).forEach((r, j) => place(r, i - j));
+          row.style.opacity = '1'; place(row, 0);
+        }, 500 + i * 700));
+        this._logT2 = setTimeout(() => rows.forEach(r => place(r, +r.dataset.final)), 500 + rows.length * 700 + 500);
+      };
+      this._logIO = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? play() : reset()), { threshold: 0.4 });
+      this._logIO.observe(loglist);
+    }
+    // fallback: everything visible after 4s regardless
+    this._fallback = setTimeout(() => reveals.forEach(show), 4000);
+    // step scroll-spy
+    const steps = [...document.querySelectorAll('[data-step]')];
+    const bar = document.querySelector('[data-stepbar]'), label = document.querySelector('[data-steplabel]');
+    this._spy = new IntersectionObserver(es => es.forEach(e => {
+      const el = e.target, n = +el.dataset.step;
+      el.style.opacity = e.isIntersecting ? '1' : '.35';
+      el.firstElementChild.style.transform = e.isIntersecting ? 'scale(1.08)' : 'none';
+      if (e.isIntersecting) {
+        if (bar) bar.style.width = (n * 20) + '%';
+        if (label) label.textContent = 'Step ' + n + ' of 5';
+      }
+    }), { rootMargin: '-40% 0px -40% 0px' });
+    steps.forEach(el => this._spy.observe(el));
+  }
+  componentWillUnmount() {
+    removeEventListener('scroll', this._onScroll);
+    if (this._io) this._io.disconnect();
+    if (this._animIO) this._animIO.disconnect();
+    if (this._logIO) this._logIO.disconnect();
+    clearTimeout(this._logT1); clearTimeout(this._logT2); (this._logTicks || []).forEach(clearTimeout);
+    if (this._spy) this._spy.disconnect();
+    clearTimeout(this._fallback);
+  }
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

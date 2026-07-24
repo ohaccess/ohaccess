@@ -10,8 +10,8 @@ import Image from 'next/image'
 const STEPS = [
   { n: 1, title: 'Scan', body: 'The visitor scans the QR sign at the door. No app to download, nothing to install.' },
   { n: 2, title: 'Register', body: 'A 30-second form: name, phone, email, and buying timeline.' },
-  { n: 3, title: 'Code word', body: <>A one-time code word lands by text <em>and</em> email — instantly. Fake contact info receives nothing.</> },
-  { n: 4, title: 'Verified entry', body: 'They share the code word with you to come in. Real contact, real person, on the record.' },
+  { n: 3, title: 'Codeword', body: <>A one-time codeword lands by text <em>and</em> email — instantly. Fake contact info receives nothing.</> },
+  { n: 4, title: 'Verified entry', body: 'They share the codeword with you to come in. Real contact, real person, on the record.' },
   { n: 5, title: 'Leads land', body: 'Live log, instant alerts, CRM sync, and a post-event report — automatic.' },
 ]
 
@@ -19,7 +19,7 @@ const SCENES = [
   { time: '0:00–0:08', title: 'The sign goes up.', body: 'Sunday morning. An agent sets the Open House sign and QR placard at a sunlit front door.', vo: '“Every Open House starts the same way — a sign in the yard, and strangers at the door.”' },
   { time: '0:08–0:16', title: 'The old record.', body: 'Close-up of a paper sign-in sheet: scribbles, a fake “M. Mouse,” a number with nine digits.', vo: '“For decades, the record of who walked in looked like this. Fake names. Dead numbers. Ink you can’t read.”' },
   { time: '0:16–0:30', title: 'Thirty seconds at the door.', body: 'A couple arrives. She scans the QR sign; a clean mobile form fills in thirty seconds.', vo: <>“<strong>ohACCESS</strong> changes that in thirty seconds. Visitors scan and register at the door…”</> },
-  { time: '0:30–0:42', title: 'The code word.', body: 'Her phone buzzes: “Your code word is MAGNOLIA.” A backup code word lands in her email.', vo: '“…and receive a one-time code word — sent to the provided phone and email. Fake info? No code. No entry.”' },
+  { time: '0:30–0:42', title: 'The codeword.', body: 'Her phone buzzes: “Your codeword is MAGNOLIA.” A backup codeword lands in her email.', vo: '“…and receive a one-time codeword — sent to the provided phone and email. Fake info? No code. No entry.”' },
   { time: '0:42–0:56', title: '“Magnolia.”', body: 'She says the word at the door. The agent’s phone has already shown her name and 0–3 month timeline.', vo: '“The agent knows who’s walking in before they say ‘Hello’ — verified and logged.”' },
   { time: '0:56–1:10', title: 'Doors close, work’s done.', body: 'That evening: the dashboard’s visitor log; leads appearing inside a CRM, one by one.', vo: '“When the doors close, the work is already done — every lead verified and delivered to your CRM.”' },
   { time: '1:10–1:25', title: 'Proof for the seller.', body: 'The agent texts the seller a report card: 14 verified visitors, 5 buying within 3 months.', vo: <>“And the seller gets proof it was worth opening their door. <strong>ohACCESS</strong>. The verified Open House.”</>, dark: true },
@@ -271,7 +271,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
             <h1 style={{ fontSize: 'clamp(42px,6.4vw,76px)', lineHeight: .98, fontWeight: 800, letterSpacing: '-.035em', textWrap: 'balance', margin: 0 }}>
               <span style={{ display: 'inline-block', animation: 'om-rise .7s .12s both' }}>The clipboard</span> <span style={{ display: 'inline-block', animation: 'om-rise .7s .22s both' }}>has been</span> <span style={{ display: 'inline-block', color: '#c9963a', animation: 'om-rise .7s .34s both' }}>lying to you.</span>
             </h1>
-            <p style={{ fontSize: 'clamp(16px,1.6vw,19px)', lineHeight: 1.55, color: 'rgba(255,255,255,.72)', margin: '24px 0 32px', maxWidth: '44ch', animation: 'om-rise .7s .45s both' }}>Fake names. Dead numbers. Ink nobody can read. <strong>ohACCESS</strong> verifies every Open House visitor at the door with a one-time code word — sent to a phone and email that actually work.</p>
+            <p style={{ fontSize: 'clamp(16px,1.6vw,19px)', lineHeight: 1.55, color: 'rgba(255,255,255,.72)', margin: '24px 0 32px', maxWidth: '44ch', animation: 'om-rise .7s .45s both' }}>Fake names. Dead numbers. Ink nobody can read. <strong>ohACCESS</strong> verifies every Open House visitor at the door with a one-time codeword — sent to a phone and email that actually work.</p>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap', animation: 'om-rise .7s .55s both' }}>
               <Link href="/login?signup=true" className="rec-btn" style={{ background: '#c9963a', color: '#1d1d1f', fontWeight: 700, fontSize: '16px', padding: '15px 28px', borderRadius: '8px' }}>Start Free — 25 check-ins</Link>
               {showFilm && <a href="#film" style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.8)', borderBottom: '1px solid rgba(255,255,255,.35)', paddingBottom: '2px' }}>Watch 90 seconds ↓</a>}
@@ -297,7 +297,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
           <div style={{ display: 'inline-flex', gap: 0, animation: 'om-marquee 28s linear infinite' }}>
             {[0, 1].map(i => (
               <div key={i} style={{ display: 'inline-flex', gap: '48px', paddingRight: '48px', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#1d1d1f' }}>
-                <span>An Open House is an invitation — not an open door</span><span>·</span><span>No real phone → no code word → no entry</span><span>·</span><span>Live visitor log</span><span>·</span><span>Instant alerts</span><span>·</span><span>CRM delivery</span><span>·</span><span>Seller report card</span><span>·</span>
+                <span>An Open House is an invitation — not an open door</span><span>·</span><span>No real phone → no codeword → no entry</span><span>·</span><span>Live visitor log</span><span>·</span><span>Instant alerts</span><span>·</span><span>CRM delivery</span><span>·</span><span>Seller report card</span><span>·</span>
               </div>
             ))}
           </div>
@@ -368,7 +368,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
           <div>
             <div style={eyebrow}>Live log → your CRM</div>
             <div style={{ fontSize: 'clamp(30px,4vw,44px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, maxWidth: '18ch' }}>Your follow-up list writes itself.</div>
-            <p style={{ fontSize: 'clamp(15px,1.5vw,17px)', lineHeight: 1.6, color: 'rgba(255,255,255,.7)', margin: '22px 0 28px', maxWidth: '46ch' }}>Every check-in appears in your live visitor log the moment the code word is issued — name, verified phone and email, buying timeline. When the event ends, the whole list is already in your CRM. No transcribing, no Monday data entry.</p>
+            <p style={{ fontSize: 'clamp(15px,1.5vw,17px)', lineHeight: 1.6, color: 'rgba(255,255,255,.7)', margin: '22px 0 28px', maxWidth: '46ch' }}>Every check-in appears in your live visitor log the moment the codeword is issued — name, verified phone and email, buying timeline. When the event ends, the whole list is already in your CRM. No transcribing, no Monday data entry.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px', fontWeight: 600 }}>
               {['Instant alert on every new visitor', 'Hot buyers flagged: 0–3 month timelines up top', 'Automated post-event report in your inbox'].map(t => (
                 <div key={t} style={{ display: 'flex', gap: '10px', alignItems: 'baseline' }}><span style={{ color: '#30d158', fontWeight: 800 }}>✓</span><span>{t}</span></div>
@@ -433,7 +433,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
               <div style={{ fontSize: '16px', fontWeight: 800, color: '#c9963a' }}>ohACCESS</div>
               <div style={{ fontSize: '12.5px', color: 'rgba(255,255,255,.5)', margin: '2px 0 16px' }}>Verified at the door</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', lineHeight: 1.5, color: 'rgba(255,255,255,.9)' }}>
-                {['Code word proves phone + email are real — before entry', 'Every visitor logged, timeline captured, delivered to your CRM', 'Seller report card proves the turnout was real'].map(t => (
+                {['Codeword proves phone + email are real — before entry', 'Every visitor logged, timeline captured, delivered to your CRM', 'Seller report card proves the turnout was real'].map(t => (
                   <div key={t} style={{ display: 'flex', gap: '9px' }}><span style={{ color: '#30d158', fontWeight: 800 }}>✓</span><span>{t}</span></div>
                 ))}
               </div>

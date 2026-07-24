@@ -49,7 +49,7 @@ export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; primaryC
     <hr class="rule">
     <div class="banner">PLEASE READ</div>
     <div class="lead">For the safety of the host, the seller, and the property, all visitors must scan the QR-code and complete the registration form before entering.</div>
-    <div class="body">A unique code word to enter this Open House is immediately sent via SMS and Email. Share the code word with the host to gain access.</div>
+    <div class="body">A unique codeword to enter this Open House is immediately sent via SMS and Email. Share the codeword with the host to gain access.</div>
     <div class="qr"><img src="${opts.dataUrl}" alt="QR Code"></div>
     <hr class="rule">
     <div class="footer-powered">Powered by</div>

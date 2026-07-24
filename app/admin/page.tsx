@@ -757,7 +757,7 @@ export default function AdminDashboard() {
                   tab === 'agents'
                     ? 'Search name, email, brokerage…'
                     : tab === 'openhouses'
-                    ? 'Search address, agent, code word…'
+                    ? 'Search address, agent, codeword…'
                     : 'Search visitor, email, phone, listing…'
                 }
                 style={{
@@ -934,7 +934,7 @@ function exportCurrent(
   } else if (tab === 'openhouses') {
     downloadCSV(
       'ohaccess-open-houses.csv',
-      ['Address', 'Agent', 'When', 'Hours', 'Status', 'Code Word', 'Price', 'Visitors', 'Created'],
+      ['Address', 'Agent', 'When', 'Hours', 'Status', 'Codeword', 'Price', 'Visitors', 'Created'],
       openHouses.map((o) => [
         o.address,
         o.agentName,

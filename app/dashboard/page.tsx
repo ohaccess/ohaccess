@@ -460,7 +460,7 @@ export default function Dashboard() {
   const createOpenHouse = async () => {
     if (guardLocked()) return
     if (!form.street_address || !form.city || !form.state || !form.code_word || !form.code_word_email) {
-      showToast('Please fill in the address, city, state, and both code words (text + email).')
+      showToast('Please fill in the address, city, state, and both codewords (text + email).')
       return
     }
     if (!form.open_house_date_iso || !form.open_house_start_time || !form.open_house_end_time) {
@@ -533,7 +533,7 @@ export default function Dashboard() {
   const updateOpenHouse = async () => {
     if (guardLocked()) return
     if (!form.street_address || !form.city || !form.state || !form.code_word || !form.code_word_email) {
-      showToast('Please fill in the address, city, state, and both code words (text + email).')
+      showToast('Please fill in the address, city, state, and both codewords (text + email).')
       return
     }
     if (!form.open_house_date_iso || !form.open_house_start_time || !form.open_house_end_time) {
