@@ -107,7 +107,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
   if (!oh) return <NotAvailable />
 
   const [{ data: visitors }, { count: scanCount }, { data: agent }] = await Promise.all([
-    supabase.from('visitors').select('purchasing_timeline').eq('open_house_id', oh.id),
+    supabase.from('visitors').select('purchasing_timeline, feedback_rating, feedback_price').eq('open_house_id', oh.id),
     supabase.from('qr_scans').select('id', { count: 'exact', head: true }).eq('open_house_id', oh.id),
     supabase
       .from('profiles')
@@ -226,6 +226,45 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
               <strong>{stats.funnel.scans}</strong> {stats.funnel.scans === 1 ? 'person' : 'people'} scanned
               the QR code · <strong>{stats.funnel.registered}</strong> completed registration
             </div>
+          </div>
+        )}
+
+        {/* What visitors thought — post-visit feedback, aggregate only */}
+        {stats.feedback && (
+          <div style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '18px 20px', marginTop: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
+              What visitors thought
+            </div>
+
+            {/* Overall rating */}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: -1 }}>{stats.feedback.avgRating.toFixed(1)}</div>
+              <div style={{ fontSize: 15, color: '#6e6e73', fontWeight: 600 }}>/ 10</div>
+            </div>
+            <div style={{ fontSize: 11, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Average overall rating · {stats.feedback.responses} {stats.feedback.responses === 1 ? 'response' : 'responses'}
+            </div>
+
+            {/* Price sentiment */}
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, margin: '16px 0 8px' }}>
+              How visitors felt about the price
+            </div>
+            {([
+              { label: 'Too high', count: stats.feedback.price.high, color: '#b84800' },
+              { label: 'Reasonable', count: stats.feedback.price.reasonable, color: '#1a7a3c' },
+              { label: 'Too low', count: stats.feedback.price.low, color: '#0071a8' },
+            ] as const).map(row => {
+              const pct = stats.feedback!.responses > 0 ? Math.round((row.count / stats.feedback!.responses) * 100) : 0
+              return (
+                <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, minWidth: 92 }}>{row.label}</span>
+                  <div style={{ flex: 1, background: '#f2f2f7', borderRadius: 6, height: 8, overflow: 'hidden' }}>
+                    <div style={{ width: `${row.count > 0 ? Math.max(pct, 4) : 0}%`, height: '100%', background: row.color, borderRadius: 6 }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 700, minWidth: 20, textAlign: 'right' }}>{row.count}</span>
+                </div>
+              )
+            })}
           </div>
         )}
 

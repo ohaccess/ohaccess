@@ -105,6 +105,16 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
         <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{visitor.sms_opted_out ? <span style={optedOutBadge} title="This number replied STOP — do not contact">🚫 opted out</span> : deliveryFailed(visitor.sms_status) ? <span style={failBadge} title="Text could not be delivered to this number">⚠ text undelivered</span> : null}{isVirtualNumber(visitor.phone_line_type) && <span style={voipBadge} title="Internet/VoIP number (TextNow, Google Voice, …), not a carrier mobile line. Many are legitimate — consider extra ID verification.">⚠ VoIP number</span>}</div>
         <div><div style={label}>Email</div><a href={`mailto:${visitor.email}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600, wordBreak: 'break-all' }}>{visitor.email || '—'}</a>{deliveryFailed(visitor.email_status) && <span style={failBadge} title="Email bounced — this address may be invalid">⚠ email bounced</span>}</div>
         <div><div style={label}>Registered</div><div style={{ fontSize: '14px', color: '#1d1d1f' }}>{visitor.registered_at ? new Date(visitor.registered_at).toLocaleString() : '—'}</div></div>
+        {(visitor.feedback_rating || visitor.feedback_price) && (
+          <div>
+            <div style={label}>Post-visit feedback</div>
+            <div style={{ fontSize: '14px', color: '#1d1d1f' }}>
+              {visitor.feedback_rating ? <><strong>{visitor.feedback_rating}/10</strong> overall</> : null}
+              {visitor.feedback_rating && visitor.feedback_price ? ' · ' : null}
+              {visitor.feedback_price ? <>price: <strong>{visitor.feedback_price}</strong></> : null}
+            </div>
+          </div>
+        )}
       </div>
 
       <button

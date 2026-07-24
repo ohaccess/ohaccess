@@ -1,4 +1,5 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
+import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 import twilio from 'twilio'
 import { Resend } from 'resend'
@@ -233,6 +234,11 @@ export async function POST(request: Request) {
       }
     }
 
+    // One-time handle returned to the visitor's browser so it can submit the
+    // post-visit feedback (rating + price) for exactly this visitor, once,
+    // without authenticating. Unguessable; write-once enforced in /api/feedback.
+    const feedbackToken = randomUUID()
+
     // Save visitor
     const { data: visitorRow, error: visitorError } = await supabase
       .from('visitors')
@@ -246,6 +252,7 @@ export async function POST(request: Request) {
         purchasing_timeline: purchasingTimeline,
         sms_opted_out: phoneOptedOut,
         source: 'ohaccess',
+        feedback_token: feedbackToken,
         // Security metadata (Privacy Policy §2): request origin + phone
         // intelligence, kept for fraud prevention and lawful requests.
         ip_address: ip,
@@ -626,8 +633,10 @@ export async function POST(request: Request) {
     }
 
     // Intentionally do NOT return codeWord — that would defeat the SMS/email
-    // verification, since any caller could read it from the response.
-    return NextResponse.json({ success: true })
+    // verification, since any caller could read it from the response. The
+    // feedbackToken is safe to return: it only permits one write of this
+    // visitor's own feedback.
+    return NextResponse.json({ success: true, feedbackToken })
 
   } catch (error) {
     console.error('Registration error:', error)

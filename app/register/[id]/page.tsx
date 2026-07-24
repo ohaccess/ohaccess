@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { usPhoneError } from '@/lib/phone'
-import { STRINGS, LANGS, TIMELINE_VALUES, detectLang, saveLang, type Lang } from '@/lib/register-i18n'
+import { STRINGS, LANGS, TIMELINE_VALUES, FEEDBACK_PRICE_VALUES, detectLang, saveLang, type Lang } from '@/lib/register-i18n'
 
 export default function RegisterPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
@@ -11,6 +11,14 @@ export default function RegisterPage({ params }: { params: Promise<{ id: string 
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [selectedTimeline, setSelectedTimeline] = useState('')
+  // Post-visit feedback (success screen). feedbackToken is returned by
+  // /api/register and lets this browser submit feedback for this visitor once.
+  const [feedbackToken, setFeedbackToken] = useState<string | null>(null)
+  const [fbRating, setFbRating] = useState<number | null>(null)
+  const [fbPriceIdx, setFbPriceIdx] = useState<number | null>(null)
+  const [fbSubmitting, setFbSubmitting] = useState(false)
+  const [fbDone, setFbDone] = useState(false)
+  const [fbError, setFbError] = useState(false)
   // Visitor-facing copy is translated; lang starts as English on the server
   // render and snaps to the saved/device language on mount.
   const [lang, setLang] = useState<Lang>('en')
@@ -278,6 +286,7 @@ function ExpiredOpenHouse() {
       })
       const data = await res.json()
       if (data.success) {
+        if (data.feedbackToken) setFeedbackToken(data.feedbackToken)
         setSubmitted(true)
       } else {
         // Server errors (rate limits, trial caps) are specific and
@@ -288,6 +297,31 @@ function ExpiredOpenHouse() {
       setErrors({ submit: t.errSubmit })
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const submitFeedback = async () => {
+    if (!feedbackToken || fbRating === null || fbPriceIdx === null) return
+    setFbSubmitting(true)
+    setFbError(false)
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: feedbackToken,
+          rating: fbRating,
+          // Submit the canonical English value, not the translated label.
+          price: FEEDBACK_PRICE_VALUES[fbPriceIdx],
+        }),
+      })
+      const data = await res.json()
+      if (data.success) setFbDone(true)
+      else setFbError(true)
+    } catch {
+      setFbError(true)
+    } finally {
+      setFbSubmitting(false)
     }
   }
 
@@ -603,6 +637,83 @@ function ExpiredOpenHouse() {
               <div style={{ fontSize: '12px', color: accentText, fontWeight: '600', marginTop: '4px' }}>
                 {t.checkAgent}
               </div>
+
+            {/* Post-visit feedback — optional, asked "after your tour". Answers
+                are aggregated PII-free into the seller report. */}
+            {feedbackToken && (
+              <div style={{ marginTop: '22px', paddingTop: '20px', borderTop: '1px solid #e5e5ea', textAlign: 'left' }}>
+                {fbDone ? (
+                  <div style={{ background: '#e8f9ee', border: '1px solid #b2f0c8', borderRadius: '12px', padding: '14px 16px', fontSize: '13.5px', color: '#1a7a3c', fontWeight: 600, lineHeight: 1.5, textAlign: 'center' }}>
+                    {t.feedbackThanks}
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ fontSize: '13.5px', color: '#1d1d1f', lineHeight: 1.55, marginBottom: '16px' }}>
+                      <strong>{t.feedbackAfter}</strong>{t.feedbackIntro.split('{after}')[1]}
+                    </div>
+
+                    {/* Q1 — overall rating, 1–10 */}
+                    <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#1d1d1f', lineHeight: 1.5, marginBottom: '10px' }}>
+                      {t.feedbackQ1}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '5px' }}>
+                      {Array.from({ length: 10 }, (_, i) => i + 1).map(n => {
+                        const on = fbRating === n
+                        return (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setFbRating(n)}
+                            style={{ aspectRatio: '1', minWidth: 0, borderRadius: '9px', border: on ? accentBtnBorder : '1px solid #d1d1d6', background: on ? accentColor : '#f5f5f7', color: on ? accentText : '#1d1d1f', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 0 }}
+                          >
+                            {n}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#8e8e93', marginTop: '5px' }}>
+                      <span>1 · {t.feedbackScaleLow}</span>
+                      <span>{t.feedbackScaleHigh} · 10</span>
+                    </div>
+
+                    {/* Q2 — price sentiment */}
+                    <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#1d1d1f', lineHeight: 1.5, margin: '18px 0 10px' }}>
+                      {t.feedbackQ2}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                      {t.feedbackPrices.map((lbl, i) => {
+                        const on = fbPriceIdx === i
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setFbPriceIdx(i)}
+                            style={{ borderRadius: '9px', border: on ? accentBtnBorder : '1px solid #d1d1d6', background: on ? accentColor : '#f5f5f7', color: on ? accentText : '#1d1d1f', fontSize: '13px', fontWeight: 700, padding: '11px 6px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                          >
+                            {lbl}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    {fbError && (
+                      <div style={{ marginTop: '12px', fontSize: '12.5px', color: '#cc0000', fontWeight: 600 }}>
+                        {t.feedbackError}
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={submitFeedback}
+                      disabled={fbSubmitting || fbRating === null || fbPriceIdx === null}
+                      style={{ marginTop: '16px', width: '100%', background: (fbRating !== null && fbPriceIdx !== null) ? primaryColor : '#e8e8ed', color: (fbRating !== null && fbPriceIdx !== null) ? onPrimary : '#aeaeb2', border: (fbRating !== null && fbPriceIdx !== null) ? primaryBtnBorder : 'none', borderRadius: '12px', padding: '13px', fontSize: '15px', fontWeight: 700, cursor: (fbSubmitting || fbRating === null || fbPriceIdx === null) ? 'default' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: fbSubmitting ? 0.7 : 1 }}
+                    >
+                      {fbSubmitting ? t.feedbackSubmitting : t.feedbackSubmit}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
