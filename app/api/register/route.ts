@@ -388,11 +388,9 @@ export async function POST(request: Request) {
     // message even if it pushes us to 2 segments for very long addresses —
     // TCPA opt-out signaling is more important than the marginal cost.
     const smsBody = buildSmsBody(
-      // Copy per Dave. NOTE: "for" (not "at") before the address means iPhone
-      // data detectors will NOT auto-link it to Apple Maps — street-only
-      // addresses need "at" as the context cue. Flagged to Dave; switch the
-      // word back to "at" here if the tappable-address link is wanted.
-      `Codeword for ${streetAddress} is "${smsCodeWord}". Share with host for access. Reply STOP to opt out.`,
+      // "at" before the address (not "for") so iPhone data detectors link it
+      // to Apple Maps — street-only addresses need that context cue.
+      `Codeword at ${streetAddress} is "${smsCodeWord}". Share with host for access. Reply STOP to opt out.`,
       [
         // Bare URL (no "Listing:" label) — the label cost 9 chars, which was
         // enough to push long addresses past the single-segment budget.
@@ -542,19 +540,19 @@ export async function POST(request: Request) {
       // reach), not the send-only noreply subdomain — which has no inbox and
       // hard-bounces any reply.
       replyTo: agent?.display_email || agent?.email || 'support@ohaccess.com',
-      subject: `Your ohACCESS email code: ${emailCodeWord}`,
+      subject: `Your ohACCESS codeword: ${emailCodeWord}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
           <div style="background: ${headerColor}; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
             <div style="font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
-            <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px;">Your access code is ready</div>
+            <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px;">Your codeword is ready</div>
           </div>
           <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px;">
             <div style="background: #f5f5f7; border: 1px dashed #d1d1d6; border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 16px;">
-              <div style="font-size: 11px; color: #6e6e73; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Your Email Access Code</div>
+              <div style="font-size: 11px; color: #6e6e73; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Your Email Codeword</div>
               <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #1d1d1f;"><q>${escapeHtml(emailCodeWord)}</q></div>
-              <div style="font-size: 12px; color: #6e6e73; margin-top: 8px;">Share this code with the host at the door to gain access.</div>
-              <div style="font-size: 11px; color: #6e6e73; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e5ea;">📱 We also texted you a separate code. If the host asks for your <strong>SMS code</strong>, check your phone&apos;s messages.</div>
+              <div style="font-size: 12px; color: #6e6e73; margin-top: 8px;">Share this codeword with the host at the door to gain access.</div>
+              <div style="font-size: 11px; color: #6e6e73; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e5ea;">📱 We also texted you a separate codeword. If the host asks for your <strong>SMS codeword</strong>, check your phone&apos;s messages.</div>
             </div>
             <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 13px; color: #6e6e73; line-height: 1.8;">
               <strong style="color: #1d1d1f;">${escapeHtml(fullAddress)}</strong><br/>
