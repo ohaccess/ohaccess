@@ -281,7 +281,8 @@ function ExpiredOpenHouse() {
           email: form.email,
           phone: form.phone,
           purchasingTimeline: selectedTimeline,
-          openHouseId: id
+          openHouseId: id,
+          lang
         })
       })
       const data = await res.json()

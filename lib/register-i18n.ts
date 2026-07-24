@@ -24,6 +24,13 @@ export const LANGS: { code: Lang; flag: string; label: string }[] = [
   { code: 'hi', flag: '🇮🇳', label: 'हिन्दी' },
 ]
 
+// The language the visitor picked, as stored in visitors.lang. Look up its
+// flag/label for display (e.g. next to the visitor's name in the dashboard);
+// a null/unknown code falls back to English so every row still shows a flag.
+export function langMeta(code: string | null | undefined) {
+  return LANGS.find(l => l.code === code) ?? LANGS[0]
+}
+
 // Submitted to the API / stored in visitors.purchasing_timeline — never
 // translated (lib/timeline ranks on these exact strings).
 export const TIMELINE_VALUES = ['0–3 Months', '3–6 Months', '6–12 Months', '12+ Months'] as const
