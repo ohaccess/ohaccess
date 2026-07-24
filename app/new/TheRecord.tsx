@@ -562,6 +562,21 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
           <div style={{ fontSize: '12px', color: '#6e6e73', textAlign: 'center', marginTop: '24px', fontStyle: 'italic' }}>
             * 2-year pricing is a founding-member offer available for a limited time only. Paid upfront and renews automatically every 2 years — we&apos;ll email you before each renewal, and you can cancel anytime. More than 100 agents? <a href="/contact" style={{ color: '#c9963a' }}>Contact us</a> for custom pricing.
           </div>
+          {/* gift + sponsor options (carried over from the previous homepage) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,280px),1fr))', gap: '16px', marginTop: '28px' }}>
+            <div data-reveal="1" className="rec-safety" style={{ border: '1px solid #e5e5ea', borderRadius: '14px', padding: '26px 26px 28px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#c9963a' }}>Give a gift</div>
+              <div style={{ fontSize: '17px', fontWeight: 800, color: '#1d1d1f', margin: '10px 0 6px' }}>Know a real estate agent?</div>
+              <div style={{ fontSize: '14px', lineHeight: 1.55, color: '#6e6e73' }}>Give them a year of <strong>ohACCESS</strong> Pro — one payment, never auto-renews. Perfect for new licensees.</div>
+              <Link href="/gift" style={{ display: 'inline-block', marginTop: '14px', fontSize: '14px', fontWeight: 700, color: '#c9963a' }}>Give a gift →</Link>
+            </div>
+            <div data-reveal="1" className="rec-safety" style={{ border: '1px solid #e5e5ea', borderRadius: '14px', padding: '26px 26px 28px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#c9963a' }}>Partner sponsorships</div>
+              <div style={{ fontSize: '17px', fontWeight: 800, color: '#1d1d1f', margin: '10px 0 6px' }}>Lender, title, or vendor partner?</div>
+              <div style={{ fontSize: '14px', lineHeight: 1.55, color: '#6e6e73' }}>Sponsor <strong>ohACCESS</strong> for the agents you work with — your brand on every verified sign-in, and the leads land in your CRM too.</div>
+              <Link href="/partners" style={{ display: 'inline-block', marginTop: '14px', fontSize: '14px', fontWeight: 700, color: '#c9963a' }}>Explore sponsorships →</Link>
+            </div>
+          </div>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
             <Link href="/login?signup=true" className="rec-btn" style={{ background: '#1d1d1f', color: '#fff', fontWeight: 700, fontSize: '16px', padding: '16px 34px', borderRadius: '8px' }}>Verify your first Open House free →</Link>
           </div>
@@ -573,6 +588,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
           <div style={{ display: 'flex', gap: '24px', fontSize: '12.5px', color: 'rgba(255,255,255,.5)' }}>
             <a href="/terms" className="rec-link">Visitor Terms</a>
             <a href="/privacy" className="rec-link">Privacy</a>
+            <a href="/partners" className="rec-link">Partners</a>
             <a href="/contact" className="rec-link">Contact</a>
           </div>
           <div style={{ fontSize: '12.5px', color: 'rgba(255,255,255,.5)' }}>© 2026 <strong>ohACCESS</strong> · Patent Pending</div>
