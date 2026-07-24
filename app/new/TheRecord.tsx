@@ -296,7 +296,11 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
 
         {/* how it works */}
         <div id="how" style={{ background: '#fff', padding: sectionPad, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,340px),1fr))', gap: 'clamp(32px,5vw,72px)' }}>
-          <div style={{ position: 'sticky', top: '96px', alignSelf: 'start' }}>
+          {/* Solid background + zIndex: on mobile the step list scrolls behind
+              this sticky rail; without them the two layers of text collide.
+              top 64 + paddingTop 32 = same visual offset as the old top:96,
+              but the white now extends up to the nav so steps pass underneath. */}
+          <div style={{ position: 'sticky', top: '64px', alignSelf: 'start', background: '#fff', zIndex: 1, paddingTop: '32px', paddingBottom: '16px' }}>
             <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#6e6e73' }}>How it works</div>
             <div style={{ fontSize: 'clamp(30px,3.4vw,42px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', marginTop: '12px', lineHeight: 1.05 }}>Ten seconds to understand.<br /><span style={{ color: '#c9963a' }}>Thirty to check-in.</span></div>
             <div style={{ marginTop: '22px', height: '3px', width: '120px', background: '#ececf0', borderRadius: '2px' }}>
