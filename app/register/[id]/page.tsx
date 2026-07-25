@@ -81,7 +81,10 @@ function ExpiredOpenHouse() {
     border: '1px solid #d1d1d6',
     borderRadius: '9px',
     padding: '10px 12px',
-    fontSize: '14px',
+    // 16px is the threshold below which iOS Safari auto-zooms the page when a
+    // field is focused. Keeping inputs at 16px stops that jump while leaving
+    // the visitor's own pinch-to-zoom untouched (unlike maximum-scale hacks).
+    fontSize: '16px',
     color: '#1d1d1f',
     outline: 'none',
     boxSizing: 'border-box' as const,
@@ -355,7 +358,10 @@ function ExpiredOpenHouse() {
     border: '1px solid #d1d1d6',
     borderRadius: '9px',
     padding: '10px 12px',
-    fontSize: '14px',
+    // 16px is the threshold below which iOS Safari auto-zooms the page when a
+    // field is focused. Keeping inputs at 16px stops that jump while leaving
+    // the visitor's own pinch-to-zoom untouched (unlike maximum-scale hacks).
+    fontSize: '16px',
     color: '#1d1d1f',
     outline: 'none',
     boxSizing: 'border-box' as const,
