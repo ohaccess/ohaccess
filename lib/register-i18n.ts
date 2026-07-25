@@ -17,23 +17,27 @@ export type Lang =
   | 'en' | 'es' | 'vi' | 'zh' | 'zh-hant' | 'ko' | 'hi'
   | 'fr' | 'de' | 'it' | 'el' | 'pl' | 'ru' | 'pt' | 'tl' | 'pa'
 
+// Ordered by estimated speakers in the US + Canada combined (US Census ACS
+// "language spoken at home" + Canadian census). English first as the default.
+// French ranks high on Canada's ~7M+ francophones (Quebec); the two Chinese
+// scripts sort on their own counts (Mandarin/Simplified > Cantonese/Traditional).
 export const LANGS: { code: Lang; flag: string; label: string }[] = [
   { code: 'en', flag: '🇺🇸', label: 'English' },
   { code: 'es', flag: '🇪🇸', label: 'Español' },
   { code: 'fr', flag: '🇫🇷', label: 'Français' },
-  { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
-  { code: 'it', flag: '🇮🇹', label: 'Italiano' },
-  { code: 'pt', flag: '🇧🇷', label: 'Português' },
-  { code: 'pl', flag: '🇵🇱', label: 'Polski' },
-  { code: 'el', flag: '🇬🇷', label: 'Ελληνικά' },
-  { code: 'ru', flag: '🇷🇺', label: 'Русский' },
-  { code: 'vi', flag: '🇻🇳', label: 'Tiếng Việt' },
-  { code: 'tl', flag: '🇵🇭', label: 'Tagalog' },
   { code: 'zh', flag: '🇨🇳', label: '中文（简体）' },
+  { code: 'tl', flag: '🇵🇭', label: 'Tagalog' },
   { code: 'zh-hant', flag: '🇹🇼', label: '中文（繁體）' },
+  { code: 'vi', flag: '🇻🇳', label: 'Tiếng Việt' },
   { code: 'ko', flag: '🇰🇷', label: '한국어' },
+  { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
+  { code: 'ru', flag: '🇷🇺', label: 'Русский' },
+  { code: 'pt', flag: '🇧🇷', label: 'Português' },
   { code: 'hi', flag: '🇮🇳', label: 'हिन्दी' },
   { code: 'pa', flag: '🇮🇳', label: 'ਪੰਜਾਬੀ' },
+  { code: 'it', flag: '🇮🇹', label: 'Italiano' },
+  { code: 'pl', flag: '🇵🇱', label: 'Polski' },
+  { code: 'el', flag: '🇬🇷', label: 'Ελληνικά' },
 ]
 
 // The language the visitor picked, as stored in visitors.lang. Look up its
