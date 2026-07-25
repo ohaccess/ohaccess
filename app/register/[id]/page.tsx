@@ -412,7 +412,7 @@ function ExpiredOpenHouse() {
             {LANGS.find(l => l.code === lang)?.flag}
           </button>
           {langOpen && (
-            <div style={{ position: 'absolute', right: 0, top: '42px', background: 'white', border: '1px solid #d1d1d6', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.14)', padding: '6px', zIndex: 10, minWidth: '160px' }}>
+            <div style={{ position: 'absolute', right: 0, top: '42px', background: 'white', border: '1px solid #d1d1d6', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.14)', padding: '6px', zIndex: 10, minWidth: '160px', maxHeight: '70vh', overflowY: 'auto' }}>
               {LANGS.map(l => (
                 <div
                   key={l.code}

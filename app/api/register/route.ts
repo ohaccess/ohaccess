@@ -71,7 +71,7 @@ export async function POST(request: Request) {
 
     // Language the visitor registered in (for the dashboard flag). Validate
     // against the known set; anything else falls back to English.
-    const visitorLang = ['en', 'es', 'vi', 'zh', 'ko', 'hi'].includes(body.lang) ? body.lang : 'en'
+    const visitorLang = ['en', 'es', 'vi', 'zh', 'zh-hant', 'ko', 'hi', 'fr', 'de', 'it', 'el', 'pl', 'ru', 'pt', 'tl', 'pa'].includes(body.lang) ? body.lang : 'en'
 
     if (!firstName || !lastName || !email || !phone || !openHouseId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
