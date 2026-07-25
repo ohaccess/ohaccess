@@ -629,8 +629,8 @@ function ExpiredOpenHouse() {
 {t.sentBody1} <br/><br/>{t.sentBody2}
             </div>
             <div style={{ fontSize: '15px', color: '#6e6e73', marginBottom: '10px' }}>
-              {openHouse.property_address}<br />
-              {openHouse.open_house_date} · {openHouse.open_house_hours}
+              <strong>{openHouse.property_address}</strong><br />
+              <strong>{openHouse.open_house_date} · {openHouse.open_house_hours}</strong>
             </div>
             <div style={{ fontSize: '12px', color: accentText, fontWeight: '600' }}>
                 {t.checkPhone}
