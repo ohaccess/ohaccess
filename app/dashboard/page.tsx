@@ -4,6 +4,7 @@ import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import TeamAdminPanel from './_components/TeamAdminPanel'
 import TeamActivityPanel from './_components/TeamActivityPanel'
 import QrModal from './_components/QrModal'
+import InviteModal from './_components/InviteModal'
 import OpenHouseList from './_components/OpenHouseList'
 import NewOpenHouseForm from './_components/NewOpenHouseForm'
 import SettingsPanel from './_components/SettingsPanel'
@@ -26,6 +27,7 @@ export default function Dashboard() {
   const [savedSettings, setSavedSettings] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [qrModal, setQrModal] = useState<any>(null)
+  const [inviteModal, setInviteModal] = useState<any>(null)
   const [visitorModal, setVisitorModal] = useState<any>(null)
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -499,7 +501,25 @@ export default function Dashboard() {
       status: 'active'
     }).select()
     if (error) { showToast('Error saving: ' + error.message); return }
-    if (data) { await loadOpenHouses(user.id); setView('dashboard'); resetForm() }
+    if (data) {
+      await loadOpenHouses(user.id)
+      setView('dashboard')
+      resetForm()
+      if (data[0]) maybePromptInvites(data[0])
+    }
+  }
+
+  // After publishing, offer to invite past visitors — but only when there's
+  // actually someone eligible (a "0 matches" popup after every publish would
+  // just be noise). Best effort: any failure silently skips the prompt; the
+  // 💌 Invite button on the card is always there as the manual path.
+  const maybePromptInvites = async (oh: any) => {
+    try {
+      const res = await fetch(`/api/open-house/${oh.id}/invites`, { headers: await authHeaders() })
+      if (!res.ok) return
+      const json = await res.json()
+      if (json.canSend && json.matches?.length > 0) setInviteModal(oh)
+    } catch { /* skip the prompt */ }
   }
 
   const startEdit = (oh: any) => {
@@ -810,6 +830,7 @@ export default function Dashboard() {
             setQrModal={setQrModal}
             openPermanentQr={openPermanentQr}
             openSellerReport={openSellerReport}
+            openInvites={(oh: any) => setInviteModal(oh)}
             setDeleteConfirm={setDeleteConfirm}
             setVisitorModal={setVisitorModal}
             showToast={showToast}
@@ -884,6 +905,19 @@ export default function Dashboard() {
 
       </div>
 {/* QR CODE MODAL */}
+      {/* INVITE PAST VISITORS MODAL */}
+      {inviteModal && (
+        <InviteModal
+          oh={inviteModal}
+          onClose={() => setInviteModal(null)}
+          showToast={showToast}
+          authHeaders={authHeaders}
+          accentColor={accentColor}
+          onAccent={onAccent}
+          accentBtnBorder={accentBtnBorder}
+        />
+      )}
+
       {qrModal && (
         <QrModal
           data={qrModal}
