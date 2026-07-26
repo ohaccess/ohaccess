@@ -601,6 +601,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
           <div style={{ display: 'flex', gap: '24px', fontSize: '12.5px', color: 'rgba(255,255,255,.5)' }}>
             <a href="/terms" className="rec-link">Visitor Terms</a>
             <a href="/privacy" className="rec-link">Privacy</a>
+            <a href="/faq" className="rec-link">FAQ</a>
             <a href="/partners" className="rec-link">Partners</a>
             <a href="/contact" className="rec-link">Contact</a>
           </div>
