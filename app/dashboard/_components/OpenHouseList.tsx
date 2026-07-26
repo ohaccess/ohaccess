@@ -168,6 +168,7 @@ export default function OpenHouseList({
   setQrModal,
   openPermanentQr,
   openSellerReport,
+  openInvites,
   setDeleteConfirm,
   setVisitorModal,
   showToast,
@@ -198,6 +199,7 @@ export default function OpenHouseList({
   setQrModal: (v: any) => void
   openPermanentQr: () => Promise<void>
   openSellerReport: (ohId: string) => Promise<void>
+  openInvites: (oh: any) => void
   setDeleteConfirm: (id: string | null) => void
   setVisitorModal: (v: any) => void
   showToast: (message: string, type?: 'success' | 'error') => void
@@ -284,6 +286,9 @@ export default function OpenHouseList({
                   navigator.clipboard.writeText(url)
                   showToast('Registration URL copied!')
                 }} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
+                {ohState(oh) !== 'ended' && (
+                  <button disabled={locked} onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openInvites(oh) }} title="Email the past visitors who are still in their buying window a personal invite to this open house" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>💌 Invite</button>
+                )}
                 <button disabled={locked} onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
                 <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }} style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🗑 Delete</button>
               </div>
