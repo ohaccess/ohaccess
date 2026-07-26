@@ -8,7 +8,7 @@ import TheRecord from './TheRecord'
 // to pin og:url here — Facebook uses og:url as the card's click-through, and
 // the layout's value would send shares of this page to the old homepage.
 export const metadata: Metadata = {
-  title: { absolute: 'ohACCESS – The Verified Open House' },
+  title: { absolute: 'ohACCESS – Verified Open House Check-In' },
   robots: { index: false, follow: false },
   openGraph: {
     title: 'ohACCESS – Verified Open House Check-In',

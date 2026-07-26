@@ -112,7 +112,7 @@ export interface RegisterStrings {
 }
 
 const en: RegisterStrings = {
-  tagline: 'Secure open house registration',
+  tagline: 'Verified Open House Check-In',
   loading: 'Loading...',
   firstName: 'First Name',
   firstNamePlaceholder: 'First',
@@ -159,7 +159,7 @@ const en: RegisterStrings = {
 }
 
 const es: RegisterStrings = {
-  tagline: 'Registro seguro de casa abierta',
+  tagline: 'Registro verificado de casa abierta',
   loading: 'Cargando...',
   firstName: 'Nombre',
   firstNamePlaceholder: 'Nombre',
@@ -206,7 +206,7 @@ const es: RegisterStrings = {
 }
 
 const vi: RegisterStrings = {
-  tagline: 'Đăng ký open house bảo mật',
+  tagline: 'Đăng ký open house đã xác minh',
   loading: 'Đang tải...',
   firstName: 'Tên',
   firstNamePlaceholder: 'Tên',
@@ -253,7 +253,7 @@ const vi: RegisterStrings = {
 }
 
 const zh: RegisterStrings = {
-  tagline: '安全的开放看房登记',
+  tagline: '已验证的开放看房签到',
   loading: '加载中...',
   firstName: '名字',
   firstNamePlaceholder: '名',
@@ -300,7 +300,7 @@ const zh: RegisterStrings = {
 }
 
 const ko: RegisterStrings = {
-  tagline: '안전한 오픈하우스 등록',
+  tagline: '인증된 오픈하우스 체크인',
   loading: '불러오는 중...',
   firstName: '이름',
   firstNamePlaceholder: '이름',
@@ -347,7 +347,7 @@ const ko: RegisterStrings = {
 }
 
 const hi: RegisterStrings = {
-  tagline: 'सुरक्षित ओपन हाउस पंजीकरण',
+  tagline: 'सत्यापित ओपन हाउस चेक-इन',
   loading: 'लोड हो रहा है...',
   firstName: 'पहला नाम',
   firstNamePlaceholder: 'पहला नाम',
@@ -394,7 +394,7 @@ const hi: RegisterStrings = {
 }
 
 const zhHant: RegisterStrings = {
-  tagline: '安全的開放看房登記',
+  tagline: '已驗證的開放看房簽到',
   loading: '載入中...',
   firstName: '名字',
   firstNamePlaceholder: '名',
@@ -441,7 +441,7 @@ const zhHant: RegisterStrings = {
 }
 
 const fr: RegisterStrings = {
-  tagline: "Inscription sécurisée pour les portes ouvertes",
+  tagline: "Enregistrement vérifié pour les portes ouvertes",
   loading: "Chargement...",
   firstName: "Prénom",
   firstNamePlaceholder: "Prénom",
@@ -488,7 +488,7 @@ const fr: RegisterStrings = {
 }
 
 const de: RegisterStrings = {
-  tagline: 'Sichere Anmeldung zum Tag der offenen Tür',
+  tagline: 'Verifizierter Check-in zum Tag der offenen Tür',
   loading: 'Wird geladen...',
   firstName: 'Vorname',
   firstNamePlaceholder: 'Vorname',
@@ -535,7 +535,7 @@ const de: RegisterStrings = {
 }
 
 const it: RegisterStrings = {
-  tagline: "Registrazione sicura per la casa aperta",
+  tagline: "Check-in verificato per la casa aperta",
   loading: "Caricamento...",
   firstName: "Nome",
   firstNamePlaceholder: "Nome",
@@ -582,7 +582,7 @@ const it: RegisterStrings = {
 }
 
 const el: RegisterStrings = {
-  tagline: 'Ασφαλής εγγραφή για ανοιχτό σπίτι',
+  tagline: 'Επαληθευμένη εγγραφή ανοιχτού σπιτιού',
   loading: 'Φόρτωση...',
   firstName: 'Όνομα',
   firstNamePlaceholder: 'Όνομα',
@@ -629,7 +629,7 @@ const el: RegisterStrings = {
 }
 
 const pl: RegisterStrings = {
-  tagline: 'Bezpieczna rejestracja na dzień otwarty',
+  tagline: 'Zweryfikowana rejestracja na dzień otwarty',
   loading: 'Ładowanie...',
   firstName: 'Imię',
   firstNamePlaceholder: 'Imię',
@@ -676,7 +676,7 @@ const pl: RegisterStrings = {
 }
 
 const ru: RegisterStrings = {
-  tagline: 'Безопасная регистрация на день открытых дверей',
+  tagline: 'Подтверждённая регистрация на дне открытых дверей',
   loading: 'Загрузка...',
   firstName: 'Имя',
   firstNamePlaceholder: 'Имя',
@@ -723,7 +723,7 @@ const ru: RegisterStrings = {
 }
 
 const pt: RegisterStrings = {
-  tagline: 'Registro seguro para a casa aberta',
+  tagline: 'Check-in verificado de casa aberta',
   loading: 'Carregando...',
   firstName: 'Nome',
   firstNamePlaceholder: 'Nome',
@@ -770,7 +770,7 @@ const pt: RegisterStrings = {
 }
 
 const tl: RegisterStrings = {
-  tagline: 'Ligtas na pagpaparehistro sa open house',
+  tagline: 'Verified na open house check-in',
   loading: 'Naglo-load...',
   firstName: 'Pangalan',
   firstNamePlaceholder: 'Pangalan',
@@ -817,7 +817,7 @@ const tl: RegisterStrings = {
 }
 
 const pa: RegisterStrings = {
-  tagline: 'ਸੁਰੱਖਿਅਤ ਓਪਨ ਹਾਊਸ ਰਜਿਸਟ੍ਰੇਸ਼ਨ',
+  tagline: 'ਪ੍ਰਮਾਣਿਤ ਓਪਨ ਹਾਊਸ ਚੈੱਕ-ਇਨ',
   loading: 'ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...',
   firstName: 'ਪਹਿਲਾ ਨਾਮ',
   firstNamePlaceholder: 'ਪਹਿਲਾ ਨਾਮ',
