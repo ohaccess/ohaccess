@@ -23,6 +23,23 @@ export const metadata: Metadata = {
   },
   description:
     "Replace paper sign-in sheets with verified QR-code digital check-in. Know exactly who walked through your open house.",
+  keywords: [
+    "open house sign-in app",
+    "open house sign-in sheet",
+    "digital open house sign-in",
+    "verified open house check-in",
+    "QR code open house registration",
+    "open house lead capture",
+    "real estate open house software",
+    "open house app for real estate agents",
+    "open house visitor registration",
+    "real estate lead capture app",
+    "paperless open house sign-in",
+    "open house guest registration",
+    "open house security",
+    "real estate agent tools",
+    "open house follow-up",
+  ],
   // Self-referencing canonical on every page, resolved against metadataBase
   // (www is the canonical host — the apex 308s to it).
   alternates: { canonical: "./" },
