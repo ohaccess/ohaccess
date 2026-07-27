@@ -15,6 +15,22 @@ export const metadata: Metadata = {
 // wire the video into TheRecord's film section and flip showFilm to true (or
 // drop the prop). References: /new = complete design incl. film placeholder,
 // /old = archived previous homepage. SEO metadata inherits from layout.tsx.
+// Organization schema so Google connects the brand name, logo, and domain.
+const ORG_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'ohACCESS',
+  url: 'https://www.ohaccess.com',
+  logo: 'https://www.ohaccess.com/favicon-192x192.png',
+  description:
+    'Verified open house sign-in for real estate agents: QR-code check-in that confirms every visitor’s phone and email.',
+}
+
 export default function Home() {
-  return <TheRecord showFilm={false} />
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_SCHEMA) }} />
+      <TheRecord showFilm={false} />
+    </>
+  )
 }

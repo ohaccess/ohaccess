@@ -603,7 +603,9 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
             <a href="/privacy" className="rec-link">Privacy</a>
             <a href="/faq" className="rec-link">FAQ</a>
             <a href="/blog" className="rec-link">Blog</a>
+            <a href="/resources" className="rec-link">Resources</a>
             <a href="/partners" className="rec-link">Partners</a>
+            <a href="/gift" className="rec-link">Gift</a>
             <a href="/contact" className="rec-link">Contact</a>
           </div>
           <div style={{ fontSize: '12.5px', color: 'rgba(255,255,255,.5)' }}>© 2026 <strong>ohACCESS</strong> · Patent Pending</div>

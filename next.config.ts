@@ -8,6 +8,23 @@ const nextConfig: NextConfig = {
   // default ".next" (its output collector 404s on a renamed dir), so the
   // rename is local-only.
   distDir: process.env.VERCEL ? ".next" : ".next.nosync",
+
+  // Baseline security headers on every response. HSTS is already added by
+  // Vercel; a full Content-Security-Policy is deliberately omitted — the app
+  // is built on inline styles/scripts and a strict CSP would break it.
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

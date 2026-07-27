@@ -96,9 +96,9 @@ export default function Partners() {
 
           {/* Left — why partner */}
           <div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 24px' }}>
               Why partner with ohACCESS
-            </div>
+            </h2>
 
             {[
               { emoji: '🎨', title: 'Your brand on every sign-in', body: 'Your logo and colors appear on every verified visitor email your agents send — you control all of it from your Team dashboard.' },
@@ -119,7 +119,7 @@ export default function Partners() {
 
             {/* How it works */}
             <div style={{ background: '#f5f5f7', borderRadius: '16px', padding: '20px', marginTop: '8px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f', marginBottom: '14px' }}>How it works</div>
+              <h2 style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 14px' }}>How it works</h2>
               {[
                 { n: '1', t: 'Subscribe to a Team plan', d: '$120/mo, $1,200 annually, or $1,920 for two years paid upfront (renews every 2 years) — up to 10 agent partners. More than 10? Per-seat pricing at $11/agent/mo, up to 100 agents. Add your logo and brand colors.' },
                 { n: '2', t: 'Invite your agent partners', d: 'They join your team and start running verified open houses.' },
@@ -140,7 +140,7 @@ export default function Partners() {
           <div>
             {!submitted ? (
               <div style={{ background: 'white', borderRadius: '22px', border: '1px solid #d1d1d6', padding: '32px', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
-                <div style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>Become a partner</div>
+                <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 4px' }}>Become a partner</h2>
                 <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Tell us about your business and we&apos;ll get you set up. We typically respond within one business day.</div>
 
                 <form onSubmit={handleSubmit}>
