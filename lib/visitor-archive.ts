@@ -14,7 +14,7 @@ const RETENTION_MS = 3 * 365 * 24 * 60 * 60 * 1000
 // NB: must stay ONE string literal — Supabase infers the row type from it at
 // compile time, and a concatenated string degrades to an untyped result.
 const VISITOR_FIELDS =
-  'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, source, notes, sms_opted_out, ip_address, user_agent, phone_carrier, phone_line_type, registered_at, sponsor_id, sponsor_name, disclosures_sent, lang, custom_answers, email_message_id, email_status, sms_message_sid, sms_status, delivery_updated_at, feedback_rating, feedback_price, feedback_submitted_at, thank_you_sent_at'
+  'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, source, notes, sms_opted_out, ip_address, user_agent, phone_carrier, phone_line_type, registered_at, sponsor_id, sponsor_name, disclosures_sent, lang, custom_answers, email_message_id, email_status, sms_message_sid, sms_status, delivery_updated_at, feedback_rating, feedback_price, feedback_submitted_at, thank_you_sent_at, legal_hold'
 
 type ArchivableVisitor = {
   id: string
@@ -50,6 +50,9 @@ type ArchivableVisitor = {
   feedback_price: string | null
   feedback_submitted_at: string | null
   thank_you_sent_at: string | null
+  // Preservation hold (migration 041) — must survive the move into the
+  // archive, or an agent deleting a held record would quietly release it.
+  legal_hold: boolean | null
 }
 
 function toArchiveRow(v: ArchivableVisitor, propertyAddress: string | null, fallbackAgentId: string | null) {
@@ -88,6 +91,7 @@ function toArchiveRow(v: ArchivableVisitor, propertyAddress: string | null, fall
     feedback_price: v.feedback_price,
     feedback_submitted_at: v.feedback_submitted_at,
     thank_you_sent_at: v.thank_you_sent_at,
+    legal_hold: v.legal_hold ?? false,
     purge_after: new Date(
       (Number.isNaN(collected) ? Date.now() : collected) + RETENTION_MS
     ).toISOString(),
@@ -96,8 +100,14 @@ function toArchiveRow(v: ArchivableVisitor, propertyAddress: string | null, fall
 
 // Opportunistic retention purge — archive ops are rare, so run it every
 // time rather than the 1%-lottery the hot-path tables use. Best-effort.
+// Skips records under a preservation hold (migration 041): expiry does not
+// override a legal obligation to retain.
 async function purgeExpired() {
-  await supabase.from('visitor_archive').delete().lt('purge_after', new Date().toISOString())
+  await supabase
+    .from('visitor_archive')
+    .delete()
+    .lt('purge_after', new Date().toISOString())
+    .eq('legal_hold', false)
 }
 
 // Copy an open house's visitor log into visitor_archive AND the listing

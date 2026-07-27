@@ -38,7 +38,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (scanErr) console.error('qr_scans log failed:', scanErr)
   if (Math.random() < 0.01) {
     const cutoff = new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000).toISOString()
-    await supabase.from('qr_scans').delete().lt('created_at', cutoff)
+    // Skips rows under a preservation hold (migration 041).
+    await supabase.from('qr_scans').delete().lt('created_at', cutoff).eq('legal_hold', false)
   }
 
   const { data: agent } = await supabase

@@ -2,6 +2,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser, isAdmin } from '@/lib/auth'
 import { archiveVisitorsForAgent } from '@/lib/visitor-archive'
+import { checkAgentHold } from '@/lib/legal-hold'
 
 // Helper: run a delete and throw a labeled error so the caller knows which
 // step failed (deletions are not transactional across PostgREST calls).
@@ -91,6 +92,20 @@ export async function POST(request: Request) {
       .in('brokerage_id', ownedIds)
       .neq('id', userId)
     membersDetached = count || 0
+  }
+
+  // Preservation hold (migration 041): if anything of this agent's is under
+  // a hold, don't tear down the surrounding account until it's released.
+  const hold = await checkAgentHold(userId)
+  if (hold.held) {
+    console.warn(`[DELETE-ACCOUNT] BLOCKED by legal hold: ${profile.email} — ${hold.summary}`)
+    return NextResponse.json(
+      {
+        error: `Blocked by a legal hold on this agent's data (${hold.summary}). Nothing was deleted. Release the hold in legal_holds only when counsel confirms the matter is closed.`,
+        legalHold: hold.counts,
+      },
+      { status: 409 }
+    )
   }
 
   // Archive the agent's live visitor log BEFORE anything is deleted, exactly
