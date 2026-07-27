@@ -19,9 +19,11 @@
 
 import Script from 'next/script'
 import { useEffect, useRef, useState } from 'react'
+import { MarkerClusterer } from '@googlemaps/markerclusterer'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { escapeHtml } from '@/lib/escape-html'
 import { googleCalendarUrl } from '@/lib/register-helpers'
+import { inWeekend, pastHiddenByDefault } from '@/lib/map-filters'
 
 type PinStatus = 'past' | 'current' | 'future'
 type Pin = {
@@ -32,6 +34,9 @@ type Pin = {
   startAt: string | null
   endAt: string | null
   listingUrl: string | null
+  price: string | null
+  beds: string | null
+  baths: string | null
   status: PinStatus
   lat: number
   lng: number
@@ -57,6 +62,27 @@ function pinIcon(status: PinStatus): { url: string; scaledSize: unknown } {
   return {
     url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
     scaledSize: new g.maps.Size(size, size),
+  }
+}
+
+// Cluster bubbles inherit their group's pin color so the green/blue/gray
+// legend still reads at a glance when nearby pins collapse into one circle.
+function clusterRenderer(status: PinStatus) {
+  return {
+    render: ({ count, position }: { count: number; position: unknown }) => {
+      const { color } = STATUS_META[status]
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" width="44" height="44"><circle cx="22" cy="22" r="20" fill="${color}" fill-opacity="0.85" stroke="white" stroke-width="2"/></svg>`
+      const g = (window as any).google
+      return new g.maps.Marker({
+        position,
+        icon: {
+          url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+          scaledSize: new g.maps.Size(44, 44),
+        },
+        label: { text: String(count), color: 'white', fontWeight: '700', fontSize: '13px' },
+        zIndex: status === 'past' ? 1 : status === 'future' ? 2 : 3,
+      })
+    },
   }
 }
 
@@ -143,11 +169,18 @@ function infoWindowHtml(pin: Pin, withAgentButton: boolean): string {
   const calIcon = pin.startAt
     ? `<a href="${e(googleCalendarUrl(`Open House — ${pin.address}`.trim(), pin.startAt, pin.endAt || pin.startAt, pin.address))}" target="_blank" rel="noopener" title="Add to Google Calendar" style="text-decoration: none;">📅</a>`
     : '📅'
+  // Same fact line the visitor email's upcoming-open-houses section uses.
+  const facts = [
+    pin.price ? `💰 ${e(pin.price)}` : '',
+    pin.beds ? `🛏 ${e(pin.beds)} bed` : '',
+    pin.baths ? `🛁 ${e(pin.baths)} bath` : '',
+  ].filter(Boolean).join(' · ')
   return `
     <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; font-size: 13px; line-height: 1.7; max-width: 260px; color: #1d1d1f;">
       <div style="display: inline-block; font-size: 11px; font-weight: 700; color: white; background: ${status.color}; border-radius: 999px; padding: 1px 9px; margin-bottom: 4px;">${status.label}</div>
       <div style="font-weight: 700;">${e(pin.address)}</div>
       <div style="color: ${SUB};">${calIcon} ${e(pin.date)}<br/>🕒 ${e(pin.hours)}</div>
+      ${facts ? `<div style="color: ${SUB};">${facts}</div>` : ''}
       ${pin.listingUrl ? `<div><a href="${e(pin.listingUrl)}" target="_blank" rel="noopener" style="color: #0071e3;">View listing →</a></div>` : ''}
       <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid ${BORDER};">
         <div style="font-weight: 700;">${e(pin.agent.name)}</div>
@@ -173,21 +206,70 @@ export default function OpenHouseMap({
   const [visible, setVisible] = useState<Record<PinStatus, boolean>>({ current: true, future: true, past: true })
   const [share, setShare] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
-  const [locateError, setLocateError] = useState('')
-  // Markers grouped by status so the legend chips can show/hide them, and the
-  // map instance so toggled-on markers re-attach to it.
+  const [notice, setNotice] = useState('')
+  const [weekendOnly, setWeekendOnly] = useState(false)
+  // Markers grouped by status; each status group renders through its own
+  // clusterer (so nearby pins collapse into a colored count bubble), and the
+  // legend chips / weekend filter work by re-feeding each clusterer its
+  // currently-eligible markers.
   const markersRef = useRef<Record<PinStatus, any[]>>({ current: [], future: [], past: [] })
+  const clusterersRef = useRef<Record<PinStatus, MarkerClusterer | null>>({ current: null, future: null, past: null })
+  const visibleRef = useRef<Record<PinStatus, boolean>>({ current: true, future: true, past: true })
+  const weekendOnlyRef = useRef(false)
+  const searchRef = useRef<HTMLInputElement>(null)
   const mapRef = useRef<any>(null)
   // The tab-switch callback changes identity between renders; keep the latest
   // in a ref so marker listeners registered once always call the current one.
   const viewAgentRef = useRef(onViewAgent)
   viewAgentRef.current = onViewAgent
 
+  // Re-syncs every clusterer with the markers that pass the current filters:
+  // status chip on/off × weekend-only. Reads refs (not state) so it can run
+  // from inside the one-time map-setup effect and from chip handlers alike.
+  const applyFilters = () => {
+    for (const s of ['current', 'future', 'past'] as PinStatus[]) {
+      const clusterer = clusterersRef.current[s]
+      if (!clusterer) continue
+      clusterer.clearMarkers()
+      if (!visibleRef.current[s]) continue
+      const members = weekendOnlyRef.current
+        ? markersRef.current[s].filter((m) => m.__weekend)
+        : markersRef.current[s]
+      if (members.length > 0) clusterer.addMarkers(members)
+    }
+  }
+
   const toggleStatus = (s: PinStatus) => {
-    setVisible((v) => {
-      const next = { ...v, [s]: !v[s] }
-      for (const m of markersRef.current[s]) m.setMap(next[s] ? mapRef.current : null)
-      return next
+    visibleRef.current = { ...visibleRef.current, [s]: !visibleRef.current[s] }
+    setVisible(visibleRef.current)
+    applyFilters()
+  }
+
+  const toggleWeekend = () => {
+    weekendOnlyRef.current = !weekendOnlyRef.current
+    setWeekendOnly(weekendOnlyRef.current)
+    applyFilters()
+  }
+
+  // City/zip jump: geocode whatever's typed and fly the map there. Uses the
+  // core Maps JS Geocoder (already loaded) rather than a Places autocomplete
+  // widget, so it works on any key and adds no extra library.
+  const jumpTo = () => {
+    const query = searchRef.current?.value.trim()
+    if (!query || !mapRef.current) return
+    const g = (window as any).google
+    new g.maps.Geocoder().geocode({ address: query, region: 'us' }, (results: any, gstatus: string) => {
+      const geom = gstatus === 'OK' ? results?.[0]?.geometry : null
+      if (!geom) {
+        setNotice(`Couldn't find “${query}” — try a city name or zip code.`)
+        return
+      }
+      setNotice('')
+      if (geom.viewport) mapRef.current.fitBounds(geom.viewport)
+      else {
+        mapRef.current.setCenter(geom.location)
+        mapRef.current.setZoom(12)
+      }
     })
   }
 
@@ -244,20 +326,20 @@ export default function OpenHouseMap({
         fullscreenControl: true,
       })
       mapRef.current = map
-      addLocateControl(g, map, setLocateError)
+      addLocateControl(g, map, setNotice)
       const info = new g.maps.InfoWindow()
 
       const bounds = new g.maps.LatLngBounds()
-      // Past pins first so live/upcoming markers draw on top of them.
-      const drawOrder = [...pins].sort((a, b) => (a.status === 'past' ? -1 : 1) - (b.status === 'past' ? -1 : 1))
-      for (const pin of drawOrder) {
+      const weekendNow = new Date()
+      for (const pin of pins) {
+        // Clusterers own map attachment, so markers are created detached.
         const marker = new g.maps.Marker({
-          map,
           position: { lat: pin.lat, lng: pin.lng },
           title: pin.address,
           icon: pinIcon(pin.status),
           zIndex: pin.status === 'past' ? 1 : pin.status === 'future' ? 2 : 3,
         })
+        marker.__weekend = inWeekend(pin.startAt, pin.endAt, weekendNow)
         bounds.extend(marker.getPosition())
         markersRef.current[pin.status].push(marker)
         marker.addListener('click', () => {
@@ -272,6 +354,24 @@ export default function OpenHouseMap({
         })
       }
 
+      // Past first so live/upcoming clusters draw on top where groups overlap.
+      for (const s of ['past', 'future', 'current'] as PinStatus[]) {
+        clusterersRef.current[s] = new MarkerClusterer({ map, markers: [], renderer: clusterRenderer(s) })
+      }
+
+      const tallies = {
+        current: pins.filter((p) => p.status === 'current').length,
+        future: pins.filter((p) => p.status === 'future').length,
+        past: pins.filter((p) => p.status === 'past').length,
+      }
+      visibleRef.current = {
+        current: true,
+        future: true,
+        past: !pastHiddenByDefault(tallies.current, tallies.future, tallies.past),
+      }
+      setVisible(visibleRef.current)
+      applyFilters()
+
       if (pins.length > 1) {
         map.fitBounds(bounds, 60)
       } else if (pins.length === 1) {
@@ -279,11 +379,7 @@ export default function OpenHouseMap({
         map.setZoom(13)
       }
 
-      setCounts({
-        current: pins.filter((p) => p.status === 'current').length,
-        future: pins.filter((p) => p.status === 'future').length,
-        past: pins.filter((p) => p.status === 'past').length,
-      })
+      setCounts(tallies)
       setUnmapped(missed)
       setShare(shareUrl || null)
       setMessage(pins.length === 0 ? 'No open houses to map yet.' : '')
@@ -311,8 +407,8 @@ export default function OpenHouseMap({
       {status === 'ready' && message && (
         <div style={{ padding: '14px 0', fontSize: 14, color: SUB }}>{message}</div>
       )}
-      {locateError && (
-        <div style={{ padding: '0 0 10px', fontSize: 13, color: '#cc0000' }}>{locateError}</div>
+      {notice && (
+        <div style={{ padding: '0 0 10px', fontSize: 13, color: '#cc0000' }}>{notice}</div>
       )}
       {counts && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', margin: '0 0 12px' }}>
@@ -342,6 +438,58 @@ export default function OpenHouseMap({
               </span>
             </button>
           ))}
+          <button
+            onClick={toggleWeekend}
+            title={weekendOnly ? 'Show all dates' : 'Only show open houses this Saturday & Sunday'}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: 'inherit',
+              color: weekendOnly ? '#0071e3' : '#1d1d1f',
+              background: weekendOnly ? '#e8f1fd' : 'white',
+              border: `1px solid ${weekendOnly ? '#0071e3' : '#d1d1d6'}`,
+              borderRadius: 999,
+              padding: '6px 12px',
+              cursor: 'pointer',
+            }}
+          >
+            📆 This weekend{weekendOnly ? ' ✓' : ''}
+          </button>
+          <input
+            ref={searchRef}
+            type="text"
+            placeholder="Jump to city or zip"
+            onKeyDown={(e) => { if (e.key === 'Enter') jumpTo() }}
+            style={{
+              fontSize: 13,
+              fontFamily: 'inherit',
+              color: '#1d1d1f',
+              background: 'white',
+              border: '1px solid #d1d1d6',
+              borderRadius: 999,
+              padding: '6px 12px',
+              width: 150,
+            }}
+          />
+          <button
+            onClick={jumpTo}
+            title="Jump to this city or zip"
+            aria-label="Search the map"
+            style={{
+              fontSize: 13,
+              fontFamily: 'inherit',
+              background: 'white',
+              border: '1px solid #d1d1d6',
+              borderRadius: 999,
+              padding: '6px 10px',
+              cursor: 'pointer',
+            }}
+          >
+            🔍
+          </button>
           {share && (
             <button
               onClick={copyShare}
