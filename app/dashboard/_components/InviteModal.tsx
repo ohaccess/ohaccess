@@ -54,6 +54,9 @@ export default function InviteModal({
   const [preview, setPreview] = useState<Preview | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [sending, setSending] = useState(false)
+  // The agent's checkbox selection — everyone starts checked; unchecking
+  // drops people the agent judges a bad fit (wrong area, wrong price point).
+  const [selected, setSelected] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     let cancelled = false
@@ -64,6 +67,7 @@ export default function InviteModal({
         if (cancelled) return
         if (!res.ok) { setLoadError(true); return }
         setPreview(json)
+        setSelected(new Set((json.matches ?? []).map((m: Match) => m.email)))
       } catch {
         if (!cancelled) setLoadError(true)
       }
@@ -72,13 +76,22 @@ export default function InviteModal({
     return () => { cancelled = true }
   }, [oh.id])
 
+  const toggle = (email: string) => {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(email)) next.delete(email); else next.add(email)
+      return next
+    })
+  }
+
   const send = async () => {
-    if (!preview || sending) return
+    if (!preview || sending || selected.size === 0) return
     setSending(true)
     try {
       const res = await fetch(`/api/open-house/${oh.id}/invites`, {
         method: 'POST',
-        headers: await authHeaders(),
+        headers: { ...(await authHeaders()), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emails: [...selected] }),
       })
       const json = await res.json()
       if (!res.ok) {
@@ -133,9 +146,16 @@ export default function InviteModal({
               </div>
             ) : (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '12px 0 4px' }}>
-                  <span style={{ background: '#e8f9ee', color: '#1a7a3c', fontSize: '12px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px' }}>{n} match{n === 1 ? '' : 'es'}</span>
-                  <span style={{ fontSize: '12px', color: '#6e6e73' }}>still in their buying window</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', margin: '12px 0 4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <span style={{ background: '#e8f9ee', color: '#1a7a3c', fontSize: '12px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', whiteSpace: 'nowrap' }}>{selected.size} of {n} selected</span>
+                    <span style={{ fontSize: '12px', color: '#6e6e73' }}>still in their buying window</span>
+                  </div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    <button onClick={() => setSelected(new Set(preview.matches.map(m => m.email)))} style={{ background: 'none', border: 'none', padding: 0, color: '#0071e3', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: 600 }}>All</button>
+                    <span style={{ color: '#d1d1d6' }}> · </span>
+                    <button onClick={() => setSelected(new Set())} style={{ background: 'none', border: 'none', padding: 0, color: '#0071e3', cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: 600 }}>None</button>
+                  </div>
                 </div>
                 {excluded && (
                   <div style={{ fontSize: '11px', color: '#6e6e73', marginBottom: '10px' }}>Not included: {excluded}</div>
@@ -147,9 +167,16 @@ export default function InviteModal({
                 <div style={{ overflowY: 'auto', border: '1px solid #f2f2f7', borderRadius: '12px', flex: 1, minHeight: 0 }}>
                   {preview.matches.map(m => {
                     const c = timelineStyle(m.timeline || '')
+                    const checked = selected.has(m.email)
                     return (
-                      <div key={m.email} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '9px 12px', borderBottom: '1px solid #f2f2f7' }}>
-                        <div style={{ minWidth: 0 }}>
+                      <label key={m.email} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', borderBottom: '1px solid #f2f2f7', cursor: 'pointer', opacity: checked ? 1 : 0.45 }}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggle(m.email)}
+                          style={{ width: '16px', height: '16px', accentColor: accentColor, flexShrink: 0, cursor: 'pointer' }}
+                        />
+                        <div style={{ minWidth: 0, flex: 1 }}>
                           <div style={{ fontSize: '13px', fontWeight: 600, color: '#1d1d1f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.firstName} {m.lastName}</div>
                           <div style={{ fontSize: '11px', color: '#6e6e73', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             visited {m.lastVisitAddress ? `${m.lastVisitAddress} · ` : ''}{fmtVisit(m.lastVisitAt)}
@@ -158,7 +185,7 @@ export default function InviteModal({
                         {m.timeline && (
                           <span style={{ background: c.bg, color: c.color, padding: '3px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>{m.timeline}</span>
                         )}
-                      </div>
+                      </label>
                     )
                   })}
                 </div>
@@ -172,8 +199,8 @@ export default function InviteModal({
                 ) : (
                   <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                     <button onClick={onClose} style={{ padding: '10px 20px', background: '#f5f5f7', color: '#1d1d1f', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Not now</button>
-                    <button disabled={sending} onClick={send} style={{ padding: '10px 20px', background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: sending ? 'wait' : 'pointer', opacity: sending ? 0.6 : 1, fontFamily: 'inherit' }}>
-                      {sending ? 'Sending…' : `Send ${n} invite${n === 1 ? '' : 's'}`}
+                    <button disabled={sending || selected.size === 0} onClick={send} style={{ padding: '10px 20px', background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: sending ? 'wait' : selected.size === 0 ? 'not-allowed' : 'pointer', opacity: sending || selected.size === 0 ? 0.6 : 1, fontFamily: 'inherit' }}>
+                      {sending ? 'Sending…' : `Send ${selected.size} invite${selected.size === 1 ? '' : 's'}`}
                     </button>
                   </div>
                 )}

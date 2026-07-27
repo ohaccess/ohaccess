@@ -172,9 +172,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const limit = await checkRateLimit(`ip:${ip}`, 'send-invites', 10, 3600)
     if (!limit.allowed) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
 
+    // Optional body: { emails: [...] } — the agent's checkbox selection. Only
+    // ever NARROWS the server-computed audience (intersection), so a crafted
+    // request can't add anyone eligibility didn't approve.
+    const body = await request.json().catch(() => null)
+    const selectedEmails: Set<string> | null = Array.isArray(body?.emails)
+      ? new Set(body.emails.filter((e: unknown) => typeof e === 'string').map((e: string) => normalizeEmail(e)))
+      : null
+
     const built = await buildAudience(request, id)
     if ('error' in built) return built.error
-    const { user, oh, matches, excluded } = built
+    const { user, oh, excluded } = built
+    const matches = selectedEmails
+      ? built.matches.filter(m => selectedEmails.has(m.email))
+      : built.matches
 
     if (hasEnded(oh)) {
       return NextResponse.json({ error: 'This open house has already ended.' }, { status: 400 })
