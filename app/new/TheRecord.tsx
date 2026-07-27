@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import Footer from '../_components/Footer'
 
 const STEPS = [
   { n: 1, title: 'Scan', body: 'The visitor scans the QR sign at the door. No app to download, nothing to install.' },
@@ -595,21 +596,8 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
           </div>
         </div>
 
-        {/* footer */}
-        <div style={{ background: '#1d1d1f', padding: '30px clamp(20px,5vw,48px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: 'rgba(255,255,255,.85)' }}>Powered by oh<span style={{ color: '#c9963a' }}>ACCESS</span></div>
-          <div style={{ display: 'flex', gap: '24px', fontSize: '12.5px', color: 'rgba(255,255,255,.5)' }}>
-            <a href="/terms" className="rec-link">Visitor Terms</a>
-            <a href="/privacy" className="rec-link">Privacy</a>
-            <a href="/faq" className="rec-link">FAQ</a>
-            <a href="/blog" className="rec-link">Blog</a>
-            <a href="/resources" className="rec-link">Resources</a>
-            <a href="/partners" className="rec-link">Partners</a>
-            <a href="/gift" className="rec-link">Gift</a>
-            <a href="/contact" className="rec-link">Contact</a>
-          </div>
-          <div style={{ fontSize: '12.5px', color: 'rgba(255,255,255,.5)' }}>© 2026 <strong>ohACCESS</strong> · Patent Pending</div>
-        </div>
+        {/* footer — shared component, flush inside the page container */}
+        <Footer marginTop="0" />
       </div>
     </div>
   )

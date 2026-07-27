@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
+import Footer from '../_components/Footer'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,22 +98,7 @@ export default async function BlogIndex() {
         )}
       </div>
 
-      {/* FOOTER */}
-      <footer style={{ background: '#111', padding: '40px 24px', textAlign: 'center', marginTop: '60px' }}>
-        <div style={{ fontSize: '20px', fontWeight: 200, color: 'white', letterSpacing: '-0.5px', marginBottom: '16px' }}>
-          oh<span style={{ fontWeight: 700 }}>ACCESS</span>
-        </div>
-        <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
-          <a href="/faq" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>FAQ</a>
-          <a href="/blog" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Blog</a>
-          <a href="/resources" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Resources</a>
-          <a href="/partners" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Partners</a>
-          <a href="/contact" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Contact</a>
-          <a href="/terms" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Terms of Service</a>
-          <a href="/privacy" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textDecoration: 'none' }}>Privacy Policy</a>
-        </div>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)' }}>© 2026 ohACCESS. All rights reserved. · <span style={{ fontWeight: 600 }}>Patent Pending</span></div>
-      </footer>
+      <Footer />
     </main>
   )
 }
