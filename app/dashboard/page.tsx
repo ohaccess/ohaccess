@@ -653,6 +653,25 @@ export default function Dashboard() {
       showToast('CRM lead email must be a valid email address', 'error')
       return
     }
+    // Disclosure links: drop rows the agent left entirely blank, then require
+    // both halves of anything they did start. Rejecting (rather than silently
+    // dropping) a half-filled row makes a typo visible instead of quietly
+    // meaning no visitor ever receives that document.
+    const rawDisclosures: { label: string; url: string }[] =
+      Array.isArray(profile?.disclosure_links) ? profile.disclosure_links : []
+    const disclosures = rawDisclosures
+      .map(r => ({ label: (r?.label || '').trim(), url: (r?.url || '').trim() }))
+      .filter(r => r.label || r.url)
+    for (const row of disclosures) {
+      if (!row.label) {
+        showToast('Give each disclosure a name visitors will see', 'error')
+        return
+      }
+      if (!/^https:\/\//i.test(row.url)) {
+        showToast(`Disclosure "${row.label}" needs a link starting with https://`, 'error')
+        return
+      }
+    }
     const { error } = await supabase.from('profiles').update({
       full_name: profile?.full_name,
       brokerage: profile?.brokerage,
@@ -668,6 +687,7 @@ export default function Dashboard() {
       zapier_webhook_url: hook || null,
       crm_lead_email: crmEmail || null,
       crm_type: profile?.crm_type || null,
+      disclosure_links: disclosures.length > 0 ? disclosures : null,
     }).eq('id', user.id)
     if (error) { showToast('Error saving: ' + error.message); return }
     showToast('Settings saved!')

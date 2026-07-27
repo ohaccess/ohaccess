@@ -54,6 +54,80 @@ export function isHexColor(value: string | null | undefined): boolean {
   return !!value && /^#[0-9a-fA-F]{3,8}$/.test(value)
 }
 
+// ---------------------------------------------------------------------------
+// Disclosures & notices
+//
+// ohACCESS is plumbing here, not a compliance authority. The agent (or their
+// brokerage) supplies BOTH the label and the URL for whatever notice their
+// state or broker requires — an IABS, a Consumer Information Statement, an
+// agency disclosure. We render those links on the sign-in success screen and
+// in the code-word email and record what was sent. We never decide which form
+// applies, host the document, or collect a signature.
+// ---------------------------------------------------------------------------
+
+export type DisclosureLink = { label: string; url: string }
+
+// How many links an agent may configure, and how long a label may be. Both are
+// enforced here (not just in the settings UI) because the stored jsonb is the
+// only thing the register route trusts.
+export const MAX_DISCLOSURE_LINKS = 5
+export const MAX_DISCLOSURE_LABEL_LENGTH = 80
+
+// Coerce whatever is sitting in the jsonb column into a clean, safe list.
+// Anything malformed is dropped rather than thrown: a bad row in settings must
+// never be able to break a visitor's sign-in.
+//
+// https-only (not just http(s)) — these links are rendered in email sent from
+// our domain to consumers, so an insecure target is not worth the deliverability
+// and trust cost. Labels are trimmed and length-capped; escaping happens at
+// render time, not here, so the stored value stays the agent's literal text.
+export function normalizeDisclosureLinks(value: unknown): DisclosureLink[] {
+  if (!Array.isArray(value)) return []
+  const out: DisclosureLink[] = []
+  for (const raw of value) {
+    if (!raw || typeof raw !== 'object') continue
+    const { label, url } = raw as { label?: unknown; url?: unknown }
+    if (typeof label !== 'string' || typeof url !== 'string') continue
+    const cleanLabel = label.trim().slice(0, MAX_DISCLOSURE_LABEL_LENGTH)
+    const cleanUrl = url.trim()
+    if (!cleanLabel) continue
+    if (!/^https:\/\//i.test(cleanUrl)) continue
+    out.push({ label: cleanLabel, url: cleanUrl })
+    if (out.length >= MAX_DISCLOSURE_LINKS) break
+  }
+  return out
+}
+
+// Brokerage links OVERRIDE the agent's, matching the existing logo/colors
+// precedence: what gets handed to a visitor is a broker-level control, not an
+// individual agent preference. A brokerage that has configured NOTHING falls
+// through to the agent's own list rather than blanking it.
+export function resolveDisclosureLinks(
+  agentLinks: unknown,
+  brokerageLinks: unknown
+): DisclosureLink[] {
+  const brokerage = normalizeDisclosureLinks(brokerageLinks)
+  if (brokerage.length > 0) return brokerage
+  return normalizeDisclosureLinks(agentLinks)
+}
+
+// The disclosures block for the visitor's code-word email. Returns '' when the
+// agent has configured none, so the email simply omits the section. Labels are
+// agent-entered, so both label and URL are escaped before interpolation.
+export function buildDisclosuresHtml(links: DisclosureLink[]): string {
+  if (links.length === 0) return ''
+  const e = escapeHtml
+  const items = links.map(l => `
+              <div style="padding: 6px 0; font-size: 13px;">
+                <a href="${e(l.url)}" style="color: #0071e3;">${e(l.label)}</a>
+              </div>`).join('')
+  return `
+            <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+              <div style="font-size: 11px; color: #6e6e73; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 8px;">Disclosures &amp; Notices</div>
+              <div style="font-size: 12px; color: #6e6e73; text-align: center; margin-bottom: 4px;">Provided by your host agent.</div>${items}
+            </div>`
+}
+
 export function isEmail(value: string | null | undefined): value is string {
   return !!value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
 }

@@ -19,6 +19,11 @@ export default function RegisterPage({ params }: { params: Promise<{ id: string 
   const [fbSubmitting, setFbSubmitting] = useState(false)
   const [fbDone, setFbDone] = useState(false)
   const [fbError, setFbError] = useState(false)
+  // Disclosure/notice links the host agent supplies (an IABS, a Consumer
+  // Information Statement, whatever their state or broker requires). Returned
+  // by /api/register and shown here as well as in the code-word email, so a
+  // visitor who never opens the email still sees them.
+  const [disclosures, setDisclosures] = useState<{ label: string; url: string }[]>([])
   // Visitor-facing copy is translated; lang starts as English on the server
   // render and snaps to the saved/device language on mount.
   const [lang, setLang] = useState<Lang>('en')
@@ -291,6 +296,7 @@ function ExpiredOpenHouse() {
       const data = await res.json()
       if (data.success) {
         if (data.feedbackToken) setFeedbackToken(data.feedbackToken)
+        if (Array.isArray(data.disclosures)) setDisclosures(data.disclosures)
         setSubmitted(true)
       } else {
         // Server errors (rate limits, trial caps) are specific and
@@ -647,6 +653,26 @@ function ExpiredOpenHouse() {
               <div style={{ fontSize: '12px', color: accentText, fontWeight: '600', marginTop: '4px' }}>
                 {t.checkAgent}
               </div>
+
+            {/* Disclosures & notices supplied by the host agent. Only the
+                section heading is translated — each label is the agent's own
+                text for their own document, so it renders as entered. Links
+                open in a new tab so the visitor doesn't lose this screen (the
+                feedback card below lives on it). */}
+            {disclosures.length > 0 && (
+              <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid #e5e5ea', textAlign: 'left' }}>
+                <div style={{ fontSize: '11px', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                  {t.disclosuresTitle}
+                </div>
+                {disclosures.map((d, i) => (
+                  <div key={i} style={{ fontSize: '13.5px', lineHeight: 1.6, marginBottom: '4px' }}>
+                    <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ color: '#0071e3', textDecoration: 'underline' }}>
+                      {d.label}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Post-visit feedback — optional, asked "after your tour". Answers
                 are aggregated PII-free into the seller report. */}

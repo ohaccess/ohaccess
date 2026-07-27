@@ -15,6 +15,8 @@ import {
   isEmail,
   buildCrmLeadEmail,
   buildUpcomingOpenHousesHtml,
+  buildDisclosuresHtml,
+  resolveDisclosureLinks,
   agentCopyRecipients,
   isVirtualNumber,
   twilioStatusCallbackUrl,
@@ -162,6 +164,34 @@ export async function POST(request: Request) {
       ? (sponsor.company ? `${sponsor.full_name} (${sponsor.company})` : sponsor.full_name)
       : null
 
+    // Team/brokerage row, fetched ONCE here because two later steps need it:
+    // the disclosure links resolved just below (before the visitor insert) and
+    // the email branding further down. Null for solo agents.
+    let brokerageRow: {
+      primary_color: string | null
+      logo_url: string | null
+      disclosure_links: unknown
+    } | null = null
+    if (agent?.brokerage_id) {
+      const { data } = await supabase
+        .from('brokerages')
+        .select('primary_color, logo_url, disclosure_links')
+        .eq('id', agent.brokerage_id)
+        .maybeSingle()
+      brokerageRow = data
+    }
+
+    // Disclosure/notice links the host agent (or their brokerage) supplies —
+    // an IABS, a Consumer Information Statement, whatever their state or broker
+    // requires. We deliver and record them; we never pick the form or host it.
+    // Resolved BEFORE the visitor insert so the exact list can be snapshotted
+    // onto the row: a later edit in Settings must never be able to rewrite what
+    // a past visitor was told they received (same reasoning as sponsor_name).
+    const disclosureLinks = resolveDisclosureLinks(
+      agent?.disclosure_links,
+      brokerageRow?.disclosure_links
+    )
+
     // Two code words: the SMS (text) word is primary; the email word is a
     // fallback. Legacy open houses only have code_word, so reuse it for email.
     const smsCodeWord = openHouse.code_word
@@ -268,6 +298,9 @@ export async function POST(request: Request) {
         // sponsor_name is a snapshot so the record survives later edits.
         sponsor_id: sponsor?.id ?? null,
         sponsor_name: sponsorConsentName,
+        // Snapshot of the disclosure links handed to this visitor, for the
+        // same reason: the record must reflect what was actually sent.
+        disclosures_sent: disclosureLinks.length > 0 ? disclosureLinks : null,
       })
       .select('id')
       .single()
@@ -442,15 +475,8 @@ export async function POST(request: Request) {
     // aren't on a team or the team hasn't set those fields.
     let brandColor = agent?.primary_color
     let brandLogo = agent?.logo_url
-    if (agent?.brokerage_id) {
-      const { data: brokerage } = await supabase
-        .from('brokerages')
-        .select('primary_color, logo_url')
-        .eq('id', agent.brokerage_id)
-        .maybeSingle()
-      if (brokerage?.primary_color) brandColor = brokerage.primary_color
-      if (brokerage?.logo_url) brandLogo = brokerage.logo_url
-    }
+    if (brokerageRow?.primary_color) brandColor = brokerageRow.primary_color
+    if (brokerageRow?.logo_url) brandLogo = brokerageRow.logo_url
     const headerColor = isHexColor(brandColor) ? brandColor : '#1d1d1f'
     const logoUrl = safeUrl(brandLogo)
 
@@ -581,6 +607,7 @@ export async function POST(request: Request) {
               ${logoUrl ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; text-align: center;"><img src="${escapeHtml(logoUrl)}" style="max-height:80px;width:80%;object-fit:contain;" /></div>` : ''}
             </div>
             ${sponsorHtml}
+            ${buildDisclosuresHtml(disclosureLinks)}
             ${upcomingHtml}
             <div style="margin-top: 16px; padding: 12px; background: #f5f5f7; border-radius: 8px; font-size: 11px; color: #6e6e73; text-align: center; line-height: 1.6;">
               By registering you agreed to the ohACCESS <a href="https://ohaccess.com/terms" style="color: #6e6e73;">Terms of Service</a>.<br/>
@@ -641,7 +668,9 @@ export async function POST(request: Request) {
     // verification, since any caller could read it from the response. The
     // feedbackToken is safe to return: it only permits one write of this
     // visitor's own feedback.
-    return NextResponse.json({ success: true, feedbackToken })
+    // disclosures are echoed back so the success screen can show the same links
+    // the email carries — for the visitor who never opens the email.
+    return NextResponse.json({ success: true, feedbackToken, disclosures: disclosureLinks })
 
   } catch (error) {
     console.error('Registration error:', error)
