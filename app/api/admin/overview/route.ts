@@ -233,6 +233,20 @@ export async function GET(request: Request) {
   }))
 
   // ---- Open houses ----
+  // Open houses with at least one record under a preservation hold
+  // (migration 041), across live, archived and scan data. Held rows are rare,
+  // so these read the partial indexes and return almost nothing in practice.
+  const heldOpenHouseIds = new Set<string>()
+  for (const table of ['visitors', 'visitor_archive', 'qr_scans'] as const) {
+    const { data } = await supabase
+      .from(table)
+      .select('open_house_id')
+      .eq('legal_hold', true)
+    for (const row of data || []) {
+      if (row.open_house_id) heldOpenHouseIds.add(row.open_house_id as string)
+    }
+  }
+
   // Three-way when: past / current (live right now) / future — same shared
   // helper the Map tab pins use, so table badges and pin colors always agree.
   const openHouseRows = openHouses.map((oh) => {
@@ -252,6 +266,7 @@ export async function GET(request: Request) {
       when,
       isPast: when === 'past',
       visitorCount: visitorsByOpenHouse.get(oh.id) || 0,
+      legalHold: heldOpenHouseIds.has(oh.id),
       created_at: oh.created_at,
     }
   })

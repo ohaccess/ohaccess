@@ -58,6 +58,7 @@ type OpenHouse = {
   when: 'past' | 'current' | 'future'
   isPast: boolean
   visitorCount: number
+  legalHold: boolean
   created_at: string
 }
 
@@ -518,6 +519,86 @@ export default function AdminDashboard() {
   }
 
   const [deletingOHId, setDeletingOHId] = useState<string | null>(null)
+  const [holdingOHId, setHoldingOHId] = useState<string | null>(null)
+
+  // Preservation hold (migrations 041/042). Placing one exempts this open
+  // house's visitors, archived records and scan log from every automated
+  // purge and blocks the admin hard-deletes until it's released.
+  const toggleLegalHold = async (oh: OpenHouse) => {
+    const releasing = oh.legalHold
+
+    let reference = ''
+    let requestedBy = ''
+    let note = ''
+
+    if (releasing) {
+      note =
+        window.prompt(
+          `RELEASE the legal hold on "${oh.address}"?\n\n` +
+            `Records go back on the normal 3-year clock. Anything already past ` +
+            `that date is permanently deleted on the next monthly purge — this ` +
+            `cannot be undone.\n\n` +
+            `Only release when counsel confirms the matter is closed.\n\n` +
+            `Who confirmed it, and when?`
+        ) || ''
+      if (!note.trim()) return
+    } else {
+      reference =
+        window.prompt(
+          `Place a legal hold on "${oh.address}"?\n\n` +
+            `Its ${oh.visitorCount} visitor record(s), any archived records and ` +
+            `the scan log are exempted from deletion until released.\n\n` +
+            `Matter or case reference (e.g. "APD 2026-114377"):`
+        ) || ''
+      if (!reference.trim()) return
+      requestedBy = window.prompt('Requesting agency, department or law firm (optional):') || ''
+      note = window.prompt('What is being preserved, and why? (one line)') || ''
+      if (!note.trim()) return
+    }
+
+    setHoldingOHId(oh.id)
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      window.location.href = '/login'
+      return
+    }
+    const res = await fetch('/api/admin/legal-hold', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        openHouseId: oh.id,
+        action: releasing ? 'release' : 'place',
+        reference,
+        requestedBy,
+        note,
+      }),
+    })
+    const j = await res.json().catch(() => ({}))
+    setHoldingOHId(null)
+    if (!res.ok) {
+      window.alert(`Could not ${releasing ? 'release' : 'place'} the hold: ${j.error || res.status}`)
+      return
+    }
+    if (j.warning) {
+      window.alert(`⚠️ ${j.warning}`)
+    } else if (releasing) {
+      window.alert(`Hold released on "${oh.address}".`)
+    } else {
+      const c = j.counts || {}
+      window.alert(
+        `Hold placed on "${oh.address}".\n\n` +
+          `${c.visitors || 0} visitor record(s), ${c.visitor_archive || 0} archived ` +
+          `record(s) and ${c.qr_scans || 0} scan log entr(ies) are now exempt from ` +
+          `deletion.`
+      )
+    }
+    refresh()
+  }
 
   const deleteOpenHouse = async (oh: OpenHouse) => {
     if (
@@ -882,7 +963,13 @@ export default function AdminDashboard() {
             />
           )}
           {tab === 'openhouses' && (
-            <OpenHousesTable rows={filteredOpenHouses} onDelete={deleteOpenHouse} deletingId={deletingOHId} />
+            <OpenHousesTable
+              rows={filteredOpenHouses}
+              onDelete={deleteOpenHouse}
+              deletingId={deletingOHId}
+              onToggleHold={toggleLegalHold}
+              holdingId={holdingOHId}
+            />
           )}
           {tab === 'visitors' && <VisitorsTable rows={filteredVisitors} />}
 
@@ -1285,10 +1372,14 @@ function OpenHousesTable({
   rows,
   onDelete,
   deletingId,
+  onToggleHold,
+  holdingId,
 }: {
   rows: OpenHouse[]
   onDelete: (o: OpenHouse) => void
   deletingId: string | null
+  onToggleHold: (o: OpenHouse) => void
+  holdingId: string | null
 }) {
   const { state, onSort } = useSortable('when', 'desc')
   const sorted = useMemo(() => applySort(rows, OH_ACC[state.key], state.dir), [rows, state])
@@ -1310,7 +1401,14 @@ function OpenHousesTable({
         {sorted.map((o) => (
           <tr key={o.id} style={{ borderTop: `1px solid ${BORDER}` }}>
             <td style={td}>
-              <div style={{ fontWeight: 600 }}>{o.address}</div>
+              <div style={{ fontWeight: 600 }}>
+                {o.address}
+                {o.legalHold && (
+                  <span style={{ marginLeft: 8, verticalAlign: 'middle' }}>
+                    <Badge text="On legal hold" color="#8a5a00" bg="#fdf0d5" />
+                  </span>
+                )}
+              </div>
               {o.listing_price && <div style={{ fontSize: 12, color: SUB }}>{o.listing_price}</div>}
             </td>
             <td style={tdSub}>{o.agentName}</td>
@@ -1330,6 +1428,29 @@ function OpenHousesTable({
             <td style={{ ...td, fontFamily: 'monospace' }}>{o.code_word || '—'}</td>
             <td style={tdR}>{o.visitorCount}</td>
             <td style={{ ...tdR, whiteSpace: 'nowrap' }}>
+              <button
+                onClick={() => onToggleHold(o)}
+                disabled={holdingId === o.id}
+                title={
+                  o.legalHold
+                    ? 'Release the preservation hold — records return to the normal 3-year clock'
+                    : 'Exempt this open house from deletion pending an investigation'
+                }
+                style={{
+                  background: o.legalHold ? '#fdf0d5' : 'white',
+                  color: '#8a5a00',
+                  border: '1px solid #e5cf9e',
+                  borderRadius: 8,
+                  padding: '6px 12px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: holdingId === o.id ? 'default' : 'pointer',
+                  opacity: holdingId === o.id ? 0.6 : 1,
+                  marginRight: 8,
+                }}
+              >
+                {holdingId === o.id ? 'Working…' : o.legalHold ? 'Release hold' : 'Legal hold'}
+              </button>
               <button
                 onClick={() => onDelete(o)}
                 disabled={deletingId === o.id}
