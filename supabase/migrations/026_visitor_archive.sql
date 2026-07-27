@@ -3,11 +3,15 @@
 -- record of who was inside a house (forensic/safety retention, allowed by
 -- Privacy Policy §5: "up to 3 years from collection"). Rules:
 --   * Agent-facing DELETE /api/open-house/[id] archives, then deletes.
---   * Admin delete tools stay TRUE hard-deletes (test cleanup + honoring
---     visitor data-deletion requests need a real purge path).
---   * Admin delete-account also wipes this archive for that agent —
---     the policy promises deletion "until the hosting Agent deletes their
---     account, whichever comes first."
+--   * Agent-facing DELETE /api/visitor/[id] archives, then deletes.
+--   * Admin delete-account ALSO archives first, and leaves existing archive
+--     rows alone (updated 2026-07-27): Privacy Policy v1.3 §5 retention is a
+--     flat 3 years from collection with no account-deletion trigger, so
+--     closing an account never shortens the clock. (v1.2 had an
+--     "until the Agent deletes their account" carve-out; v1.3 dropped it.)
+--   * Admin delete-open-house stays a TRUE hard-delete — it is the real
+--     purge path for test cleanup and for honoring a visitor's own
+--     data-deletion request under Privacy Policy §6.
 --   * purge_after = original registration time + 3 years (collection-date
 --     anchored, so archiving never extends the promised retention window).
 -- No FKs on purpose: rows must survive open-house/profile deletion.
