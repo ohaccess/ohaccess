@@ -19,6 +19,9 @@ export type MapPin = {
   startAt: string | null
   endAt: string | null
   listingUrl: string | null
+  price: string | null
+  beds: string | null
+  baths: string | null
   status: PinStatus
   lat: number
   lng: number
@@ -50,7 +53,7 @@ async function geocode(address: string): Promise<{ lat: number; lng: number } | 
 export async function buildMapPayload(): Promise<MapPayload | null> {
   const { data: rows, error } = await supabase
     .from('open_houses')
-    .select('id, property_address, open_house_date, open_house_hours, listing_url, start_at, end_at, agent_id, profiles(id, full_name, display_email, email, phone)')
+    .select('id, property_address, open_house_date, open_house_hours, listing_url, listing_price, bedrooms, bathrooms, start_at, end_at, agent_id, profiles(id, full_name, display_email, email, phone)')
     .order('start_at', { ascending: true })
 
   if (error) return null
@@ -75,6 +78,9 @@ export async function buildMapPayload(): Promise<MapPayload | null> {
         startAt: oh.start_at || null,
         endAt: oh.end_at || null,
         listingUrl: /^https?:\/\//i.test(oh.listing_url || '') ? oh.listing_url : null,
+        price: oh.listing_price || null,
+        beds: oh.bedrooms || null,
+        baths: oh.bathrooms || null,
         status: ohStatus(oh, now),
         agent: {
           id: profile?.id || oh.agent_id || '',
