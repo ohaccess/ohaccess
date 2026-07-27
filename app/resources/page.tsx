@@ -51,9 +51,9 @@ export default function Resources() {
 
         {/* The story — why ohACCESS exists and how it works */}
         <div style={{ marginBottom: '56px' }}>
-          <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 4px' }}>
             🏡 How ohACCESS works
-          </div>
+          </h2>
           <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '24px' }}>
             From the paper sign-in sheet you know too well to clean, verified leads — here&apos;s the whole story.
           </div>
@@ -124,9 +124,9 @@ export default function Resources() {
 
         {/* How to use section */}
         <div style={{ marginBottom: '48px' }}>
-          <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 4px' }}>
             📋 How to set up your open house
-          </div>
+          </h2>
           <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
             Follow these steps for a smooth, verified open house every time.
           </div>
@@ -154,9 +154,9 @@ export default function Resources() {
 
         {/* Welcome Sign Templates */}
         <div style={{ marginBottom: '48px' }}>
-          <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 4px' }}>
             🪧 Welcome Sign Templates
-          </div>
+          </h2>
           <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
             Print-ready welcome signs to display at your open house entrance. Visitors scan the QR code to register and receive their access code.
           </div>
@@ -197,9 +197,9 @@ export default function Resources() {
 
         {/* Open house essentials (affiliate) */}
         <div style={{ marginBottom: '48px' }}>
-          <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 4px' }}>
             🪧 Open house essentials
-          </div>
+          </h2>
           <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
             Our favorite sign stands and displays for showing your QR welcome sign on the approach to the entrance — placed where visitors can&apos;t miss it — and guiding them in from the street.
           </div>
@@ -231,9 +231,9 @@ export default function Resources() {
 
         {/* Tips section */}
         <div style={{ marginBottom: '48px' }}>
-          <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 4px' }}>
             💡 Pro tips
-          </div>
+          </h2>
           <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
             Get the most out of ohACCESS at every open house.
           </div>
@@ -257,9 +257,9 @@ export default function Resources() {
 
         {/* CTA */}
         <div style={{ background: '#1d1d1f', borderRadius: '22px', padding: '40px', textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: 'white', marginBottom: '8px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'white', margin: '0 0 8px' }}>
             Ready to run your next open house?
-          </div>
+          </h2>
           <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', marginBottom: '24px' }}>
             Create your open house and generate your QR code in under 3 minutes.
           </div>

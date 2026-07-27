@@ -95,9 +95,9 @@ export default function Contact() {
 
           {/* Left — why ohACCESS */}
           <div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 24px' }}>
               Why brokerages choose ohACCESS
-            </div>
+            </h2>
 
             {[
               { emoji: '🏢', title: 'Built for teams', body: 'Manage all your agents from one admin dashboard. See every open house and visitor log across your entire brokerage.' },
@@ -118,7 +118,7 @@ export default function Contact() {
 
             {/* Pricing guide — self-serve up to 100 agents; negotiated beyond. */}
             <div style={{ background: '#f5f5f7', borderRadius: '16px', padding: '20px', marginTop: '8px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f', marginBottom: '12px' }}>Brokerage pricing:</div>
+              <h2 style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 12px' }}>Brokerage pricing:</h2>
               {[
                 { range: '11–100 agents', price: '$11/agent/mo', note: 'Self-serve' },
                 { range: '100+ agents', price: 'Custom', note: 'Contact us' },
@@ -139,7 +139,7 @@ export default function Contact() {
           <div>
             {!submitted ? (
               <div style={{ background: 'white', borderRadius: '22px', border: '1px solid #d1d1d6', padding: '32px', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
-                <div style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>Get in touch</div>
+                <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 4px' }}>Get in touch</h2>
                 <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>We typically respond within one business day.</div>
 
                 <form onSubmit={handleSubmit}>

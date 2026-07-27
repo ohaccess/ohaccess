@@ -76,7 +76,7 @@ export default async function BlogIndex() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={p.image_url}
-                      alt=""
+                      alt={p.title}
                       style={{ width: '140px', height: '94px', objectFit: 'cover', borderRadius: '10px', flexShrink: 0 }}
                     />
                   )}
