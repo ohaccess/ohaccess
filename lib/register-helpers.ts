@@ -245,9 +245,15 @@ export function buildCrmLeadEmail(lead: {
   agentName: string
   registeredAt: string
   visitorUrl: string
+  customAnswers?: { prompt: string; answer: string }[]
 }): string {
   const fullName = `${lead.firstName} ${lead.lastName}`.trim()
   const e = escapeHtml
+  // Answers to the agent's own questions, appended as more "Label: value" lines
+  // so the CRM email parsers that read this format pick them up too.
+  const customLines = (lead.customAnswers || [])
+    .map(a => `${e(a.prompt)}: ${e(a.answer)}<br/>`)
+    .join('\n')
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -269,8 +275,8 @@ Purchasing Timeline: ${e(lead.purchasingTimeline || 'Not specified')}<br/>
 Property: ${e(lead.propertyAddress)}<br/>
 Listing Agent: ${e(lead.agentName)}<br/>
 Source: ohACCESS<br/>
-Registered: ${e(lead.registeredAt)}
-</p>
+Registered: ${e(lead.registeredAt)}<br/>
+${customLines}</p>
 <p>Visitor details: <a href="${e(lead.visitorUrl)}">${e(lead.visitorUrl)}</a></p>
 </body>
 </html>`

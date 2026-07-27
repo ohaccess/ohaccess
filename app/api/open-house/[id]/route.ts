@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { getClientIp } from '@/lib/rate-limit'
 import { archiveVisitorsForOpenHouse } from '@/lib/visitor-archive'
+import { normalizeCustomQuestions, questionsForSurface } from '@/lib/custom-questions'
 
 // GET: public, read-only display data for the visitor registration page.
 // Returns ONLY safe fields — never the secret code_word/code_word_email, and
@@ -42,9 +43,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   const { data: agent } = await supabase
     .from('profiles')
-    .select('full_name, primary_color, accent_color, sponsor_id')
+    .select('full_name, primary_color, accent_color, sponsor_id, custom_questions')
     .eq('id', oh.agent_id)
     .maybeSingle()
+
+  // The agent's one extra sign-in question, if they've configured one. Safe to
+  // expose: it's a prompt the visitor is about to be shown anyway. The
+  // success-screen questions are NOT sent here — those come back from
+  // /api/register, so they're only revealed to someone who actually signed in.
+  const signinQuestions = questionsForSurface(
+    normalizeCustomQuestions(agent?.custom_questions),
+    'signin'
+  )
 
   // Sponsor disclosure: when the agent has an accepted sponsor, the sign-in
   // form must NAME them in the consent language. Only the public display name
@@ -82,6 +92,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       accent_color: agent?.accent_color ?? null,
     },
     sponsor: sponsorName ? { name: sponsorName } : null,
+    customQuestions: signinQuestions,
   })
 }
 

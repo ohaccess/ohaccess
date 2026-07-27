@@ -539,6 +539,118 @@ export default function SettingsPanel({
   const updateDisclosureRow = (i: number, row: { label: string; url: string }) =>
     setDisclosureRows(disclosureRows.map((r, idx) => (idx === i ? row : r)))
 
+  // Custom questions, also stored on `profile`. Ids are minted here and never
+  // change, so an answer already recorded against a question stays linked to it
+  // even after the agent rewrites the wording.
+  type CustomQ = {
+    id: string
+    prompt: string
+    type: 'text' | 'choice'
+    options: string[]
+    surface: 'signin' | 'success'
+  }
+  const questions: CustomQ[] = Array.isArray(profile?.custom_questions) ? profile.custom_questions : []
+  const setQuestions = (qs: CustomQ[]) => setProfile({ ...profile, custom_questions: qs })
+  const signinCount = questions.filter(q => q.surface === 'signin').length
+  const successCount = questions.filter(q => q.surface === 'success').length
+  const addQuestion = (surface: 'signin' | 'success') =>
+    setQuestions([...questions, {
+      id: (globalThis.crypto?.randomUUID?.() ?? `q-${Date.now()}-${questions.length}`),
+      prompt: '', type: 'text', options: [], surface,
+    }])
+  const updateQuestion = (id: string, patch: Partial<CustomQ>) =>
+    setQuestions(questions.map(q => (q.id === id ? { ...q, ...patch } : q)))
+  const removeQuestion = (id: string) => setQuestions(questions.filter(q => q.id !== id))
+  const setOption = (id: string, i: number, value: string) =>
+    setQuestions(questions.map(q => {
+      if (q.id !== id) return q
+      const options = [...(q.options || [])]
+      options[i] = value
+      return { ...q, options }
+    }))
+  const addOption = (id: string) =>
+    setQuestions(questions.map(q => (q.id === id ? { ...q, options: [...(q.options || []), ''] } : q)))
+  const removeOption = (id: string, i: number) =>
+    setQuestions(questions.map(q =>
+      q.id === id ? { ...q, options: (q.options || []).filter((_, idx) => idx !== i) } : q
+    ))
+
+  const questionEditor = (q: CustomQ) => (
+    <div key={q.id} style={{ border: '1px solid #d1d1d6', borderRadius: '12px', padding: '14px', marginBottom: '10px', background: '#fafafa' }}>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '8px' }}>
+        <input
+          style={{ ...inputStyle, flex: 1, minWidth: 0, marginBottom: 0 }}
+          type="text"
+          maxLength={160}
+          placeholder="Your question"
+          value={q.prompt}
+          onChange={e => updateQuestion(q.id, { prompt: e.target.value })}
+        />
+        <button
+          onClick={() => removeQuestion(q.id)}
+          aria-label="Remove this question"
+          style={{ flexShrink: 0, padding: '9px 12px', background: 'white', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '9px', fontSize: '13px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        >
+          ✕
+        </button>
+      </div>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: q.type === 'choice' ? '10px' : 0 }}>
+        <span style={{ fontSize: '12px', color: '#6e6e73' }}>Answer:</span>
+        {(['text', 'choice'] as const).map(kind => (
+          <button
+            key={kind}
+            onClick={() => updateQuestion(q.id, {
+              type: kind,
+              // Seed two blank options so a fresh choice question is editable.
+              options: kind === 'choice' && (q.options || []).length === 0 ? ['', ''] : q.options,
+            })}
+            style={{
+              padding: '6px 12px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: q.type === kind ? 700 : 500,
+              border: q.type === kind ? `2px solid ${primaryColor}` : '1px solid #d1d1d6',
+              background: q.type === kind ? primaryColor : 'white',
+              color: q.type === kind ? onPrimary : '#1d1d1f',
+            }}
+          >
+            {kind === 'text' ? 'Typed answer' : 'Multiple choice'}
+          </button>
+        ))}
+      </div>
+      {q.type === 'choice' && (
+        <>
+          {(q.options || []).map((opt, i) => (
+            <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+              <input
+                style={{ ...inputStyle, flex: 1, minWidth: 0, marginBottom: 0 }}
+                type="text"
+                maxLength={60}
+                placeholder={`Choice ${i + 1}`}
+                value={opt}
+                onChange={e => setOption(q.id, i, e.target.value)}
+              />
+              <button
+                onClick={() => removeOption(q.id, i)}
+                aria-label="Remove this choice"
+                style={{ flexShrink: 0, padding: '9px 12px', background: 'white', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '9px', fontSize: '13px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          {(q.options || []).length < 4 && (
+            <button
+              onClick={() => addOption(q.id)}
+              style={{ padding: '7px 12px', background: 'white', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '9px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
+              + Add a choice
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  )
+
   return (
     <>
       <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Account settings</div>
@@ -751,6 +863,50 @@ export default function SettingsPanel({
           3. In Zapier, add your CRM as the action (e.g. <strong>Follow Up Boss → Create Lead</strong>) and map the fields we send: first/last name, email, phone, timeline, property address, and a link to the visitor.<br />
           4. Turn the Zap on — new visitors now flow into your CRM automatically.
           <div style={{ marginTop: '8px', fontStyle: 'italic' }}>Note: Zapier&apos;s &quot;Catch Hook&quot; trigger requires a paid Zapier plan.</div>
+        </div>
+      </div>
+
+      {/* Custom questions — one extra on the sign-in form (the entry gate, so
+          strictly capped) and up to two after the tour. The built-in rating and
+          price questions are fixed and not editable here: the seller report
+          aggregates them by name. */}
+      <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Your own questions</div>
+        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
+          Ask visitors something of your own, on top of the standard fields. Every custom question is optional for the visitor — nothing you add here can stop someone from getting their codeword.
+        </div>
+
+        <label style={labelStyle}>On the sign-in form &mdash; 1 question</label>
+        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '2px 0 10px', lineHeight: '1.6' }}>
+          Asked before they get their codeword, so keep it short.
+        </div>
+        {questions.filter(q => q.surface === 'signin').map(questionEditor)}
+        {signinCount < 1 && (
+          <button
+            onClick={() => addQuestion('signin')}
+            style={{ padding: '8px 14px', background: 'white', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            + Add a sign-in question
+          </button>
+        )}
+
+        <label style={{ ...labelStyle, marginTop: '20px' }}>After the tour &mdash; up to 2 questions</label>
+        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '2px 0 10px', lineHeight: '1.6' }}>
+          Asked on the confirmation screen, alongside the standard rating and price questions.
+        </div>
+        {questions.filter(q => q.surface === 'success').map(questionEditor)}
+        {successCount < 2 && (
+          <button
+            onClick={() => addQuestion('success')}
+            style={{ padding: '8px 14px', background: 'white', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            + Add a post-tour question
+          </button>
+        )}
+
+        <div style={{ marginTop: '14px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.7' }}>
+          Answers show up on each visitor&apos;s record, in your CSV export, and in the lead sent to your CRM.<br /><br />
+          <strong style={{ color: '#1d1d1f' }}>Two things worth knowing:</strong> your questions appear in the language you write them, even for a visitor who switches the form to Spanish or another language. And editing or deleting a question later never changes answers you&apos;ve already collected — those keep the wording they were asked under.
         </div>
       </div>
 

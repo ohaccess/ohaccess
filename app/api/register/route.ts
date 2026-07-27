@@ -24,6 +24,11 @@ import {
   type UpcomingOpenHouse,
 } from '@/lib/register-helpers'
 import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
+import {
+  normalizeCustomQuestions,
+  questionsForSurface,
+  buildCustomAnswers,
+} from '@/lib/custom-questions'
 
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID!,
@@ -192,6 +197,17 @@ export async function POST(request: Request) {
       brokerageRow?.disclosure_links
     )
 
+    // The agent's own extra questions. The sign-in answer arrives with this
+    // request; the success-screen questions are returned below and answered
+    // later via /api/feedback. Answers snapshot the prompt they were asked
+    // under, so editing a question in Settings can't relabel old rows.
+    const customQuestions = normalizeCustomQuestions(agent?.custom_questions)
+    const signinAnswers = buildCustomAnswers(
+      questionsForSurface(customQuestions, 'signin'),
+      body.customAnswers
+    )
+    const successQuestions = questionsForSurface(customQuestions, 'success')
+
     // Two code words: the SMS (text) word is primary; the email word is a
     // fallback. Legacy open houses only have code_word, so reuse it for email.
     const smsCodeWord = openHouse.code_word
@@ -301,6 +317,7 @@ export async function POST(request: Request) {
         // Snapshot of the disclosure links handed to this visitor, for the
         // same reason: the record must reflect what was actually sent.
         disclosures_sent: disclosureLinks.length > 0 ? disclosureLinks : null,
+        custom_answers: signinAnswers.length > 0 ? signinAnswers : null,
       })
       .select('id')
       .single()
@@ -360,6 +377,7 @@ export async function POST(request: Request) {
           agentName: agent?.full_name || '',
           registeredAt: now,
           visitorUrl: `https://ohaccess.com/visitor/${visitorRow.id}`,
+          customAnswers: signinAnswers,
         }),
       })
 
@@ -670,7 +688,12 @@ export async function POST(request: Request) {
     // visitor's own feedback.
     // disclosures are echoed back so the success screen can show the same links
     // the email carries — for the visitor who never opens the email.
-    return NextResponse.json({ success: true, feedbackToken, disclosures: disclosureLinks })
+    return NextResponse.json({
+      success: true,
+      feedbackToken,
+      disclosures: disclosureLinks,
+      customQuestions: successQuestions,
+    })
 
   } catch (error) {
     console.error('Registration error:', error)

@@ -11,6 +11,7 @@ import SettingsPanel from './_components/SettingsPanel'
 import VisitorDetail from '@/app/_components/VisitorDetail'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
+import { normalizeCustomAnswers } from '@/lib/custom-questions'
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
@@ -631,9 +632,35 @@ export default function Dashboard() {
 
   const exportCSV = () => {
     if (guardLocked()) return
-    const headers = ['First Name','Last Name','Email','Phone','Timeline','Registered','Verified']
-    const rows = visitors.map(v => [v.first_name, v.last_name, v.email, v.phone, v.purchasing_timeline, new Date(v.registered_at).toLocaleString(), v.verified ? 'Yes' : 'No'])
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+    // Custom answers are free text and routinely contain commas, so every field
+    // is now RFC-4180 quoted. Without this a single "Yes, pre-approved" answer
+    // would shift each following column by one.
+    const csvCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
+
+    // One column per question actually answered by someone in this log, keyed
+    // by question id but LABELLED with the prompt as it was asked.
+    const questionColumns: { id: string; prompt: string }[] = []
+    for (const v of visitors) {
+      for (const a of normalizeCustomAnswers(v.custom_answers)) {
+        if (!questionColumns.some(q => q.id === a.id)) {
+          questionColumns.push({ id: a.id, prompt: a.prompt })
+        }
+      }
+    }
+
+    const headers = [
+      'First Name','Last Name','Email','Phone','Timeline','Registered','Verified',
+      ...questionColumns.map(q => q.prompt),
+    ]
+    const rows = visitors.map(v => {
+      const answers = normalizeCustomAnswers(v.custom_answers)
+      return [
+        v.first_name, v.last_name, v.email, v.phone, v.purchasing_timeline,
+        new Date(v.registered_at).toLocaleString(), v.verified ? 'Yes' : 'No',
+        ...questionColumns.map(q => answers.find(a => a.id === q.id)?.answer ?? ''),
+      ]
+    })
+    const csv = [headers, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -672,6 +699,41 @@ export default function Dashboard() {
         return
       }
     }
+    // Custom questions: drop rows the agent added but never filled in, then
+    // reject anything half-finished. A blank prompt or a choice question with
+    // fewer than two real options would render as a dead end for the visitor.
+    const rawQuestions: any[] = Array.isArray(profile?.custom_questions) ? profile.custom_questions : []
+    const cleanedQuestions = rawQuestions
+      .map(q => ({
+        id: q?.id,
+        prompt: (q?.prompt || '').trim(),
+        type: q?.type === 'choice' ? 'choice' : 'text',
+        options: Array.isArray(q?.options)
+          ? q.options.map((o: string) => (o || '').trim()).filter(Boolean).slice(0, 4)
+          : [],
+        surface: q?.surface === 'signin' ? 'signin' : 'success',
+      }))
+      .filter(q => q.prompt || q.options.length > 0)
+    for (const q of cleanedQuestions) {
+      if (!q.prompt) {
+        showToast('Give each of your questions something to ask', 'error')
+        return
+      }
+      if (q.type === 'choice' && q.options.length < 2) {
+        showToast(`"${q.prompt}" needs at least two choices`, 'error')
+        return
+      }
+      if (q.type === 'text') q.options = []
+    }
+    if (cleanedQuestions.filter(q => q.surface === 'signin').length > 1) {
+      showToast('Only one custom question can go on the sign-in form', 'error')
+      return
+    }
+    if (cleanedQuestions.filter(q => q.surface === 'success').length > 2) {
+      showToast('You can ask at most two questions after the tour', 'error')
+      return
+    }
+
     const { error } = await supabase.from('profiles').update({
       full_name: profile?.full_name,
       brokerage: profile?.brokerage,
@@ -688,6 +750,7 @@ export default function Dashboard() {
       crm_lead_email: crmEmail || null,
       crm_type: profile?.crm_type || null,
       disclosure_links: disclosures.length > 0 ? disclosures : null,
+      custom_questions: cleanedQuestions.length > 0 ? cleanedQuestions : null,
     }).eq('id', user.id)
     if (error) { showToast('Error saving: ' + error.message); return }
     showToast('Settings saved!')
