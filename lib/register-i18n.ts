@@ -94,6 +94,10 @@ export interface RegisterStrings {
   checkPhone: string
   checkEmail: string
   checkAgent: string
+  // Section heading above the host agent's disclosure/notice links on the
+  // success screen. Only the HEADING is translated — the link labels are the
+  // agent's own text for their own documents.
+  disclosuresTitle: string
   // Post-visit feedback card on the success screen. feedbackIntro contains
   // {after}; rendered with feedbackAfter bolded (Dave's "After your tour…").
   feedbackIntro: string
@@ -145,6 +149,7 @@ const en: RegisterStrings = {
   checkPhone: '✓ Codeword was sent to your phone.',
   checkEmail: '✓ Backup codeword was sent to your email.',
   checkAgent: '✓ Agent has been notified of your arrival.',
+  disclosuresTitle: "Disclosures & Notices",
   feedbackIntro: '{after} your tour, please provide feedback to the following questions.',
   feedbackAfter: 'After',
   feedbackQ1: 'Considering the features, location, and condition of the home, how would you rate it overall?',
@@ -192,6 +197,7 @@ const es: RegisterStrings = {
   checkPhone: '✓ Tu palabra clave fue enviada a tu teléfono.',
   checkEmail: '✓ La palabra clave de respaldo fue enviada a tu correo.',
   checkAgent: '✓ El agente ha sido notificado de tu llegada.',
+  disclosuresTitle: "Divulgaciones y avisos",
   feedbackIntro: '{after} de tu recorrido, por favor responde las siguientes preguntas.',
   feedbackAfter: 'Después',
   feedbackQ1: 'Considerando las características, la ubicación y el estado de la casa, ¿cómo la calificarías en general?',
@@ -239,6 +245,7 @@ const vi: RegisterStrings = {
   checkPhone: '✓ Mật mã đã được gửi đến điện thoại của bạn.',
   checkEmail: '✓ Mật mã dự phòng đã được gửi đến email của bạn.',
   checkAgent: '✓ Chuyên viên môi giới đã được thông báo về sự có mặt của bạn.',
+  disclosuresTitle: "Công bố và thông báo",
   feedbackIntro: '{after} khi tham quan, vui lòng trả lời các câu hỏi sau.',
   feedbackAfter: 'Sau',
   feedbackQ1: 'Xét về đặc điểm, vị trí và tình trạng của ngôi nhà, bạn đánh giá tổng thể như thế nào?',
@@ -286,6 +293,7 @@ const zh: RegisterStrings = {
   checkPhone: '✓ 暗号已发送到您的手机。',
   checkEmail: '✓ 备用暗号已发送到您的邮箱。',
   checkAgent: '✓ 经纪人已收到您到访的通知。',
+  disclosuresTitle: "披露与告知",
   feedbackIntro: '{after}，请回答以下问题。',
   feedbackAfter: '参观后',
   feedbackQ1: '综合考虑房屋的特点、位置和状况，您对它的总体评价如何？',
@@ -333,6 +341,7 @@ const ko: RegisterStrings = {
   checkPhone: '✓ 암호가 휴대폰으로 전송되었습니다.',
   checkEmail: '✓ 예비 암호가 이메일로 전송되었습니다.',
   checkAgent: '✓ 에이전트에게 도착이 통지되었습니다.',
+  disclosuresTitle: "고지 및 안내",
   feedbackIntro: '{after}, 아래 질문에 답변해 주세요.',
   feedbackAfter: '둘러보신 후',
   feedbackQ1: '집의 특징, 위치, 상태를 고려할 때 전반적으로 어떻게 평가하시겠어요?',
@@ -380,6 +389,7 @@ const hi: RegisterStrings = {
   checkPhone: '✓ कोडवर्ड आपके फ़ोन पर भेज दिया गया है।',
   checkEmail: '✓ बैकअप कोडवर्ड आपके ईमेल पर भेज दिया गया है।',
   checkAgent: '✓ एजेंट को आपके आगमन की सूचना दे दी गई है।',
+  disclosuresTitle: "प्रकटीकरण और सूचनाएं",
   feedbackIntro: '{after}, कृपया नीचे दिए गए प्रश्नों के उत्तर दें।',
   feedbackAfter: 'दौरे के बाद',
   feedbackQ1: 'घर की विशेषताओं, स्थान और स्थिति को ध्यान में रखते हुए, आप इसे कुल मिलाकर कैसे आंकेंगे?',
@@ -427,6 +437,7 @@ const zhHant: RegisterStrings = {
   checkPhone: '✓ 暗號已傳送到您的手機。',
   checkEmail: '✓ 備用暗號已傳送到您的信箱。',
   checkAgent: '✓ 經紀人已收到您到訪的通知。',
+  disclosuresTitle: "披露與告知",
   feedbackIntro: '{after}，請回答以下問題。',
   feedbackAfter: '參觀後',
   feedbackQ1: '綜合考量房屋的特點、位置和狀況，您對它的整體評價如何？',
@@ -474,6 +485,7 @@ const fr: RegisterStrings = {
   checkPhone: "✓ Le mot de code a été envoyé sur votre téléphone.",
   checkEmail: "✓ Le mot de code de secours a été envoyé par e-mail.",
   checkAgent: "✓ L'agent a été informé de votre arrivée.",
+  disclosuresTitle: "Informations et avis",
   feedbackIntro: "{after} votre visite, veuillez répondre aux questions suivantes.",
   feedbackAfter: "Après",
   feedbackQ1: "En tenant compte des caractéristiques, de l'emplacement et de l'état du logement, quelle note globale lui donneriez-vous ?",
@@ -521,6 +533,7 @@ const de: RegisterStrings = {
   checkPhone: '✓ Das Codewort wurde an Ihr Telefon gesendet.',
   checkEmail: '✓ Das Ersatz-Codewort wurde an Ihre E-Mail gesendet.',
   checkAgent: '✓ Der Makler wurde über Ihre Ankunft informiert.',
+  disclosuresTitle: "Offenlegungen und Hinweise",
   feedbackIntro: '{after} Ihrer Besichtigung beantworten Sie bitte die folgenden Fragen.',
   feedbackAfter: 'Nach',
   feedbackQ1: 'Wie würden Sie das Haus unter Berücksichtigung von Ausstattung, Lage und Zustand insgesamt bewerten?',
@@ -568,6 +581,7 @@ const it: RegisterStrings = {
   checkPhone: "✓ La parola in codice è stata inviata al tuo telefono.",
   checkEmail: "✓ La parola in codice di riserva è stata inviata alla tua email.",
   checkAgent: "✓ L'agente è stato avvisato del tuo arrivo.",
+  disclosuresTitle: "Informative e avvisi",
   feedbackIntro: "{after} la visita, rispondi alle seguenti domande.",
   feedbackAfter: "Dopo",
   feedbackQ1: "Considerando caratteristiche, posizione e condizioni della casa, come la valuteresti nel complesso?",
@@ -615,6 +629,7 @@ const el: RegisterStrings = {
   checkPhone: '✓ Η κωδική λέξη στάλθηκε στο τηλέφωνό σας.',
   checkEmail: '✓ Η εφεδρική κωδική λέξη στάλθηκε στο email σας.',
   checkAgent: '✓ Ο μεσίτης ενημερώθηκε για την άφιξή σας.',
+  disclosuresTitle: "Γνωστοποιήσεις και ειδοποιήσεις",
   feedbackIntro: '{after} την ξενάγηση, παρακαλώ απαντήστε στις παρακάτω ερωτήσεις.',
   feedbackAfter: 'Μετά',
   feedbackQ1: 'Λαμβάνοντας υπόψη τα χαρακτηριστικά, την τοποθεσία και την κατάσταση του σπιτιού, πώς θα το βαθμολογούσατε συνολικά;',
@@ -662,6 +677,7 @@ const pl: RegisterStrings = {
   checkPhone: '✓ Hasło dostępu zostało wysłane na Twój telefon.',
   checkEmail: '✓ Zapasowe hasło zostało wysłane na Twój e-mail.',
   checkAgent: '✓ Agent został powiadomiony o Twoim przybyciu.',
+  disclosuresTitle: "Ujawnienia i informacje",
   feedbackIntro: '{after} zwiedzaniu odpowiedz na poniższe pytania.',
   feedbackAfter: 'Po',
   feedbackQ1: 'Biorąc pod uwagę cechy, lokalizację i stan domu, jak ogólnie byś go ocenił(a)?',
@@ -709,6 +725,7 @@ const ru: RegisterStrings = {
   checkPhone: '✓ Кодовое слово отправлено на ваш телефон.',
   checkEmail: '✓ Резервное кодовое слово отправлено на вашу эл. почту.',
   checkAgent: '✓ Агент уведомлён о вашем приходе.',
+  disclosuresTitle: "Раскрытие информации и уведомления",
   feedbackIntro: '{after} осмотра, пожалуйста, ответьте на следующие вопросы.',
   feedbackAfter: 'После',
   feedbackQ1: 'Учитывая особенности, расположение и состояние дома, как бы вы оценили его в целом?',
@@ -756,6 +773,7 @@ const pt: RegisterStrings = {
   checkPhone: '✓ A palavra-código foi enviada para o seu telefone.',
   checkEmail: '✓ A palavra-código reserva foi enviada para o seu e-mail.',
   checkAgent: '✓ O corretor foi avisado da sua chegada.',
+  disclosuresTitle: "Divulgações e avisos",
   feedbackIntro: '{after} a visita, responda às perguntas a seguir.',
   feedbackAfter: 'Após',
   feedbackQ1: 'Considerando as características, a localização e as condições do imóvel, como você o avaliaria no geral?',
@@ -803,6 +821,7 @@ const tl: RegisterStrings = {
   checkPhone: '✓ Ipinadala ang codeword sa iyong telepono.',
   checkEmail: '✓ Ipinadala ang backup na codeword sa iyong email.',
   checkAgent: '✓ Naabisuhan na ang agent tungkol sa iyong pagdating.',
+  disclosuresTitle: "Mga Pagsisiwalat at Paunawa",
   feedbackIntro: '{after} ng iyong pagsilip, pakisagot ang mga sumusunod na tanong.',
   feedbackAfter: 'Pagkatapos',
   feedbackQ1: 'Isinaalang-alang ang mga tampok, lokasyon, at kalagayan ng bahay, paano mo ito iraranggo sa kabuuan?',
@@ -850,6 +869,7 @@ const pa: RegisterStrings = {
   checkPhone: '✓ ਕੋਡਵਰਡ ਤੁਹਾਡੇ ਫ਼ੋਨ ਉੱਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।',
   checkEmail: '✓ ਬੈਕਅੱਪ ਕੋਡਵਰਡ ਤੁਹਾਡੀ ਈਮੇਲ ਉੱਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।',
   checkAgent: '✓ ਏਜੰਟ ਨੂੰ ਤੁਹਾਡੇ ਆਉਣ ਦੀ ਸੂਚਨਾ ਦੇ ਦਿੱਤੀ ਗਈ ਹੈ।',
+  disclosuresTitle: "ਖੁਲਾਸੇ ਅਤੇ ਸੂਚਨਾਵਾਂ",
   feedbackIntro: '{after}, ਕਿਰਪਾ ਕਰਕੇ ਹੇਠਾਂ ਦਿੱਤੇ ਸਵਾਲਾਂ ਦੇ ਜਵਾਬ ਦਿਓ।',
   feedbackAfter: 'ਦੌਰੇ ਤੋਂ ਬਾਅਦ',
   feedbackQ1: 'ਘਰ ਦੀਆਂ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ, ਸਥਾਨ ਅਤੇ ਹਾਲਤ ਨੂੰ ਧਿਆਨ ਵਿੱਚ ਰੱਖਦਿਆਂ, ਤੁਸੀਂ ਇਸਨੂੰ ਕੁੱਲ ਮਿਲਾ ਕੇ ਕਿਵੇਂ ਦਰਜਾ ਦਿਓਗੇ?',

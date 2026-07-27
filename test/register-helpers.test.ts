@@ -11,6 +11,11 @@ import {
   agentCopyRecipients,
   isVirtualNumber,
   twilioStatusCallbackUrl,
+  normalizeDisclosureLinks,
+  resolveDisclosureLinks,
+  buildDisclosuresHtml,
+  MAX_DISCLOSURE_LINKS,
+  MAX_DISCLOSURE_LABEL_LENGTH,
   SMS_MAX_LENGTH,
   type UpcomingOpenHouse,
 } from '@/lib/register-helpers'
@@ -278,5 +283,95 @@ describe('twilioStatusCallbackUrl', () => {
     expect(twilioStatusCallbackUrl('http://localhost:3000/')).toBe(
       'http://localhost:3000/api/webhooks/twilio-status'
     )
+  })
+})
+
+describe('normalizeDisclosureLinks', () => {
+  it('keeps well-formed rows and trims the label', () => {
+    expect(normalizeDisclosureLinks([{ label: '  IABS  ', url: 'https://example.com/iabs.pdf' }]))
+      .toEqual([{ label: 'IABS', url: 'https://example.com/iabs.pdf' }])
+  })
+  it('returns [] for null/undefined/non-array (empty or never-set column)', () => {
+    expect(normalizeDisclosureLinks(null)).toEqual([])
+    expect(normalizeDisclosureLinks(undefined)).toEqual([])
+    expect(normalizeDisclosureLinks('nope')).toEqual([])
+    expect(normalizeDisclosureLinks({ label: 'x', url: 'https://a.com' })).toEqual([])
+  })
+  it('drops rows with a blank label or a non-https url', () => {
+    expect(normalizeDisclosureLinks([
+      { label: '', url: 'https://example.com/a.pdf' },
+      { label: '   ', url: 'https://example.com/b.pdf' },
+      { label: 'Insecure', url: 'http://example.com/c.pdf' },
+      { label: 'Relative', url: '/local/d.pdf' },
+      { label: 'Good', url: 'https://example.com/e.pdf' },
+    ])).toEqual([{ label: 'Good', url: 'https://example.com/e.pdf' }])
+  })
+  it('refuses javascript: and data: urls even when dressed up', () => {
+    expect(normalizeDisclosureLinks([
+      { label: 'XSS', url: 'javascript:alert(1)' },
+      { label: 'Data', url: 'data:text/html,<script>alert(1)</script>' },
+      { label: 'Sneaky', url: ' javascript:alert(1)' },
+    ])).toEqual([])
+  })
+  it('drops malformed entries without throwing', () => {
+    expect(normalizeDisclosureLinks([null, 42, 'str', {}, { label: 5, url: 7 }])).toEqual([])
+  })
+  it('caps the list at MAX_DISCLOSURE_LINKS', () => {
+    const many = Array.from({ length: 9 }, (_, i) => ({ label: `Doc ${i}`, url: `https://e.com/${i}` }))
+    expect(normalizeDisclosureLinks(many)).toHaveLength(MAX_DISCLOSURE_LINKS)
+  })
+  it('caps an over-long label', () => {
+    const [row] = normalizeDisclosureLinks([{ label: 'x'.repeat(500), url: 'https://e.com/a' }])
+    expect(row.label).toHaveLength(MAX_DISCLOSURE_LABEL_LENGTH)
+  })
+})
+
+describe('resolveDisclosureLinks', () => {
+  const agent = [{ label: 'Agent doc', url: 'https://e.com/agent' }]
+  const brokerage = [{ label: 'Brokerage doc', url: 'https://e.com/brokerage' }]
+
+  it("uses the agent's own links when they have no brokerage", () => {
+    expect(resolveDisclosureLinks(agent, null)).toEqual(agent)
+  })
+  it('lets the brokerage override the agent (broker-level control)', () => {
+    expect(resolveDisclosureLinks(agent, brokerage)).toEqual(brokerage)
+  })
+  it('falls through to the agent when the brokerage has configured nothing', () => {
+    expect(resolveDisclosureLinks(agent, [])).toEqual(agent)
+    expect(resolveDisclosureLinks(agent, null)).toEqual(agent)
+  })
+  it('falls through to the agent when every brokerage row is invalid', () => {
+    expect(resolveDisclosureLinks(agent, [{ label: 'Bad', url: 'http://e.com' }])).toEqual(agent)
+  })
+  it('returns [] when neither side has anything', () => {
+    expect(resolveDisclosureLinks(null, null)).toEqual([])
+  })
+})
+
+describe('buildDisclosuresHtml', () => {
+  it('renders nothing when there are no links, so the email omits the section', () => {
+    expect(buildDisclosuresHtml([])).toBe('')
+  })
+  it('renders one anchor per link', () => {
+    const html = buildDisclosuresHtml([
+      { label: 'IABS', url: 'https://e.com/iabs.pdf' },
+      { label: 'Consumer Notice', url: 'https://e.com/cn.pdf' },
+    ])
+    expect(html).toContain('href="https://e.com/iabs.pdf"')
+    expect(html).toContain('>IABS<')
+    expect(html).toContain('>Consumer Notice<')
+  })
+  it('escapes an agent-entered label so it cannot inject markup', () => {
+    const html = buildDisclosuresHtml([
+      { label: '<img src=x onerror=alert(1)>', url: 'https://e.com/a.pdf' },
+    ])
+    expect(html).not.toContain('<img')
+    expect(html).toContain('&lt;img')
+  })
+  it('escapes quotes in the url so it cannot break out of the href attribute', () => {
+    const html = buildDisclosuresHtml([
+      { label: 'Doc', url: 'https://e.com/a.pdf?x="onmouseover="alert(1)' },
+    ])
+    expect(html).not.toContain('"onmouseover="')
   })
 })

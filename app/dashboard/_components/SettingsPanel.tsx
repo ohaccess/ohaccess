@@ -526,6 +526,19 @@ export default function SettingsPanel({
   inputStyle: CSSProperties
   labelStyle: CSSProperties
 }) {
+  // Disclosure/notice rows live in `profile` like every other setting, so the
+  // existing saveSettings picks them up. Rows are kept as typed (including
+  // half-finished ones) and only validated/cleaned on save.
+  const disclosureRows: { label: string; url: string }[] =
+    Array.isArray(profile?.disclosure_links) ? profile.disclosure_links : []
+  const setDisclosureRows = (rows: { label: string; url: string }[]) =>
+    setProfile({ ...profile, disclosure_links: rows })
+  const addDisclosureRow = () => setDisclosureRows([...disclosureRows, { label: '', url: '' }])
+  const removeDisclosureRow = (i: number) =>
+    setDisclosureRows(disclosureRows.filter((_, idx) => idx !== i))
+  const updateDisclosureRow = (i: number, row: { label: string; url: string }) =>
+    setDisclosureRows(disclosureRows.map((r, idx) => (idx === i ? row : r)))
+
   return (
     <>
       <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Account settings</div>
@@ -738,6 +751,56 @@ export default function SettingsPanel({
           3. In Zapier, add your CRM as the action (e.g. <strong>Follow Up Boss → Create Lead</strong>) and map the fields we send: first/last name, email, phone, timeline, property address, and a link to the visitor.<br />
           4. Turn the Zap on — new visitors now flow into your CRM automatically.
           <div style={{ marginTop: '8px', fontStyle: 'italic' }}>Note: Zapier&apos;s &quot;Catch Hook&quot; trigger requires a paid Zapier plan.</div>
+        </div>
+      </div>
+
+      {/* Disclosures & notices — agent-supplied label + link, delivered to the
+          visitor on the success screen and in their code-word email. ohACCESS
+          never picks the form, hosts it, or collects a signature. */}
+      <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Disclosures &amp; notices</div>
+        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
+          Add a link to any disclosure or notice you want every visitor to receive — an agency disclosure, an Information About Brokerage Services form, a Consumer Information Statement. Each one appears on the visitor&apos;s confirmation screen and in their codeword email.
+        </div>
+        {disclosureRows.map((row, i) => (
+          <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '8px' }}>
+            <input
+              style={{ ...inputStyle, flex: '1 1 38%', minWidth: 0 }}
+              type="text"
+              maxLength={80}
+              placeholder="Name shown to visitors"
+              value={row.label}
+              onChange={e => updateDisclosureRow(i, { ...row, label: e.target.value })}
+            />
+            <input
+              style={{ ...inputStyle, flex: '1 1 62%', minWidth: 0 }}
+              type="url"
+              placeholder="https://..."
+              value={row.url}
+              onChange={e => updateDisclosureRow(i, { ...row, url: e.target.value })}
+            />
+            <button
+              onClick={() => removeDisclosureRow(i)}
+              aria-label="Remove this disclosure"
+              style={{ flexShrink: 0, padding: '9px 12px', background: 'white', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '9px', fontSize: '13px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        {disclosureRows.length < 5 && (
+          <button
+            onClick={addDisclosureRow}
+            style={{ marginTop: '4px', padding: '8px 14px', background: 'white', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            + Add a disclosure
+          </button>
+        )}
+        <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.7' }}>
+          These are documents <strong style={{ color: '#1d1d1f' }}>you</strong> supply. ohACCESS delivers them and records that they were sent — we don&apos;t determine what your state or broker requires. Links must start with <em>https://</em> and should point somewhere permanent (your brokerage&apos;s site or your state commission&apos;s form page), since visitors may open them later.
+          {isTeamMember && (
+            <><br /><br /><strong style={{ color: '#1d1d1f' }}>Note:</strong> if your brokerage has set its own disclosures, those are sent instead of yours.</>
+          )}
         </div>
       </div>
 
