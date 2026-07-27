@@ -4,8 +4,17 @@ import { supabaseAdmin as supabase } from './supabase-admin'
 // years from the date of collection") and the qr_scans purge.
 const RETENTION_MS = 3 * 365 * 24 * 60 * 60 * 1000
 
+// Every column of `visitors` that the archive preserves. Keep this in sync
+// with the visitor_archive table (migrations 026 + 040) — a field missing
+// here is silently dropped at archive time and is NOT recoverable, because
+// the source row is deleted moments later.
+//
+// The only deliberate omission is feedback_token: a live one-time capability
+// handle, not a record of anything (see migration 040).
+// NB: must stay ONE string literal — Supabase infers the row type from it at
+// compile time, and a concatenated string degrades to an untyped result.
 const VISITOR_FIELDS =
-  'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, source, notes, sms_opted_out, ip_address, user_agent, phone_carrier, phone_line_type, registered_at'
+  'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, source, notes, sms_opted_out, ip_address, user_agent, phone_carrier, phone_line_type, registered_at, sponsor_id, sponsor_name, disclosures_sent, lang, custom_answers, email_message_id, email_status, sms_message_sid, sms_status, delivery_updated_at, feedback_rating, feedback_price, feedback_submitted_at, thank_you_sent_at, legal_hold'
 
 type ArchivableVisitor = {
   id: string
@@ -24,6 +33,26 @@ type ArchivableVisitor = {
   phone_carrier: string | null
   phone_line_type: string | null
   registered_at: string | null
+  // Consent evidence — what this visitor was actually shown and agreed to.
+  sponsor_id: string | null
+  sponsor_name: string | null
+  disclosures_sent: unknown
+  lang: string | null
+  custom_answers: unknown
+  // Delivery proof — that the codeword reached the phone/inbox.
+  email_message_id: string | null
+  email_status: string | null
+  sms_message_sid: string | null
+  sms_status: string | null
+  delivery_updated_at: string | null
+  // Post-visit record.
+  feedback_rating: number | null
+  feedback_price: string | null
+  feedback_submitted_at: string | null
+  thank_you_sent_at: string | null
+  // Preservation hold (migration 041) — must survive the move into the
+  // archive, or an agent deleting a held record would quietly release it.
+  legal_hold: boolean | null
 }
 
 function toArchiveRow(v: ArchivableVisitor, propertyAddress: string | null, fallbackAgentId: string | null) {
@@ -48,6 +77,21 @@ function toArchiveRow(v: ArchivableVisitor, propertyAddress: string | null, fall
     phone_carrier: v.phone_carrier,
     phone_line_type: v.phone_line_type,
     registered_at: v.registered_at,
+    sponsor_id: v.sponsor_id,
+    sponsor_name: v.sponsor_name,
+    disclosures_sent: v.disclosures_sent ?? null,
+    lang: v.lang,
+    custom_answers: v.custom_answers ?? null,
+    email_message_id: v.email_message_id,
+    email_status: v.email_status,
+    sms_message_sid: v.sms_message_sid,
+    sms_status: v.sms_status,
+    delivery_updated_at: v.delivery_updated_at,
+    feedback_rating: v.feedback_rating,
+    feedback_price: v.feedback_price,
+    feedback_submitted_at: v.feedback_submitted_at,
+    thank_you_sent_at: v.thank_you_sent_at,
+    legal_hold: v.legal_hold ?? false,
     purge_after: new Date(
       (Number.isNaN(collected) ? Date.now() : collected) + RETENTION_MS
     ).toISOString(),
@@ -56,8 +100,14 @@ function toArchiveRow(v: ArchivableVisitor, propertyAddress: string | null, fall
 
 // Opportunistic retention purge — archive ops are rare, so run it every
 // time rather than the 1%-lottery the hot-path tables use. Best-effort.
+// Skips records under a preservation hold (migration 041): expiry does not
+// override a legal obligation to retain.
 async function purgeExpired() {
-  await supabase.from('visitor_archive').delete().lt('purge_after', new Date().toISOString())
+  await supabase
+    .from('visitor_archive')
+    .delete()
+    .lt('purge_after', new Date().toISOString())
+    .eq('legal_hold', false)
 }
 
 // Copy an open house's visitor log into visitor_archive AND the listing
@@ -99,6 +149,44 @@ export async function archiveVisitorsForOpenHouse(openHouseId: string): Promise<
 
   const rows = (visitors as ArchivableVisitor[]).map((v) =>
     toArchiveRow(v, oh?.property_address ?? null, oh?.agent_id ?? null)
+  )
+  const { error: insertErr } = await supabase.from('visitor_archive').insert(rows)
+  if (insertErr) throw new Error(`visitor_archive insert: ${insertErr.message}`)
+
+  await purgeExpired()
+  return rows.length
+}
+
+// Copy EVERY visitor belonging to one agent into visitor_archive before the
+// admin account-deletion tool wipes their rows. Privacy Policy §5 retention
+// is a flat 3 years from collection with no account-deletion trigger, so
+// closing an agent's account must not shorten the clock on the record of who
+// was inside a house. Throws on failure — the caller must abort the delete.
+// Returns rows archived.
+//
+// The property address is captured here because the agent's open_houses rows
+// are deleted moments later; after that there is nothing left to join to.
+//
+// NOT a purge path: honoring a visitor's own §6 deletion request still goes
+// through the admin delete-open-house tool, which stays a true hard delete.
+export async function archiveVisitorsForAgent(agentId: string): Promise<number> {
+  const { data: visitors, error: readErr } = await supabase
+    .from('visitors')
+    .select(VISITOR_FIELDS)
+    .eq('agent_id', agentId)
+  if (readErr) throw new Error(`visitor_archive read: ${readErr.message}`)
+  if (!visitors || visitors.length === 0) return 0
+
+  const { data: openHouses } = await supabase
+    .from('open_houses')
+    .select('id, property_address')
+    .eq('agent_id', agentId)
+  const addressById = new Map(
+    (openHouses || []).map((oh) => [oh.id as string, (oh.property_address as string) ?? null])
+  )
+
+  const rows = (visitors as ArchivableVisitor[]).map((v) =>
+    toArchiveRow(v, v.open_house_id ? addressById.get(v.open_house_id) ?? null : null, agentId)
   )
   const { error: insertErr } = await supabase.from('visitor_archive').insert(rows)
   if (insertErr) throw new Error(`visitor_archive insert: ${insertErr.message}`)

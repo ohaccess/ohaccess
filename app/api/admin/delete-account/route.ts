@@ -1,6 +1,8 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser, isAdmin } from '@/lib/auth'
+import { archiveVisitorsForAgent } from '@/lib/visitor-archive'
+import { checkAgentHold } from '@/lib/legal-hold'
 
 // Helper: run a delete and throw a labeled error so the caller knows which
 // step failed (deletions are not transactional across PostgREST calls).
@@ -92,12 +94,42 @@ export async function POST(request: Request) {
     membersDetached = count || 0
   }
 
+  // Preservation hold (migration 041): if anything of this agent's is under
+  // a hold, don't tear down the surrounding account until it's released.
+  const hold = await checkAgentHold(userId)
+  if (hold.held) {
+    console.warn(`[DELETE-ACCOUNT] BLOCKED by legal hold: ${profile.email} — ${hold.summary}`)
+    return NextResponse.json(
+      {
+        error: `Blocked by a legal hold on this agent's data (${hold.summary}). Nothing was deleted. Release the hold in legal_holds only when counsel confirms the matter is closed.`,
+        legalHold: hold.counts,
+      },
+      { status: 409 }
+    )
+  }
+
+  // Archive the agent's live visitor log BEFORE anything is deleted, exactly
+  // like the agent-facing deletes do. Privacy Policy v1.3 §5 retention is a
+  // flat 3 years from collection with NO account-deletion trigger, so closing
+  // an account must not destroy the record of who was inside a house. If
+  // archiving fails, abort before deleting anything — never silently lose it.
+  let visitorsArchived = 0
   try {
-    // Children first, then parents. visitor_archive rows are deliberately
-    // KEPT (Dave, 2026-07-20): Privacy Policy v1.3 retention is a flat 3
-    // years from collection with no account-deletion trigger, so previously
-    // archived visitor records survive account deletion until the monthly
-    // retention purge (/api/cron/data-retention) ages them out.
+    visitorsArchived = await archiveVisitorsForAgent(userId)
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error'
+    console.error(`[DELETE-ACCOUNT] archive FAILED by ${admin.email} on ${profile.email}: ${message}`)
+    return NextResponse.json(
+      { error: `Could not archive visitor records (${message}). Nothing was deleted.` },
+      { status: 500 }
+    )
+  }
+
+  try {
+    // Children first, then parents. Existing visitor_archive rows are
+    // deliberately KEPT (Dave, 2026-07-20) for the same reason as above —
+    // they survive until the monthly retention purge
+    // (/api/cron/data-retention) ages them out at the 3-year mark.
     await del('visitors', supabase.from('visitors').delete().eq('agent_id', userId))
     await del('short_urls', supabase.from('short_urls').delete().eq('agent_id', userId))
     await del('open_houses', supabase.from('open_houses').delete().eq('agent_id', userId))
@@ -122,7 +154,7 @@ export async function POST(request: Request) {
 
   console.log(
     `[DELETE-ACCOUNT] ${admin.email} deleted ${profile.email} (${profile.id}) — ` +
-      `${visitorCount} visitors, ${openHouseCount} open houses, ${shortUrlCount} short URLs, ` +
+      `${visitorCount} visitors (${visitorsArchived} archived), ${openHouseCount} open houses, ${shortUrlCount} short URLs, ` +
       `${ownedIds.length} brokerages, ${membersDetached} members detached, at ${new Date().toISOString()}`
   )
 
@@ -131,6 +163,7 @@ export async function POST(request: Request) {
       email: profile.email,
       name: profile.full_name || profile.email,
       visitors: visitorCount,
+      visitorsArchived,
       openHouses: openHouseCount,
       shortUrls: shortUrlCount,
       brokeragesDeleted: ownedIds.length,

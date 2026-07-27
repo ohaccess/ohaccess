@@ -38,7 +38,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (scanErr) console.error('qr_scans log failed:', scanErr)
   if (Math.random() < 0.01) {
     const cutoff = new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000).toISOString()
-    await supabase.from('qr_scans').delete().lt('created_at', cutoff)
+    // Skips rows under a preservation hold (migration 041).
+    await supabase.from('qr_scans').delete().lt('created_at', cutoff).eq('legal_hold', false)
   }
 
   const { data: agent } = await supabase
@@ -119,8 +120,9 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   // Archive the visitor log BEFORE deleting it (visitor_archive, migration
   // 026): a dashboard cleanup must not destroy the record of who was inside
-  // the house. Retained up to 3 years per Privacy Policy §5; wiped when the
-  // agent's account is deleted. If archiving fails, abort the delete — never
+  // the house. Retained up to 3 years from collection per Privacy Policy §5,
+  // including through account deletion (delete-account archives too, as of
+  // 2026-07-27). If archiving fails, abort the delete — never
   // silently lose the log.
   try {
     await archiveVisitorsForOpenHouse(id)

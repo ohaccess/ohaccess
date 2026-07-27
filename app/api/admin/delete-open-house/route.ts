@@ -1,6 +1,7 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser, isAdmin } from '@/lib/auth'
+import { checkOpenHouseHold } from '@/lib/legal-hold'
 
 async function del(step: string, run: PromiseLike<{ error: { message: string } | null }>) {
   const { error } = await run
@@ -35,6 +36,22 @@ export async function POST(request: Request) {
 
   if (ohError || !oh) {
     return NextResponse.json({ error: 'Open house not found' }, { status: 404 })
+  }
+
+  // Preservation hold (migration 041) overrides this purge — including when
+  // it is being run to honor a visitor's §6 deletion request. Policy §5
+  // reserves exactly that: deletion is "subject to any legal obligations to
+  // retain certain records."
+  const hold = await checkOpenHouseHold(openHouseId)
+  if (hold.held) {
+    console.warn(`[DELETE-OPEN-HOUSE] BLOCKED by legal hold: ${openHouseId} — ${hold.summary}`)
+    return NextResponse.json(
+      {
+        error: `Blocked by a legal hold on this open house (${hold.summary}). Nothing was deleted. Release the hold in legal_holds only when counsel confirms the matter is closed.`,
+        legalHold: hold.counts,
+      },
+      { status: 409 }
+    )
   }
 
   const { count: visitorCount } = await supabase
