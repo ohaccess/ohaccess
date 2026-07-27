@@ -60,6 +60,79 @@ function pinIcon(status: PinStatus): { url: string; scaledSize: unknown } {
   }
 }
 
+// Crosshair "my location" glyph for the custom map control, tinted by state.
+function targetSvg(color: string): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="${color}"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>`
+}
+
+// Adds a Google-Maps-style "zoom to my location" button to the map. On tap it
+// asks the browser for the viewer's position, drops/updates a blue dot there,
+// and zooms in. onError surfaces a human message above the map.
+function addLocateControl(g: any, map: any, onError: (msg: string) => void) {
+  if (!('geolocation' in navigator)) return
+  const btn = document.createElement('button')
+  btn.type = 'button'
+  btn.title = 'Zoom to your location'
+  btn.setAttribute('aria-label', 'Zoom to your location')
+  btn.innerHTML = targetSvg('#666')
+  Object.assign(btn.style, {
+    background: 'white',
+    border: 'none',
+    borderRadius: '2px',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+    cursor: 'pointer',
+    width: '40px',
+    height: '40px',
+    margin: '10px',
+    padding: '0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  })
+  let meMarker: any = null
+  btn.addEventListener('click', () => {
+    btn.style.opacity = '0.5'
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        btn.style.opacity = '1'
+        btn.innerHTML = targetSvg('#0071e3')
+        onError('')
+        const position = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        // Blue "you are here" dot, styled after Google's own location marker.
+        if (!meMarker) {
+          const dot = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="10" fill="#4285F4" opacity="0.25"/><circle cx="12" cy="12" r="6" fill="#4285F4" stroke="white" stroke-width="2"/></svg>`
+          meMarker = new g.maps.Marker({
+            map,
+            position,
+            title: 'Your location',
+            clickable: false,
+            zIndex: 4,
+            icon: {
+              url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(dot)}`,
+              scaledSize: new g.maps.Size(22, 22),
+              anchor: new g.maps.Point(11, 11),
+            },
+          })
+        } else {
+          meMarker.setPosition(position)
+        }
+        map.panTo(position)
+        map.setZoom(11)
+      },
+      (err) => {
+        btn.style.opacity = '1'
+        onError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Location is blocked — allow location access in your browser to use the locate button.'
+            : "Couldn't get your location — please try again."
+        )
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+    )
+  })
+  map.controls[g.maps.ControlPosition.RIGHT_BOTTOM].push(btn)
+}
+
 function infoWindowHtml(pin: Pin, withAgentButton: boolean): string {
   const e = escapeHtml
   const status = STATUS_META[pin.status]
@@ -100,6 +173,7 @@ export default function OpenHouseMap({
   const [visible, setVisible] = useState<Record<PinStatus, boolean>>({ current: true, future: true, past: true })
   const [share, setShare] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [locateError, setLocateError] = useState('')
   // Markers grouped by status so the legend chips can show/hide them, and the
   // map instance so toggled-on markers re-attach to it.
   const markersRef = useRef<Record<PinStatus, any[]>>({ current: [], future: [], past: [] })
@@ -170,6 +244,7 @@ export default function OpenHouseMap({
         fullscreenControl: true,
       })
       mapRef.current = map
+      addLocateControl(g, map, setLocateError)
       const info = new g.maps.InfoWindow()
 
       const bounds = new g.maps.LatLngBounds()
@@ -235,6 +310,9 @@ export default function OpenHouseMap({
       )}
       {status === 'ready' && message && (
         <div style={{ padding: '14px 0', fontSize: 14, color: SUB }}>{message}</div>
+      )}
+      {locateError && (
+        <div style={{ padding: '0 0 10px', fontSize: 13, color: '#cc0000' }}>{locateError}</div>
       )}
       {counts && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', margin: '0 0 12px' }}>
