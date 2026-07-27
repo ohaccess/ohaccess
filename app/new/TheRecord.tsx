@@ -602,6 +602,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
             <a href="/terms" className="rec-link">Visitor Terms</a>
             <a href="/privacy" className="rec-link">Privacy</a>
             <a href="/faq" className="rec-link">FAQ</a>
+            <a href="/blog" className="rec-link">Blog</a>
             <a href="/partners" className="rec-link">Partners</a>
             <a href="/contact" className="rec-link">Contact</a>
           </div>
