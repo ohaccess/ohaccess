@@ -4,10 +4,13 @@ import { ohStatus, type OhStatus } from './oh-status'
 // Shared data source for the open-house map: every open house in the system
 // with geocoded coordinates, a past/current/future status, and agent contact
 // info. Used by both the admin Map tab route and the secret-link share route.
-// Addresses are geocoded server-side (same Google key the address
-// autocomplete uses) and cached in-memory per lambda so repeat loads don't
-// re-bill; an address that fails to geocode is reported in `unmapped` instead
-// of silently vanishing from the map.
+// Coordinates persist on the open_houses row (lat/lng/geocoded_address,
+// migration 037): a row is geocoded server-side once (same Google key the
+// address autocomplete uses), written back, and reused on every later load —
+// geocoded_address is the address the coords came from, so an address edit
+// triggers a fresh geocode. The in-memory cache remains as a second layer for
+// rows sharing an address or whose write-back failed. An address that fails
+// to geocode is reported in `unmapped` instead of silently vanishing.
 
 type PinAgent = { id: string; name: string; phone: string; email: string }
 export type PinStatus = OhStatus
@@ -53,7 +56,7 @@ async function geocode(address: string): Promise<{ lat: number; lng: number } | 
 export async function buildMapPayload(): Promise<MapPayload | null> {
   const { data: rows, error } = await supabase
     .from('open_houses')
-    .select('id, property_address, open_house_date, open_house_hours, listing_url, listing_price, bedrooms, bathrooms, start_at, end_at, agent_id, profiles(id, full_name, display_email, email, phone)')
+    .select('id, property_address, open_house_date, open_house_hours, listing_url, listing_price, bedrooms, bathrooms, start_at, end_at, agent_id, lat, lng, geocoded_address, profiles(id, full_name, display_email, email, phone)')
     .order('start_at', { ascending: true })
 
   if (error) return null
@@ -65,7 +68,18 @@ export async function buildMapPayload(): Promise<MapPayload | null> {
   await Promise.all(
     (rows || []).map(async (oh) => {
       const address = oh.property_address || ''
-      const coords = address ? await geocode(address) : null
+      const stored = oh.lat != null && oh.lng != null && oh.geocoded_address === address
+        ? { lat: oh.lat as number, lng: oh.lng as number }
+        : null
+      const coords = stored ?? (address ? await geocode(address) : null)
+      if (!stored && coords) {
+        // Persist so future loads skip the geocoder entirely. Best-effort:
+        // a failed write just means this row geocodes again next load.
+        await supabase
+          .from('open_houses')
+          .update({ lat: coords.lat, lng: coords.lng, geocoded_address: address })
+          .eq('id', oh.id)
+      }
       // supabase-js types a to-one join as an array; runtime gives the object.
       const profile = (Array.isArray(oh.profiles) ? oh.profiles[0] : oh.profiles) as {
         id: string; full_name: string | null; display_email: string | null; email: string | null; phone: string | null
