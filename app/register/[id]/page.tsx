@@ -24,6 +24,15 @@ export default function RegisterPage({ params }: { params: Promise<{ id: string 
   // by /api/register and shown here as well as in the code-word email, so a
   // visitor who never opens the email still sees them.
   const [disclosures, setDisclosures] = useState<{ label: string; url: string }[]>([])
+  // The agent's own extra questions. The sign-in one comes with the open-house
+  // payload; the success-screen ones come back from /api/register. Answers are
+  // collected in one map keyed by question id and posted with whichever request
+  // that surface uses. All are optional — they never block the codeword.
+  type CustomQ = { id: string; prompt: string; type: 'text' | 'choice'; options: string[] }
+  const [successQuestions, setSuccessQuestions] = useState<CustomQ[]>([])
+  const [customAnswers, setCustomAnswers] = useState<Record<string, string>>({})
+  const setCustomAnswer = (id: string, value: string) =>
+    setCustomAnswers(prev => ({ ...prev, [id]: value }))
   // Visitor-facing copy is translated; lang starts as English on the server
   // render and snaps to the saved/device language on mount.
   const [lang, setLang] = useState<Lang>('en')
@@ -290,13 +299,15 @@ function ExpiredOpenHouse() {
           phone: form.phone,
           purchasingTimeline: selectedTimeline,
           openHouseId: id,
-          lang
+          lang,
+          customAnswers
         })
       })
       const data = await res.json()
       if (data.success) {
         if (data.feedbackToken) setFeedbackToken(data.feedbackToken)
         if (Array.isArray(data.disclosures)) setDisclosures(data.disclosures)
+        if (Array.isArray(data.customQuestions)) setSuccessQuestions(data.customQuestions)
         setSubmitted(true)
       } else {
         // Server errors (rate limits, trial caps) are specific and
@@ -323,6 +334,7 @@ function ExpiredOpenHouse() {
           rating: fbRating,
           // Submit the canonical English value, not the translated label.
           price: FEEDBACK_PRICE_VALUES[fbPriceIdx],
+          customAnswers,
         }),
       })
       const data = await res.json()
@@ -334,6 +346,66 @@ function ExpiredOpenHouse() {
       setFbSubmitting(false)
     }
   }
+
+  // Renders one agent-defined question. Used on both the sign-in form and the
+  // success screen. Prompts and choice options are the agent's own words, so
+  // they render in whatever language the agent typed them — unlike the rest of
+  // this form, they can't be translated.
+  const renderCustomQuestion = (q: CustomQ) => (
+    <div key={q.id} style={{ marginTop: '14px', textAlign: 'left' }}>
+      <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '7px', lineHeight: 1.45 }}>
+        {q.prompt}
+      </div>
+      {q.type === 'choice' ? (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
+          {q.options.map(opt => {
+            const active = customAnswers[q.id] === opt
+            return (
+              <button
+                key={opt}
+                type="button"
+                // Tapping the active option clears it — every custom question
+                // is optional, so an accidental tap must be undoable.
+                onClick={() => setCustomAnswer(q.id, active ? '' : opt)}
+                style={{
+                  padding: '9px 14px',
+                  borderRadius: '10px',
+                  border: active ? `2px solid ${primaryColor}` : '1px solid #d1d1d6',
+                  background: active ? primaryColor : 'white',
+                  color: active ? onPrimary : '#1d1d1f',
+                  fontSize: '13px',
+                  fontWeight: active ? '700' : '500',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  cursor: 'pointer',
+                }}
+              >
+                {opt}
+              </button>
+            )
+          })}
+        </div>
+      ) : (
+        <input
+          type="text"
+          maxLength={500}
+          value={customAnswers[q.id] || ''}
+          onChange={e => setCustomAnswer(q.id, e.target.value)}
+          style={{
+            width: '100%',
+            padding: '12px 14px',
+            borderRadius: '10px',
+            border: '1px solid #d1d1d6',
+            // 16px keeps iOS Safari from zooming the viewport on focus.
+            fontSize: '16px',
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            color: '#1d1d1f',
+            background: 'white',
+            boxSizing: 'border-box',
+          }}
+        />
+      )}
+    </div>
+  )
 
   if (loading) return (
     <main style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -570,6 +642,11 @@ function ExpiredOpenHouse() {
             </div>
             {errors.timeline && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.timeline}</div>}
 
+            {/* The agent's one extra sign-in question. Optional and unmarked by
+                an asterisk on purpose: this form is the entry gate, and nothing
+                the agent adds may stand between a visitor and their codeword. */}
+            {(openHouse.customQuestions || []).map((q: CustomQ) => renderCustomQuestion(q))}
+
             {/* Submit button */}
             <button
               onClick={handleSubmit}
@@ -731,6 +808,11 @@ function ExpiredOpenHouse() {
                         )
                       })}
                     </div>
+
+                    {/* The agent's own success-screen questions, submitted with
+                        the built-in feedback on one Submit. Optional, so they
+                        never gate the button. */}
+                    {successQuestions.map(q => renderCustomQuestion(q))}
 
                     {fbError && (
                       <div style={{ marginTop: '12px', fontSize: '12.5px', color: '#cc0000', fontWeight: 600 }}>

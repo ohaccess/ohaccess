@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { timelineStyle } from '@/lib/timeline'
 import { isVirtualNumber } from '@/lib/register-helpers'
+import { normalizeCustomAnswers } from '@/lib/custom-questions'
 
 // A hard delivery failure reported by Resend (email) or Twilio (SMS) means the
 // visitor's contact info is likely bad.
@@ -115,6 +116,15 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
             </div>
           </div>
         )}
+        {/* Answers to the agent's own questions. Each carries the prompt it was
+            asked under, so this stays accurate even after the question is
+            reworded or removed in Settings. */}
+        {normalizeCustomAnswers(visitor.custom_answers).map(a => (
+          <div key={a.id}>
+            <div style={label}>{a.prompt}</div>
+            <div style={{ fontSize: '14px', color: '#1d1d1f' }}>{a.answer}</div>
+          </div>
+        ))}
       </div>
 
       <button
