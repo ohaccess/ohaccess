@@ -351,61 +351,64 @@ function ExpiredOpenHouse() {
   // success screen. Prompts and choice options are the agent's own words, so
   // they render in whatever language the agent typed them — unlike the rest of
   // this form, they can't be translated.
-  const renderCustomQuestion = (q: CustomQ) => (
-    <div key={q.id} style={{ marginTop: '14px', textAlign: 'left' }}>
-      <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '7px', lineHeight: 1.45 }}>
-        {q.prompt}
-      </div>
-      {q.type === 'choice' ? (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
-          {q.options.map(opt => {
-            const active = customAnswers[q.id] === opt
-            return (
-              <button
-                key={opt}
-                type="button"
-                // Tapping the active option clears it — every custom question
-                // is optional, so an accidental tap must be undoable.
-                onClick={() => setCustomAnswer(q.id, active ? '' : opt)}
-                style={{
-                  padding: '9px 14px',
-                  borderRadius: '10px',
-                  border: active ? `2px solid ${primaryColor}` : '1px solid #d1d1d6',
-                  background: active ? primaryColor : 'white',
-                  color: active ? onPrimary : '#1d1d1f',
-                  fontSize: '13px',
-                  fontWeight: active ? '700' : '500',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  cursor: 'pointer',
-                }}
-              >
-                {opt}
-              </button>
-            )
-          })}
+  // Branding follows the surface the question sits on, so a custom question is
+  // indistinguishable from the built-in controls around it:
+  //   sign-in form  -> PRIMARY, like the purchasing-timeline picker
+  //   success screen -> ACCENT, like the rating grid and price buttons
+  // Selected-state borders come from fillBorder() (lib/colors) rather than a
+  // hardcoded rule — that's what keeps a near-white brand color visible instead
+  // of a filled button vanishing into the card.
+  const renderCustomQuestion = (q: CustomQ, surface: 'signin' | 'success') => {
+    const fill = surface === 'signin' ? primaryColor : accentColor
+    const onFill = surface === 'signin' ? onPrimary : onAccent
+    const fillBtnBorder = surface === 'signin' ? primaryBtnBorder : accentBtnBorder
+    return (
+      <div key={q.id} style={{ marginTop: '14px', textAlign: 'left' }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '7px', lineHeight: 1.45 }}>
+          {q.prompt}
         </div>
-      ) : (
-        <input
-          type="text"
-          maxLength={500}
-          value={customAnswers[q.id] || ''}
-          onChange={e => setCustomAnswer(q.id, e.target.value)}
-          style={{
-            width: '100%',
-            padding: '12px 14px',
-            borderRadius: '10px',
-            border: '1px solid #d1d1d6',
-            // 16px keeps iOS Safari from zooming the viewport on focus.
-            fontSize: '16px',
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            color: '#1d1d1f',
-            background: 'white',
-            boxSizing: 'border-box',
-          }}
-        />
-      )}
-    </div>
-  )
+        {q.type === 'choice' ? (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
+            {q.options.map(opt => {
+              const on = customAnswers[q.id] === opt
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  // Tapping the selected option clears it — every custom question
+                  // is optional, so an accidental tap must be undoable.
+                  onClick={() => setCustomAnswer(q.id, on ? '' : opt)}
+                  style={{
+                    borderRadius: '9px',
+                    border: on ? fillBtnBorder : '1px solid #d1d1d6',
+                    background: on ? fill : '#f5f5f7',
+                    color: on ? onFill : '#1d1d1f',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    padding: '11px 14px',
+                    cursor: 'pointer',
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  {opt}
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          // Reuses the form's own inputStyle so a typed answer matches the name
+          // and email fields exactly (including the 16px iOS no-zoom size).
+          <input
+            type="text"
+            maxLength={500}
+            value={customAnswers[q.id] || ''}
+            onChange={e => setCustomAnswer(q.id, e.target.value)}
+            style={inputStyle}
+          />
+        )}
+      </div>
+    )
+  }
 
   if (loading) return (
     <main style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -645,7 +648,7 @@ function ExpiredOpenHouse() {
             {/* The agent's one extra sign-in question. Optional and unmarked by
                 an asterisk on purpose: this form is the entry gate, and nothing
                 the agent adds may stand between a visitor and their codeword. */}
-            {(openHouse.customQuestions || []).map((q: CustomQ) => renderCustomQuestion(q))}
+            {(openHouse.customQuestions || []).map((q: CustomQ) => renderCustomQuestion(q, 'signin'))}
 
             {/* Submit button */}
             <button
@@ -812,7 +815,7 @@ function ExpiredOpenHouse() {
                     {/* The agent's own success-screen questions, submitted with
                         the built-in feedback on one Submit. Optional, so they
                         never gate the button. */}
-                    {successQuestions.map(q => renderCustomQuestion(q))}
+                    {successQuestions.map(q => renderCustomQuestion(q, 'success'))}
 
                     {fbError && (
                       <div style={{ marginTop: '12px', fontSize: '12.5px', color: '#cc0000', fontWeight: 600 }}>
