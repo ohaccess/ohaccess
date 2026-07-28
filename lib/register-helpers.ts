@@ -9,6 +9,40 @@ import { escapeHtml } from './escape-html'
 // listing URL can't push the SMS into multi-segment (extra cost) or rejection.
 export const SMS_MAX_LENGTH = 160
 
+// The SMS code word is the only free-text field an agent can drop into the
+// visitor's text, so it's the only thing that can push that message past one
+// billable segment. The fixed wrapper ("Codeword at ... is "...". Share with
+// host for access. Reply STOP to opt out.") is 70 characters, which leaves 90
+// for the address plus the code word.
+//
+// The binding constraint isn't the segment, though — it's the optional short
+// listing link (31 chars + a space). With the link attached, the address and
+// code word share a 58-character budget, so 12 leaves 46 for the address.
+// Past that buildSmsBody drops the link rather than spilling into a second
+// segment, and the visitor gets the listing link in their email instead. Every
+// character shaved off this cap is a character of address that still fits WITH
+// the link, which is why it sits at 12 rather than higher — 12 still clears
+// the longest generated word (WELCOMING, 9) with room for a custom code.
+export const SMS_CODE_WORD_MAX_LENGTH = 12
+
+// Letters and digits only, uppercased, truncated to the cap above.
+//
+// The character filter matters more than the length cap: one emoji, curly
+// quote, or accented letter flips the whole message from GSM-7 to UCS-2
+// encoding, which drops the single-segment limit from 160 to 70 — less than
+// the wrapper plus a typical address already needs. That would double the
+// Twilio cost of every text sent from that open house. It also keeps the code
+// word to something a visitor can read aloud at the door.
+//
+// The EMAIL code word is deliberately left alone — email has no segments and
+// no encoding cliff, so emoji and long phrases are fine there.
+export function sanitizeSmsCodeWord(value: string | null | undefined): string {
+  return String(value ?? '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, SMS_CODE_WORD_MAX_LENGTH)
+}
+
 // Random 8-char alphanumeric slug for a short URL.
 export function generateCode(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'

@@ -12,6 +12,7 @@ import VisitorDetail from '@/app/_components/VisitorDetail'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { normalizeCustomAnswers } from '@/lib/custom-questions'
+import { sanitizeSmsCodeWord } from '@/lib/register-helpers'
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
@@ -466,6 +467,14 @@ export default function Dashboard() {
       showToast('Please fill in the address, city, state, and both codewords (text + email).')
       return
     }
+    // Re-clean the text code on save, not just on keystroke — a paste, an
+    // autofill, or an edit of a legacy open house can all get a value into
+    // state that never passed through the input's onChange.
+    const smsCode = sanitizeSmsCodeWord(form.code_word)
+    if (!smsCode) {
+      showToast('The text codeword needs at least one letter or number.')
+      return
+    }
     if (!form.open_house_date_iso || !form.open_house_start_time || !form.open_house_end_time) {
       showToast('Please choose the open house date, start time, and end time.')
       return
@@ -497,7 +506,7 @@ export default function Dashboard() {
       end_at: endAt,
       timezone: tz,
       listing_url: form.listing_url,
-      code_word: form.code_word,
+      code_word: smsCode,
       code_word_email: form.code_word_email,
       status: 'active'
     }).select()
@@ -545,7 +554,10 @@ export default function Dashboard() {
       open_house_hours: oh.open_house_hours || '',
       property_timezone: oh.timezone || '',
       listing_url: oh.listing_url || '',
-      code_word: oh.code_word || '',
+      // Clean on load too, so an older open house whose text code predates the
+      // limit shows the agent exactly what will be saved rather than silently
+      // changing under them when they hit Update.
+      code_word: sanitizeSmsCodeWord(oh.code_word),
       code_word_email: oh.code_word_email || ''
     })
     setView('new')
@@ -555,6 +567,11 @@ export default function Dashboard() {
     if (guardLocked()) return
     if (!form.street_address || !form.city || !form.state || !form.code_word || !form.code_word_email) {
       showToast('Please fill in the address, city, state, and both codewords (text + email).')
+      return
+    }
+    const smsCode = sanitizeSmsCodeWord(form.code_word)
+    if (!smsCode) {
+      showToast('The text codeword needs at least one letter or number.')
       return
     }
     if (!form.open_house_date_iso || !form.open_house_start_time || !form.open_house_end_time) {
@@ -595,7 +612,7 @@ export default function Dashboard() {
       end_at: endAt,
       timezone: tz,
       listing_url: form.listing_url,
-      code_word: form.code_word,
+      code_word: smsCode,
       code_word_email: form.code_word_email,
     }
     if (timesChanged) update.report_sent_at = null
