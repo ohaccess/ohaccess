@@ -1,5 +1,6 @@
 'use client'
 import type { CSSProperties } from 'react'
+import { SMS_CODE_WORD_MAX_LENGTH, sanitizeSmsCodeWord } from '@/lib/register-helpers'
 
 // The New / Edit Open House form: property details (with Google address
 // autocomplete + a date-picker calendar) and the two access code words.
@@ -200,11 +201,16 @@ export default function NewOpenHouseForm({
             <label style={labelStyle}>📱 Text code (SMS) — primary <span style={{ color: '#ff3b30' }}>*</span></label>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. LOVELY" value={form.code_word} onChange={e => setForm({ ...form, code_word: e.target.value.toUpperCase() })} />
+                <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. LOVELY" maxLength={SMS_CODE_WORD_MAX_LENGTH} value={form.code_word} onChange={e => setForm({ ...form, code_word: sanitizeSmsCodeWord(e.target.value) })} />
               </div>
               <button onClick={() => setForm({ ...form, code_word: generateSmsWord() })} style={{ padding: '9px 14px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                 ✦ Auto-generate
               </button>
+            </div>
+            {/* Why this field is restricted and the email one isn't — see
+                sanitizeSmsCodeWord() in lib/register-helpers.ts. */}
+            <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '6px', lineHeight: '1.45' }}>
+              Letters and numbers only, up to {SMS_CODE_WORD_MAX_LENGTH} characters ({form.code_word.length}/{SMS_CODE_WORD_MAX_LENGTH}). A text message only fits 160 characters before the carrier splits it in two, and a single emoji or accented letter cuts that limit to 70 — so a short, plain code keeps every visitor&apos;s text arriving as one message.
             </div>
           </div>
 
@@ -218,6 +224,9 @@ export default function NewOpenHouseForm({
               <button onClick={() => setForm({ ...form, code_word_email: generateEmailWord() })} style={{ padding: '9px 14px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                 ✦ Auto-generate
               </button>
+            </div>
+            <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '6px', lineHeight: '1.45' }}>
+              Anything you like here — emoji, punctuation, any length. Email has no character limit, so only the text code needs to stay short.
             </div>
           </div>
         </div>

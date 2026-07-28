@@ -17,6 +17,8 @@ import {
   MAX_DISCLOSURE_LINKS,
   MAX_DISCLOSURE_LABEL_LENGTH,
   SMS_MAX_LENGTH,
+  SMS_CODE_WORD_MAX_LENGTH,
+  sanitizeSmsCodeWord,
   type UpcomingOpenHouse,
 } from '@/lib/register-helpers'
 
@@ -54,6 +56,44 @@ describe('buildSmsBody', () => {
     ])
     expect(out.length).toBeLessThanOrEqual(SMS_MAX_LENGTH)
     expect(out).toContain('B: https://b.co/short') // the one that fits still lands
+  })
+})
+
+describe('sanitizeSmsCodeWord', () => {
+  it('uppercases a normal word and leaves it otherwise intact', () => {
+    expect(sanitizeSmsCodeWord('lovely')).toBe('LOVELY')
+  })
+  it('keeps digits', () => {
+    expect(sanitizeSmsCodeWord('Oak12')).toBe('OAK12')
+  })
+  it('strips spaces and punctuation', () => {
+    expect(sanitizeSmsCodeWord("Grand-Manor's")).toBe('GRANDMANORS')
+  })
+  it('strips emoji and accented letters that would force UCS-2 encoding', () => {
+    expect(sanitizeSmsCodeWord('CAFÉ🏡')).toBe('CAF')
+    expect(sanitizeSmsCodeWord('“CURLY”')).toBe('CURLY')
+  })
+  it('truncates to the cap', () => {
+    const out = sanitizeSmsCodeWord('A'.repeat(50))
+    expect(out).toHaveLength(SMS_CODE_WORD_MAX_LENGTH)
+  })
+  it('truncates AFTER stripping, so filler characters do not eat the budget', () => {
+    expect(sanitizeSmsCodeWord('!!!!!!!!!!!!!!!!!!!!LOVELY')).toBe('LOVELY')
+  })
+  it('returns empty for null/undefined/all-invalid input', () => {
+    expect(sanitizeSmsCodeWord(null)).toBe('')
+    expect(sanitizeSmsCodeWord(undefined)).toBe('')
+    expect(sanitizeSmsCodeWord('🏡🏡')).toBe('')
+  })
+  it('keeps the visitor SMS to one segment even at the cap with a long address', () => {
+    const address = '18732 Rancho Santa Margarita Parkway Suite 400'
+    const word = sanitizeSmsCodeWord('W'.repeat(SMS_CODE_WORD_MAX_LENGTH))
+    const body = `Codeword at ${address} is "${word}". Share with host for access. Reply STOP to opt out.`
+    expect(body.length).toBeLessThanOrEqual(SMS_MAX_LENGTH)
+  })
+  it('every auto-generated SMS word survives sanitizing unchanged', () => {
+    const words = ['BESPOKE','CHARMING','CLASSIC','COZY','ELEGANT','GRAND','HISTORIC','INVITING','LOVELY','LUXE','MODERN','POLISHED','PRISTINE','RADIANT','REFINED','SERENE','SPACIOUS','STATELY','STUNNING','STYLISH','TIMELESS','TRANQUIL','WELCOMING']
+    for (const w of words) expect(sanitizeSmsCodeWord(w)).toBe(w)
   })
 })
 
