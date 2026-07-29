@@ -5,5 +5,5 @@
 // /subscriber-terms, /privacy, and /terms, or the audit trail records a
 // version the subscriber was never shown.
 export const SUBSCRIBER_TERMS_VERSION = '1.2'  // app/subscriber-terms/page.tsx
-export const PRIVACY_POLICY_VERSION = '1.3'    // app/privacy/page.tsx
+export const PRIVACY_POLICY_VERSION = '1.4'    // app/privacy/page.tsx
 export const VISITOR_TERMS_VERSION = '1.5'     // app/terms/page.tsx
