@@ -66,6 +66,10 @@ export async function POST(request: Request) {
     // visitor's data-deletion request.
     await del('visitors', supabase.from('visitors').delete().eq('open_house_id', openHouseId))
     await del('short_urls', supabase.from('short_urls').delete().eq('open_house_id', openHouseId))
+    // Agreement receipts carry the visitor's name/email (migration 043), so a
+    // true hard-delete must clear them too. Held receipts were already caught
+    // by the checkOpenHouseHold gate above.
+    await del('agreement_receipts', supabase.from('agreement_receipts').delete().eq('open_house_id', openHouseId))
     await del('open_house', supabase.from('open_houses').delete().eq('id', openHouseId))
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error'

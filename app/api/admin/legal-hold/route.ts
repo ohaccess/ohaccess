@@ -41,7 +41,10 @@ export async function POST(request: Request) {
   }
 
   const setFlag = async (held: boolean) => {
-    for (const table of ['visitors', 'visitor_archive', 'qr_scans'] as const) {
+    // agreement_receipts included (migration 043): after the signed PDF is
+    // emailed and discarded, the receipt is the only evidence a signature
+    // ceremony happened — precisely what a preservation request is after.
+    for (const table of ['visitors', 'visitor_archive', 'qr_scans', 'agreement_receipts'] as const) {
       const { error } = await supabase
         .from(table)
         .update({ legal_hold: held })

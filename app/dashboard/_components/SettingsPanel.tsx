@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { fillBorder } from '@/lib/colors'
 import { isLegacyTwoYear, isComped, isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
+import { normalizeAgreementTemplates, MAX_AGREEMENT_TEMPLATES } from '@/lib/agreements'
 
 // The Settings view: subscription/billing, agent profile, branding & photos,
 // brand colors, CRM lead-intake, and the Zapier webhook. Presentational —
@@ -529,6 +530,72 @@ export default function SettingsPanel({
   // Disclosure/notice rows live in `profile` like every other setting, so the
   // existing saveSettings picks them up. Rows are kept as typed (including
   // half-finished ones) and only validated/cleaned on save.
+  // Agreement templates (migration 043): the agent's uploaded blank forms for
+  // the "signed agreement before entry" step. Unlike everything else in this
+  // panel these save IMMEDIATELY through /api/agreement-templates (a file
+  // upload can't ride the profiles.update() whitelist), so the Save settings
+  // button is not involved; the API updates profiles.agreement_templates and
+  // we mirror its response into local profile state.
+  const agreementTemplates = normalizeAgreementTemplates(profile?.agreement_templates)
+  const [agreementLabel, setAgreementLabel] = useState('')
+  const [agreementFile, setAgreementFile] = useState<File | null>(null)
+  const [agreementBusy, setAgreementBusy] = useState(false)
+  // Remount the bare <input type="file"> after each upload — file inputs
+  // can't be programmatically cleared through React state.
+  const [agreementFileKey, setAgreementFileKey] = useState(0)
+
+  const agreementAuthHeaders = async (): Promise<HeadersInit> => {
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+  }
+
+  const uploadAgreementTemplate = async () => {
+    if (!agreementFile) { showToast('Choose a PDF file first', 'error'); return }
+    if (!agreementLabel.trim()) { showToast('Give the document a name visitors will see', 'error'); return }
+    setAgreementBusy(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', agreementFile)
+      fd.append('label', agreementLabel.trim())
+      const res = await fetch('/api/agreement-templates', {
+        method: 'POST',
+        headers: await agreementAuthHeaders(),
+        body: fd,
+      })
+      const json = await res.json()
+      if (!res.ok) { showToast(json.error || 'Upload failed. Please try again.', 'error'); return }
+      setProfile({ ...profile, agreement_templates: [...agreementTemplates, json.template] })
+      setAgreementLabel('')
+      setAgreementFile(null)
+      setAgreementFileKey(k => k + 1)
+      showToast('Document uploaded!')
+    } catch {
+      showToast('Upload failed. Please try again.', 'error')
+    } finally {
+      setAgreementBusy(false)
+    }
+  }
+
+  const deleteAgreementTemplate = async (id: string) => {
+    setAgreementBusy(true)
+    try {
+      const res = await fetch('/api/agreement-templates', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', ...(await agreementAuthHeaders()) },
+        body: JSON.stringify({ id }),
+      })
+      const json = await res.json()
+      if (!res.ok) { showToast(json.error || 'Could not delete the document.', 'error'); return }
+      const remaining = agreementTemplates.filter(t => t.id !== id)
+      setProfile({ ...profile, agreement_templates: remaining.length > 0 ? remaining : null })
+      showToast('Document deleted.')
+    } catch {
+      showToast('Could not delete the document.', 'error')
+    } finally {
+      setAgreementBusy(false)
+    }
+  }
+
   const disclosureRows: { label: string; url: string }[] =
     Array.isArray(profile?.disclosure_links) ? profile.disclosure_links : []
   const setDisclosureRows = (rows: { label: string; url: string }[]) =>
@@ -957,6 +1024,70 @@ export default function SettingsPanel({
           {isTeamMember && (
             <><br /><br /><strong style={{ color: '#1d1d1f' }}>Note:</strong> if your brokerage has set its own disclosures, those are sent instead of yours.</>
           )}
+        </div>
+      </div>
+
+      {/* Agreements signed before entry — the agent's uploaded blank forms
+          (touring agreement, buyer-rep one-pager, disclosure). Turned on per
+          open house in the New Open House form. Signed copies are emailed to
+          both parties and never stored; only the blank template lives here. */}
+      <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agreements signed before entry</div>
+        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
+          For open houses that need a <strong style={{ color: '#1d1d1f' }}>signature</strong> before the tour — a touring agreement when you host another brokerage&apos;s listing, a buyer-rep one-pager, anything your broker requires signed rather than just delivered. Upload the blank PDF once here, then flip on &ldquo;Require a signed agreement&rdquo; when you set up an open house. Visitors e-sign on their phone right after check-in; the signed PDF is emailed to you and to them, and <strong style={{ color: '#1d1d1f' }}>ohACCESS never stores signed documents</strong>.
+        </div>
+
+        {agreementTemplates.map(tpl => (
+          <div key={tpl.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid #d1d1d6', borderRadius: '12px', padding: '10px 14px', marginBottom: '8px', background: '#fafafa' }}>
+            <span style={{ fontSize: '18px' }}>📄</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tpl.label}</div>
+              <div style={{ fontSize: '11px', color: '#6e6e73' }}>
+                {tpl.pages} page{tpl.pages === 1 ? '' : 's'}{tpl.size > 0 ? ` · ${Math.max(1, Math.round(tpl.size / 1024))} KB` : ''}{tpl.uploaded_at ? ` · uploaded ${new Date(tpl.uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+              </div>
+            </div>
+            <button
+              onClick={() => deleteAgreementTemplate(tpl.id)}
+              disabled={agreementBusy}
+              aria-label="Delete this document"
+              style={{ flexShrink: 0, padding: '9px 12px', background: 'white', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '9px', fontSize: '13px', cursor: agreementBusy ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+
+        {agreementTemplates.length < MAX_AGREEMENT_TEMPLATES && (
+          <div style={{ border: '1px dashed #d1d1d6', borderRadius: '12px', padding: '14px', marginTop: agreementTemplates.length > 0 ? '4px' : 0 }}>
+            <label style={labelStyle}>Name shown to visitors</label>
+            <input
+              style={inputStyle}
+              type="text"
+              maxLength={80}
+              placeholder="e.g. Touring Agreement"
+              value={agreementLabel}
+              onChange={e => setAgreementLabel(e.target.value)}
+            />
+            <label style={{ ...labelStyle, marginTop: '10px' }}>PDF file (up to 5 pages, 2 MB)</label>
+            <input
+              key={agreementFileKey}
+              type="file"
+              accept="application/pdf,.pdf"
+              onChange={e => setAgreementFile(e.target.files?.[0] || null)}
+              style={{ display: 'block', fontSize: '12px', color: '#6e6e73', fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: '10px' }}
+            />
+            <button
+              onClick={uploadAgreementTemplate}
+              disabled={agreementBusy}
+              style={{ padding: '8px 14px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: agreementBusy ? 'not-allowed' : 'pointer', opacity: agreementBusy ? 0.6 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
+              {agreementBusy ? 'Uploading…' : '⬆ Upload document'}
+            </button>
+          </div>
+        )}
+
+        <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.7' }}>
+          These are documents <strong style={{ color: '#1d1d1f' }}>you</strong> supply — your brokerage form, your state association&apos;s touring agreement, or one your broker approves. ohACCESS collects the signature and delivers the copies; we don&apos;t determine what your situation requires or provide legal forms. Uploads save immediately (no need to hit Save settings). Deleting a document here simply removes the signing step from any open house that was using it — past signed copies live in email, untouched.
         </div>
       </div>
 

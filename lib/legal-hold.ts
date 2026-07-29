@@ -15,7 +15,7 @@ import { supabaseAdmin as supabase } from './supabase-admin'
 // sees the ordinary result rather than a notice that would tell them their
 // records are under preservation.
 
-type HoldCounts = { visitors: number; visitor_archive: number; qr_scans: number }
+type HoldCounts = { visitors: number; visitor_archive: number; qr_scans: number; agreement_receipts: number }
 
 export type HoldCheck = {
   held: boolean
@@ -29,6 +29,7 @@ function summarize(counts: HoldCounts): string {
     counts.visitors && `${counts.visitors} visitor record(s)`,
     counts.visitor_archive && `${counts.visitor_archive} archived record(s)`,
     counts.qr_scans && `${counts.qr_scans} scan log entr(ies)`,
+    counts.agreement_receipts && `${counts.agreement_receipts} agreement receipt(s)`,
   ].filter(Boolean)
   return parts.join(', ')
 }
@@ -48,8 +49,9 @@ export async function checkOpenHouseHold(openHouseId: string): Promise<HoldCheck
     visitors: await countHeld('visitors', 'open_house_id', openHouseId),
     visitor_archive: await countHeld('visitor_archive', 'open_house_id', openHouseId),
     qr_scans: await countHeld('qr_scans', 'open_house_id', openHouseId),
+    agreement_receipts: await countHeld('agreement_receipts', 'open_house_id', openHouseId),
   }
-  const held = counts.visitors + counts.visitor_archive + counts.qr_scans > 0
+  const held = counts.visitors + counts.visitor_archive + counts.qr_scans + counts.agreement_receipts > 0
   return { held, counts, summary: summarize(counts) }
 }
 
@@ -61,7 +63,8 @@ export async function checkAgentHold(agentId: string): Promise<HoldCheck> {
     visitors: await countHeld('visitors', 'agent_id', agentId),
     visitor_archive: await countHeld('visitor_archive', 'agent_id', agentId),
     qr_scans: await countHeld('qr_scans', 'agent_id', agentId),
+    agreement_receipts: await countHeld('agreement_receipts', 'agent_id', agentId),
   }
-  const held = counts.visitors + counts.visitor_archive + counts.qr_scans > 0
+  const held = counts.visitors + counts.visitor_archive + counts.qr_scans + counts.agreement_receipts > 0
   return { held, counts, summary: summarize(counts) }
 }

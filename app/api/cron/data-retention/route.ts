@@ -75,6 +75,20 @@ async function handle(request: Request) {
     purged.qr_scans = error ? `error: ${error.message}` : count || 0
   }
 
+  // Signed-agreement receipts (migration 043) — collection date is the
+  // signature itself. The emailed PDFs were never stored; this row is the
+  // only trace, so it follows the same 3-year window as the visitor row it
+  // described.
+  {
+    held.agreement_receipts = await countHeld('agreement_receipts', 'signed_at', cutoffIso)
+    const { count, error } = await supabase
+      .from('agreement_receipts')
+      .delete({ count: 'exact' })
+      .lt('signed_at', cutoffIso)
+      .eq('legal_hold', false)
+    purged.agreement_receipts = error ? `error: ${error.message}` : count || 0
+  }
+
   const heldTotal = Object.values(held).reduce((a, b) => a + b, 0)
   console.log(`[DATA-RETENTION] purge run at ${nowIso}, cutoff ${cutoffIso}:`, purged)
   if (heldTotal > 0) {
