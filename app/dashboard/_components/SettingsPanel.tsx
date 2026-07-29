@@ -1069,13 +1069,24 @@ export default function SettingsPanel({
               onChange={e => setAgreementLabel(e.target.value)}
             />
             <label style={{ ...labelStyle, marginTop: '10px' }}>PDF file (up to 5 pages, 2 MB)</label>
-            <input
-              key={agreementFileKey}
-              type="file"
-              accept="application/pdf,.pdf"
-              onChange={e => setAgreementFile(e.target.files?.[0] || null)}
-              style={{ display: 'block', fontSize: '12px', color: '#6e6e73', fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: '10px' }}
-            />
+            {/* The native file input is nearly invisible (Dave's feedback), so
+                it hides inside a styled label that reads as a real button; the
+                chosen filename echoes beside it as confirmation. */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '9px 14px', background: 'white', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                📎 Choose PDF…
+                <input
+                  key={agreementFileKey}
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={e => setAgreementFile(e.target.files?.[0] || null)}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              <span style={{ fontSize: '12px', color: agreementFile ? '#1a7a3c' : '#6e6e73', fontWeight: agreementFile ? '600' : '400' }}>
+                {agreementFile ? `✓ ${agreementFile.name}` : 'No file chosen yet'}
+              </span>
+            </div>
             <button
               onClick={uploadAgreementTemplate}
               disabled={agreementBusy}
