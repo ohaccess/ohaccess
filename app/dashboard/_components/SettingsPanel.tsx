@@ -205,7 +205,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
 
   return (
     <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-      <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Subscription</div>
+      <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Subscription</div>
 
       {showPlans && (
         <>
@@ -214,7 +214,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
               <div style={{ fontSize: '14px', color: '#1d1d1f', marginBottom: '4px' }}>
                 <strong>Plan:</strong> Free trial
               </div>
-              <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '18px' }}>
+              <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '18px' }}>
                 {Math.max(0, trialLimitFor(profile) - visitorCount)} of {trialLimitFor(profile)} visitor registrations remaining
               </div>
             </>
@@ -223,7 +223,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
               <div style={{ fontSize: '14px', fontWeight: '700', color: '#8a6400' }}>
                 {isComped(profile) ? 'Your complimentary access has ended' : 'Your 2-year plan has ended'}
               </div>
-              <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
+              <div style={{ fontSize: '13px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
                 Your {isComped(profile) ? 'complimentary' : 'prepaid'} access ended on {formatPlanDate(periodEnd)}. Choose a plan below to pick up right where you left off — your data is safe.
               </div>
             </div>
@@ -275,7 +275,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
             <strong>Plan:</strong> {tier.charAt(0).toUpperCase() + tier.slice(1)}
             {billing && ` — ${intervalLabel(billing)}`}
           </div>
-          <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '6px' }}>
+          <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '6px' }}>
             <strong>Status:</strong> {status === 'past_due'
               ? <span style={{ color: '#cc0000' }}>Payment failed — please update your card</span>
               : pendingCancel
@@ -285,7 +285,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
               : (status || 'Unknown')}
           </div>
           {periodEnd && !pendingCancel && status !== 'past_due' && (
-            <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '14px' }}>
+            <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '14px' }}>
               {isLegacyTwoYear(profile) || isComped(profile) ? <><strong>Access until:</strong> {formatPlanDate(periodEnd)}</> : <><strong>Renews on:</strong> {formatPlanDate(periodEnd)}</>}
             </div>
           )}
@@ -314,7 +314,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
 
           {confirmingCancel && !pendingCancel && (
             <div style={{ marginTop: '12px', background: '#fff0f0', border: '1px solid #ffcccc', borderRadius: '10px', padding: '12px 14px' }}>
-              <div style={{ fontSize: '12px', color: '#6e6e73', lineHeight: '1.5', marginBottom: '10px' }}>
+              <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.5', marginBottom: '10px' }}>
                 You&apos;ll keep full access until <strong>{formatPlanDate(periodEnd)}</strong>. After that your plan won&apos;t renew and you won&apos;t be charged again. You can resume anytime before then.
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -385,10 +385,10 @@ function ReferralSection({ profile }: { profile: any }) {
 
   return (
     <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-      <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
-        🎁 Refer an agent
+      <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
+        🎁 Refer an Agent
       </div>
-      <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '12px' }}>
+      <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '12px' }}>
         {earnsCreditNow ? (
           <>Share your personal link with other agents. When someone you refer becomes a paying ohACCESS subscriber, you earn <strong style={{ color: '#1d1d1f' }}>a free month of Pro</strong> — added onto your annual or 2-year plan, or a $15 credit on your next bill if you&apos;re month-to-month.</>
         ) : (
@@ -460,17 +460,17 @@ function SponsorshipSection({ profile, setProfile, agentId, showToast }: {
 
   return (
     <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-      <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Sponsorship</div>
+      <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Sponsorship</div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '12px', flexWrap: 'wrap' as const }}>
         <div style={{ fontSize: '13px', color: '#48484a', lineHeight: '1.6' }}>
           Sponsored by <strong style={{ color: '#1d1d1f' }}>{label}</strong>.<br />
-          <span style={{ fontSize: '12px', color: '#6e6e73' }}>
+          <span style={{ fontSize: '13px', color: '#6e6e73' }}>
             Their card appears below yours in visitor emails, and your sign-in form names them in the consent language.
           </span>
         </div>
         {confirming ? (
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: '#6e6e73' }}>End sponsorship?</span>
+            <span style={{ fontSize: '13px', color: '#6e6e73' }}>End sponsorship?</span>
             <button onClick={endSponsorship} disabled={busy} style={{ background: '#cc0000', color: 'white', border: 'none', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy ? 0.7 : 1 }}>
               {busy ? '…' : 'Yes, end it'}
             </button>
@@ -527,6 +527,13 @@ export default function SettingsPanel({
   inputStyle: CSSProperties
   labelStyle: CSSProperties
 }) {
+  // The shared dashboard input/label styles read small on a standard MacBook
+  // (Dave's feedback), so Settings bumps them one notch locally. Parameter
+  // reassignment on purpose: every use below picks up the larger versions
+  // without touching the other dashboard views.
+  inputStyle = { ...inputStyle, fontSize: '14px' }
+  labelStyle = { ...labelStyle, fontSize: '12px' }
+
   // Disclosure/notice rows live in `profile` like every other setting, so the
   // existing saveSettings picks them up. Rows are kept as typed (including
   // half-finished ones) and only validated/cleaned on save.
@@ -662,7 +669,7 @@ export default function SettingsPanel({
         </button>
       </div>
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: q.type === 'choice' ? '10px' : 0 }}>
-        <span style={{ fontSize: '12px', color: '#6e6e73' }}>Answer:</span>
+        <span style={{ fontSize: '13px', color: '#6e6e73' }}>Answer:</span>
         {(['text', 'choice'] as const).map(kind => (
           <button
             key={kind}
@@ -720,18 +727,18 @@ export default function SettingsPanel({
 
   return (
     <>
-      <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Account settings</div>
-      <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '24px' }}>Manage your profile, branding, and preferences.</div>
+      <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Account Settings</div>
+      <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '24px' }}>Manage your profile, branding, and preferences.</div>
 
       {isTeamMember ? (
         <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-          <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Subscription</div>
+          <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Subscription</div>
           {teamPaymentFailed ? (
-            <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.5' }}>
+            <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.5' }}>
               ⚠️ Your team&apos;s most recent payment didn&apos;t go through. Please contact your team/brokerage admin so your access isn&apos;t interrupted — there&apos;s nothing for you to pay directly.
             </div>
           ) : (
-            <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.5' }}>
+            <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.5' }}>
               ✓ You&apos;re covered under your team&apos;s plan. Billing is managed by your team lead — there&apos;s nothing for you to pay.
             </div>
           )}
@@ -748,8 +755,15 @@ export default function SettingsPanel({
 
       <ReferralSection profile={profile} />
 
+      {/* Two-column card grid on wide screens (Dave: too much scrolling).
+          Subscription + Referral stay full-width above; auto-fit collapses
+          back to one column under ~1000px, so phones are unchanged. Cards
+          keep their own marginBottom for row spacing; columnGap handles the
+          horizontal gutter. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 480px), 1fr))', columnGap: '16px', alignItems: 'start' }}>
+
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agent profile</div>
+        <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agent Profile</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
             <label style={labelStyle}>Full Name</label>
@@ -760,7 +774,7 @@ export default function SettingsPanel({
             {profile?.brokerage_id ? (
               <>
                 <input style={{ ...inputStyle, background: '#ececf0', color: '#8e8e93', cursor: 'not-allowed' }} type="text" placeholder="Managed by your team" value={profile?.brokerage || ''} disabled readOnly />
-                <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px' }}>
+                <div style={{ fontSize: '13px', color: '#6e6e73', marginTop: '4px' }}>
                   🔒 Managed by your team.{isTeamAdmin ? ' Set the team name in the Team tab.' : ''}
                 </div>
               </>
@@ -797,8 +811,8 @@ export default function SettingsPanel({
       )}
 
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Branding & photos</div>
-        <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px', lineHeight: '1.5' }}>
+        <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Branding & Photos</div>
+        <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px', lineHeight: '1.5' }}>
           Paste direct image URLs ending in .jpg or .png. Headshot and logo appear in visitor emails.
           <strong style={{ color: '#1d1d1f' }}> Tip: if your headshot or logo is already online (your brokerage site, agent profile, etc.), right-click the image and choose &ldquo;Copy Image Address&rdquo; (press and hold on a phone), then paste it here.</strong> Or upload the photo to <a href="https://imgur.com" target="_blank" style={{ color: '#0071e3' }}>imgur.com</a> for a reliable direct link.
         </div>
@@ -806,7 +820,7 @@ export default function SettingsPanel({
           <div>
             <label style={labelStyle}>Agent Landing Page URL</label>
             <input style={inputStyle} type="url" placeholder="https://yourwebsite.com/bio" value={profile?.landing_page_url || ''} onChange={e => setProfile({ ...profile, landing_page_url: e.target.value })} />
-            <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px' }}>Your bio page, Instagram, or Linktree. Appears in visitor emails and texts.</div>
+            <div style={{ fontSize: '13px', color: '#6e6e73', marginTop: '4px' }}>Your bio page, Instagram, or Linktree. Appears in visitor emails and texts.</div>
           </div>
           <div>
             <label style={labelStyle}>Agent Headshot URL</label>
@@ -821,13 +835,13 @@ export default function SettingsPanel({
           <div>
             <label style={labelStyle}>Logo URL (Brokerage or Team)</label>
             {profile?.brokerage_id ? (
-              <div style={{ background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '9px', padding: '10px 12px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.5' }}>
+              <div style={{ background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '9px', padding: '10px 12px', fontSize: '13px', color: '#6e6e73', lineHeight: '1.5' }}>
                 🔒 Your team controls the logo.{isTeamAdmin ? ' Manage it in the Team tab.' : ' Contact your team lead to change it.'}
               </div>
             ) : (
               <>
                 <input style={inputStyle} type="url" placeholder="https://yoursite.com/logo.png" value={profile?.logo_url || ''} onChange={e => setProfile({ ...profile, logo_url: e.target.value })} />
-                <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px' }}>A logo with a transparent or white background looks best in emails and on your printed sign.</div>
+                <div style={{ fontSize: '13px', color: '#6e6e73', marginTop: '4px' }}>A logo with a transparent or white background looks best in emails and on your printed sign.</div>
                 {profile?.logo_url && (
                   <div style={{ marginTop: '8px', background: '#f5f5f7', borderRadius: '8px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '52px', border: '1px solid #d1d1d6' }}>
                     <img
@@ -852,16 +866,16 @@ export default function SettingsPanel({
 
       {profile?.brokerage_id ? (
         <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-          <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Brand colors</div>
-          <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '12px', lineHeight: '1.5' }}>
+          <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Brand Colors</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73', marginTop: '12px', lineHeight: '1.5' }}>
             🔒 Your team&apos;s colors are applied to your visitor emails.
             {isTeamAdmin ? ' Manage your team branding in the Team tab.' : ' Contact your team lead to change them.'}
           </div>
         </div>
       ) : (
         <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-          <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Brand colors</div>
-          <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '16px' }}>Applied to your visitor registration form and email header.</div>
+          <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Brand Colors</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>Applied to your visitor registration form and email header.</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
               <label style={labelStyle}>Primary Color</label>
@@ -879,7 +893,7 @@ export default function SettingsPanel({
             </div>
           </div>
           <div style={{ marginTop: '14px', padding: '12px 16px', background: '#f5f5f7', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ fontSize: '12px', color: '#6e6e73' }}>Preview:</div>
+            <div style={{ fontSize: '13px', color: '#6e6e73' }}>Preview:</div>
             <div style={{ background: primaryColor, color: onPrimary, border: fillBorder(primaryColor), padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>oh<strong>ACCESS</strong></div>
             <div style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>Button</div>
           </div>
@@ -887,8 +901,8 @@ export default function SettingsPanel({
       )}
 
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Send leads to your CRM</div>
-        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
+        <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Send Leads to Your CRM</div>
+        <div style={{ fontSize: '13px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
           Every new visitor flows straight into your CRM as a lead — no Zapier, no setup fees. Your CRM gives each user a unique &quot;lead intake&quot; email address; paste it here and we send each sign-in there automatically. Works with Follow Up Boss, BoldTrail/kvCORE, Lofty, Sierra Interactive, Real Geeks, and most others.
         </div>
         <label style={labelStyle}>Your CRM</label>
@@ -907,7 +921,7 @@ export default function SettingsPanel({
         </select>
         <label style={{ ...labelStyle, marginTop: '12px' }}>Your CRM lead-intake email</label>
         <input style={inputStyle} type="email" placeholder="e.g. yourname@followupboss.me" value={profile?.crm_lead_email || ''} onChange={e => setProfile({ ...profile, crm_lead_email: e.target.value })} />
-        <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.7' }}>
+        <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '13px', color: '#6e6e73', lineHeight: '1.7' }}>
           <strong style={{ color: '#1d1d1f' }}>Where to find your lead-intake email:</strong><br />
           • <strong>Follow Up Boss</strong> — your <em>@followupboss.me</em> address (Admin → Overview → API Keys &amp; Lead Email, under Integrations).<br />
           • <strong>BoldTrail / kvCORE</strong> — Lead Engine → your lead parsing email.<br />
@@ -917,13 +931,13 @@ export default function SettingsPanel({
       </div>
 
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Advanced: CRM integration via Zapier</div>
-        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
+        <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Advanced: CRM Integration via Zapier</div>
+        <div style={{ fontSize: '13px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
           Send every new visitor straight into your CRM — Follow Up Boss, kvCORE, a Google Sheet, and 7,000+ apps — through Zapier.
         </div>
         <label style={labelStyle}>Zapier webhook URL</label>
         <input style={inputStyle} type="url" placeholder="https://hooks.zapier.com/hooks/catch/..." value={profile?.zapier_webhook_url || ''} onChange={e => setProfile({ ...profile, zapier_webhook_url: e.target.value })} />
-        <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.7' }}>
+        <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '13px', color: '#6e6e73', lineHeight: '1.7' }}>
           <strong style={{ color: '#1d1d1f' }}>Set it up in ~5 minutes:</strong><br />
           1. In Zapier, create a Zap with the trigger <strong>&quot;Webhooks by Zapier → Catch Hook.&quot;</strong><br />
           2. Copy the custom webhook URL Zapier gives you, paste it above, and click Save settings.<br />
@@ -938,13 +952,13 @@ export default function SettingsPanel({
           price questions are fixed and not editable here: the seller report
           aggregates them by name. */}
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Your own questions</div>
-        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
+        <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Your Own Questions</div>
+        <div style={{ fontSize: '13px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
           Ask visitors something of your own, on top of the standard fields. Every custom question is optional for the visitor — nothing you add here can stop someone from getting their codeword.
         </div>
 
         <label style={labelStyle}>On the sign-in form &mdash; 1 question</label>
-        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '2px 0 10px', lineHeight: '1.6' }}>
+        <div style={{ fontSize: '13px', color: '#6e6e73', margin: '2px 0 10px', lineHeight: '1.6' }}>
           Asked before they get their codeword, so keep it short.
         </div>
         {questions.filter(q => q.surface === 'signin').map(questionEditor)}
@@ -958,7 +972,7 @@ export default function SettingsPanel({
         )}
 
         <label style={{ ...labelStyle, marginTop: '20px' }}>After the tour &mdash; up to 2 questions</label>
-        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '2px 0 10px', lineHeight: '1.6' }}>
+        <div style={{ fontSize: '13px', color: '#6e6e73', margin: '2px 0 10px', lineHeight: '1.6' }}>
           Asked on the confirmation screen, alongside the standard rating and price questions.
         </div>
         {questions.filter(q => q.surface === 'success').map(questionEditor)}
@@ -971,7 +985,7 @@ export default function SettingsPanel({
           </button>
         )}
 
-        <div style={{ marginTop: '14px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.7' }}>
+        <div style={{ marginTop: '14px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '13px', color: '#6e6e73', lineHeight: '1.7' }}>
           Answers show up on each visitor&apos;s record, in your CSV export, and in the lead sent to your CRM.<br /><br />
           <strong style={{ color: '#1d1d1f' }}>Two things worth knowing:</strong> your questions appear in the language you write them, even for a visitor who switches the form to Spanish or another language. And editing or deleting a question later never changes answers you&apos;ve already collected — those keep the wording they were asked under.
         </div>
@@ -981,8 +995,8 @@ export default function SettingsPanel({
           visitor on the success screen and in their code-word email. ohACCESS
           never picks the form, hosts it, or collects a signature. */}
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Disclosures &amp; notices</div>
-        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
+        <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Disclosures &amp; Notices</div>
+        <div style={{ fontSize: '13px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
           Add a link to any disclosure or notice you want every visitor to receive — an agency disclosure, an Information About Brokerage Services form, a Consumer Information Statement. Each one appears on the visitor&apos;s confirmation screen and in their codeword email.
         </div>
         {disclosureRows.map((row, i) => (
@@ -1019,7 +1033,7 @@ export default function SettingsPanel({
             + Add a disclosure
           </button>
         )}
-        <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.7' }}>
+        <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '13px', color: '#6e6e73', lineHeight: '1.7' }}>
           These are documents <strong style={{ color: '#1d1d1f' }}>you</strong> supply. ohACCESS delivers them and records that they were sent — we don&apos;t determine what your state or broker requires. Links must start with <em>https://</em> and should point somewhere permanent (your brokerage&apos;s site or your state commission&apos;s form page), since visitors may open them later.
           {isTeamMember && (
             <><br /><br /><strong style={{ color: '#1d1d1f' }}>Note:</strong> if your brokerage has set its own disclosures, those are sent instead of yours.</>
@@ -1032,8 +1046,8 @@ export default function SettingsPanel({
           open house in the New Open House form. Signed copies are emailed to
           both parties and never stored; only the blank template lives here. */}
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agreements signed before entry</div>
-        <div style={{ fontSize: '12px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
+        <div style={{ fontSize: '15px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agreements Signed Before Entry</div>
+        <div style={{ fontSize: '13px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
           For open houses that need a <strong style={{ color: '#1d1d1f' }}>signature</strong> before the tour — a touring agreement when you host another brokerage&apos;s listing, a buyer-rep one-pager, anything your broker requires signed rather than just delivered. Upload the blank PDF once here, then flip on &ldquo;Require a signed agreement&rdquo; when you set up an open house. Visitors e-sign on their phone right after check-in; the signed PDF is emailed to you and to them, and <strong style={{ color: '#1d1d1f' }}>ohACCESS never stores signed documents</strong>.
         </div>
 
@@ -1097,10 +1111,12 @@ export default function SettingsPanel({
           </div>
         )}
 
-        <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#6e6e73', lineHeight: '1.7' }}>
+        <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '13px', color: '#6e6e73', lineHeight: '1.7' }}>
           These are documents <strong style={{ color: '#1d1d1f' }}>you</strong> supply — your brokerage form, your state association&apos;s touring agreement, or one your broker approves. ohACCESS collects the signature and delivers the copies; we don&apos;t determine what your situation requires or provide legal forms. Uploads save immediately (no need to hit Save settings). Deleting a document here simply removes the signing step from any open house that was using it — past signed copies live in email, untouched.
         </div>
       </div>
+
+      </div>{/* end two-column card grid */}
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
         <button onClick={saveSettings} style={{ padding: '9px 18px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
