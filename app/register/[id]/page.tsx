@@ -33,6 +33,17 @@ export default function RegisterPage({ params }: { params: Promise<{ id: string 
   const [customAnswers, setCustomAnswers] = useState<Record<string, string>>({})
   const setCustomAnswer = (id: string, value: string) =>
     setCustomAnswers(prev => ({ ...prev, [id]: value }))
+  // Touring-agreement step (migration 043). /api/register returns the
+  // documents when this open house requires a signature before entry; the
+  // step renders as its own screen between the form and the success screen.
+  // Signing posts to /api/agreement/sign with the same one-time
+  // feedbackToken; the signed PDF is emailed, never shown here.
+  const [agreementDocs, setAgreementDocs] = useState<{ id: string; label: string; pages: number }[]>([])
+  const [agreementSigned, setAgreementSigned] = useState(false)
+  const [signName, setSignName] = useState('')
+  const [signAgree, setSignAgree] = useState(false)
+  const [signSubmitting, setSignSubmitting] = useState(false)
+  const [signError, setSignError] = useState<string | null>(null)
   // Visitor-facing copy is translated; lang starts as English on the server
   // render and snaps to the saved/device language on mount.
   const [lang, setLang] = useState<Lang>('en')
@@ -308,6 +319,7 @@ function ExpiredOpenHouse() {
         if (data.feedbackToken) setFeedbackToken(data.feedbackToken)
         if (Array.isArray(data.disclosures)) setDisclosures(data.disclosures)
         if (Array.isArray(data.customQuestions)) setSuccessQuestions(data.customQuestions)
+        if (Array.isArray(data.agreement?.docs)) setAgreementDocs(data.agreement.docs)
         setSubmitted(true)
       } else {
         // Server errors (rate limits, trial caps) are specific and
@@ -344,6 +356,34 @@ function ExpiredOpenHouse() {
       setFbError(true)
     } finally {
       setFbSubmitting(false)
+    }
+  }
+
+  const signAgreement = async () => {
+    // Mirror the server's rule (lib/agreements signerNameError): a full name,
+    // at least two words. The server re-validates; this just gives the
+    // visitor an immediate, translated message.
+    const name = signName.trim().replace(/\s+/g, ' ')
+    if (name.split(' ').filter(Boolean).length < 2) {
+      setSignError(t.agreementNameError)
+      return
+    }
+    if (!signAgree || !feedbackToken) return
+    setSignSubmitting(true)
+    setSignError(null)
+    try {
+      const res = await fetch('/api/agreement/sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: feedbackToken, name }),
+      })
+      const data = await res.json()
+      if (data.success) setAgreementSigned(true)
+      else setSignError(data.error || t.agreementError)
+    } catch {
+      setSignError(t.agreementError)
+    } finally {
+      setSignSubmitting(false)
     }
   }
 
@@ -708,6 +748,97 @@ function ExpiredOpenHouse() {
               <strong style={{ color: '#1d1d1f' }}>{t.narTitle}</strong> {t.narBody}
             </div>
           </>
+        ) : agreementDocs.length > 0 && !agreementSigned ? (
+          /* Touring-agreement screen — the host requires signed document(s)
+             before entry. Sits AFTER the sign-in (so the lead is captured and
+             the codeword texts are already out even if the visitor balks) and
+             BEFORE the success screen. There is deliberately no skip button:
+             the host chose "require", sees who hasn't signed on their
+             dashboard, and handles it at the door. Branding follows the
+             sign-in surface (PRIMARY), since this is still the entry gate. */
+          <div style={{ padding: '4px 2px 22px', textAlign: 'left' }}>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', margin: '18px 0 8px', textAlign: 'center' }}>
+              {t.agreementTitle}
+            </div>
+            <div style={{ fontSize: '13px', color: '#48484a', background: '#f5f5f7', borderRadius: '12px', padding: '12px 15px', lineHeight: '1.6', border: '1px solid #e5e5ea' }}>
+              {t.agreementIntro}
+            </div>
+
+            {/* Document labels are the agent's own text and render as entered.
+                Links open the PDF in a new tab (phones use their native
+                viewer) via the tokenized doc route — the bucket is private. */}
+            <div style={{ fontSize: '11px', fontWeight: '600', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '16px 0 7px' }}>
+              {t.agreementDocsLabel}
+            </div>
+            {agreementDocs.map(d => (
+              <a
+                key={d.id}
+                href={`/api/agreement/doc?token=${encodeURIComponent(feedbackToken || '')}&doc=${encodeURIComponent(d.id)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: '11px', background: 'white', border: '1px solid #d1d1d6', borderRadius: '12px', padding: '12px 14px', marginBottom: '8px', textDecoration: 'none' }}
+              >
+                <span style={{ fontSize: '20px' }}>📄</span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontSize: '14px', fontWeight: '700', color: '#1d1d1f', lineHeight: 1.4 }}>{d.label}</span>
+                  <span style={{ display: 'block', fontSize: '12px', color: '#0071e3', textDecoration: 'underline', marginTop: '2px' }}>{t.agreementView} ↗</span>
+                </span>
+              </a>
+            ))}
+
+            <label style={labelStyle}>{t.agreementNameLabel} <span style={{ color: '#ff3b30' }}>*</span></label>
+            <input
+              style={{ ...inputStyle, border: signError ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
+              type="text"
+              autoComplete="name"
+              value={signName}
+              onChange={e => { setSignName(e.target.value); if (signError) setSignError(null) }}
+            />
+
+            {/* Affirmative intent checkbox — the E-SIGN "intent to sign" act,
+                styled like the timeline radios so it matches the form. */}
+            <div
+              onClick={() => setSignAgree(a => !a)}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: '9px', marginTop: '12px', background: signAgree ? '#f0f0f0' : '#f5f5f7', border: signAgree ? `1px solid ${primaryText}` : '1px solid #d1d1d6', borderRadius: '10px', padding: '11px 12px', cursor: 'pointer' }}
+            >
+              <div style={{ width: '17px', height: '17px', borderRadius: '5px', border: signAgree ? `1.5px solid ${primaryText}` : '1.5px solid #d1d1d6', background: signAgree ? primaryColor : 'white', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: onPrimary, fontSize: '12px', fontWeight: 700, marginTop: '1px' }}>
+                {signAgree ? '✓' : ''}
+              </div>
+              <div style={{ fontSize: '12.5px', color: '#48484a', lineHeight: '1.55' }}>{t.agreementConsent}</div>
+            </div>
+
+            {signError && (
+              <div style={{ marginTop: '10px', padding: '10px', background: '#fff0f0', borderRadius: '8px', fontSize: '13px', color: '#cc0000' }}>
+                {signError}
+              </div>
+            )}
+
+            <button
+              onClick={signAgreement}
+              disabled={signSubmitting || !signAgree}
+              style={{
+                display: 'block',
+                width: '100%',
+                marginTop: '14px',
+                padding: '14px',
+                backgroundColor: signAgree ? primaryColor : '#e8e8ed',
+                color: signAgree ? onPrimary : '#aeaeb2',
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontSize: '15px',
+                fontWeight: '700',
+                border: signAgree ? primaryBtnBorder : 'none',
+                borderRadius: '12px',
+                cursor: (signSubmitting || !signAgree) ? 'not-allowed' : 'pointer',
+                opacity: signSubmitting ? 0.7 : 1
+              }}
+            >
+              {signSubmitting ? t.agreementSubmitting : t.agreementBtn}
+            </button>
+
+            <div style={{ marginTop: '12px', fontSize: '11px', color: '#aeaeb2', textAlign: 'center', lineHeight: '1.6' }}>
+              {t.agreementPrivacy}
+            </div>
+          </div>
         ) : (
           /* Success screen */
           <div style={{ textAlign: 'center', padding: '16px 18px 22px' }}>
@@ -733,6 +864,11 @@ function ExpiredOpenHouse() {
               <div style={{ fontSize: '12px', color: accentText, fontWeight: '600', marginTop: '4px' }}>
                 {t.checkAgent}
               </div>
+              {agreementSigned && (
+                <div style={{ fontSize: '12px', color: accentText, fontWeight: '600', marginTop: '4px' }}>
+                  {t.agreementDone}
+                </div>
+              )}
 
             {/* Disclosures & notices supplied by the host agent. Only the
                 section heading is translated — each label is the agent's own

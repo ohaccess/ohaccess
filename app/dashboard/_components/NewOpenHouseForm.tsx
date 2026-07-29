@@ -1,6 +1,7 @@
 'use client'
 import type { CSSProperties } from 'react'
 import { SMS_CODE_WORD_MAX_LENGTH, sanitizeSmsCodeWord } from '@/lib/register-helpers'
+import { MAX_OPEN_HOUSE_AGREEMENT_DOCS, type AgreementTemplate } from '@/lib/agreements'
 
 // The New / Edit Open House form: property details (with Google address
 // autocomplete + a date-picker calendar) and the two access code words.
@@ -32,6 +33,7 @@ export default function NewOpenHouseForm({
   resetForm,
   setView,
   setEditingOH,
+  agreementTemplates,
   primaryColor,
   onPrimary,
   primaryBtnBorder,
@@ -58,6 +60,7 @@ export default function NewOpenHouseForm({
   resetForm: () => void
   setView: (v: 'dashboard' | 'new' | 'settings' | 'team' | 'activity') => void
   setEditingOH: (oh: any) => void
+  agreementTemplates: AgreementTemplate[]
   primaryColor: string
   onPrimary: string
   primaryBtnBorder: string
@@ -66,6 +69,14 @@ export default function NewOpenHouseForm({
 }) {
   const firstDay = new Date(calDate.getFullYear(), calDate.getMonth(), 1).getDay()
   const daysInMonth = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 0).getDate()
+
+  const selectedDocIds: string[] = Array.isArray(form.agreement_template_ids) ? form.agreement_template_ids : []
+  const toggleDoc = (id: string) => {
+    const next = selectedDocIds.includes(id)
+      ? selectedDocIds.filter((x: string) => x !== id)
+      : [...selectedDocIds, id].slice(0, MAX_OPEN_HOUSE_AGREEMENT_DOCS)
+    setForm({ ...form, agreement_template_ids: next })
+  }
 
   return (
     <>
@@ -230,6 +241,68 @@ export default function NewOpenHouseForm({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Signed agreement before entry (migration 043) — for open houses that
+          need a touring agreement / disclosure signed at the door, e.g. when
+          hosting another brokerage's listing. The documents themselves are
+          uploaded once in Settings; this card just turns the step on and picks
+          which of them apply to THIS open house. */}
+      <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Signed Agreement Before Entry</div>
+        <div style={{ fontSize: '13px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.5' }}>
+          Hosting another brokerage&apos;s listing, or need a touring agreement or disclosure signed before visitors walk through? Turn this on and each visitor reviews and e-signs right after check-in — a signed PDF is emailed to you and to them, and ohACCESS keeps nothing.
+        </div>
+
+        <div
+          onClick={() => setForm({ ...form, require_agreement: !form.require_agreement })}
+          style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', background: form.require_agreement ? '#f0f0f0' : '#f5f5f7', border: form.require_agreement ? `1px solid ${primaryColor}` : '1px solid #d1d1d6', borderRadius: '10px', padding: '11px 13px', cursor: 'pointer' }}
+        >
+          <div style={{ width: '17px', height: '17px', borderRadius: '5px', border: form.require_agreement ? 'none' : '1.5px solid #d1d1d6', background: form.require_agreement ? primaryColor : 'white', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: onPrimary, fontSize: '12px', fontWeight: '700', marginTop: '1px' }}>
+            {form.require_agreement ? '✓' : ''}
+          </div>
+          <div style={{ fontSize: '13px', color: '#1d1d1f', fontWeight: '600', lineHeight: '1.5' }}>
+            Require a signed agreement before entry
+          </div>
+        </div>
+
+        {form.require_agreement && (
+          agreementTemplates.length === 0 ? (
+            <div style={{ marginTop: '12px', background: '#fff8e6', border: '1px solid #f0d896', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#8a6100', lineHeight: '1.6' }}>
+              You haven&apos;t uploaded any documents yet. Add your brokerage&apos;s touring agreement (a one-page PDF) in Settings first — then come back and pick it here.{' '}
+              <button onClick={() => setView('settings')} style={{ background: 'none', border: 'none', color: '#8a6100', fontWeight: '700', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                Go to Settings →
+              </button>
+            </div>
+          ) : (
+            <>
+              <div style={{ ...labelStyle, marginTop: '14px' }}>Documents visitors must sign (up to {MAX_OPEN_HOUSE_AGREEMENT_DOCS})</div>
+              {agreementTemplates.map(tpl => {
+                const on = selectedDocIds.includes(tpl.id)
+                return (
+                  <div
+                    key={tpl.id}
+                    onClick={() => toggleDoc(tpl.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '10px', background: on ? '#f0f0f0' : '#f5f5f7', border: on ? `1px solid ${primaryColor}` : '1px solid #d1d1d6', borderRadius: '10px', padding: '10px 13px', marginBottom: '7px', cursor: 'pointer' }}
+                  >
+                    <div style={{ width: '15px', height: '15px', borderRadius: '4px', border: on ? 'none' : '1.5px solid #d1d1d6', background: on ? primaryColor : 'white', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: onPrimary, fontSize: '10px', fontWeight: '700' }}>
+                      {on ? '✓' : ''}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>📄 {tpl.label}</div>
+                      <div style={{ fontSize: '11px', color: '#6e6e73' }}>{tpl.pages} page{tpl.pages === 1 ? '' : 's'}</div>
+                    </div>
+                  </div>
+                )
+              })}
+              {selectedDocIds.length === 0 && (
+                <div style={{ fontSize: '11px', color: '#b25e00', marginTop: '4px', lineHeight: '1.45' }}>
+                  ⚠ Pick at least one document, or visitors won&apos;t be asked to sign anything.
+                </div>
+              )}
+            </>
+          )
+        )}
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>

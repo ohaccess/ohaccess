@@ -41,6 +41,11 @@ const deliveryFlag = (status: string | null | undefined): boolean =>
   status === 'bounced' || status === 'complained' || status === 'undelivered' || status === 'failed'
 const deliveryBadgeStyle = { marginLeft: '6px', background: '#fff0f0', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 const optedOutBadgeStyle = { marginLeft: '6px', background: '#f2f2f7', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+// Agreement chips — only shown when the open house requires a signed
+// agreement (migration 043). "Not signed" is a door-side prompt for the
+// host, deliberately amber (a nudge), never red (an accusation).
+const signedBadgeStyle = { marginLeft: '6px', background: '#e8f9ee', color: '#1a7a3c', border: '1px solid #b2f0c8', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+const unsignedBadgeStyle = { marginLeft: '6px', background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 const voipBadgeStyle = { marginLeft: '6px', background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 
 // Derive an open house's lifecycle state from its schedule, since the stored
@@ -332,6 +337,9 @@ export default function OpenHouseList({
                         <button onClick={() => setVisitorModal(v)} style={{ background: 'none', border: 'none', padding: 0, color: accentText, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px', textAlign: 'left' }}>
                           {v.first_name} {v.last_name}{v.notes ? ' 📝' : ''}
                         </button>
+                        {selectedOH?.require_agreement && (v.agreement_signed
+                          ? <span title="Signed the required agreement — copies were emailed to you both" style={signedBadgeStyle}>✍ Signed</span>
+                          : <span title="Hasn't signed the required agreement — ask before letting them tour" style={unsignedBadgeStyle}>✍ Not signed</span>)}
                       </td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}{v.sms_opted_out ? <span title="This number replied STOP — do not contact" style={optedOutBadgeStyle}>🚫 Opted out</span> : deliveryFlag(v.sms_status) ? <span title="Text could not be delivered to this number" style={deliveryBadgeStyle}>⚠ undelivered</span> : null}{isVirtualNumber(v.phone_line_type) && <span title="Internet/VoIP number (TextNow, Google Voice, …), not a carrier mobile line. Many are legitimate — consider extra ID verification." style={voipBadgeStyle}>⚠ VoIP</span>}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.email}{deliveryFlag(v.email_status) && <span title="Email bounced — this address may be invalid" style={deliveryBadgeStyle}>⚠ bounced</span>}</td>

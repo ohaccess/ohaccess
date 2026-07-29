@@ -13,6 +13,7 @@ import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors
 import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { normalizeCustomAnswers } from '@/lib/custom-questions'
 import { sanitizeSmsCodeWord } from '@/lib/register-helpers'
+import { normalizeAgreementTemplates } from '@/lib/agreements'
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
@@ -51,7 +52,11 @@ export default function Dashboard() {
     property_timezone: '',
     listing_url: '',
     code_word: '',
-    code_word_email: ''
+    code_word_email: '',
+    // Touring agreement (migration 043): whether visitors must sign before
+    // entry, and WHICH of the agent's uploaded documents apply (max 3).
+    require_agreement: false,
+    agreement_template_ids: [] as string[]
   })
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
   const [totalVisitors, setTotalVisitors] = useState<number | null>(null)
@@ -281,7 +286,19 @@ export default function Dashboard() {
 
   const loadVisitors = async (openHouseId: string) => {
     const { data } = await supabase.from('visitors').select('*').eq('open_house_id', openHouseId).order('registered_at', { ascending: false })
-    if (data) setVisitors(data)
+    if (!data) return
+    // Signed-agreement receipts for the chip in the visitor log (RLS lets an
+    // agent read only their own receipts). Best-effort: a lookup failure just
+    // means no chips, never a broken log.
+    let signedIds = new Set<string>()
+    try {
+      const { data: receipts } = await supabase
+        .from('agreement_receipts')
+        .select('visitor_id')
+        .eq('open_house_id', openHouseId)
+      signedIds = new Set((receipts || []).map(r => r.visitor_id))
+    } catch { /* no chips */ }
+    setVisitors(data.map(v => ({ ...v, agreement_signed: signedIds.has(v.id) })))
   }
 
   // The SMS (text) code is an adjective; the email code is a home-themed noun.
@@ -305,7 +322,8 @@ export default function Dashboard() {
     listing_price: '', bedrooms: '', bathrooms: '',
     square_footage: '', open_house_date: '', open_house_date_iso: '',
     open_house_start_time: '', open_house_end_time: '',
-    open_house_hours: '', property_timezone: '', listing_url: '', code_word: '', code_word_email: ''
+    open_house_hours: '', property_timezone: '', listing_url: '', code_word: '', code_word_email: '',
+    require_agreement: false, agreement_template_ids: [] as string[]
   })
 
   // 24h "13:30" -> "1:30 PM" for the human-readable hours string.
@@ -508,6 +526,8 @@ export default function Dashboard() {
       listing_url: form.listing_url,
       code_word: smsCode,
       code_word_email: form.code_word_email,
+      require_agreement: form.require_agreement,
+      agreement_template_ids: form.agreement_template_ids.length > 0 ? form.agreement_template_ids : null,
       status: 'active'
     }).select()
     if (error) { showToast('Error saving: ' + error.message); return }
@@ -558,7 +578,11 @@ export default function Dashboard() {
       // limit shows the agent exactly what will be saved rather than silently
       // changing under them when they hit Update.
       code_word: sanitizeSmsCodeWord(oh.code_word),
-      code_word_email: oh.code_word_email || ''
+      code_word_email: oh.code_word_email || '',
+      require_agreement: !!oh.require_agreement,
+      agreement_template_ids: Array.isArray(oh.agreement_template_ids)
+        ? oh.agreement_template_ids.filter((x: unknown) => typeof x === 'string')
+        : []
     })
     setView('new')
   }
@@ -614,6 +638,8 @@ export default function Dashboard() {
       listing_url: form.listing_url,
       code_word: smsCode,
       code_word_email: form.code_word_email,
+      require_agreement: form.require_agreement,
+      agreement_template_ids: form.agreement_template_ids.length > 0 ? form.agreement_template_ids : null,
     }
     if (timesChanged) update.report_sent_at = null
     const { error } = await supabase.from('open_houses').update(update).eq('id', editingOH.id)
@@ -960,6 +986,7 @@ export default function Dashboard() {
             resetForm={resetForm}
             setView={setView}
             setEditingOH={setEditingOH}
+            agreementTemplates={normalizeAgreementTemplates(profile?.agreement_templates)}
             primaryColor={primaryColor}
             onPrimary={onPrimary}
             primaryBtnBorder={primaryBtnBorder}

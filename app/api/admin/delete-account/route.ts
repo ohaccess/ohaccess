@@ -132,9 +132,23 @@ export async function POST(request: Request) {
     // (/api/cron/data-retention) ages them out at the 3-year mark.
     await del('visitors', supabase.from('visitors').delete().eq('agent_id', userId))
     await del('short_urls', supabase.from('short_urls').delete().eq('agent_id', userId))
+    // Agreement receipts carry visitor PII (migration 043) — a hard-delete
+    // clears them; held ones were caught by the checkAgentHold gate above.
+    await del('agreement_receipts', supabase.from('agreement_receipts').delete().eq('agent_id', userId))
     await del('open_houses', supabase.from('open_houses').delete().eq('agent_id', userId))
     if (ownedIds.length) {
       await del('brokerages', supabase.from('brokerages').delete().eq('owner_id', userId))
+    }
+    // Blank agreement-template files live under <userId>/ in the private
+    // bucket (043). Best-effort: an orphaned blank form is unreachable and
+    // holds no visitor data, so a cleanup failure must not fail the deletion.
+    try {
+      const { data: files } = await supabase.storage.from('agreement-templates').list(userId)
+      if (files && files.length > 0) {
+        await supabase.storage.from('agreement-templates').remove(files.map(f => `${userId}/${f.name}`))
+      }
+    } catch (e) {
+      console.error('[DELETE-ACCOUNT] agreement-template storage cleanup failed:', e)
     }
     await del('profile', supabase.from('profiles').delete().eq('id', userId))
 

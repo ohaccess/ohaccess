@@ -29,6 +29,7 @@ import {
   questionsForSurface,
   buildCustomAnswers,
 } from '@/lib/custom-questions'
+import { normalizeAgreementTemplates, resolveAgreementDocs } from '@/lib/agreements'
 
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID!,
@@ -682,6 +683,21 @@ export async function POST(request: Request) {
       })
     }
 
+    // Touring agreement step (migration 043): when this open house requires a
+    // signed agreement, tell the browser which documents to show. Only id,
+    // label, and page count are exposed — the visitor reads the PDFs through
+    // the tokenized /api/agreement/doc route and signs via /api/agreement/sign,
+    // both keyed on the same feedbackToken. Revealed only here (not on the
+    // public open-house GET) so the documents follow an actual sign-in, and
+    // resolved fail-open: stale template ids mean the step simply doesn't
+    // appear (lib/agreements doctrine).
+    const agreementDocs = openHouse.require_agreement
+      ? resolveAgreementDocs(
+          normalizeAgreementTemplates(agent?.agreement_templates),
+          openHouse.agreement_template_ids
+        ).map(d => ({ id: d.id, label: d.label, pages: d.pages }))
+      : []
+
     // Intentionally do NOT return codeWord — that would defeat the SMS/email
     // verification, since any caller could read it from the response. The
     // feedbackToken is safe to return: it only permits one write of this
@@ -693,6 +709,7 @@ export async function POST(request: Request) {
       feedbackToken,
       disclosures: disclosureLinks,
       customQuestions: successQuestions,
+      agreement: agreementDocs.length > 0 ? { docs: agreementDocs } : null,
     })
 
   } catch (error) {

@@ -113,6 +113,23 @@ export interface RegisterStrings {
   feedbackSubmitting: string
   feedbackThanks: string
   feedbackError: string
+  // Touring-agreement step (migration 043) — shown between the sign-in form
+  // and the success screen when the host requires signed document(s) before
+  // entry. Document LABELS are the agent's own text and render as entered;
+  // only the surrounding chrome is translated.
+  agreementTitle: string
+  agreementIntro: string
+  agreementDocsLabel: string
+  agreementView: string
+  agreementNameLabel: string
+  agreementConsent: string
+  agreementBtn: string
+  agreementSubmitting: string
+  agreementNameError: string
+  agreementError: string
+  // Shown on the success screen after signing.
+  agreementDone: string
+  agreementPrivacy: string
 }
 
 const en: RegisterStrings = {
@@ -161,6 +178,18 @@ const en: RegisterStrings = {
   feedbackSubmitting: 'Sending…',
   feedbackThanks: 'Thank you! Your feedback was shared with the agent for the seller.',
   feedbackError: 'Could not save your feedback. Please try again.',
+  agreementTitle: 'One more step before your tour',
+  agreementIntro: 'The host needs you to review and sign the following before entering. It takes about 20 seconds, and a signed copy is emailed to you.',
+  agreementDocsLabel: 'Documents to review',
+  agreementView: 'Read document',
+  agreementNameLabel: 'Type your full legal name to sign',
+  agreementConsent: 'I have reviewed the document(s) above and intend my typed name to be my electronic signature.',
+  agreementBtn: 'Sign & continue →',
+  agreementSubmitting: 'Recording your signature...',
+  agreementNameError: 'Please type your full name',
+  agreementError: 'Could not record your signature. Please try again.',
+  agreementDone: '✓ A signed copy was emailed to you and the host.',
+  agreementPrivacy: 'Signed copies go to you and the host agent by email. ohACCESS does not keep the document.',
 }
 
 const es: RegisterStrings = {
@@ -209,6 +238,18 @@ const es: RegisterStrings = {
   feedbackSubmitting: 'Enviando…',
   feedbackThanks: '¡Gracias! Tus comentarios se compartieron con el agente para el vendedor.',
   feedbackError: 'No se pudieron guardar tus comentarios. Por favor intenta de nuevo.',
+  agreementTitle: 'Un paso más antes de tu visita',
+  agreementIntro: 'El anfitrión necesita que revises y firmes lo siguiente antes de entrar. Toma unos 20 segundos y recibirás una copia firmada por correo.',
+  agreementDocsLabel: 'Documentos para revisar',
+  agreementView: 'Leer el documento',
+  agreementNameLabel: 'Escribe tu nombre legal completo para firmar',
+  agreementConsent: 'He revisado los documentos anteriores y acepto que mi nombre escrito sea mi firma electrónica.',
+  agreementBtn: 'Firmar y continuar →',
+  agreementSubmitting: 'Registrando tu firma...',
+  agreementNameError: 'Por favor escribe tu nombre completo',
+  agreementError: 'No se pudo registrar tu firma. Por favor intenta de nuevo.',
+  agreementDone: '✓ Se envió una copia firmada a tu correo y al anfitrión.',
+  agreementPrivacy: 'Las copias firmadas se envían por correo a ti y al agente anfitrión. ohACCESS no conserva el documento.',
 }
 
 const vi: RegisterStrings = {
@@ -257,6 +298,18 @@ const vi: RegisterStrings = {
   feedbackSubmitting: 'Đang gửi…',
   feedbackThanks: 'Cảm ơn bạn! Phản hồi của bạn đã được chia sẻ với chuyên viên môi giới cho người bán.',
   feedbackError: 'Không thể lưu phản hồi của bạn. Vui lòng thử lại.',
+  agreementTitle: 'Một bước nữa trước khi tham quan',
+  agreementIntro: 'Chủ trì cần bạn xem và ký các tài liệu sau trước khi vào. Chỉ mất khoảng 20 giây, và bản đã ký sẽ được gửi đến email của bạn.',
+  agreementDocsLabel: 'Tài liệu cần xem',
+  agreementView: 'Đọc tài liệu',
+  agreementNameLabel: 'Nhập họ tên đầy đủ của bạn để ký',
+  agreementConsent: 'Tôi đã xem các tài liệu trên và đồng ý rằng tên tôi nhập là chữ ký điện tử của tôi.',
+  agreementBtn: 'Ký và tiếp tục →',
+  agreementSubmitting: 'Đang ghi nhận chữ ký của bạn...',
+  agreementNameError: 'Vui lòng nhập họ tên đầy đủ của bạn',
+  agreementError: 'Không thể ghi nhận chữ ký của bạn. Vui lòng thử lại.',
+  agreementDone: '✓ Bản đã ký đã được gửi đến email của bạn và chủ trì.',
+  agreementPrivacy: 'Bản đã ký được gửi qua email cho bạn và chuyên viên môi giới chủ trì. ohACCESS không lưu giữ tài liệu.',
 }
 
 const zh: RegisterStrings = {
@@ -305,6 +358,18 @@ const zh: RegisterStrings = {
   feedbackSubmitting: '正在提交…',
   feedbackThanks: '谢谢！您的反馈已分享给经纪人以转告卖家。',
   feedbackError: '无法保存您的反馈，请重试。',
+  agreementTitle: '参观前还差一步',
+  agreementIntro: '进入前，接待人员需要您查看并签署以下文件。大约只需 20 秒，签署后的副本会发送到您的邮箱。',
+  agreementDocsLabel: '待查看的文件',
+  agreementView: '阅读文件',
+  agreementNameLabel: '输入您的完整法定姓名以签名',
+  agreementConsent: '我已查看上述文件，并同意以我输入的姓名作为我的电子签名。',
+  agreementBtn: '签名并继续 →',
+  agreementSubmitting: '正在记录您的签名...',
+  agreementNameError: '请输入您的完整姓名',
+  agreementError: '无法记录您的签名，请重试。',
+  agreementDone: '✓ 签署副本已发送到您和接待人员的邮箱。',
+  agreementPrivacy: '签署后的副本会通过电子邮件发送给您和接待经纪人。ohACCESS 不保存该文件。',
 }
 
 const ko: RegisterStrings = {
@@ -353,6 +418,18 @@ const ko: RegisterStrings = {
   feedbackSubmitting: '보내는 중…',
   feedbackThanks: '감사합니다! 남겨 주신 의견은 판매자를 위해 에이전트에게 전달되었습니다.',
   feedbackError: '피드백을 저장하지 못했습니다. 다시 시도해 주세요.',
+  agreementTitle: '투어 전 마지막 한 단계',
+  agreementIntro: '입장 전에 호스트가 아래 문서를 확인하고 서명해 주시길 요청합니다. 약 20초면 되며, 서명된 사본이 이메일로 전송됩니다.',
+  agreementDocsLabel: '확인할 문서',
+  agreementView: '문서 읽기',
+  agreementNameLabel: '서명을 위해 성명(법적 이름)을 입력하세요',
+  agreementConsent: '위 문서를 확인했으며, 입력한 이름을 저의 전자 서명으로 사용하는 데 동의합니다.',
+  agreementBtn: '서명하고 계속 →',
+  agreementSubmitting: '서명을 기록하는 중...',
+  agreementNameError: '성명을 입력해 주세요',
+  agreementError: '서명을 기록하지 못했습니다. 다시 시도해 주세요.',
+  agreementDone: '✓ 서명된 사본이 귀하와 호스트의 이메일로 전송되었습니다.',
+  agreementPrivacy: '서명된 사본은 귀하와 호스트 에이전트에게 이메일로 전송됩니다. ohACCESS는 문서를 보관하지 않습니다.',
 }
 
 const hi: RegisterStrings = {
@@ -401,6 +478,18 @@ const hi: RegisterStrings = {
   feedbackSubmitting: 'भेजा जा रहा है…',
   feedbackThanks: 'धन्यवाद! आपकी प्रतिक्रिया विक्रेता के लिए एजेंट के साथ साझा कर दी गई है।',
   feedbackError: 'आपकी प्रतिक्रिया सहेजी नहीं जा सकी। कृपया फिर से प्रयास करें।',
+  agreementTitle: 'दौरे से पहले एक और कदम',
+  agreementIntro: 'प्रवेश से पहले होस्ट चाहते हैं कि आप नीचे दिए दस्तावेज़ देखें और हस्ताक्षर करें। इसमें लगभग 20 सेकंड लगते हैं, और हस्ताक्षरित प्रति आपके ईमेल पर भेज दी जाती है।',
+  agreementDocsLabel: 'देखने के लिए दस्तावेज़',
+  agreementView: 'दस्तावेज़ पढ़ें',
+  agreementNameLabel: 'हस्ताक्षर करने के लिए अपना पूरा कानूनी नाम लिखें',
+  agreementConsent: 'मैंने ऊपर दिए दस्तावेज़ देख लिए हैं और सहमत हूं कि मेरा लिखा नाम मेरा इलेक्ट्रॉनिक हस्ताक्षर होगा।',
+  agreementBtn: 'हस्ताक्षर करें और आगे बढ़ें →',
+  agreementSubmitting: 'आपका हस्ताक्षर दर्ज किया जा रहा है...',
+  agreementNameError: 'कृपया अपना पूरा नाम लिखें',
+  agreementError: 'आपका हस्ताक्षर दर्ज नहीं हो सका। कृपया फिर से प्रयास करें।',
+  agreementDone: '✓ हस्ताक्षरित प्रति आपको और होस्ट को ईमेल कर दी गई है।',
+  agreementPrivacy: 'हस्ताक्षरित प्रतियां ईमेल द्वारा आपको और होस्ट एजेंट को भेजी जाती हैं। ohACCESS दस्तावेज़ अपने पास नहीं रखता।',
 }
 
 const zhHant: RegisterStrings = {
@@ -449,6 +538,18 @@ const zhHant: RegisterStrings = {
   feedbackSubmitting: '正在提交…',
   feedbackThanks: '謝謝！您的回饋已分享給經紀人以轉告賣家。',
   feedbackError: '無法儲存您的回饋，請重試。',
+  agreementTitle: '參觀前還差一步',
+  agreementIntro: '進入前，接待人員需要您查看並簽署以下文件。大約只需 20 秒，簽署後的副本會寄到您的信箱。',
+  agreementDocsLabel: '待查看的文件',
+  agreementView: '閱讀文件',
+  agreementNameLabel: '輸入您的完整法定姓名以簽名',
+  agreementConsent: '我已查看上述文件，並同意以我輸入的姓名作為我的電子簽名。',
+  agreementBtn: '簽名並繼續 →',
+  agreementSubmitting: '正在記錄您的簽名...',
+  agreementNameError: '請輸入您的完整姓名',
+  agreementError: '無法記錄您的簽名，請重試。',
+  agreementDone: '✓ 簽署副本已寄到您和接待人員的信箱。',
+  agreementPrivacy: '簽署後的副本會透過電子郵件寄給您和接待經紀人。ohACCESS 不保存該文件。',
 }
 
 const fr: RegisterStrings = {
@@ -497,6 +598,18 @@ const fr: RegisterStrings = {
   feedbackSubmitting: "Envoi…",
   feedbackThanks: "Merci ! Vos commentaires ont été transmis à l'agent pour le vendeur.",
   feedbackError: "Impossible d'enregistrer vos commentaires. Veuillez réessayer.",
+  agreementTitle: 'Une dernière étape avant votre visite',
+  agreementIntro: "L'hôte vous demande de consulter et de signer les documents suivants avant d'entrer. Cela prend environ 20 secondes, et une copie signée vous est envoyée par e-mail.",
+  agreementDocsLabel: 'Documents à consulter',
+  agreementView: 'Lire le document',
+  agreementNameLabel: 'Tapez votre nom légal complet pour signer',
+  agreementConsent: "J'ai consulté les documents ci-dessus et j'accepte que mon nom tapé constitue ma signature électronique.",
+  agreementBtn: 'Signer et continuer →',
+  agreementSubmitting: 'Enregistrement de votre signature...',
+  agreementNameError: 'Veuillez taper votre nom complet',
+  agreementError: "Impossible d'enregistrer votre signature. Veuillez réessayer.",
+  agreementDone: "✓ Une copie signée a été envoyée par e-mail à vous et à l'hôte.",
+  agreementPrivacy: "Les copies signées vous sont envoyées par e-mail, ainsi qu'à l'agent hôte. ohACCESS ne conserve pas le document.",
 }
 
 const de: RegisterStrings = {
@@ -545,6 +658,18 @@ const de: RegisterStrings = {
   feedbackSubmitting: 'Senden…',
   feedbackThanks: 'Vielen Dank! Ihr Feedback wurde dem Makler für den Verkäufer weitergegeben.',
   feedbackError: 'Ihr Feedback konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.',
+  agreementTitle: 'Ein letzter Schritt vor Ihrer Besichtigung',
+  agreementIntro: 'Der Gastgeber bittet Sie, vor dem Betreten die folgenden Dokumente zu prüfen und zu unterschreiben. Das dauert etwa 20 Sekunden; eine unterschriebene Kopie erhalten Sie per E-Mail.',
+  agreementDocsLabel: 'Zu prüfende Dokumente',
+  agreementView: 'Dokument lesen',
+  agreementNameLabel: 'Geben Sie zum Unterschreiben Ihren vollständigen Namen ein',
+  agreementConsent: 'Ich habe die obigen Dokumente geprüft und stimme zu, dass mein eingegebener Name als meine elektronische Unterschrift gilt.',
+  agreementBtn: 'Unterschreiben und weiter →',
+  agreementSubmitting: 'Ihre Unterschrift wird erfasst...',
+  agreementNameError: 'Bitte geben Sie Ihren vollständigen Namen ein',
+  agreementError: 'Ihre Unterschrift konnte nicht erfasst werden. Bitte versuchen Sie es erneut.',
+  agreementDone: '✓ Eine unterschriebene Kopie wurde an Sie und den Gastgeber gemailt.',
+  agreementPrivacy: 'Unterschriebene Kopien gehen per E-Mail an Sie und den gastgebenden Makler. ohACCESS bewahrt das Dokument nicht auf.',
 }
 
 const it: RegisterStrings = {
@@ -593,6 +718,18 @@ const it: RegisterStrings = {
   feedbackSubmitting: "Invio…",
   feedbackThanks: "Grazie! Il tuo feedback è stato condiviso con l'agente per il venditore.",
   feedbackError: "Impossibile salvare il tuo feedback. Riprova.",
+  agreementTitle: 'Un ultimo passaggio prima della visita',
+  agreementIntro: "Prima di entrare, l'ospite ti chiede di leggere e firmare i seguenti documenti. Richiede circa 20 secondi e una copia firmata ti viene inviata via email.",
+  agreementDocsLabel: 'Documenti da leggere',
+  agreementView: 'Leggi il documento',
+  agreementNameLabel: 'Digita il tuo nome legale completo per firmare',
+  agreementConsent: 'Ho letto i documenti sopra e accetto che il nome digitato costituisca la mia firma elettronica.',
+  agreementBtn: 'Firma e continua →',
+  agreementSubmitting: 'Registrazione della firma...',
+  agreementNameError: 'Digita il tuo nome completo',
+  agreementError: 'Impossibile registrare la firma. Riprova.',
+  agreementDone: "✓ Una copia firmata è stata inviata via email a te e all'ospite.",
+  agreementPrivacy: "Le copie firmate vengono inviate via email a te e all'agente ospitante. ohACCESS non conserva il documento.",
 }
 
 const el: RegisterStrings = {
@@ -641,6 +778,18 @@ const el: RegisterStrings = {
   feedbackSubmitting: 'Αποστολή…',
   feedbackThanks: 'Ευχαριστούμε! Τα σχόλιά σας κοινοποιήθηκαν στον μεσίτη για τον πωλητή.',
   feedbackError: 'Δεν ήταν δυνατή η αποθήκευση των σχολίων σας. Παρακαλώ δοκιμάστε ξανά.',
+  agreementTitle: 'Ένα ακόμη βήμα πριν από την ξενάγηση',
+  agreementIntro: 'Πριν εισέλθετε, ο οικοδεσπότης σάς ζητά να διαβάσετε και να υπογράψετε τα παρακάτω έγγραφα. Διαρκεί περίπου 20 δευτερόλεπτα και ένα υπογεγραμμένο αντίγραφο σας αποστέλλεται με email.',
+  agreementDocsLabel: 'Έγγραφα προς ανάγνωση',
+  agreementView: 'Διαβάστε το έγγραφο',
+  agreementNameLabel: 'Πληκτρολογήστε το πλήρες νόμιμο όνομά σας για να υπογράψετε',
+  agreementConsent: 'Έχω διαβάσει τα παραπάνω έγγραφα και συμφωνώ το πληκτρολογημένο όνομά μου να αποτελεί την ηλεκτρονική μου υπογραφή.',
+  agreementBtn: 'Υπογραφή και συνέχεια →',
+  agreementSubmitting: 'Καταχώριση της υπογραφής σας...',
+  agreementNameError: 'Παρακαλώ πληκτρολογήστε το πλήρες όνομά σας',
+  agreementError: 'Δεν ήταν δυνατή η καταχώριση της υπογραφής σας. Παρακαλώ δοκιμάστε ξανά.',
+  agreementDone: '✓ Ένα υπογεγραμμένο αντίγραφο στάλθηκε με email σε εσάς και στον οικοδεσπότη.',
+  agreementPrivacy: 'Τα υπογεγραμμένα αντίγραφα αποστέλλονται με email σε εσάς και στον μεσίτη-οικοδεσπότη. Η ohACCESS δεν κρατά το έγγραφο.',
 }
 
 const pl: RegisterStrings = {
@@ -689,6 +838,18 @@ const pl: RegisterStrings = {
   feedbackSubmitting: 'Wysyłanie…',
   feedbackThanks: 'Dziękujemy! Twoja opinia została przekazana agentowi dla sprzedającego.',
   feedbackError: 'Nie udało się zapisać opinii. Spróbuj ponownie.',
+  agreementTitle: 'Jeszcze jeden krok przed zwiedzaniem',
+  agreementIntro: 'Przed wejściem gospodarz prosi o zapoznanie się z poniższymi dokumentami i ich podpisanie. Zajmuje to około 20 sekund, a podpisana kopia zostanie wysłana na Twój e-mail.',
+  agreementDocsLabel: 'Dokumenty do przeczytania',
+  agreementView: 'Przeczytaj dokument',
+  agreementNameLabel: 'Wpisz swoje pełne imię i nazwisko, aby podpisać',
+  agreementConsent: 'Zapoznałem(-am) się z powyższymi dokumentami i zgadzam się, aby wpisane imię i nazwisko stanowiło mój podpis elektroniczny.',
+  agreementBtn: 'Podpisz i kontynuuj →',
+  agreementSubmitting: 'Zapisywanie podpisu...',
+  agreementNameError: 'Wpisz pełne imię i nazwisko',
+  agreementError: 'Nie udało się zapisać podpisu. Spróbuj ponownie.',
+  agreementDone: '✓ Podpisana kopia została wysłana e-mailem do Ciebie i gospodarza.',
+  agreementPrivacy: 'Podpisane kopie trafiają e-mailem do Ciebie i agenta prowadzącego. ohACCESS nie przechowuje dokumentu.',
 }
 
 const ru: RegisterStrings = {
@@ -737,6 +898,18 @@ const ru: RegisterStrings = {
   feedbackSubmitting: 'Отправка…',
   feedbackThanks: 'Спасибо! Ваш отзыв передан агенту для продавца.',
   feedbackError: 'Не удалось сохранить ваш отзыв. Пожалуйста, попробуйте снова.',
+  agreementTitle: 'Ещё один шаг перед осмотром',
+  agreementIntro: 'Перед входом принимающий агент просит вас ознакомиться со следующими документами и подписать их. Это занимает около 20 секунд, подписанная копия придёт вам на эл. почту.',
+  agreementDocsLabel: 'Документы для ознакомления',
+  agreementView: 'Прочитать документ',
+  agreementNameLabel: 'Введите ваше полное имя, чтобы подписать',
+  agreementConsent: 'Я ознакомился(-лась) с документами выше и согласен(-на), что введённое имя является моей электронной подписью.',
+  agreementBtn: 'Подписать и продолжить →',
+  agreementSubmitting: 'Запись вашей подписи...',
+  agreementNameError: 'Пожалуйста, введите полное имя',
+  agreementError: 'Не удалось записать вашу подпись. Пожалуйста, попробуйте снова.',
+  agreementDone: '✓ Подписанная копия отправлена вам и принимающему агенту по эл. почте.',
+  agreementPrivacy: 'Подписанные копии отправляются по эл. почте вам и принимающему агенту. ohACCESS не хранит документ.',
 }
 
 const pt: RegisterStrings = {
@@ -785,6 +958,18 @@ const pt: RegisterStrings = {
   feedbackSubmitting: 'Enviando…',
   feedbackThanks: 'Obrigado! Seu feedback foi compartilhado com o corretor para o vendedor.',
   feedbackError: 'Não foi possível salvar seu feedback. Tente novamente.',
+  agreementTitle: 'Mais um passo antes da visita',
+  agreementIntro: 'Antes de entrar, o anfitrião pede que você leia e assine os documentos a seguir. Leva cerca de 20 segundos, e uma cópia assinada é enviada para o seu e-mail.',
+  agreementDocsLabel: 'Documentos para ler',
+  agreementView: 'Ler o documento',
+  agreementNameLabel: 'Digite seu nome legal completo para assinar',
+  agreementConsent: 'Li os documentos acima e concordo que o nome digitado seja minha assinatura eletrônica.',
+  agreementBtn: 'Assinar e continuar →',
+  agreementSubmitting: 'Registrando sua assinatura...',
+  agreementNameError: 'Digite seu nome completo',
+  agreementError: 'Não foi possível registrar sua assinatura. Tente novamente.',
+  agreementDone: '✓ Uma cópia assinada foi enviada por e-mail para você e para o anfitrião.',
+  agreementPrivacy: 'As cópias assinadas vão por e-mail para você e para o corretor anfitrião. A ohACCESS não guarda o documento.',
 }
 
 const tl: RegisterStrings = {
@@ -833,6 +1018,18 @@ const tl: RegisterStrings = {
   feedbackSubmitting: 'Ipinapadala…',
   feedbackThanks: 'Salamat! Ibinahagi ang iyong feedback sa agent para sa nagbebenta.',
   feedbackError: 'Hindi na-save ang iyong feedback. Pakisubukang muli.',
+  agreementTitle: 'Isa pang hakbang bago ang iyong pagsilip',
+  agreementIntro: 'Bago pumasok, hinihiling ng host na basahin at pirmahan mo ang mga sumusunod na dokumento. Aabutin lang ito ng mga 20 segundo, at ipapadala sa email mo ang pirmadong kopya.',
+  agreementDocsLabel: 'Mga dokumentong babasahin',
+  agreementView: 'Basahin ang dokumento',
+  agreementNameLabel: 'I-type ang iyong buong legal na pangalan para pumirma',
+  agreementConsent: 'Nabasa ko ang mga dokumento sa itaas at sumasang-ayon akong ang na-type kong pangalan ang magsisilbing aking electronic signature.',
+  agreementBtn: 'Pumirma at magpatuloy →',
+  agreementSubmitting: 'Itinatala ang iyong pirma...',
+  agreementNameError: 'Pakitype ang iyong buong pangalan',
+  agreementError: 'Hindi naitala ang iyong pirma. Pakisubukang muli.',
+  agreementDone: '✓ Ipinadala sa email ang pirmadong kopya sa iyo at sa host.',
+  agreementPrivacy: 'Ang mga pirmadong kopya ay ipinapadala sa email mo at sa host agent. Hindi nag-iimbak ng dokumento ang ohACCESS.',
 }
 
 const pa: RegisterStrings = {
@@ -881,6 +1078,18 @@ const pa: RegisterStrings = {
   feedbackSubmitting: 'ਭੇਜਿਆ ਜਾ ਰਿਹਾ ਹੈ…',
   feedbackThanks: 'ਧੰਨਵਾਦ! ਤੁਹਾਡਾ ਫੀਡਬੈਕ ਵੇਚਣ ਵਾਲੇ ਲਈ ਏਜੰਟ ਨਾਲ ਸਾਂਝਾ ਕਰ ਦਿੱਤਾ ਗਿਆ ਹੈ।',
   feedbackError: 'ਤੁਹਾਡਾ ਫੀਡਬੈਕ ਸੰਭਾਲਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+  agreementTitle: 'ਦੌਰੇ ਤੋਂ ਪਹਿਲਾਂ ਇੱਕ ਹੋਰ ਕਦਮ',
+  agreementIntro: 'ਅੰਦਰ ਜਾਣ ਤੋਂ ਪਹਿਲਾਂ, ਮੇਜ਼ਬਾਨ ਚਾਹੁੰਦਾ ਹੈ ਕਿ ਤੁਸੀਂ ਹੇਠਾਂ ਦਿੱਤੇ ਦਸਤਾਵੇਜ਼ ਵੇਖੋ ਅਤੇ ਦਸਤਖਤ ਕਰੋ। ਇਸ ਵਿੱਚ ਲਗਭਗ 20 ਸਕਿੰਟ ਲੱਗਦੇ ਹਨ, ਅਤੇ ਦਸਤਖਤ ਕੀਤੀ ਕਾਪੀ ਤੁਹਾਡੀ ਈਮੇਲ ਉੱਤੇ ਭੇਜ ਦਿੱਤੀ ਜਾਂਦੀ ਹੈ।',
+  agreementDocsLabel: 'ਵੇਖਣ ਲਈ ਦਸਤਾਵੇਜ਼',
+  agreementView: 'ਦਸਤਾਵੇਜ਼ ਪੜ੍ਹੋ',
+  agreementNameLabel: 'ਦਸਤਖਤ ਕਰਨ ਲਈ ਆਪਣਾ ਪੂਰਾ ਕਾਨੂੰਨੀ ਨਾਮ ਲਿਖੋ',
+  agreementConsent: 'ਮੈਂ ਉੱਪਰ ਦਿੱਤੇ ਦਸਤਾਵੇਜ਼ ਵੇਖ ਲਏ ਹਨ ਅਤੇ ਸਹਿਮਤ ਹਾਂ ਕਿ ਮੇਰਾ ਲਿਖਿਆ ਨਾਮ ਮੇਰੇ ਇਲੈਕਟ੍ਰਾਨਿਕ ਦਸਤਖਤ ਹੋਵੇਗਾ।',
+  agreementBtn: 'ਦਸਤਖਤ ਕਰੋ ਅਤੇ ਅੱਗੇ ਵਧੋ →',
+  agreementSubmitting: 'ਤੁਹਾਡੇ ਦਸਤਖਤ ਦਰਜ ਕੀਤੇ ਜਾ ਰਹੇ ਹਨ...',
+  agreementNameError: 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਪੂਰਾ ਨਾਮ ਲਿਖੋ',
+  agreementError: 'ਤੁਹਾਡੇ ਦਸਤਖਤ ਦਰਜ ਨਹੀਂ ਹੋ ਸਕੇ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+  agreementDone: '✓ ਦਸਤਖਤ ਕੀਤੀ ਕਾਪੀ ਤੁਹਾਨੂੰ ਅਤੇ ਮੇਜ਼ਬਾਨ ਨੂੰ ਈਮੇਲ ਕਰ ਦਿੱਤੀ ਗਈ ਹੈ।',
+  agreementPrivacy: 'ਦਸਤਖਤ ਕੀਤੀਆਂ ਕਾਪੀਆਂ ਈਮੇਲ ਰਾਹੀਂ ਤੁਹਾਨੂੰ ਅਤੇ ਮੇਜ਼ਬਾਨ ਏਜੰਟ ਨੂੰ ਭੇਜੀਆਂ ਜਾਂਦੀਆਂ ਹਨ। ohACCESS ਦਸਤਾਵੇਜ਼ ਆਪਣੇ ਕੋਲ ਨਹੀਂ ਰੱਖਦਾ।',
 }
 
 export const STRINGS: Record<Lang, RegisterStrings> = {
