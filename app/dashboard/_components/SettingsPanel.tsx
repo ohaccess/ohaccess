@@ -803,20 +803,6 @@ export default function SettingsPanel({
             <label style={labelStyle}>State</label>
             <input style={inputStyle} type="text" placeholder="TX" value={profile?.state || ''} onChange={e => setProfile({ ...profile, state: e.target.value })} />
           </div>
-        </div>
-      </div>
-
-      {profile?.sponsor_id && (
-        <SponsorshipSection profile={profile} setProfile={setProfile} agentId={agentId} showToast={showToast} />
-      )}
-
-      <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Branding & Photos</div>
-        <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '16px', lineHeight: '1.5' }}>
-          Paste direct image URLs ending in .jpg or .png. Headshot and logo appear in visitor emails.
-          <strong style={{ color: '#1d1d1f' }}> Tip: if your headshot or logo is already online (your brokerage site, agent profile, etc.), right-click the image and choose &ldquo;Copy Image Address&rdquo; (press and hold on a phone), then paste it here.</strong> Or upload the photo to <a href="https://imgur.com" target="_blank" style={{ color: '#0071e3' }}>imgur.com</a> for a reliable direct link.
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
           <div>
             <label style={labelStyle}>Agent Landing Page URL</label>
             <input style={inputStyle} type="url" placeholder="https://yourwebsite.com/bio" value={profile?.landing_page_url || ''} onChange={e => setProfile({ ...profile, landing_page_url: e.target.value })} />
@@ -825,6 +811,7 @@ export default function SettingsPanel({
           <div>
             <label style={labelStyle}>Agent Headshot URL</label>
             <input style={inputStyle} type="url" placeholder="https://yoursite.com/headshot.jpg" value={profile?.headshot_url || ''} onChange={e => setProfile({ ...profile, headshot_url: e.target.value })} />
+            <div style={{ fontSize: '14px', color: '#6e6e73', marginTop: '4px' }}>Paste a direct image URL (.jpg or .png) — right-click your photo online and choose &ldquo;Copy Image Address&rdquo;, or upload it to <a href="https://imgur.com" target="_blank" style={{ color: '#0071e3' }}>imgur.com</a>.</div>
             {profile?.headshot_url && (
               <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <img src={profile.headshot_url} alt="Headshot" style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #d1d1d6' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
@@ -832,14 +819,26 @@ export default function SettingsPanel({
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {profile?.sponsor_id && (
+        <SponsorshipSection profile={profile} setProfile={setProfile} agentId={agentId} showToast={showToast} />
+      )}
+
+      {/* Branding (logo + colors). Hidden ENTIRELY for team/brokerage
+          accounts (Dave's call): both are team-managed and locked there, so
+          the card would be nothing but lock notes — admins manage branding
+          in the Team tab, members ask their team lead. */}
+      {!profile?.brokerage_id && (
+      <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Branding</div>
+        <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '16px', lineHeight: '1.5' }}>
+          Your logo and colors appear on the visitor sign-in form, in visitor emails, and on your printed sign.
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
           <div>
-            <label style={labelStyle}>Logo URL (Brokerage or Team)</label>
-            {profile?.brokerage_id ? (
-              <div style={{ background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '9px', padding: '10px 12px', fontSize: '14px', color: '#6e6e73', lineHeight: '1.5' }}>
-                🔒 Your team controls the logo.{isTeamAdmin ? ' Manage it in the Team tab.' : ' Contact your team lead to change it.'}
-              </div>
-            ) : (
-              <>
+            <label style={labelStyle}>Logo URL</label>
                 <input style={inputStyle} type="url" placeholder="https://yoursite.com/logo.png" value={profile?.logo_url || ''} onChange={e => setProfile({ ...profile, logo_url: e.target.value })} />
                 <div style={{ fontSize: '14px', color: '#6e6e73', marginTop: '4px' }}>A logo with a transparent or white background looks best in emails and on your printed sign.</div>
                 {profile?.logo_url && (
@@ -858,23 +857,12 @@ export default function SettingsPanel({
                     />
                   </div>
                 )}
-              </>
-            )}
           </div>
         </div>
 
-        {/* Brand colors live inside the branding card (Dave's request — one
-            card, less scrolling). Team members get the locked note instead
-            of pickers, same rule as the logo above. */}
+        {/* Colors share the branding card — one card, less scrolling. */}
         <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #e5e5ea' }}>
           <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px' }}>Brand Colors</div>
-          {profile?.brokerage_id ? (
-            <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.5' }}>
-              🔒 Your team&apos;s colors are applied to your visitor emails.
-              {isTeamAdmin ? ' Manage your team branding in the Team tab.' : ' Contact your team lead to change them.'}
-            </div>
-          ) : (
-            <>
               <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '12px' }}>Applied to your visitor registration form and email header.</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
@@ -897,10 +885,9 @@ export default function SettingsPanel({
                 <div style={{ background: primaryColor, color: onPrimary, border: fillBorder(primaryColor), padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>oh<strong>ACCESS</strong></div>
                 <div style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600' }}>Button</div>
               </div>
-            </>
-          )}
         </div>
       </div>
+      )}
 
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Send Leads to Your CRM</div>
