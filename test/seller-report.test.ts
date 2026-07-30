@@ -85,4 +85,123 @@ describe('buildSellerReportStats', () => {
     const stats = buildSellerReportStats([fb(8), fb(9), fb(9)], 0) // 26/3 = 8.666…
     expect(stats.feedback?.avgRating).toBe(8.7)
   })
+
+  describe('custom questions', () => {
+    const withAnswers = (answers: { id: string; prompt: string; answer: string }[]) => ({
+      purchasing_timeline: null,
+      custom_answers: answers,
+    })
+
+    it('returns no custom questions when nobody answered any', () => {
+      expect(buildSellerReportStats([v(null)], 0).customQuestions).toEqual([])
+      expect(buildSellerReportStats([v(null)], 0, [{ id: 'q1', prompt: 'Pre-approved?', type: 'choice', options: ['Yes', 'No'], surface: 'signin' }]).customQuestions).toEqual([])
+    })
+
+    it('counts choice answers per option, keeping zero-count options', () => {
+      const questions = [{ id: 'q1', prompt: 'Are you pre-approved?', type: 'choice', options: ['Yes', 'No', 'Not sure'], surface: 'signin' }]
+      const stats = buildSellerReportStats(
+        [
+          withAnswers([{ id: 'q1', prompt: 'Are you pre-approved?', answer: 'Yes' }]),
+          withAnswers([{ id: 'q1', prompt: 'Are you pre-approved?', answer: 'Yes' }]),
+          withAnswers([{ id: 'q1', prompt: 'Are you pre-approved?', answer: 'No' }]),
+          withAnswers([]), // signed in but skipped the question
+        ],
+        0,
+        questions
+      )
+      expect(stats.customQuestions).toEqual([
+        {
+          id: 'q1',
+          prompt: 'Are you pre-approved?',
+          responses: 3,
+          choices: [
+            { label: 'Yes', count: 2 },
+            { label: 'No', count: 1 },
+            { label: 'Not sure', count: 0 },
+          ],
+          answers: [],
+        },
+      ])
+    })
+
+    it('appends answers recorded under options that were later removed', () => {
+      const questions = [{ id: 'q1', prompt: 'Financing?', type: 'choice', options: ['Cash', 'Mortgage'], surface: 'signin' }]
+      const stats = buildSellerReportStats(
+        [withAnswers([{ id: 'q1', prompt: 'Financing?', answer: 'VA loan' }])],
+        0,
+        questions
+      )
+      expect(stats.customQuestions[0].choices).toEqual([
+        { label: 'Cash', count: 0 },
+        { label: 'Mortgage', count: 0 },
+        { label: 'VA loan', count: 1 },
+      ])
+    })
+
+    it('lists free-text answers in sign-in order', () => {
+      const questions = [{ id: 'q2', prompt: 'What did you think of the kitchen?', type: 'text', options: [], surface: 'success' }]
+      const stats = buildSellerReportStats(
+        [
+          withAnswers([{ id: 'q2', prompt: 'What did you think of the kitchen?', answer: 'Loved it' }]),
+          withAnswers([{ id: 'q2', prompt: 'What did you think of the kitchen?', answer: 'A bit dated' }]),
+        ],
+        0,
+        questions
+      )
+      expect(stats.customQuestions).toEqual([
+        {
+          id: 'q2',
+          prompt: 'What did you think of the kitchen?',
+          responses: 2,
+          choices: null,
+          answers: ['Loved it', 'A bit dated'],
+        },
+      ])
+    })
+
+    it('groups by question id, using the live prompt after a reword', () => {
+      const questions = [{ id: 'q1', prompt: 'Pre-approved for a mortgage?', type: 'choice', options: ['Yes', 'No'], surface: 'signin' }]
+      const stats = buildSellerReportStats(
+        [
+          withAnswers([{ id: 'q1', prompt: 'Pre-approved?', answer: 'Yes' }]), // answered before the reword
+          withAnswers([{ id: 'q1', prompt: 'Pre-approved for a mortgage?', answer: 'No' }]),
+        ],
+        0,
+        questions
+      )
+      expect(stats.customQuestions).toHaveLength(1)
+      expect(stats.customQuestions[0].prompt).toBe('Pre-approved for a mortgage?')
+      expect(stats.customQuestions[0].responses).toBe(2)
+    })
+
+    it('keeps answers to a question deleted from Settings, as free text under its snapshotted prompt', () => {
+      const stats = buildSellerReportStats(
+        [withAnswers([{ id: 'gone', prompt: 'Working with an agent?', answer: 'Yes' }])],
+        0,
+        [] // question no longer in the profile
+      )
+      expect(stats.customQuestions).toEqual([
+        { id: 'gone', prompt: 'Working with an agent?', responses: 1, choices: null, answers: ['Yes'] },
+      ])
+    })
+
+    it('orders live questions by the agent’s configured order, then deleted ones', () => {
+      const questions = [
+        { id: 'a', prompt: 'First?', type: 'text', options: [], surface: 'signin' },
+        { id: 'b', prompt: 'Second?', type: 'text', options: [], surface: 'success' },
+      ]
+      const stats = buildSellerReportStats(
+        [
+          withAnswers([
+            { id: 'gone', prompt: 'Old question?', answer: 'x' },
+            { id: 'b', prompt: 'Second?', answer: 'y' },
+            { id: 'a', prompt: 'First?', answer: 'z' },
+          ]),
+        ],
+        0,
+        questions
+      )
+      expect(stats.customQuestions.map(q => q.id)).toEqual(['a', 'b', 'gone'])
+    })
+  })
 })

@@ -5,6 +5,7 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { timelineStyle } from '@/lib/timeline'
 import { buildSellerReportStats } from '@/lib/seller-report'
 import { safeUrl } from '@/lib/register-helpers'
+import { readableOnLight } from '@/lib/colors'
 import ShareLink from './ShareLink'
 
 // The shareable seller report card: a PII-free summary of one open house
@@ -107,11 +108,11 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
   if (!oh) return <NotAvailable />
 
   const [{ data: visitors }, { count: scanCount }, { data: agent }] = await Promise.all([
-    supabase.from('visitors').select('purchasing_timeline, feedback_rating, feedback_price').eq('open_house_id', oh.id),
+    supabase.from('visitors').select('purchasing_timeline, feedback_rating, feedback_price, custom_answers').eq('open_house_id', oh.id),
     supabase.from('qr_scans').select('id', { count: 'exact', head: true }).eq('open_house_id', oh.id),
     supabase
       .from('profiles')
-      .select('full_name, email, display_email, phone, brokerage, brokerage_id, primary_color, accent_color, logo_url')
+      .select('full_name, email, display_email, phone, brokerage, brokerage_id, primary_color, accent_color, logo_url, custom_questions')
       .eq('id', oh.agent_id)
       .maybeSingle(),
   ])
@@ -131,7 +132,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
   }
   const listingUrl = safeUrl(oh.listing_url)
 
-  const stats = buildSellerReportStats(visitors ?? [], scanCount ?? 0)
+  const stats = buildSellerReportStats(visitors ?? [], scanCount ?? 0, agent?.custom_questions)
   const agentContactEmail = agent?.display_email || agent?.email || null
 
   return (
@@ -267,6 +268,45 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
             })}
           </div>
         )}
+
+        {/* The agent's own custom questions — one card per question that got
+            answers. Choice questions show a count per option; free-text
+            questions list the visitors' words with no identity attached. */}
+        {stats.customQuestions.map(q => {
+          const barColor = readableOnLight(brandColor)
+          return (
+            <div key={q.id} style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '18px 20px', marginTop: 10 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {q.prompt}
+              </div>
+              {q.choices ? (
+                q.choices.map(c => {
+                  const pct = q.responses > 0 ? Math.round((c.count / q.responses) * 100) : 0
+                  return (
+                    <div key={c.label} style={{ marginTop: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+                        <span style={{ fontSize: 12.5, fontWeight: 700 }}>{c.label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700 }}>{c.count}</span>
+                      </div>
+                      <div style={{ background: '#f2f2f7', borderRadius: 6, height: 8, overflow: 'hidden', marginTop: 4 }}>
+                        <div style={{ width: `${c.count > 0 ? Math.max(pct, 4) : 0}%`, height: '100%', background: barColor, borderRadius: 6 }} />
+                      </div>
+                    </div>
+                  )
+                })
+              ) : (
+                q.answers.map((a, i) => (
+                  <div key={i} style={{ background: '#f5f5f7', borderRadius: 10, padding: '9px 12px', marginTop: i === 0 ? 12 : 8, fontSize: 13, lineHeight: 1.5 }}>
+                    &ldquo;{a}&rdquo;
+                  </div>
+                ))
+              )}
+              <div style={{ fontSize: 11, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 12 }}>
+                {q.responses} {q.responses === 1 ? 'response' : 'responses'}
+              </div>
+            </div>
+          )
+        })}
 
         {/* Prepared by */}
         {agent?.full_name && (

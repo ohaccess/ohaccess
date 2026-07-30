@@ -122,7 +122,7 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
         {normalizeCustomAnswers(visitor.custom_answers).map(a => (
           <div key={a.id}>
             <div style={label}>{a.prompt}</div>
-            <div style={{ fontSize: '14px', color: '#1d1d1f' }}>{a.answer}</div>
+            <div style={{ fontSize: '14px', color: '#1d1d1f', fontWeight: 700 }}>{a.answer}</div>
           </div>
         ))}
       </div>
