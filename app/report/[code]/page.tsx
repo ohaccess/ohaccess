@@ -112,7 +112,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
     supabase.from('qr_scans').select('id', { count: 'exact', head: true }).eq('open_house_id', oh.id),
     supabase
       .from('profiles')
-      .select('full_name, email, display_email, phone, brokerage, brokerage_id, primary_color, accent_color, logo_url, custom_questions')
+      .select('full_name, email, display_email, phone, brokerage, brokerage_id, primary_color, accent_color, logo_url, headshot_url, custom_questions')
       .eq('id', oh.agent_id)
       .maybeSingle(),
   ])
@@ -134,6 +134,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
 
   const stats = buildSellerReportStats(visitors ?? [], scanCount ?? 0, agent?.custom_questions)
   const agentContactEmail = agent?.display_email || agent?.email || null
+  const agentHeadshot = safeUrl(agent?.headshot_url)
 
   return (
     // White at the top fading into the usual page gray — brokerage logos are
@@ -314,17 +315,25 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
             <div style={{ fontSize: 11, fontWeight: 700, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
               Hosted by
             </div>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>{agent.full_name}</div>
-            {agent.brokerage && <div style={{ fontSize: 12.5, color: '#6e6e73', marginTop: 2 }}>{agent.brokerage}</div>}
-            <div style={{ fontSize: 12.5, marginTop: 6, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-              {agent.phone && <a href={`tel:${agent.phone}`} style={{ color: brandColor, fontWeight: 600, textDecoration: 'none' }}>{agent.phone}</a>}
-              {agentContactEmail && <a href={`mailto:${agentContactEmail}`} style={{ color: brandColor, fontWeight: 600, textDecoration: 'none' }}>{agentContactEmail}</a>}
-            </div>
-            {listingUrl && (
-              <div style={{ marginTop: 8 }}>
-                <a href={listingUrl} style={{ fontSize: 12.5, color: brandColor, fontWeight: 700 }}>View the listing →</a>
+            {/* Same layout as the agent card in the codeword email: round
+                headshot on the left, contact details stacked beside it. */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {agentHeadshot && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={agentHeadshot} alt="" style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid #d1d1d6', marginRight: 20 }} />
+              )}
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>{agent.full_name}</div>
+                {agent.brokerage && <div style={{ fontSize: 12.5, color: '#6e6e73', marginTop: 2 }}>{agent.brokerage}</div>}
+                {agentContactEmail && <div style={{ marginTop: 2 }}><a href={`mailto:${agentContactEmail}`} style={{ fontSize: 12.5, color: brandColor, fontWeight: 600, textDecoration: 'none' }}>{agentContactEmail}</a></div>}
+                {agent.phone && <div style={{ marginTop: 2 }}><a href={`tel:${agent.phone}`} style={{ fontSize: 12.5, color: brandColor, fontWeight: 600, textDecoration: 'none' }}>{agent.phone}</a></div>}
+                {listingUrl && (
+                  <div style={{ marginTop: 2 }}>
+                    <a href={listingUrl} style={{ fontSize: 12.5, color: brandColor, fontWeight: 700 }}>View the listing →</a>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         )}
 
