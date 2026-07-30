@@ -211,7 +211,9 @@ export function googleCalendarUrl(title: string, startIso: string, endIso: strin
 
 // Builds the "Upcoming Open Houses" block for the visitor email: the agent's
 // (and their team's) open houses over the next 10 days, pre-filtered/sorted by
-// the caller. Each row shows day · time · city, a Google-Maps-linked address,
+// the caller. Each row shows day · time, a Google-Maps-linked address (which
+// carries the city; the city joins the when-line only when the address is
+// missing),
 // price + beds/baths, and add-to-calendar links (Google/Outlook are prefill
 // URLs; Apple has no URL scheme, so it points at our downloadable .ics
 // endpoint). Returns '' when there's nothing upcoming — the email simply
@@ -223,7 +225,8 @@ export function buildUpcomingOpenHousesHtml(houses: UpcomingOpenHouse[], appUrl:
   const items = houses.map(oh => {
     const address = oh.property_address || ''
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
-    const when = [oh.open_house_date, oh.open_house_hours, oh.city]
+    // The city only rides the when-line if there's no address row to carry it.
+    const when = [oh.open_house_date, oh.open_house_hours, address ? null : oh.city]
       .filter(Boolean).map(v => e(String(v))).join(' &middot; ')
 
     // Calendar links need concrete times; legacy rows without end_at fall back

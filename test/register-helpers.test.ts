@@ -191,13 +191,18 @@ describe('buildUpcomingOpenHousesHtml', () => {
     expect(buildUpcomingOpenHousesHtml([], APP_URL)).toBe('')
   })
 
-  it('shows day, time, and city plus price and beds/baths', () => {
+  it('shows day and time plus price and beds/baths — no city, the address line carries it', () => {
     const html = buildUpcomingOpenHousesHtml([oh], APP_URL)
     expect(html).toContain('Upcoming Open Houses')
-    expect(html).toContain('Sat, Jul 18, 2026 &middot; 1:00 PM – 3:00 PM &middot; Austin')
+    expect(html).toContain('Sat, Jul 18, 2026 &middot; 1:00 PM – 3:00 PM</div>')
     expect(html).toContain('$625,000')
     expect(html).toContain('4 bed')
     expect(html).toContain('3 bath')
+  })
+
+  it('falls back to city on the when-line only when the address is missing', () => {
+    const html = buildUpcomingOpenHousesHtml([{ ...oh, property_address: null }], APP_URL)
+    expect(html).toContain('Sat, Jul 18, 2026 &middot; 1:00 PM – 3:00 PM &middot; Austin')
   })
 
   it('links the address to Google Maps', () => {
@@ -216,7 +221,7 @@ describe('buildUpcomingOpenHousesHtml', () => {
   it('omits calendar links when a legacy row has no start time', () => {
     const html = buildUpcomingOpenHousesHtml([{ ...oh, start_at: null, end_at: null }], APP_URL)
     expect(html).not.toContain('Add to calendar')
-    expect(html).toContain('Austin') // the listing itself still renders
+    expect(html).toContain('123 Main St') // the listing itself still renders
   })
 
   it('skips missing fields without leaving dangling separators', () => {
@@ -239,10 +244,13 @@ describe('buildUpcomingOpenHousesHtml', () => {
   })
 
   it('renders one row per open house', () => {
-    const html = buildUpcomingOpenHousesHtml([oh, { ...oh, id: 'oh-456', city: 'Round Rock' }], APP_URL)
+    const html = buildUpcomingOpenHousesHtml(
+      [oh, { ...oh, id: 'oh-456', property_address: '9 Oak Ln, Round Rock, TX 78664' }],
+      APP_URL
+    )
     expect(html).toContain('oh-123/calendar')
     expect(html).toContain('oh-456/calendar')
-    expect(html).toContain('Round Rock')
+    expect(html).toContain('9 Oak Ln, Round Rock, TX 78664')
   })
 })
 

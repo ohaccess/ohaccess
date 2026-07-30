@@ -592,12 +592,12 @@ export async function POST(request: Request) {
       replyTo: agent?.display_email || agent?.email || 'support@ohaccess.com',
       subject: `Your ohACCESS codeword: ${emailCodeWord}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 8px;">
           <div style="background: ${headerColor}; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
             <div style="font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
             <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px;">Your codeword is ready</div>
           </div>
-          <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px;">
+          <div style="background: white; border-radius: 0 0 16px 16px; padding: 14px;">
             <div style="background: #f5f5f7; border: 1px dashed #d1d1d6; border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 16px;">
               <div style="font-size: 11px; color: #6e6e73; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Your Email Codeword</div>
               <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #1d1d1f;"><q>${escapeHtml(emailCodeWord)}</q></div>
