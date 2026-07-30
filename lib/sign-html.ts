@@ -35,7 +35,9 @@ export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; primaryC
   .wordmark b { font-weight: 800; }
   .tagline { font-size: 14px; font-weight: 600; letter-spacing: 5px; margin-top: 6px; }
   .rule { border: none; border-top: 3px solid ${accent}; margin: 7px 0; }
-  .banner { background: ${primary}; color: ${onPrimary}; font-size: 27px; font-weight: 800; letter-spacing: 8px; padding: 10px 10px; margin-bottom: 8px; }
+  .banner { background: ${primary}; color: ${onPrimary}; font-size: 27px; font-weight: 800; letter-spacing: 8px; padding: 10px 10px; margin-bottom: 8px; cursor: pointer; }
+  .banner-hint { font-size: 12px; color: #8e8e93; margin: -4px 0 6px; }
+  @media print { .banner-hint { display: none; } }
   .lead { font-size: 23.5px; font-weight: 700; line-height: 1.42; margin: 0 auto 6px; max-width: 100%; }
   .body { font-size: 21px; font-weight: 400; line-height: 1.48; color: #3a3a3c; margin: 0 auto 8px; max-width: 100%; }
   .qr { display: inline-block; border: 4px solid ${accent}; border-radius: 12px; padding: 12px; }
@@ -54,7 +56,8 @@ export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; primaryC
       ? `<img class="logo" src="${logoUrl}" alt="Logo" onerror="this.style.display='none';document.getElementById('wm').style.display='block'"><div class="wordmark" id="wm" style="display:none">oh<b>ACCESS</b></div>`
       : `<div class="wordmark">oh<b>ACCESS</b></div><div class="tagline">VERIFIED OPEN HOUSE CHECK-IN</div>`}</div>
     <hr class="rule">
-    <div class="banner">YOUR ATTENTION PLEASE</div>
+    <div class="banner" id="banner">YOUR ATTENTION PLEASE</div>
+    <div class="banner-hint">Click the banner to switch headings, then print again (Ctrl/Cmd&#8288;+&#8288;P). This tip won't print.</div>
     <div class="lead">For the safety of the host, the property, and other guests, the owner of this property is requiring that <em>all</em> visitors scan the QR-code and complete the form <em>before</em> entering.</div>
     <div class="body">A valid phone number &amp; email are <strong>required</strong> in order to receive the unique codeword. Share the codeword with the host to tour the property.</div>
     <div class="qr"><img src="${opts.dataUrl}" alt="QR Code"></div>
@@ -66,7 +69,19 @@ export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; primaryC
     <div class="footer-brand">ohACCESS.com</div>
     <div class="footer-tag">VERIFIED OPEN HOUSE CHECK-IN</div>
   </div>
-  <script>window.onload = function () { setTimeout(function () { window.print() }, 500) }</script>
+  <script>
+    window.onload = function () { setTimeout(function () { window.print() }, 500) }
+    // Clicking the banner cycles through alternate headings; the agent then
+    // reprints with the browser's own print command.
+    ;(function () {
+      var headings = ['YOUR ATTENTION PLEASE', 'WELCOME! PLEASE READ.', 'REQUIRED BEFORE ENTRY', 'CODEWORD REQUIRED', 'SAFETY PROTOCOL']
+      var i = 0
+      document.getElementById('banner').addEventListener('click', function () {
+        i = (i + 1) % headings.length
+        this.textContent = headings[i]
+      })
+    })()
+  </script>
 </body>
 </html>`
 }
