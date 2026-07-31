@@ -10,16 +10,40 @@ export default function UpdatePassword() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [ready, setReady] = useState(false)
+  const [linkError, setLinkError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
   useEffect(() => {
-    // Check for session from reset link
-    supabase.auth.onAuthStateChange(async (event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setReady(true)
-      }
+    // The reset link lands here with recovery credentials in the URL, and
+    // supabase-js parses them at client init — usually BEFORE this effect
+    // runs, so the PASSWORD_RECOVERY event fires with nobody listening and
+    // waiting for it alone left the page stuck on "Verifying...". Keep the
+    // listener (covers slow parses), but also accept an already-established
+    // session, exchange a ?code= link ourselves, and surface an expired/used
+    // link instead of spinning forever.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) setReady(true)
     })
+    ;(async () => {
+      // Supabase reports a dead link via error params (hash or query).
+      const hashParams = new URLSearchParams(window.location.hash.slice(1))
+      const queryParams = new URLSearchParams(window.location.search)
+      if (hashParams.get('error') || queryParams.get('error')) {
+        setLinkError('This reset link has expired or was already used.')
+        return
+      }
+      const code = queryParams.get('code')
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (error) setLinkError('This reset link has expired or was already used.')
+        else setReady(true)
+        return
+      }
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) setReady(true)
+    })()
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -94,12 +118,12 @@ export default function UpdatePassword() {
           </div>
         ) : !ready ? (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔗</div>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>{linkError ? '⏱️' : '🔗'}</div>
             <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '8px' }}>
-              Verifying your reset link...
+              {linkError ? 'Reset link expired' : 'Verifying your reset link...'}
             </div>
             <p style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '24px' }}>
-              If this page doesn&apos;t load, your reset link may have expired. Please request a new one.
+              {linkError || 'If this page doesn’t load, your reset link may have expired. Please request a new one.'}
             </p>
             <Link href="/reset-password" style={{ color: '#0071e3', fontSize: '13px', textDecoration: 'none' }}>
               Request new reset link
