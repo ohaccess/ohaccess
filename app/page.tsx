@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import TheRecord from './new/TheRecord'
+import RecoveryRedirect from './_components/RecoveryRedirect'
 
 // Homepage browser tab = the clean brand tagline. `absolute` skips the
 // "%s · ohACCESS" template; other pages keep the SEO-rich layout default
@@ -30,6 +31,7 @@ export default function Home() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_SCHEMA) }} />
+      <RecoveryRedirect />
       <TheRecord showFilm={false} />
     </>
   )
