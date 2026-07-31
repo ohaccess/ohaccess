@@ -152,6 +152,7 @@ export default function OpenHouseList({
   selectedOH,
   visitors,
   isPaidTier,
+  sponsored,
   trialLimit,
   locked,
   primaryColor,
@@ -183,6 +184,7 @@ export default function OpenHouseList({
   selectedOH: any
   visitors: any[]
   isPaidTier: boolean
+  sponsored: boolean
   trialLimit: number
   locked: boolean
   primaryColor: string
@@ -220,7 +222,11 @@ export default function OpenHouseList({
       <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Dashboard</div>
       <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>Real-time visitor log and open house management.</div>
 
-      {!isPaidTier && !locked && (
+      {/* Hidden for sponsored agents even if the sponsor's billing isn't
+          active yet (Dave's call) — a sponsored account shouldn't see trial
+          nags. If the sponsorship ends (either side), sponsored flips false
+          and the banner returns with the live remaining count. */}
+      {!isPaidTier && !locked && !sponsored && (
         <TrialBanner agentId={user?.id} supabase={supabase} accentColor={accentColor} trialLimit={trialLimit} />
       )}
 

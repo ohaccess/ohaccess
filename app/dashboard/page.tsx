@@ -935,6 +935,7 @@ export default function Dashboard() {
             selectedOH={selectedOH}
             visitors={visitors}
             isPaidTier={isPaidTier}
+            sponsored={!!profile?.sponsor_id}
             trialLimit={trialLimit}
             locked={locked}
             primaryColor={primaryColor}
