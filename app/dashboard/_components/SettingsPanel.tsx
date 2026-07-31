@@ -441,6 +441,7 @@ function SponsorshipSection({ profile, setProfile, agentId, showToast, sponsorCo
   } | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [planBilling, setPlanBilling] = useState<BillingKey>('month')
 
   useEffect(() => {
     if (!profile?.sponsor_id) return
@@ -451,6 +452,10 @@ function SponsorshipSection({ profile, setProfile, agentId, showToast, sponsorCo
       .maybeSingle()
       .then(({ data }: { data: typeof sponsor }) => setSponsor(data))
   }, [profile?.sponsor_id])
+
+  const billingChoices = OFFER_TWO_YEAR
+    ? BILLING_OPTIONS
+    : BILLING_OPTIONS.filter(b => b.key !== 'two_year_prepay')
 
   const endSponsorship = async () => {
     setBusy(true)
@@ -471,55 +476,97 @@ function SponsorshipSection({ profile, setProfile, agentId, showToast, sponsorCo
 
   return (
     <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-      <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Sponsorship</div>
+      <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Subscription &amp; Sponsorship</div>
 
-      {sponsorCovered && (
-        <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.5', marginBottom: '14px' }}>
-          ✓ <strong style={{ color: '#1d1d1f' }}>Pro — included with your sponsorship.</strong> Your sponsor covers your plan; there&apos;s nothing for you to pay.
-        </div>
-      )}
+      {/* Sponsor on the left, plans on the right (Dave's call): pricing stays
+          visible for reference but locked until the sponsorship is ended.
+          auto-fit collapses to one column on phones. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '20px', alignItems: 'start' }}>
 
-      {/* The sponsor's card, styled to match the one visitors see in emails. */}
-      <div style={{ background: '#fdfaf3', border: '1px solid #ead9ad', borderRadius: '10px', padding: '14px', maxWidth: '460px' }}>
-        <div style={{ fontSize: '10px', fontWeight: '700', color: '#8a6a1f', textTransform: 'uppercase' as const, letterSpacing: '1px', marginBottom: '10px' }}>Sponsored by</div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          {sponsor?.headshot_url && (
-            <img src={sponsor.headshot_url} alt="Sponsor headshot" style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid #ead9ad', marginRight: '16px' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+        <div>
+          {sponsorCovered && (
+            <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.5', marginBottom: '14px' }}>
+              ✓ <strong style={{ color: '#1d1d1f' }}>Pro — included with your sponsorship.</strong> Your sponsor covers your plan; there&apos;s nothing for you to pay.
+            </div>
           )}
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#1d1d1f' }}>{sponsor?.full_name || '…'}</div>
-            {sponsor?.company && <div style={{ fontSize: '12px', color: '#6e6e73' }}>{sponsor.company}</div>}
-            {sponsor?.display_email && <div style={{ fontSize: '12px', color: '#0071e3' }}>{sponsor.display_email}</div>}
-            {sponsor?.phone && <div style={{ fontSize: '12px', color: '#6e6e73' }}>{sponsor.phone}</div>}
-            {sponsor?.license_number && <div style={{ fontSize: '11px', color: '#6e6e73' }}>{sponsor.license_number}</div>}
-          </div>
-        </div>
-        {sponsor?.logo_url && (
-          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #ead9ad', textAlign: 'center' as const }}>
-            <img src={sponsor.logo_url} alt="Sponsor logo" style={{ maxHeight: '60px', width: '70%', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-          </div>
-        )}
-      </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '14px', flexWrap: 'wrap' as const }}>
-        <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.6', flex: '1 1 280px' }}>
-          This card appears below yours in visitor emails, and your sign-in form names them in the consent language. Your branding — logo, colors, and name — stays fully yours.
-        </div>
-        {confirming ? (
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' as const }}>
-            <span style={{ fontSize: '14px', color: '#6e6e73' }}>{sponsorCovered ? 'End sponsorship? Your Pro coverage through them ends too.' : 'End sponsorship?'}</span>
-            <button onClick={endSponsorship} disabled={busy} style={{ background: '#cc0000', color: 'white', border: 'none', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy ? 0.7 : 1 }}>
-              {busy ? '…' : 'Yes, end it'}
-            </button>
-            <button onClick={() => setConfirming(false)} style={{ background: 'none', border: 'none', color: '#6e6e73', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Cancel
-            </button>
+          {/* The sponsor's card, styled to match the one visitors see in emails. */}
+          <div style={{ background: '#fdfaf3', border: '1px solid #ead9ad', borderRadius: '10px', padding: '14px' }}>
+            <div style={{ fontSize: '10px', fontWeight: '700', color: '#8a6a1f', textTransform: 'uppercase' as const, letterSpacing: '1px', marginBottom: '10px' }}>Sponsored by</div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {sponsor?.headshot_url && (
+                <img src={sponsor.headshot_url} alt="Sponsor headshot" style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid #ead9ad', marginRight: '16px' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              )}
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#1d1d1f' }}>{sponsor?.full_name || '…'}</div>
+                {sponsor?.company && <div style={{ fontSize: '12px', color: '#6e6e73' }}>{sponsor.company}</div>}
+                {sponsor?.display_email && <div style={{ fontSize: '12px', color: '#0071e3' }}>{sponsor.display_email}</div>}
+                {sponsor?.phone && <div style={{ fontSize: '12px', color: '#6e6e73' }}>{sponsor.phone}</div>}
+                {sponsor?.license_number && <div style={{ fontSize: '11px', color: '#6e6e73' }}>{sponsor.license_number}</div>}
+              </div>
+            </div>
+            {sponsor?.logo_url && (
+              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #ead9ad', textAlign: 'center' as const }}>
+                <img src={sponsor.logo_url} alt="Sponsor logo" style={{ maxHeight: '60px', width: '70%', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              </div>
+            )}
           </div>
-        ) : (
-          <button onClick={() => setConfirming(true)} style={{ background: 'white', border: '1px solid #d1d1d6', color: '#cc0000', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            End sponsorship
-          </button>
-        )}
+
+          <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.6', marginTop: '14px' }}>
+            This card appears below yours in visitor emails, and your sign-in form names them in the consent language. Your branding — logo, colors, and name — stays fully yours.
+          </div>
+
+          <div style={{ marginTop: '14px' }}>
+            {confirming ? (
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' as const }}>
+                <span style={{ fontSize: '14px', color: '#6e6e73' }}>{sponsorCovered ? 'End sponsorship? Your Pro coverage through them ends too.' : 'End sponsorship?'}</span>
+                <button onClick={endSponsorship} disabled={busy} style={{ background: '#cc0000', color: 'white', border: 'none', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy ? 0.7 : 1 }}>
+                  {busy ? '…' : 'Yes, end it'}
+                </button>
+                <button onClick={() => setConfirming(false)} style={{ background: 'none', border: 'none', color: '#6e6e73', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirming(true)} style={{ background: 'white', border: '1px solid #d1d1d6', color: '#cc0000', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                End sponsorship
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Plans — visible for reference, locked while sponsored. Ending the
+            sponsorship swaps this card for the live SubscriptionSection. */}
+        <div>
+          <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.5', marginBottom: '12px' }}>
+            🔒 Plans are locked while you&apos;re sponsored — end the sponsorship to choose your own plan.
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+            <div style={{ display: 'inline-flex', background: '#f5f5f7', borderRadius: '12px', padding: '4px', gap: '2px', maxWidth: '100%', flexWrap: 'wrap' as const }}>
+              {billingChoices.map(b => (
+                <button key={b.key} onClick={() => setPlanBilling(b.key)} style={{ padding: '8px 14px', borderRadius: '9px', border: 'none', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: '600', background: planBilling === b.key ? '#1d1d1f' : 'transparent', color: planBilling === b.key ? 'white' : '#6e6e73', whiteSpace: 'nowrap' as const }}>
+                  {b.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '10px', opacity: 0.55 }}>
+            {PLAN_TIERS.map(plan => (
+              <div key={plan.tier} style={{ background: plan.featured ? '#1d1d1f' : 'white', border: plan.featured ? '2px solid #c9963a' : '1px solid #d1d1d6', borderRadius: '14px', padding: '14px 12px', display: 'flex', flexDirection: 'column' as const }}>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: plan.featured ? 'white' : '#1d1d1f', marginBottom: '4px' }}>{plan.name}</div>
+                <div style={{ fontSize: '22px', fontWeight: '700', color: plan.featured ? '#c9963a' : '#1d1d1f', letterSpacing: '-0.5px', lineHeight: '1.1' }}>
+                  {plan.price[planBilling]}<span style={{ fontSize: '11px', fontWeight: '400', color: plan.featured ? 'rgba(255,255,255,0.5)' : '#6e6e73' }}>{plan.per}</span>
+                </div>
+                <div style={{ fontSize: '10px', color: plan.featured ? 'rgba(255,255,255,0.55)' : '#6e6e73', minHeight: '26px', marginTop: '4px', marginBottom: '10px' }}>{plan.sub[planBilling]}</div>
+                <button disabled style={{ marginTop: 'auto', width: '100%', background: plan.featured ? '#c9963a' : '#1d1d1f', color: plan.featured ? '#1d1d1f' : 'white', border: 'none', borderRadius: '9px', padding: '8px', fontSize: '11px', fontWeight: '700', cursor: 'not-allowed', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  🔒 {plan.cta}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -775,13 +822,12 @@ export default function SettingsPanel({
       <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Account Settings</div>
       <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '24px' }}>Manage your profile, branding, and preferences.</div>
 
-      {/* Sponsored agents see their sponsor's card up top, where the plan
-          card would sit. While the sponsor's billing is active it REPLACES
-          the Subscription card (the account runs as full Pro — nothing to
-          pay, nothing to pitch); the Subscription card still shows below it
-          if the agent also carries their own paid plan (so they can manage
-          or cancel their own billing), or if the sponsor's billing lapses
-          (back to the normal plan options). */}
+      {/* Sponsored agents get ONE combined card up top, where the plan card
+          would sit: sponsor on the left, plans on the right — visible for
+          reference but locked until the sponsorship is ended (two-click
+          confirm). It replaces the Subscription card entirely; that card
+          only still shows below when the agent carries their OWN paid plan
+          (so they can manage or cancel their own billing). */}
       {profile?.sponsor_id && (
         <SponsorshipSection
           profile={profile}
@@ -806,7 +852,7 @@ export default function SettingsPanel({
             </div>
           )}
         </div>
-      ) : (!sponsorCovered || ownPaidActive) ? (
+      ) : (!profile?.sponsor_id || ownPaidActive) ? (
         <SubscriptionSection
           profile={profile}
           agentId={agentId}
