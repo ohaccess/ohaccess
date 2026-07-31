@@ -5,6 +5,7 @@ import { Resend } from 'resend'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/escape-html'
 import { agentCopyRecipients } from '@/lib/register-helpers'
+import { sendVisitorCodewordMessages } from '@/lib/codeword-messages'
 import {
   normalizeAgreementTemplates,
   resolveAgreementDocs,
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
 
     const { data: visitor } = await supabase
       .from('visitors')
-      .select('id, open_house_id, agent_id, email')
+      .select('id, open_house_id, agent_id, email, phone, sms_opted_out, sms_message_sid, sms_status, email_message_id')
       .eq('feedback_token', token)
       .maybeSingle()
     if (!visitor) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -77,6 +78,29 @@ export async function POST(request: Request) {
     if (!openHouse) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     const agent = openHouse.profiles
 
+    // The codeword SMS + email that /api/register deliberately DID NOT send
+    // for this agreement-gated open house — the codeword is door access, so
+    // it waits for the signature. Released here via the shared sender
+    // (lib/codeword-messages). Pending = never attempted: null sid/status
+    // (SMS) and null message id (email), so visitors from before agreement
+    // gating (messaged at sign-in) are never sent duplicates. Best-effort: a
+    // failed message must never fail the (already delivered) signature.
+    const releaseCodewordMessages = async () => {
+      const smsPending =
+        !!visitor.phone && !visitor.sms_opted_out && !visitor.sms_message_sid && !visitor.sms_status
+      const emailPending = !visitor.email_message_id
+      if (!smsPending && !emailPending) return
+      await sendVisitorCodewordMessages({
+        visitorId: visitor.id,
+        email: visitor.email,
+        phone: visitor.phone,
+        phoneOptedOut: !!visitor.sms_opted_out,
+        openHouse,
+        agent,
+        channels: { sms: smsPending, email: emailPending },
+      })
+    }
+
     const docs = openHouse.require_agreement
       ? resolveAgreementDocs(
           normalizeAgreementTemplates(agent?.agreement_templates),
@@ -84,8 +108,11 @@ export async function POST(request: Request) {
         )
       : []
     // Fail open: if the documents vanished between sign-in and signing (the
-    // agent deleted them mid-open-house), there is nothing left to sign.
+    // agent deleted them mid-open-house), there is nothing left to sign. The
+    // register route still held back the codeword messages, so release them
+    // now — otherwise this visitor would never get their codeword.
     if (docs.length === 0) {
+      await releaseCodewordMessages()
       return NextResponse.json({ success: true, nothingToSign: true })
     }
 
@@ -191,6 +218,10 @@ export async function POST(request: Request) {
         `[AGREEMENT] receipt insert FAILED for visitor ${visitor.id} (email ${sent.data?.id}): ${receiptErr.message}`
       )
     }
+
+    // Signature delivered — now release the codeword SMS + email the register
+    // route held back for this agreement-gated open house.
+    await releaseCodewordMessages()
 
     return NextResponse.json({ success: true })
   } catch (err) {

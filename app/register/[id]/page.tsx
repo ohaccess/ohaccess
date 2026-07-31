@@ -319,7 +319,14 @@ function ExpiredOpenHouse() {
         if (data.feedbackToken) setFeedbackToken(data.feedbackToken)
         if (Array.isArray(data.disclosures)) setDisclosures(data.disclosures)
         if (Array.isArray(data.customQuestions)) setSuccessQuestions(data.customQuestions)
-        if (Array.isArray(data.agreement?.docs)) setAgreementDocs(data.agreement.docs)
+        if (Array.isArray(data.agreement?.docs)) {
+          setAgreementDocs(data.agreement.docs)
+          // Pre-fill the signature name from the sign-in form (standard
+          // e-sign practice — DocuSign et al. do the same). The field stays
+          // editable, and intent still comes from the visitor's own tap on
+          // the unchecked consent box + the Sign button.
+          setSignName(`${form.firstName} ${form.lastName}`.trim().replace(/\s+/g, ' '))
+        }
         setSubmitted(true)
       } else {
         // Server errors (rate limits, trial caps) are specific and
@@ -750,8 +757,9 @@ function ExpiredOpenHouse() {
           </>
         ) : agreementDocs.length > 0 && !agreementSigned ? (
           /* Touring-agreement screen — the host requires signed document(s)
-             before entry. Sits AFTER the sign-in (so the lead is captured and
-             the codeword texts are already out even if the visitor balks) and
+             before entry. Sits AFTER the sign-in (so the lead is captured even
+             if the visitor balks — but the codeword SMS and email are both
+             held back until they sign; /api/agreement/sign releases them) and
              BEFORE the success screen. There is deliberately no skip button:
              the host chose "require", sees who hasn't signed on their
              dashboard, and handles it at the door. Branding follows the
