@@ -1006,6 +1006,7 @@ export default function Dashboard() {
             isTeamMember={isTeamMember}
             teamPaymentFailed={teamPaymentFailed}
             isTeamAdmin={isTeamAdmin}
+            sponsorCovered={sponsorCovered}
             formatPhone={formatPhone}
             saveSettings={saveSettings}
             primaryColor={primaryColor}

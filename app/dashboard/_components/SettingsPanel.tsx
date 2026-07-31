@@ -415,16 +415,30 @@ function ReferralSection({ profile }: { profile: any }) {
   )
 }
 
-// Shown only when the agent has an active sponsor (a 3rd-party provider whose
-// card rides below theirs in visitor emails). The agent accepted this via the
-// emailed invite; this section lets them see who it is and end it anytime.
-function SponsorshipSection({ profile, setProfile, agentId, showToast }: {
+// Shown at the TOP of Settings — where the plan card would sit — when the
+// agent has a sponsor (a 3rd-party provider whose card rides below theirs in
+// visitor emails). Mirrors the gold "Sponsored by" card visitors see in
+// emails so the agent knows exactly what's being shown. While the sponsor's
+// billing is active the agent's account runs as full Pro, so this card
+// REPLACES the plan/upgrade card entirely. The agent accepted this via the
+// emailed invite; this card lets them see who it is and end it anytime.
+function SponsorshipSection({ profile, setProfile, agentId, showToast, sponsorCovered, onEnded }: {
   profile: any
   setProfile: (p: any) => void
   agentId: string
   showToast: (message: string, type?: 'success' | 'error') => void
+  sponsorCovered: boolean
+  onEnded: () => void | Promise<void>
 }) {
-  const [sponsor, setSponsor] = useState<{ full_name: string | null; company: string | null } | null>(null)
+  const [sponsor, setSponsor] = useState<{
+    full_name: string | null
+    company: string | null
+    display_email: string | null
+    phone: string | null
+    license_number: string | null
+    headshot_url: string | null
+    logo_url: string | null
+  } | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
 
@@ -432,10 +446,10 @@ function SponsorshipSection({ profile, setProfile, agentId, showToast }: {
     if (!profile?.sponsor_id) return
     supabase
       .from('sponsors')
-      .select('full_name, company')
+      .select('full_name, company, display_email, phone, license_number, headshot_url, logo_url')
       .eq('id', profile.sponsor_id)
       .maybeSingle()
-      .then(({ data }: { data: { full_name: string | null; company: string | null } | null }) => setSponsor(data))
+      .then(({ data }: { data: typeof sponsor }) => setSponsor(data))
   }, [profile?.sponsor_id])
 
   const endSponsorship = async () => {
@@ -452,25 +466,48 @@ function SponsorshipSection({ profile, setProfile, agentId, showToast }: {
     }
     setProfile({ ...profile, sponsor_id: null })
     showToast('Sponsorship ended.')
+    await onEnded()
   }
-
-  const label = sponsor
-    ? (sponsor.company ? `${sponsor.full_name} (${sponsor.company})` : sponsor.full_name)
-    : '…'
 
   return (
     <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
-      <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Sponsorship</div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '12px', flexWrap: 'wrap' as const }}>
-        <div style={{ fontSize: '13px', color: '#48484a', lineHeight: '1.6' }}>
-          Sponsored by <strong style={{ color: '#1d1d1f' }}>{label}</strong>.<br />
-          <span style={{ fontSize: '14px', color: '#6e6e73' }}>
-            Their card appears below yours in visitor emails, and your sign-in form names them in the consent language.
-          </span>
+      <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Sponsorship</div>
+
+      {sponsorCovered && (
+        <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.5', marginBottom: '14px' }}>
+          ✓ <strong style={{ color: '#1d1d1f' }}>Pro — included with your sponsorship.</strong> Your sponsor covers your plan; there&apos;s nothing for you to pay.
+        </div>
+      )}
+
+      {/* The sponsor's card, styled to match the one visitors see in emails. */}
+      <div style={{ background: '#fdfaf3', border: '1px solid #ead9ad', borderRadius: '10px', padding: '14px', maxWidth: '460px' }}>
+        <div style={{ fontSize: '10px', fontWeight: '700', color: '#8a6a1f', textTransform: 'uppercase' as const, letterSpacing: '1px', marginBottom: '10px' }}>Sponsored by</div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {sponsor?.headshot_url && (
+            <img src={sponsor.headshot_url} alt="Sponsor headshot" style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid #ead9ad', marginRight: '16px' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          )}
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#1d1d1f' }}>{sponsor?.full_name || '…'}</div>
+            {sponsor?.company && <div style={{ fontSize: '12px', color: '#6e6e73' }}>{sponsor.company}</div>}
+            {sponsor?.display_email && <div style={{ fontSize: '12px', color: '#0071e3' }}>{sponsor.display_email}</div>}
+            {sponsor?.phone && <div style={{ fontSize: '12px', color: '#6e6e73' }}>{sponsor.phone}</div>}
+            {sponsor?.license_number && <div style={{ fontSize: '11px', color: '#6e6e73' }}>{sponsor.license_number}</div>}
+          </div>
+        </div>
+        {sponsor?.logo_url && (
+          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #ead9ad', textAlign: 'center' as const }}>
+            <img src={sponsor.logo_url} alt="Sponsor logo" style={{ maxHeight: '60px', width: '70%', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '14px', flexWrap: 'wrap' as const }}>
+        <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.6', flex: '1 1 280px' }}>
+          This card appears below yours in visitor emails, and your sign-in form names them in the consent language. Your branding — logo, colors, and name — stays fully yours.
         </div>
         {confirming ? (
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: '#6e6e73' }}>End sponsorship?</span>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' as const }}>
+            <span style={{ fontSize: '14px', color: '#6e6e73' }}>{sponsorCovered ? 'End sponsorship? Your Pro coverage through them ends too.' : 'End sponsorship?'}</span>
             <button onClick={endSponsorship} disabled={busy} style={{ background: '#cc0000', color: 'white', border: 'none', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: busy ? 0.7 : 1 }}>
               {busy ? '…' : 'Yes, end it'}
             </button>
@@ -497,6 +534,7 @@ export default function SettingsPanel({
   isTeamMember,
   teamPaymentFailed,
   isTeamAdmin,
+  sponsorCovered,
   formatPhone,
   saveSettings,
   primaryColor,
@@ -516,6 +554,7 @@ export default function SettingsPanel({
   isTeamMember: boolean
   teamPaymentFailed: boolean
   isTeamAdmin: boolean
+  sponsorCovered: boolean
   formatPhone: (value: string) => string
   saveSettings: () => void
   primaryColor: string
@@ -533,6 +572,12 @@ export default function SettingsPanel({
   // without touching the other dashboard views.
   inputStyle = { ...inputStyle, fontSize: '14px' }
   labelStyle = { ...labelStyle, fontSize: '12px' }
+
+  // Whether the agent carries their OWN active paid plan (as opposed to Pro
+  // access granted by a sponsor's billing). Decides if the Subscription card
+  // still shows underneath the sponsor card.
+  const ownPaidActive =
+    ['pro', 'team', 'brokerage'].includes(profile?.tier || 'free') && !isExpiredPrepaidAccess(profile)
 
   // Disclosure/notice rows live in `profile` like every other setting, so the
   // existing saveSettings picks them up. Rows are kept as typed (including
@@ -730,6 +775,24 @@ export default function SettingsPanel({
       <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Account Settings</div>
       <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '24px' }}>Manage your profile, branding, and preferences.</div>
 
+      {/* Sponsored agents see their sponsor's card up top, where the plan
+          card would sit. While the sponsor's billing is active it REPLACES
+          the Subscription card (the account runs as full Pro — nothing to
+          pay, nothing to pitch); the Subscription card still shows below it
+          if the agent also carries their own paid plan (so they can manage
+          or cancel their own billing), or if the sponsor's billing lapses
+          (back to the normal plan options). */}
+      {profile?.sponsor_id && (
+        <SponsorshipSection
+          profile={profile}
+          setProfile={setProfile}
+          agentId={agentId}
+          showToast={showToast}
+          sponsorCovered={sponsorCovered}
+          onEnded={onSubscriptionChanged}
+        />
+      )}
+
       {isTeamMember ? (
         <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
           <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Subscription</div>
@@ -743,7 +806,7 @@ export default function SettingsPanel({
             </div>
           )}
         </div>
-      ) : (
+      ) : (!sponsorCovered || ownPaidActive) ? (
         <SubscriptionSection
           profile={profile}
           agentId={agentId}
@@ -751,7 +814,7 @@ export default function SettingsPanel({
           showToast={showToast}
           onChanged={onSubscriptionChanged}
         />
-      )}
+      ) : null}
 
       <ReferralSection profile={profile} />
 
@@ -821,10 +884,6 @@ export default function SettingsPanel({
           </div>
         </div>
       </div>
-
-      {profile?.sponsor_id && (
-        <SponsorshipSection profile={profile} setProfile={setProfile} agentId={agentId} showToast={showToast} />
-      )}
 
       {/* Branding (logo + colors). Hidden ENTIRELY for team/brokerage
           accounts (Dave's call): both are team-managed and locked there, so
