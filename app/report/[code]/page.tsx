@@ -2,10 +2,9 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { checkRateLimit } from '@/lib/rate-limit'
-import { timelineStyle } from '@/lib/timeline'
 import { buildSellerReportStats } from '@/lib/seller-report'
 import { safeUrl } from '@/lib/register-helpers'
-import { readableOnLight } from '@/lib/colors'
+import { onColor, readableOnLight } from '@/lib/colors'
 import ShareLink from './ShareLink'
 
 // The shareable seller report card: a PII-free summary of one open house
@@ -120,17 +119,26 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
   // Team/brokerage members inherit their team's branding, matching every
   // other visitor-facing surface (register page, emails, printed sign).
   let brandColor = agent?.primary_color || '#1d1d1f'
+  let accentColor = agent?.accent_color || '#0071e3'
   let brandLogo = safeUrl(agent?.logo_url)
   if (agent?.brokerage_id) {
     const { data: brokerage } = await supabase
       .from('brokerages')
-      .select('primary_color, logo_url')
+      .select('primary_color, accent_color, logo_url')
       .eq('id', agent.brokerage_id)
       .maybeSingle()
     if (brokerage?.primary_color) brandColor = brokerage.primary_color
+    if (brokerage?.accent_color) accentColor = brokerage.accent_color
     if (safeUrl(brokerage?.logo_url)) brandLogo = safeUrl(brokerage?.logo_url)
   }
   const listingUrl = safeUrl(oh.listing_url)
+
+  // Stats and chart bars alternate between the agent's two brand colors —
+  // primary first, then accent — instead of per-answer semantic colors.
+  // readableOnLight guards against a too-light pick vanishing on white.
+  const chartPrimary = readableOnLight(brandColor)
+  const chartAccent = readableOnLight(accentColor)
+  const chartColor = (i: number) => (i % 2 === 0 ? chartPrimary : chartAccent)
 
   const stats = buildSellerReportStats(visitors ?? [], scanCount ?? 0, agent?.custom_questions)
   const agentContactEmail = agent?.display_email || agent?.email || null
@@ -168,14 +176,14 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
         {/* Headline stats */}
         <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
           <div style={{ flex: 1, background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '18px 14px', textAlign: 'center' }}>
-            <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: -1 }}>{stats.total}</div>
+            <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: -1, color: chartPrimary }}>{stats.total}</div>
             <div style={{ fontSize: 11, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>
               Registered {stats.total === 1 ? 'visitor' : 'visitors'}
             </div>
           </div>
           {stats.soonCount > 0 && (
             <div style={{ flex: 1, background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '18px 14px', textAlign: 'center' }}>
-              <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: -1, color: '#b84800' }}>{stats.soonCount}</div>
+              <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: -1, color: chartAccent }}>{stats.soonCount}</div>
               <div style={{ fontSize: 11, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>
                 Buying within 6 months
               </div>
@@ -195,16 +203,16 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
               <div style={{ fontSize: 11, fontWeight: 700, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
                 When visitors plan to buy
               </div>
-              {stats.groups.map(g => {
-                const c = timelineStyle(g.label)
+              {stats.groups.map((g, i) => {
+                const c = chartColor(i)
                 const pct = Math.round((g.count / stats.total) * 100)
                 return (
                   <div key={g.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
-                    <span style={{ background: c.bg, color: c.color, padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', minWidth: 92, textAlign: 'center' }}>
+                    <span style={{ background: c, color: onColor(c), padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', minWidth: 92, textAlign: 'center' }}>
                       {g.label}
                     </span>
                     <div style={{ flex: 1, background: '#f2f2f7', borderRadius: 6, height: 8, overflow: 'hidden' }}>
-                      <div style={{ width: `${Math.max(pct, 4)}%`, height: '100%', background: c.color, borderRadius: 6 }} />
+                      <div style={{ width: `${Math.max(pct, 4)}%`, height: '100%', background: c, borderRadius: 6 }} />
                     </div>
                     <span style={{ fontSize: 13, fontWeight: 700, minWidth: 20, textAlign: 'right' }}>{g.count}</span>
                   </div>
@@ -252,16 +260,16 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
               How visitors felt about the price
             </div>
             {([
-              { label: 'Too high', count: stats.feedback.price.high, color: '#b84800' },
-              { label: 'Reasonable', count: stats.feedback.price.reasonable, color: '#1a7a3c' },
-              { label: 'Too low', count: stats.feedback.price.low, color: '#0071a8' },
-            ] as const).map(row => {
+              { label: 'Too high', count: stats.feedback.price.high },
+              { label: 'Reasonable', count: stats.feedback.price.reasonable },
+              { label: 'Too low', count: stats.feedback.price.low },
+            ] as const).map((row, i) => {
               const pct = stats.feedback!.responses > 0 ? Math.round((row.count / stats.feedback!.responses) * 100) : 0
               return (
                 <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
                   <span style={{ fontSize: 12.5, fontWeight: 700, minWidth: 92 }}>{row.label}</span>
                   <div style={{ flex: 1, background: '#f2f2f7', borderRadius: 6, height: 8, overflow: 'hidden' }}>
-                    <div style={{ width: `${row.count > 0 ? Math.max(pct, 4) : 0}%`, height: '100%', background: row.color, borderRadius: 6 }} />
+                    <div style={{ width: `${row.count > 0 ? Math.max(pct, 4) : 0}%`, height: '100%', background: chartColor(i), borderRadius: 6 }} />
                   </div>
                   <span style={{ fontSize: 13, fontWeight: 700, minWidth: 20, textAlign: 'right' }}>{row.count}</span>
                 </div>
@@ -274,14 +282,13 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
             answers. Choice questions show a count per option; free-text
             questions list the visitors' words with no identity attached. */}
         {stats.customQuestions.map(q => {
-          const barColor = readableOnLight(brandColor)
           return (
             <div key={q.id} style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '18px 20px', marginTop: 10 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {q.prompt}
               </div>
               {q.choices ? (
-                q.choices.map(c => {
+                q.choices.map((c, i) => {
                   const pct = q.responses > 0 ? Math.round((c.count / q.responses) * 100) : 0
                   return (
                     <div key={c.label} style={{ marginTop: 10 }}>
@@ -290,7 +297,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
                         <span style={{ fontSize: 13, fontWeight: 700 }}>{c.count}</span>
                       </div>
                       <div style={{ background: '#f2f2f7', borderRadius: 6, height: 8, overflow: 'hidden', marginTop: 4 }}>
-                        <div style={{ width: `${c.count > 0 ? Math.max(pct, 4) : 0}%`, height: '100%', background: barColor, borderRadius: 6 }} />
+                        <div style={{ width: `${c.count > 0 ? Math.max(pct, 4) : 0}%`, height: '100%', background: chartColor(i), borderRadius: 6 }} />
                       </div>
                     </div>
                   )
