@@ -426,7 +426,7 @@ export async function POST(request: Request) {
         // VoIP flag (plain text, not emoji — emoji forces UCS-2 encoding and
         // triples SMS cost). nonFixedVoip = TextNow/Google Voice-style app
         // number, worth extra scrutiny at the door.
-        body: `ohACCESS: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${phone}${isVirtualNumber(phoneLineType) ? ' (VoIP/internet number - verify ID)' : ''}, ${email}, Timeline: ${purchasingTimeline}, Time: ${now}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
+        body: `ohACCESS: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${phone}${isVirtualNumber(phoneLineType) ? ' (FYI - VoIP/internet number)' : ''}, ${email}, Timeline: ${purchasingTimeline}, Time: ${now}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
         from: process.env.TWILIO_PHONE_NUMBER!,
         to: agent.phone
       })
