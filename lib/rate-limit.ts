@@ -37,9 +37,15 @@ export async function checkRateLimit(
 }
 
 export function getClientIp(req: Request): string {
-  const forwarded = req.headers.get('x-forwarded-for')
+  return getClientIpFromHeaders(req.headers)
+}
+
+// Same lookup for callers that only have headers (server components use
+// next/headers, which hands back a Headers object without a Request).
+export function getClientIpFromHeaders(headers: Headers): string {
+  const forwarded = headers.get('x-forwarded-for')
   if (forwarded) return forwarded.split(',')[0].trim()
-  const realIp = req.headers.get('x-real-ip')
+  const realIp = headers.get('x-real-ip')
   if (realIp) return realIp
   return 'unknown'
 }

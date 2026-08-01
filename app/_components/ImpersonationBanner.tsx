@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 
 export const IMPERSONATION_KEY = 'ohaccess_impersonation'
 
@@ -33,6 +32,10 @@ export default function ImpersonationBanner() {
   const exit = async () => {
     setExiting(true)
     try {
+      // Loaded on demand: this banner sits in the root layout, so a top-level
+      // supabase import would ship the whole client library (~56KB gz) on
+      // every page of the site just for this admin-only button.
+      const { supabaseBrowser: supabase } = await import('@/lib/supabase-browser')
       await supabase.auth.setSession({
         access_token: record.adminAccessToken,
         refresh_token: record.adminRefreshToken,

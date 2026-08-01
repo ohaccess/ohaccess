@@ -8,6 +8,14 @@
       "cwd": "/Users/davesheehan/Desktop/ohaccess-app",
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "ohaccess-prod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start"],
+      "cwd": "/Users/davesheehan/Desktop/ohaccess-app",
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

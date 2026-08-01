@@ -1,5 +1,6 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import crypto from 'crypto'
 
 export const runtime = 'nodejs'
@@ -72,6 +73,7 @@ export async function POST(request: Request) {
   }
 
   let saved = 0
+  const savedSlugs: string[] = []
   const failed: string[] = []
   for (const article of articles) {
     const slug = article.slug?.trim().toLowerCase()
@@ -117,7 +119,15 @@ export async function POST(request: Request) {
       failed.push(String(article.id))
     } else {
       saved++
+      savedSlugs.push(slug)
     }
+  }
+
+  // The blog pages are cached (revalidate = 3600); flush them now so a new
+  // post is live the moment GrandRanker publishes it.
+  if (saved > 0) {
+    revalidatePath('/blog')
+    for (const slug of savedSlugs) revalidatePath(`/blog/${slug}`)
   }
 
   // Nothing saved and at least one real failure → 500 so GrandRanker retries.

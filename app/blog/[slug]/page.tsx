@@ -4,7 +4,10 @@ import { notFound } from 'next/navigation'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import Footer from '../../_components/Footer'
 
-export const dynamic = 'force-dynamic'
+// Posts only change when GrandRanker publishes, so serve a cached copy and
+// rebuild it at most hourly. The publish webhook also revalidates these
+// pages immediately, so new posts appear without waiting for the hour.
+export const revalidate = 3600
 
 const BASE = 'https://www.ohaccess.com'
 

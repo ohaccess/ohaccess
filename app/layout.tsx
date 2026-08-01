@@ -55,11 +55,11 @@ export const metadata: Metadata = {
       "Replace paper sign-in sheets with verified QR-code digital check-in. Know exactly who walked through your open house.",
     url: "https://www.ohaccess.com",
     type: "website",
-    images: [{ url: "https://www.ohaccess.com/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "https://www.ohaccess.com/og-image.jpg", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["https://www.ohaccess.com/og-image.png"],
+    images: ["https://www.ohaccess.com/og-image.jpg"],
   },
   icons: {
     icon: [
