@@ -10,6 +10,7 @@ import VisitorDetail from '@/app/_components/VisitorDetail'
 export default function VisitorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
   const [visitor, setVisitor] = useState<any>(null)
+  const [requireAgreement, setRequireAgreement] = useState(false)
   const [status, setStatus] = useState<'loading' | 'ready' | 'notfound'>('loading')
 
   useEffect(() => {
@@ -21,7 +22,23 @@ export default function VisitorPage({ params }: { params: Promise<{ id: string }
         return
       }
       const { data } = await supabase.from('visitors').select('*').eq('id', id).maybeSingle()
-      if (data) { setVisitor(data); setStatus('ready') }
+      if (data) {
+        // Agreement chip, mirroring the dashboard visitor log: shown only when
+        // the open house requires a signed agreement, signed = a receipt
+        // exists. Best-effort — a lookup failure just means no chip.
+        try {
+          const [{ data: oh }, { data: receipts }] = await Promise.all([
+            supabase.from('open_houses').select('require_agreement').eq('id', data.open_house_id).maybeSingle(),
+            supabase.from('agreement_receipts').select('visitor_id').eq('visitor_id', id).limit(1),
+          ])
+          if (oh?.require_agreement) {
+            setRequireAgreement(true)
+            data.agreement_signed = (receipts || []).length > 0
+          }
+        } catch { /* no chip */ }
+        setVisitor(data)
+        setStatus('ready')
+      }
       else setStatus('notfound')
     }
     run()
@@ -50,6 +67,7 @@ export default function VisitorPage({ params }: { params: Promise<{ id: string }
             <VisitorDetail
               visitor={visitor}
               supabase={supabase}
+              requireAgreement={requireAgreement}
               onDelete={() => { window.location.href = '/dashboard' }}
             />
           )}

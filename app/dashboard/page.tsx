@@ -1076,6 +1076,7 @@ export default function Dashboard() {
               supabase={supabase}
               primaryColor={primaryColor}
               accentColor={accentColor}
+              requireAgreement={!!openHouses.find(oh => oh.id === visitorModal.open_house_id)?.require_agreement}
               onChange={(fields) => {
                 setVisitors(prev => prev.map(v => v.id === visitorModal.id ? { ...v, ...fields } : v))
                 setVisitorModal((vm: any) => vm ? { ...vm, ...fields } : vm)

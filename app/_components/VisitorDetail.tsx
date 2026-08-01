@@ -12,17 +12,24 @@ const deliveryFailed = (status: string | null | undefined): boolean =>
 const failBadge = { marginLeft: '8px', background: '#fff0f0', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 const optedOutBadge = { marginLeft: '8px', background: '#f2f2f7', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 const voipBadge = { marginLeft: '8px', background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+// Agreement chips — same look as the dashboard visitor log's, shown only
+// when the open house requires a signed agreement (requireAgreement prop).
+const signedBadge = { marginLeft: '10px', background: '#e8f9ee', color: '#1a7a3c', border: '1px solid #b2f0c8', borderRadius: '6px', padding: '2px 8px', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap' as const, verticalAlign: 'middle' }
+const unsignedBadge = { marginLeft: '10px', background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '6px', padding: '2px 8px', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap' as const, verticalAlign: 'middle' }
 
 // Shared visitor detail + notes editor. Used both in the dashboard panel
 // (modal) and on the standalone mobile /visitor/[id] page, so the verify
 // toggle and notes-save logic live in exactly one place. Saves via the
 // (authenticated) supabase client; the visitors RLS policy already restricts
 // writes to the owning agent.
-export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d1f', accentColor = '#0071e3', onChange, onDelete }: {
+export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d1f', accentColor = '#0071e3', requireAgreement = false, onChange, onDelete }: {
   visitor: any
   supabase: any
   primaryColor?: string
   accentColor?: string
+  // True when this visitor's open house requires a signed touring agreement;
+  // shows the Signed / Not signed chip (visitor.agreement_signed) by the name.
+  requireAgreement?: boolean
   onChange?: (fields: { verified?: boolean; notes?: string }) => void
   // When provided, a "Delete visitor" button is shown. Called after the visitor
   // is successfully deleted, so the parent can close the modal / refresh its list.
@@ -96,6 +103,9 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ fontSize: '20px', fontWeight: 700, color: '#1d1d1f' }}>
           {`${visitor.first_name || ''} ${visitor.last_name || ''}`.trim() || 'Visitor'}
+          {requireAgreement && (visitor.agreement_signed
+            ? <span title="Signed the required agreement — copies were emailed to you both" style={signedBadge}>✍ Signed</span>
+            : <span title="Hasn't signed the required agreement — ask before letting them tour" style={unsignedBadge}>✍ Not signed</span>)}
         </div>
         {visitor.purchasing_timeline && (
           <span style={{ background: tl.bg, color: tl.color, padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>{visitor.purchasing_timeline}</span>
