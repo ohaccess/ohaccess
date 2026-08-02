@@ -110,6 +110,7 @@ export async function GET(request: Request) {
       primaryColor: primary,
       onPrimary: onColor(primary),
       accentColor: accent,
+      onAccent: onColor(accent),
     })
 
     return new NextResponse(html, {

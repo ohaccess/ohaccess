@@ -71,7 +71,7 @@ export default function QrModal({
           <button onClick={() => {
             const w = window.open('', '_blank')
             if (!w) { showToast('Please allow pop-ups to print the sign.', 'error'); return }
-            w.document.write(buildSignHtml({ dataUrl: data.dataUrl, logoUrl: logoUrl || '', primaryColor, onPrimary, accentColor }))
+            w.document.write(buildSignHtml({ dataUrl: data.dataUrl, logoUrl: logoUrl || '', primaryColor, onPrimary, accentColor, onAccent }))
             w.document.close()
           }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             🖨 Print branded sign
