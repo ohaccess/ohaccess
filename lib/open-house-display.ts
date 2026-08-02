@@ -13,10 +13,18 @@ export type OpenHouseDisplay = NonNullable<Awaited<ReturnType<typeof getOpenHous
 // Shared by the /register/[id] server page (which renders the form with the
 // data already in place — no client fetch round trip) and the GET handler at
 // /api/open-house/[id].
+// open_houses.id is a Postgres uuid column. Anything else in the URL — a
+// bot probing /register/admin, a mangled QR link — is guaranteed not to
+// match, so answer "not found" without a query. Skipping the round trip
+// also keeps "invalid input syntax for type uuid" noise out of the DB logs.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export async function getOpenHouseDisplay(
   id: string,
   scan: { ip: string; userAgent: string | null }
 ) {
+  if (!UUID_RE.test(id)) return null
+
   const { data: oh, error } = await supabase
     .from('open_houses')
     .select('id, property_address, listing_price, bedrooms, bathrooms, square_footage, open_house_date, open_house_hours, status, agent_id')
