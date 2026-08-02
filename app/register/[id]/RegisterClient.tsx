@@ -395,17 +395,16 @@ function ExpiredOpenHouse() {
   // success screen. Prompts and choice options are the agent's own words, so
   // they render in whatever language the agent typed them — unlike the rest of
   // this form, they can't be translated.
-  // Branding follows the surface the question sits on, so a custom question is
-  // indistinguishable from the built-in controls around it:
-  //   sign-in form  -> PRIMARY, like the purchasing-timeline picker
-  //   success screen -> ACCENT, like the rating grid and price buttons
+  // Selections use ACCENT on both surfaces, matching the built-in answer
+  // controls around them (the purchasing-timeline picker on the sign-in form,
+  // the rating grid and price buttons on the success screen).
   // Selected-state borders come from fillBorder() (lib/colors) rather than a
   // hardcoded rule — that's what keeps a near-white brand color visible instead
   // of a filled button vanishing into the card.
-  const renderCustomQuestion = (q: CustomQ, surface: 'signin' | 'success') => {
-    const fill = surface === 'signin' ? primaryColor : accentColor
-    const onFill = surface === 'signin' ? onPrimary : onAccent
-    const fillBtnBorder = surface === 'signin' ? primaryBtnBorder : accentBtnBorder
+  const renderCustomQuestion = (q: CustomQ) => {
+    const fill = accentColor
+    const onFill = onAccent
+    const fillBtnBorder = accentBtnBorder
     return (
       <div key={q.id} style={{ marginTop: '14px', textAlign: 'left' }}>
         <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '7px', lineHeight: 1.45 }}>
@@ -671,12 +670,12 @@ function ExpiredOpenHouse() {
                     alignItems: 'center',
                     gap: '7px',
                     background: selectedTimeline === tv ? '#f0f0f0' : '#f5f5f7',
-                    border: selectedTimeline === tv ? `1px solid ${primaryText}` : '1px solid #d1d1d6',
+                    border: selectedTimeline === tv ? `1px solid ${accentText}` : '1px solid #d1d1d6',
                     borderRadius: '9px',
                     padding: '9px 11px',
                     cursor: 'pointer',
                     fontSize: '12px',
-                    color: selectedTimeline === tv ? primaryText : '#6e6e73',
+                    color: selectedTimeline === tv ? accentText : '#6e6e73',
                     fontWeight: selectedTimeline === tv ? '600' : '400'
                   }}
                 >
@@ -684,15 +683,15 @@ function ExpiredOpenHouse() {
                     width: '13px',
                     height: '13px',
                     borderRadius: '50%',
-                    border: selectedTimeline === tv ? `1.5px solid ${primaryText}` : '1.5px solid #d1d1d6',
-                    background: selectedTimeline === tv ? primaryColor : 'transparent',
+                    border: selectedTimeline === tv ? `1.5px solid ${accentText}` : '1.5px solid #d1d1d6',
+                    background: selectedTimeline === tv ? accentColor : 'transparent',
                     flexShrink: 0,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
                     {selectedTimeline === tv && (
-                      <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: onPrimary }} />
+                      <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: onAccent }} />
                     )}
                   </div>
                   {t.timelines[i]}
@@ -704,7 +703,7 @@ function ExpiredOpenHouse() {
             {/* The agent's one extra sign-in question. Optional and unmarked by
                 an asterisk on purpose: this form is the entry gate, and nothing
                 the agent adds may stand between a visitor and their codeword. */}
-            {(openHouse.customQuestions || []).map((q: CustomQ) => renderCustomQuestion(q, 'signin'))}
+            {(openHouse.customQuestions || []).map((q: CustomQ) => renderCustomQuestion(q))}
 
             {/* Submit button */}
             <button
@@ -968,7 +967,7 @@ function ExpiredOpenHouse() {
                     {/* The agent's own success-screen questions, submitted with
                         the built-in feedback on one Submit. Optional, so they
                         never gate the button. */}
-                    {successQuestions.map(q => renderCustomQuestion(q, 'success'))}
+                    {successQuestions.map(q => renderCustomQuestion(q))}
 
                     {fbError && (
                       <div style={{ marginTop: '12px', fontSize: '12.5px', color: '#cc0000', fontWeight: 600 }}>
