@@ -161,7 +161,8 @@ function sanitizeForFont(text: string, font: PDFFont): string {
 }
 
 // "July 29, 2026, 1:14 PM CDT" in the property's timezone — the wall-clock
-// time everyone at the open house experienced. Falls back to UTC ISO if the
+// time everyone at the open house experienced, with the familiar zone
+// abbreviation rather than the raw IANA id. Falls back to UTC ISO if the
 // stored timezone string is invalid.
 function formatSignedAt(iso: string, timezone: string): string {
   const d = new Date(iso)
@@ -171,7 +172,10 @@ function formatSignedAt(iso: string, timezone: string): string {
       timeZone: timezone || 'UTC',
       dateStyle: 'long',
       timeStyle: 'short',
-    }) + (timezone ? ` (${timezone})` : ' (UTC)')
+    }) + ' ' + d.toLocaleTimeString('en-US', {
+      timeZone: timezone || 'UTC',
+      timeZoneName: 'short',
+    }).split(' ').pop()
   } catch {
     return d.toISOString()
   }
