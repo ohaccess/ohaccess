@@ -20,6 +20,12 @@ import {
 import { normalizeAgreementTemplates, resolveAgreementDocs } from '@/lib/agreements'
 import { createShortUrl } from '@/lib/short-urls'
 import { sendVisitorCodewordMessages } from '@/lib/codeword-messages'
+import {
+  VISITOR_COOKIE,
+  VISITOR_COOKIE_MAX_AGE,
+  VISITOR_COOKIE_PATH,
+  serializeVisitorPrefill,
+} from '@/lib/visitor-prefill'
 
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID!,
@@ -438,13 +444,29 @@ export async function POST(request: Request) {
     // visitor's own feedback.
     // disclosures are echoed back so the success screen can show the same links
     // the email carries — for the visitor who never opens the email.
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       feedbackToken,
       disclosures: disclosureLinks,
       customQuestions: successQuestions,
       agreement: agreementDocs.length > 0 ? { docs: agreementDocs } : null,
     })
+
+    // Remember this visitor on their own device (lib/visitor-prefill) so the
+    // form at their next ohACCESS open house is pre-filled. Server-set so
+    // Safari keeps it past 7 days; refreshed on every sign-in so edits stick.
+    const prefill = serializeVisitorPrefill({ firstName, lastName, email, phone })
+    if (prefill) {
+      response.cookies.set(VISITOR_COOKIE, prefill, {
+        maxAge: VISITOR_COOKIE_MAX_AGE,
+        path: VISITOR_COOKIE_PATH,
+        sameSite: 'lax',
+        secure: true,
+        httpOnly: false, // the "Not you?" link clears it client-side
+      })
+    }
+
+    return response
 
   } catch (error) {
     console.error('Registration error:', error)

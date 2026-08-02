@@ -1,6 +1,7 @@
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 import { getClientIpFromHeaders } from '@/lib/rate-limit'
 import { getOpenHouseDisplay } from '@/lib/open-house-display'
+import { VISITOR_COOKIE, parseVisitorPrefill } from '@/lib/visitor-prefill'
 import RegisterClient from './RegisterClient'
 
 // Server page: fetches the safe display data (and records the qr_scans
@@ -17,5 +18,11 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
     userAgent: h.get('user-agent'),
   })
 
-  return <RegisterClient id={id} initialOpenHouse={openHouse} />
+  // Returning visitor: /api/register saved their contact info in a cookie on
+  // this device at a previous ohACCESS open house (any agent's). Garbage or
+  // absent parses to null and the form simply starts blank.
+  const jar = await cookies()
+  const returningVisitor = parseVisitorPrefill(jar.get(VISITOR_COOKIE)?.value)
+
+  return <RegisterClient id={id} initialOpenHouse={openHouse} returningVisitor={returningVisitor} />
 }

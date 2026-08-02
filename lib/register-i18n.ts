@@ -59,6 +59,9 @@ export const FEEDBACK_PRICE_VALUES = ['Too High', 'Reasonable', 'Too Low'] as co
 export interface RegisterStrings {
   tagline: string
   loading: string
+  // Returning-visitor banner: {name} is replaced with the first name.
+  welcomeBack: string
+  notYou: string
   firstName: string
   firstNamePlaceholder: string
   lastName: string
@@ -135,6 +138,8 @@ export interface RegisterStrings {
 const en: RegisterStrings = {
   tagline: 'Verified Open House Check-In',
   loading: 'Loading...',
+  welcomeBack: 'Welcome back, {name}! Your details are filled in from last time.',
+  notYou: 'Not you?',
   firstName: 'First Name',
   firstNamePlaceholder: 'First',
   lastName: 'Last Name',
@@ -195,6 +200,8 @@ const en: RegisterStrings = {
 const es: RegisterStrings = {
   tagline: 'Registro verificado de casa abierta',
   loading: 'Cargando...',
+  welcomeBack: '¡Hola de nuevo, {name}! Tus datos ya están completados de la última vez.',
+  notYou: '¿No eres tú?',
   firstName: 'Nombre',
   firstNamePlaceholder: 'Nombre',
   lastName: 'Apellido',
@@ -255,6 +262,8 @@ const es: RegisterStrings = {
 const vi: RegisterStrings = {
   tagline: 'Đăng ký open house đã xác minh',
   loading: 'Đang tải...',
+  welcomeBack: 'Chào mừng bạn trở lại, {name}! Thông tin của bạn đã được điền sẵn từ lần trước.',
+  notYou: 'Không phải bạn?',
   firstName: 'Tên',
   firstNamePlaceholder: 'Tên',
   lastName: 'Họ',
@@ -315,6 +324,8 @@ const vi: RegisterStrings = {
 const zh: RegisterStrings = {
   tagline: '已验证的开放看房签到',
   loading: '加载中...',
+  welcomeBack: '欢迎回来，{name}！已为您填好上次的信息。',
+  notYou: '不是您？',
   firstName: '名字',
   firstNamePlaceholder: '名',
   lastName: '姓氏',
@@ -375,6 +386,8 @@ const zh: RegisterStrings = {
 const ko: RegisterStrings = {
   tagline: '인증된 오픈하우스 체크인',
   loading: '불러오는 중...',
+  welcomeBack: '{name}님, 다시 오신 것을 환영합니다! 지난번 정보가 미리 입력되어 있습니다.',
+  notYou: '본인이 아닌가요?',
   firstName: '이름',
   firstNamePlaceholder: '이름',
   lastName: '성',
@@ -435,6 +448,8 @@ const ko: RegisterStrings = {
 const hi: RegisterStrings = {
   tagline: 'सत्यापित ओपन हाउस चेक-इन',
   loading: 'लोड हो रहा है...',
+  welcomeBack: 'वापसी पर स्वागत है, {name}! आपकी जानकारी पिछली बार से भरी हुई है।',
+  notYou: 'आप नहीं हैं?',
   firstName: 'पहला नाम',
   firstNamePlaceholder: 'पहला नाम',
   lastName: 'उपनाम',
@@ -495,6 +510,8 @@ const hi: RegisterStrings = {
 const zhHant: RegisterStrings = {
   tagline: '已驗證的開放看房簽到',
   loading: '載入中...',
+  welcomeBack: '歡迎回來，{name}！已為您填好上次的資料。',
+  notYou: '不是您？',
   firstName: '名字',
   firstNamePlaceholder: '名',
   lastName: '姓氏',
@@ -555,6 +572,8 @@ const zhHant: RegisterStrings = {
 const fr: RegisterStrings = {
   tagline: "Enregistrement vérifié pour les portes ouvertes",
   loading: "Chargement...",
+  welcomeBack: "Content de vous revoir, {name} ! Vos coordonnées de la dernière fois sont déjà remplies.",
+  notYou: "Ce n'est pas vous ?",
   firstName: "Prénom",
   firstNamePlaceholder: "Prénom",
   lastName: "Nom",
@@ -615,6 +634,8 @@ const fr: RegisterStrings = {
 const de: RegisterStrings = {
   tagline: 'Verifizierter Check-in zum Tag der offenen Tür',
   loading: 'Wird geladen...',
+  welcomeBack: 'Willkommen zurück, {name}! Ihre Angaben vom letzten Mal sind bereits ausgefüllt.',
+  notYou: 'Nicht Sie?',
   firstName: 'Vorname',
   firstNamePlaceholder: 'Vorname',
   lastName: 'Nachname',
@@ -675,6 +696,8 @@ const de: RegisterStrings = {
 const it: RegisterStrings = {
   tagline: "Check-in verificato per la casa aperta",
   loading: "Caricamento...",
+  welcomeBack: "Bentornato, {name}! I tuoi dati dell'ultima volta sono già inseriti.",
+  notYou: "Non sei tu?",
   firstName: "Nome",
   firstNamePlaceholder: "Nome",
   lastName: "Cognome",
@@ -735,6 +758,8 @@ const it: RegisterStrings = {
 const el: RegisterStrings = {
   tagline: 'Επαληθευμένη εγγραφή ανοιχτού σπιτιού',
   loading: 'Φόρτωση...',
+  welcomeBack: 'Καλώς ήρθατε ξανά, {name}! Τα στοιχεία σας από την προηγούμενη φορά είναι ήδη συμπληρωμένα.',
+  notYou: 'Δεν είστε εσείς;',
   firstName: 'Όνομα',
   firstNamePlaceholder: 'Όνομα',
   lastName: 'Επώνυμο',
@@ -795,6 +820,8 @@ const el: RegisterStrings = {
 const pl: RegisterStrings = {
   tagline: 'Zweryfikowana rejestracja na dzień otwarty',
   loading: 'Ładowanie...',
+  welcomeBack: 'Witaj ponownie, {name}! Twoje dane z poprzedniej wizyty są już uzupełnione.',
+  notYou: 'To nie Ty?',
   firstName: 'Imię',
   firstNamePlaceholder: 'Imię',
   lastName: 'Nazwisko',
@@ -855,6 +882,8 @@ const pl: RegisterStrings = {
 const ru: RegisterStrings = {
   tagline: 'Подтверждённая регистрация на дне открытых дверей',
   loading: 'Загрузка...',
+  welcomeBack: 'С возвращением, {name}! Ваши данные с прошлого раза уже заполнены.',
+  notYou: 'Это не вы?',
   firstName: 'Имя',
   firstNamePlaceholder: 'Имя',
   lastName: 'Фамилия',
@@ -915,6 +944,8 @@ const ru: RegisterStrings = {
 const pt: RegisterStrings = {
   tagline: 'Check-in verificado de casa aberta',
   loading: 'Carregando...',
+  welcomeBack: 'Bem-vindo(a) de volta, {name}! Seus dados da última vez já estão preenchidos.',
+  notYou: 'Não é você?',
   firstName: 'Nome',
   firstNamePlaceholder: 'Nome',
   lastName: 'Sobrenome',
@@ -975,6 +1006,8 @@ const pt: RegisterStrings = {
 const tl: RegisterStrings = {
   tagline: 'Verified na open house check-in',
   loading: 'Naglo-load...',
+  welcomeBack: 'Maligayang pagbabalik, {name}! Nakalagay na ang iyong impormasyon mula noong huli.',
+  notYou: 'Hindi ikaw?',
   firstName: 'Pangalan',
   firstNamePlaceholder: 'Pangalan',
   lastName: 'Apelyido',
@@ -1035,6 +1068,8 @@ const tl: RegisterStrings = {
 const pa: RegisterStrings = {
   tagline: 'ਪ੍ਰਮਾਣਿਤ ਓਪਨ ਹਾਊਸ ਚੈੱਕ-ਇਨ',
   loading: 'ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...',
+  welcomeBack: 'ਵਾਪਸ ਆਉਣ ਤੇ ਸੁਆਗਤ ਹੈ, {name}! ਤੁਹਾਡੀ ਪਿਛਲੀ ਜਾਣਕਾਰੀ ਪਹਿਲਾਂ ਹੀ ਭਰੀ ਹੋਈ ਹੈ।',
+  notYou: 'ਤੁਸੀਂ ਨਹੀਂ ਹੋ?',
   firstName: 'ਪਹਿਲਾ ਨਾਮ',
   firstNamePlaceholder: 'ਪਹਿਲਾ ਨਾਮ',
   lastName: 'ਆਖਰੀ ਨਾਮ',

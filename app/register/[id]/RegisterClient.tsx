@@ -4,11 +4,17 @@ import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors
 import { usPhoneError } from '@/lib/phone'
 import { STRINGS, LANGS, TIMELINE_VALUES, FEEDBACK_PRICE_VALUES, detectLang, saveLang, type Lang } from '@/lib/register-i18n'
 import type { OpenHouseDisplay } from '@/lib/open-house-display'
+import { VISITOR_COOKIE, VISITOR_COOKIE_PATH, type VisitorPrefill } from '@/lib/visitor-prefill'
 
 // The open-house display data is fetched by the server page (page.tsx) and
 // passed in ready to render — no client fetch, so the form appears as soon
-// as the JS loads. null means not found/expired.
-export default function RegisterClient({ id, initialOpenHouse }: { id: string; initialOpenHouse: OpenHouseDisplay | null }) {
+// as the JS loads. null means not found/expired. returningVisitor carries the
+// contact info saved on this device at a previous sign-in (or null).
+export default function RegisterClient({ id, initialOpenHouse, returningVisitor }: {
+  id: string
+  initialOpenHouse: OpenHouseDisplay | null
+  returningVisitor: VisitorPrefill | null
+}) {
   const [openHouse] = useState<any>(initialOpenHouse)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -50,13 +56,21 @@ export default function RegisterClient({ id, initialOpenHouse }: { id: string; i
   // render and snaps to the saved/device language on mount.
   const [lang, setLang] = useState<Lang>('en')
   const [langOpen, setLangOpen] = useState(false)
+  // Whether the form is showing remembered details (drives the "welcome
+  // back" banner). "Not you?" clears the fields AND the device cookie.
+  const [prefilled, setPrefilled] = useState(!!returningVisitor)
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: ''
+    firstName: returningVisitor?.firstName ?? '',
+    lastName: returningVisitor?.lastName ?? '',
+    email: returningVisitor?.email ?? '',
+    phone: returningVisitor?.phone ?? ''
   }
 )
+  const clearPrefill = () => {
+    setForm({ firstName: '', lastName: '', email: '', phone: '' })
+    document.cookie = `${VISITOR_COOKIE}=; Max-Age=0; path=${VISITOR_COOKIE_PATH}`
+    setPrefilled(false)
+  }
 function ExpiredOpenHouse() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', zip: '' })
   const [submitting, setSubmitting] = useState(false)
@@ -560,6 +574,24 @@ function ExpiredOpenHouse() {
                 {openHouse.open_house_date} · {openHouse.open_house_hours} · {agent?.full_name}
               </div>
             </div>
+
+            {/* Returning visitor: remembered details are already in the
+                fields; the banner says so and offers a one-tap reset for a
+                borrowed phone / shared device. */}
+            {prefilled && (
+              <div style={{ background: '#f0f7ff', border: '1px solid #c9e2ff', borderRadius: '12px', padding: '10px 14px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '13px', color: '#1d1d1f' }}>
+                  {t.welcomeBack.replace('{name}', returningVisitor?.firstName ?? '')}
+                </span>
+                <button
+                  type="button"
+                  onClick={clearPrefill}
+                  style={{ background: 'none', border: 'none', padding: 0, fontSize: '13px', fontWeight: 700, color: '#0071e3', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                >
+                  {t.notYou}
+                </button>
+              </div>
+            )}
 
             {/* Name fields */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
