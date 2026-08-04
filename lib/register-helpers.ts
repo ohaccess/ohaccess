@@ -17,7 +17,9 @@ export const SMS_MAX_LENGTH = 160
 //
 // The binding constraint isn't the segment, though — it's the optional short
 // listing link (31 chars + a space). With the link attached, the address and
-// code word share a 58-character budget, so 12 leaves 46 for the address.
+// code word share a 58-character budget, so 12 leaves 46 for the address —
+// which since the zip was added (", 90210", 7 chars, so iPhone Maps links
+// resolve to the right town) means 39 for the street itself.
 // Past that buildSmsBody drops the link rather than spilling into a second
 // segment, and the visitor gets the listing link in their email instead. Every
 // character shaved off this cap is a character of address that still fits WITH

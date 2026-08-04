@@ -72,6 +72,7 @@ export async function sendVisitorCodewordMessages(params: {
     code_word: string | null
     code_word_email: string | null
     street_address: string | null
+    zip_code: string | null
     property_address: string | null
     listing_url: string | null
     open_house_date: string | null
@@ -149,6 +150,14 @@ export async function sendVisitorCodewordMessages(params: {
   const emailCodeWord = openHouse.code_word_email || openHouse.code_word
   const streetAddress = openHouse.street_address || openHouse.property_address
   const fullAddress = openHouse.property_address
+  // SMS address = street + zip: a street-only address gives iPhone's Maps
+  // auto-link nothing to resolve the town with, and city/state costs 10-25+
+  // chars where the zip pins the location for a flat 7. property_address (the
+  // fallback when street_address is missing) already ends with the zip.
+  const smsAddress =
+    openHouse.street_address && openHouse.zip_code
+      ? `${openHouse.street_address}, ${openHouse.zip_code}`
+      : streetAddress
 
   // Tracked short links (best-effort — a failure just omits the link). The
   // agent/sponsor links only appear in the email, so skip them on SMS-only
@@ -195,7 +204,7 @@ export async function sendVisitorCodewordMessages(params: {
     const smsBody = buildSmsBody(
       // "at" before the address (not "for") so iPhone data detectors link it
       // to Apple Maps — street-only addresses need that context cue.
-      `Codeword at ${streetAddress} is "${smsCodeWord}". Share with host for access. Reply STOP to opt out.`,
+      `Codeword at ${smsAddress} is "${smsCodeWord}". Share with host for access. Reply STOP to opt out.`,
       [
         // Bare URL (no "Listing:" label) — the label cost 9 chars, which was
         // enough to push long addresses past the single-segment budget.
