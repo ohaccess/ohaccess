@@ -8,6 +8,7 @@ import { notifyAdmins } from '@/lib/notify-admin'
 import { ensureManagedBrokerage } from '@/lib/team'
 import { MIN_BROKERAGE_SEATS } from '@/lib/billing-plans'
 import { generateGiftCode } from '@/lib/gift'
+import { HARDWARE_CHOICES, isHardwareChoice, normalizeStateCode } from '@/lib/hardware-offer'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -266,6 +267,91 @@ async function handleGiftPurchase(session: Stripe.Checkout.Session) {
   )
 }
 
+// A qualifying Pro 2-year checkout carried the free sign-hardware fields
+// (metadata.hardware_offer from /api/stripe/checkout). Record the claim and
+// email the fulfillment details — Dave orders from Amazon and ships to the
+// agent, so the email is written to be copy-pasteable into an Amazon order.
+// Idempotent: stripe_session_id and profile_id are both UNIQUE, so a webhook
+// replay or a second checkout can never create a second claim (23505 = done).
+// Best-effort by design — a hardware hiccup must never fail the webhook and
+// make Stripe retry a checkout that already provisioned the subscription.
+async function recordHardwareClaim(session: Stripe.Checkout.Session, profileId: string) {
+  try {
+    const choiceRaw = session.custom_fields?.find((f) => f.key === 'hardware_choice')?.dropdown?.value
+    const choice = isHardwareChoice(choiceRaw) ? choiceRaw : null
+    const shipping = session.collected_information?.shipping_details ?? null
+    const state = normalizeStateCode(shipping?.address?.state)
+    if (!choice || !shipping || !state) {
+      console.error('hardware claim: incomplete checkout data', {
+        session: session.id, choice: choiceRaw, hasShipping: !!shipping, state: shipping?.address?.state,
+      })
+      await notifyAdmins(
+        '⚠️ Sign-hardware claim needs manual review',
+        `<p>A Pro 2-year checkout had the hardware offer attached, but the claim data was incomplete. Check the session in Stripe and fulfill manually.</p>
+         <p><strong>Stripe session:</strong> ${escapeHtml(session.id)}</p>`
+      )
+      return
+    }
+
+    const { data: buyer } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', profileId)
+      .maybeSingle()
+
+    const { error: insertError } = await supabase.from('hardware_claims').insert({
+      profile_id: profileId,
+      stripe_session_id: session.id,
+      choice,
+      state,
+      agent_name: buyer?.full_name ?? shipping.name ?? null,
+      agent_email: buyer?.email ?? null,
+      shipping: {
+        name: shipping.name,
+        line1: shipping.address.line1,
+        line2: shipping.address.line2,
+        city: shipping.address.city,
+        state: shipping.address.state,
+        postal_code: shipping.address.postal_code,
+        country: shipping.address.country,
+      },
+    })
+    if (insertError) {
+      // 23505 = this session (or this profile) already has its claim — replay.
+      if ((insertError as { code?: string }).code === '23505') return
+      throw insertError
+    }
+
+    const addressLines = [
+      shipping.name,
+      shipping.address.line1,
+      shipping.address.line2,
+      `${shipping.address.city}, ${shipping.address.state} ${shipping.address.postal_code}`,
+    ].filter(Boolean)
+    const { count } = await supabase
+      .from('hardware_claims')
+      .select('*', { count: 'exact', head: true })
+      .eq('state', state)
+    await notifyAdmins(
+      `🪧 Ship sign hardware: ${HARDWARE_CHOICES[choice]} to ${state}`,
+      `<p>A Pro 2-year subscriber just claimed their free sign hardware. Order from Amazon and ship to:</p>
+       <p style="font-family: monospace; background: #f5f5f7; padding: 12px 16px; border-radius: 8px;">
+         ${addressLines.map((l) => escapeHtml(l ?? '')).join('<br/>')}
+       </p>
+       <p><strong>Item:</strong> ${escapeHtml(HARDWARE_CHOICES[choice])}<br/>
+       <strong>Agent:</strong> ${escapeHtml(buyer?.full_name ?? '—')} (${escapeHtml(buyer?.email ?? '—')})<br/>
+       <strong>${escapeHtml(state)} claims:</strong> ${count ?? '?'} of 100</p>`
+    )
+  } catch (err) {
+    console.error('hardware claim failed', session.id, err)
+    await notifyAdmins(
+      '⚠️ Sign-hardware claim failed to record',
+      `<p>The subscription was provisioned fine, but the hardware claim could not be recorded. Check the session in Stripe and fulfill manually.</p>
+       <p><strong>Stripe session:</strong> ${escapeHtml(session.id)}</p>`
+    )
+  }
+}
+
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // Gift checkouts have no buyer profile — route them before profile
   // resolution, or the lookup below would log a false error.
@@ -314,6 +400,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       current_period_end: periodEnd,
       subscription_canceled_at: null,
     })
+  }
+
+  // Free sign-hardware claim rides along on qualifying Pro 2-year checkouts.
+  if (session.metadata?.hardware_offer === 'true') {
+    await recordHardwareClaim(session, profileId)
   }
 
   // Team/Brokerage buyers become owners of a brokerages row, so they get the

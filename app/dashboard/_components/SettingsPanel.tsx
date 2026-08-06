@@ -80,6 +80,17 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
   const [busy, setBusy] = useState<string | null>(null)
   const [planBilling, setPlanBilling] = useState<BillingKey>('month')
   const [confirmingCancel, setConfirmingCancel] = useState(false)
+  // Free sign-hardware offer status; active:false (retired, or the visitor's
+  // state is sold out) hides the offer line. Checkout enforces eligibility
+  // regardless of what's displayed here.
+  const [hwOffer, setHwOffer] = useState<{ active: boolean } | null>(null)
+  useEffect(() => {
+    fetch('/api/hardware-offer')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setHwOffer(d) })
+      .catch(() => {})
+  }, [])
+  const hwActive = OFFER_TWO_YEAR && hwOffer?.active !== false
 
   const tier = profile?.tier || 'free'
   const isFree = tier === 'free'
@@ -251,6 +262,9 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
                   {plan.price[planBilling]}<span style={{ fontSize: '12px', fontWeight: '400', color: plan.featured ? 'rgba(255,255,255,0.5)' : '#6e6e73' }}>{plan.per}</span>
                 </div>
                 <div style={{ fontSize: '11px', color: plan.featured ? 'rgba(255,255,255,0.55)' : '#6e6e73', minHeight: '28px', marginTop: '4px', marginBottom: '12px' }}>{plan.sub[planBilling]}</div>
+                {plan.tier === 'pro' && planBilling === 'two_year_prepay' && hwActive && (
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#c9963a', marginTop: '-8px', marginBottom: '12px' }}>+ Free sign hardware, shipped†</div>
+                )}
                 <button
                   onClick={() => startCheckout(plan.tier, planBilling)}
                   disabled={busy !== null}
@@ -264,6 +278,9 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
           {OFFER_TWO_YEAR && (
             <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '10px', fontStyle: 'italic' }}>
               * 2-year pricing is a limited-time founding-member offer — paid upfront, renews automatically every 2 years (we&apos;ll email you before each renewal; cancel anytime). Brokerage plans over 100 agents: <a href="/contact" style={{ color: '#0071e3' }}>contact us</a>.
+              {hwActive && (
+                <> † Free sign hardware (two pedestal sign stands or one A-frame, your choice at checkout) for the first 100 individual Pro 2-year subscribers in each state, by shipping address, while supplies last — one per account, US shipping only, no cash value. See <a href="/subscriber-terms" style={{ color: '#0071e3' }}>Subscriber Terms §4.9</a>.</>
+              )}
             </div>
           )}
         </>

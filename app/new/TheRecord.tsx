@@ -53,6 +53,22 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [billing, setBilling] = useState<'monthly' | 'annual' | '2year'>('monthly')
+  // Free sign-hardware offer: live per-state status (three-phase copy). null
+  // until loaded — render the generic phase meanwhile, which claims nothing
+  // numeric; active:false (offer retired or state sold out) hides the box.
+  const [hw, setHw] = useState<{ active: boolean; stateName?: string | null; claimed?: number; remaining?: number; phase?: string } | null>(null)
+  useEffect(() => {
+    fetch('/api/hardware-offer')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setHw(d) })
+      .catch(() => {})
+  }, [])
+  const hwLine =
+    hw?.phase === 'remaining' && hw.stateName
+      ? `Two pedestal sign stands or an A-frame, shipped free. Only ${hw.remaining} left in ${hw.stateName} — going fast.`
+      : hw?.phase === 'claimed' && hw.stateName
+        ? `Two pedestal sign stands or an A-frame, shipped free. ${hw.claimed} ${hw.stateName} agents have claimed theirs.`
+        : 'Two pedestal sign stands or an A-frame, shipped free — for the first 100 agents in each state.'
   // Hero photo matches the visitor's current season; swaps at the exact
   // equinox/solstice instants (see lib/season.ts). The Halloween/Christmas
   // override depends on the visitor's local calendar, which the server can't
@@ -579,6 +595,18 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
                 <div style={{ fontSize: '12.5px', color: tier.dark ? 'rgba(255,255,255,.5)' : '#a8a8ad', marginTop: '2px' }}>{tier.desc}</div>
                 <div style={{ fontSize: '34px', fontWeight: 800, color: tier.dark ? '#fff' : '#1d1d1f', margin: '10px 0 2px' }}>{tier.price[billing]}<span style={{ fontSize: '15px', fontWeight: 600, color: tier.dark ? 'rgba(255,255,255,.6)' : '#6e6e73' }}>{tier.per[billing]}</span></div>
                 <div style={{ fontSize: '13px', color: tier.dark ? 'rgba(255,255,255,.6)' : '#6e6e73', marginBottom: '16px' }}>{tier.note[billing]}</div>
+                {tier.name === 'Pro' && hw?.active !== false && (
+                  billing === '2year' ? (
+                    <div style={{ background: 'rgba(201,150,58,.14)', border: '1px solid rgba(201,150,58,.45)', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
+                      <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#c9963a' }}>Free sign hardware included†</div>
+                      <div style={{ fontSize: '12.5px', lineHeight: 1.5, color: 'rgba(255,255,255,.75)', marginTop: '4px' }}>{hwLine}</div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setBilling('2year')} style={{ display: 'block', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginBottom: '16px', fontSize: '12.5px', fontWeight: 700, color: '#c9963a', textAlign: 'left' }}>
+                      Free sign hardware with the 2-year plan →
+                    </button>
+                  )
+                )}
                 <div style={{ fontSize: '13.5px', lineHeight: 1.7, color: tier.dark ? '#fff' : '#1d1d1f' }}>{tier.features}</div>
               </div>
             ))}
@@ -586,6 +614,11 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
           <div style={{ fontSize: '12px', color: '#6e6e73', textAlign: 'center', marginTop: '24px', fontStyle: 'italic' }}>
             * 2-year pricing is a founding-member offer available for a limited time only. Paid upfront and renews automatically every 2 years — we&apos;ll email you before each renewal, and you can cancel anytime. More than 100 agents? <a href="/contact" style={{ color: '#c9963a' }}>Contact us</a> for custom pricing.
           </div>
+          {hw?.active !== false && (
+            <div style={{ fontSize: '12px', color: '#6e6e73', textAlign: 'center', marginTop: '8px', fontStyle: 'italic' }}>
+              † Free sign hardware: available to the first 100 individual Pro two-year subscribers in each state, determined by the shipping address provided at checkout, while supplies last. Choice of two pedestal sign stands or one A-frame sign frame. One per account; US shipping addresses only; no cash value; not available on Team or Brokerage plans. See <a href="/subscriber-terms" style={{ color: '#c9963a' }}>Subscriber Terms §4.9</a>.
+            </div>
+          )}
           {/* gift + sponsor options (carried over from the previous homepage) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,280px),1fr))', gap: '16px', marginTop: '28px' }}>
             <div data-reveal="1" className="rec-safety" style={{ border: '1px solid #e5e5ea', borderRadius: '14px', padding: '26px 26px 28px' }}>
