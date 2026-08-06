@@ -61,12 +61,12 @@ export default function Resources() {
 
           <div className="howto-row">
             <div className="howto-img">
-              <img src="/resources/paper-signin.jpg" alt="Agent deciphering a messy paper open-house sign-in sheet with fake names and illegible handwriting" />
+              <img src="/resources/paper-signin.jpg" alt="Agent deciphering a messy paper open-house sign-in sheet with illegible handwriting and incomplete contact info" />
             </div>
             <div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>The problem you already know</div>
               <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
-                Paper sign-in sheets are messy, unreadable, and frankly a liability. Illegible handwriting. Fake names. Phone numbers off by one digit. No email verification. And when the open house is over, you&apos;re left deciphering chicken scratch. There&apos;s a better way.
+                Paper sign-in sheets are messy, unreadable, and frankly a liability. Illegible handwriting. Phone numbers off by one digit. No email verification. And when the open house is over, you&apos;re left deciphering chicken scratch. There&apos;s a better way.
               </div>
             </div>
           </div>
@@ -78,7 +78,7 @@ export default function Resources() {
             <div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Verified check-in, right on their phone</div>
               <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
-                ohACCESS replaces your paper sheet with a QR-code digital check-in. Visitors scan the sign outside before they enter and complete a quick, verified registration — name, email, phone, and buying timeline — all clean, accurate, and captured instantly. A unique codeword is texted to their phone on the spot, and you get a text with their details. They share the codeword with you at the door. <strong style={{ color: '#1d1d1f' }}>Bad or fake information = no codeword = no entry.</strong>
+                ohACCESS replaces your paper sheet with a QR-code digital check-in. Visitors scan the sign outside before they enter and complete a quick, verified registration — name, email, phone, and buying timeline — all clean, accurate, and captured instantly. A unique codeword is texted to their phone on the spot, and you get a text with their details. They share the codeword with you at the door. <strong style={{ color: '#1d1d1f' }}>Bad phone or email = no codeword = no entry.</strong>
               </div>
             </div>
           </div>

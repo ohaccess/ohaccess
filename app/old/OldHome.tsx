@@ -106,7 +106,7 @@ export default function Home() {
             <span style={{ color: '#c9963a' }}>is finished.</span>
           </h1>
           <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.6', marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px' }}>
-            ohACCESS verifies every open house visitor&apos;s contact information in real time — via a codeword sent to their phone and email. Fake info? No code. No entry.
+            ohACCESS verifies every open house visitor&apos;s contact information in real time — via a codeword sent to their phone and email. Bad number? No code. No entry.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', padding: '0 16px' }}>
             <Link href="/login?signup=true" style={{ background: '#c9963a', color: '#1d1d1f', padding: '16px 32px', borderRadius: '12px', textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', maxWidth: '340px', lineHeight: '1.4' }}>
@@ -131,10 +131,10 @@ export default function Home() {
           </div>
           <div className="grid-4">
             {[
-              { emoji: '😤', title: 'Fake information', body: 'Visitors write false names, dead email addresses, and wrong phone numbers with zero accountability.' },
+              { emoji: '😤', title: 'Bad contact info', body: 'Visitors write dead email addresses and wrong phone numbers with zero accountability.' },
               { emoji: '📖', title: 'Illegible handwriting', body: 'Paper sign-in sheets are often unreadable. Agents spend hours decoding contact info they can never use.' },
               { emoji: '🚫', title: 'No verification', body: 'There is no way to know if a visitor gave real contact info until you try — and fail — days later.' },
-              { emoji: '🏠', title: 'Safety risk', body: 'Agents let complete strangers into private residences with no verified identity and no record of who walked through.' },
+              { emoji: '🏠', title: 'Safety risk', body: 'Agents let complete strangers into private residences with no verified contact info and no record of who walked through.' },
             ].map(item => (
               <div key={item.title} style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '24px', textAlign: 'center' }}>
                 <div style={{ fontSize: '32px', marginBottom: '12px' }}>{item.emoji}</div>
@@ -157,7 +157,7 @@ export default function Home() {
             {[
               { step: '1', title: 'Create your open house', body: 'Enter your listing details and choose a secret codeword. A unique QR code is generated instantly.' },
               { step: '2', title: 'Buyer scans the QR code', body: 'A mobile form loads. They enter their name, valid email, valid phone number, and buying timeline.' },
-              { step: '3', title: 'Codeword is delivered', body: 'A text and email with the codeword hits their phone instantly. Fake info = no code = no entry.' },
+              { step: '3', title: 'Codeword is delivered', body: 'A text and email with the codeword hits their phone instantly. Bad number or email = no code = no entry.' },
               { step: '4', title: 'Agent is notified', body: "You receive an instant SMS with the visitor's full details — before they even reach the door. Tap the link in the alert to verify the visitor and save private notes." },
             ].map(item => (
               <div key={item.step} style={{ background: '#f5f5f7', borderRadius: '18px', padding: '24px' }}>
@@ -178,7 +178,7 @@ export default function Home() {
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <h2 className="section-title">Every guest checks in. No anonymous walk-ins.</h2>
             <p style={{ fontSize: '16px', color: '#6e6e73', maxWidth: '640px', margin: '0 auto' }}>
-              Open houses are the #1 situation where real estate agents report feeling unsafe.<sup>1</sup> A paper sign-in sheet doesn&apos;t change that — anyone can scribble a fake name and walk in. ohACCESS replaces the clipboard with a verified check-in.
+              Open houses are the #1 situation where real estate agents report feeling unsafe.<sup>1</sup> A paper sign-in sheet doesn&apos;t change that — anyone can scribble anything and walk in. ohACCESS replaces the clipboard with a verified check-in.
             </p>
           </div>
           <div className="grid-4">
