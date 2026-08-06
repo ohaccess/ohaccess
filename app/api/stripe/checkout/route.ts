@@ -4,6 +4,7 @@ import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { stripe, getPriceConfig, isTier, isBillingInterval } from '@/lib/stripe'
 import { isValidSeatCount, isExpiredPrepaidAccess, isComped, MIN_BROKERAGE_SEATS, MAX_BROKERAGE_SEATS } from '@/lib/billing-plans'
+import { HARDWARE_OFFER_ACTIVE, HARDWARE_CHOICES } from '@/lib/hardware-offer'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://ohaccess.com'
 
@@ -88,6 +89,22 @@ export async function POST(request: Request) {
 
     const cfg = getPriceConfig(tier, interval)
 
+    // Free sign-hardware offer (terms §4.9): individual Pro 2-year purchases
+    // only, one claim per account ever. When eligible, Stripe Checkout itself
+    // collects the US shipping address and the stand-vs-A-frame choice; the
+    // webhook records the claim. The per-state cap is enforced by the
+    // marketing display going away as states fill — a buyer who reaches
+    // checkout with the fields attached is always honored.
+    let hardwareOffer = false
+    if (HARDWARE_OFFER_ACTIVE && tier === 'pro' && interval === 'two_year_prepay') {
+      const { data: priorClaim } = await supabase
+        .from('hardware_claims')
+        .select('id')
+        .eq('profile_id', user.id)
+        .maybeSingle()
+      hardwareOffer = !priorClaim
+    }
+
     // Every plan is a subscription now — the 2-year term included (it's a
     // real interval=year×2 subscription that auto-renews; the old one-time
     // payment flow is gone, and legacy holders are handled by the guards above).
@@ -104,6 +121,7 @@ export async function POST(request: Request) {
         tier,
         billing_interval: interval,
         ...(tier === 'brokerage' ? { seats: String(seatCount) } : {}),
+        ...(hardwareOffer ? { hardware_offer: 'true' } : {}),
       },
       subscription_data: {
         metadata: {
@@ -113,6 +131,29 @@ export async function POST(request: Request) {
           ...(tier === 'brokerage' ? { seats: String(seatCount) } : {}),
         },
       },
+      ...(hardwareOffer
+        ? {
+            shipping_address_collection: { allowed_countries: ['US'] },
+            custom_fields: [
+              {
+                key: 'hardware_choice',
+                type: 'dropdown',
+                label: { type: 'custom', custom: 'Your free sign hardware' },
+                dropdown: {
+                  options: [
+                    { value: 'pedestal_pair', label: HARDWARE_CHOICES.pedestal_pair },
+                    { value: 'a_frame', label: HARDWARE_CHOICES.a_frame },
+                  ],
+                },
+              },
+            ],
+            custom_text: {
+              shipping_address: {
+                message: 'Your free sign hardware ships to this address (US only).',
+              },
+            },
+          }
+        : {}),
     })
 
     if (!session.url) {
