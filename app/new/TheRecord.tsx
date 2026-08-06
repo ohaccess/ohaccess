@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Footer from '../_components/Footer'
+import { getHoliday, getSeason, heroImage } from '@/lib/season'
 
 const STEPS = [
   { n: 1, title: 'Scan', body: 'The visitor scans the QR sign at the door. No app to download, nothing to install.' },
@@ -52,6 +53,15 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [billing, setBilling] = useState<'monthly' | 'annual' | '2year'>('monthly')
+  // Hero photo matches the visitor's current season; swaps at the exact
+  // equinox/solstice instants (see lib/season.ts). The Halloween/Christmas
+  // override depends on the visitor's local calendar, which the server can't
+  // know — applying it after mount keeps server and browser HTML identical.
+  const [heroSrc, setHeroSrc] = useState(() => heroImage(getSeason()))
+  useEffect(() => {
+    const holiday = getHoliday()
+    if (holiday) setHeroSrc(heroImage(holiday))
+  }, [])
   const navLinks = showFilm ? NAV_LINKS : NAV_LINKS.filter(l => l.href !== '#film')
 
   useEffect(() => {
@@ -281,7 +291,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
           </div>
           <div style={{ height: 'clamp(360px,44vw,560px)', position: 'relative' }}>
             <div data-parallax="0.12" style={{ position: 'absolute', inset: 0, willChange: 'transform' }}>
-              <Image src="/record-hero.jpg" alt="Visitor at a front door scanning the ohACCESS QR sign with her phone" fill sizes="(max-width: 900px) 100vw, 50vw" priority style={{ objectFit: 'cover' }} />
+              <Image src={heroSrc} alt="Visitor at a front door scanning the ohACCESS QR sign with her phone" fill sizes="(max-width: 900px) 100vw, 50vw" priority style={{ objectFit: 'cover' }} />
             </div>
             <div data-reveal="1" style={{ position: 'absolute', left: 'clamp(-16px,-1vw,-10px)', bottom: '36px', background: 'rgba(29,29,31,.9)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,.15)', borderRadius: '14px', padding: '14px 18px', display: 'flex', gap: '12px', alignItems: 'center', boxShadow: '0 12px 32px rgba(0,0,0,.4)' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#30d158', animation: 'om-pulse 2s infinite' }} />
@@ -340,7 +350,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
           {/* FILM SLOT — replace the poster with the final poster frame and wire
               the play button to a native <video> when the film is delivered. */}
           <div data-reveal="1" style={{ margin: '36px clamp(20px,5vw,48px) 0', position: 'relative', aspectRatio: '16/9', borderRadius: '18px', overflow: 'hidden', background: '#1d1d1f', boxShadow: '0 24px 64px rgba(29,29,31,.3)' }}>
-            <Image src="/record-hero.jpg" alt="" fill sizes="100vw" style={{ objectFit: 'cover', opacity: .55 }} />
+            <Image src={heroSrc} alt="" fill sizes="100vw" style={{ objectFit: 'cover', opacity: .55 }} />
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', background: 'linear-gradient(to top,rgba(29,29,31,.55),rgba(29,29,31,.15))', pointerEvents: 'none' }}>
               <div className="rec-play" style={{ width: '84px', height: '84px', borderRadius: '50%', background: '#c9963a', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 34px rgba(0,0,0,.4)', pointerEvents: 'auto', cursor: 'pointer' }}>
                 <div style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '14px 0 14px 24px', borderColor: 'transparent transparent transparent #1d1d1f', marginLeft: '6px' }} />
