@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import TeamAdminPanel from './_components/TeamAdminPanel'
 import TeamActivityPanel from './_components/TeamActivityPanel'
@@ -27,6 +27,10 @@ export default function Dashboard() {
   const [calDate, setCalDate] = useState(new Date())
   const [editingOH, setEditingOH] = useState<any>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  // Set when a save would overlap another open house — holds the conflicting
+  // rows and which handler to re-run if the agent chooses "Save anyway".
+  const [overlapWarn, setOverlapWarn] = useState<{ conflicts: any[]; mode: 'create' | 'update' } | null>(null)
+  const overlapAcknowledged = useRef(false)
   const [savedSettings, setSavedSettings] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [qrModal, setQrModal] = useState<any>(null)
@@ -479,6 +483,19 @@ export default function Dashboard() {
     }
   }
 
+  // Other open houses whose scheduled window overlaps [startAt, endAt]. The
+  // permanent QR can only point at one open house at a time, so overlapping
+  // ones make scans ambiguous — the save handlers warn before proceeding.
+  // Legacy rows without structured times can't be compared and are skipped.
+  const overlappingOpenHouses = (startAt: string, endAt: string, excludeId?: string) => {
+    const s = Date.parse(startAt), e = Date.parse(endAt)
+    return openHouses.filter(oh => {
+      if (oh.id === excludeId || !oh.start_at || !oh.end_at) return false
+      const os = Date.parse(oh.start_at), oe = Date.parse(oh.end_at)
+      return !Number.isNaN(os) && !Number.isNaN(oe) && s < oe && os < e
+    })
+  }
+
   const createOpenHouse = async () => {
     if (guardLocked()) return
     if (!form.street_address || !form.city || !form.state || !form.code_word || !form.code_word_email) {
@@ -504,6 +521,13 @@ export default function Dashboard() {
       showToast('The end time needs to be after the start time.')
       return
     }
+    // Overlap with another open house? Warn once ("Save anyway" re-runs this
+    // handler with the acknowledged flag set), then save normally.
+    if (!overlapAcknowledged.current) {
+      const conflicts = overlappingOpenHouses(startAt, endAt)
+      if (conflicts.length > 0) { setOverlapWarn({ conflicts, mode: 'create' }); return }
+    }
+    overlapAcknowledged.current = false
     const hoursText = `${fmtTime12(form.open_house_start_time)} – ${fmtTime12(form.open_house_end_time)}`
     const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
     const { data, error } = await supabase.from('open_houses').insert({
@@ -609,6 +633,12 @@ export default function Dashboard() {
       showToast('The end time needs to be after the start time.')
       return
     }
+    // Same overlap warning as createOpenHouse, excluding the row being edited.
+    if (!overlapAcknowledged.current) {
+      const conflicts = overlappingOpenHouses(startAt, endAt, editingOH.id)
+      if (conflicts.length > 0) { setOverlapWarn({ conflicts, mode: 'update' }); return }
+    }
+    overlapAcknowledged.current = false
     const hoursText = `${fmtTime12(form.open_house_start_time)} – ${fmtTime12(form.open_house_end_time)}`
     const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
     // Only clear report_sent_at when the SCHEDULE actually changed — a reschedule
@@ -1113,6 +1143,39 @@ export default function Dashboard() {
           animation: 'fadeIn 0.2s ease'
         }}>
           {toast.type === 'success' ? '✓' : '⚠️'} {toast.message}
+        </div>
+      )}
+
+      {overlapWarn && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
+          <div style={{ background: 'white', borderRadius: '22px', padding: '32px', maxWidth: '460px', width: '90%', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ fontSize: '40px', marginBottom: '16px' }}>📌</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>This overlaps another open house</div>
+            <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '14px', lineHeight: '1.6', textAlign: 'left' }}>
+              You already have {overlapWarn.conflicts.length === 1 ? 'an open house' : `${overlapWarn.conflicts.length} open houses`} scheduled at the same time:
+            </div>
+            {overlapWarn.conflicts.map(oh => (
+              <div key={oh.id} style={{ background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '12px', padding: '10px 14px', marginBottom: '8px', textAlign: 'left' }}>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>{oh.property_address}</div>
+                <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '2px' }}>{[oh.open_house_date, oh.open_house_hours].filter(Boolean).join(' · ')}</div>
+              </div>
+            ))}
+            <div style={{ fontSize: '13px', color: '#6e6e73', margin: '14px 0 24px', lineHeight: '1.6', textAlign: 'left' }}>
+              Heads up: your permanent <strong>📌 My QR code</strong> can only point to one open house at a time. While these overlap, visitors who scan it will be asked to <strong>choose which open house they&rsquo;re at</strong> before signing in. For one-tap sign-in at each door, use each open house&rsquo;s own <strong>📱 QR Code</strong> button instead.
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button onClick={() => setOverlapWarn(null)} style={{ padding: '10px 24px', background: '#f5f5f7', color: '#1d1d1f', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Go back</button>
+              <button
+                onClick={() => {
+                  const mode = overlapWarn.mode
+                  overlapAcknowledged.current = true
+                  setOverlapWarn(null)
+                  if (mode === 'create') createOpenHouse(); else updateOpenHouse()
+                }}
+                style={{ padding: '10px 24px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >Save anyway</button>
+            </div>
+          </div>
         </div>
       )}
 
