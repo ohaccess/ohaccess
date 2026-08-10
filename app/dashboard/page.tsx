@@ -611,6 +611,40 @@ export default function Dashboard() {
     setView('new')
   }
 
+  // "Duplicate" on an open-house card: same prefill as startEdit EXCEPT the
+  // date/times (a copy is almost always the same property on a new day), and
+  // editingOH must stay null so Save inserts a new row — the nav's "New Open
+  // House" button doesn't clear editingOH, so set it explicitly here.
+  const startCopy = (oh: any) => {
+    if (guardLocked()) return
+    setEditingOH(null)
+    setForm({
+      street_address: oh.street_address || '',
+      address_2: oh.address_2 || '',
+      city: oh.city || '',
+      state: oh.state || '',
+      zip_code: oh.zip_code || '',
+      listing_price: oh.listing_price || '',
+      bedrooms: oh.bedrooms || '',
+      bathrooms: oh.bathrooms || '',
+      square_footage: oh.square_footage || '',
+      open_house_date: '',
+      open_house_date_iso: '',
+      open_house_start_time: '',
+      open_house_end_time: '',
+      open_house_hours: '',
+      property_timezone: oh.timezone || '',
+      listing_url: oh.listing_url || '',
+      code_word: sanitizeSmsCodeWord(oh.code_word),
+      code_word_email: oh.code_word_email || '',
+      require_agreement: !!oh.require_agreement,
+      agreement_template_ids: Array.isArray(oh.agreement_template_ids)
+        ? oh.agreement_template_ids.filter((x: unknown) => typeof x === 'string')
+        : []
+    })
+    setView('new')
+  }
+
   const updateOpenHouse = async () => {
     if (guardLocked()) return
     if (!form.street_address || !form.city || !form.state || !form.code_word || !form.code_word_email) {
@@ -979,6 +1013,7 @@ export default function Dashboard() {
             loadVisitors={loadVisitors}
             guardLocked={guardLocked}
             startEdit={startEdit}
+            startCopy={startCopy}
             exportCSV={exportCSV}
             toggleVerified={toggleVerified}
             setView={setView}
