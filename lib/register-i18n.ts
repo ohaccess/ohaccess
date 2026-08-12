@@ -1133,13 +1133,23 @@ export const STRINGS: Record<Lang, RegisterStrings> = {
 
 const LANG_STORAGE_KEY = 'ohaccess_lang'
 
-// Best-guess starting language: a previously chosen one wins, else the
-// device language, else English. Safe to call only in the browser.
-export function detectLang(): Lang {
+// True when the value is one of the offered language codes. hasOwnProperty
+// (not `in`) so junk like 'toString' can't slip through the prototype chain.
+export function isLang(code: unknown): code is Lang {
+  return typeof code === 'string' && Object.prototype.hasOwnProperty.call(STRINGS, code)
+}
+
+// Best-guess starting language: a previously chosen one wins, then the
+// language remembered from the visitor's last sign-in (rides in the
+// server-set prefill cookie, which outlives Safari's ~7-day purge of
+// localStorage), else the device language, else English. Safe to call only
+// in the browser.
+export function detectLang(rememberedLang?: string | null): Lang {
   try {
     const saved = window.localStorage.getItem(LANG_STORAGE_KEY)
-    if (saved && saved in STRINGS) return saved as Lang
-  } catch { /* storage blocked — fall through to device language */ }
+    if (isLang(saved)) return saved
+  } catch { /* storage blocked — fall through to the cookie/device */ }
+  if (isLang(rememberedLang)) return rememberedLang
   const device = (navigator.language || '').toLowerCase()
   // Chinese needs a script decision: Traditional for Taiwan/Hong Kong/Macau
   // (or an explicit -Hant tag), Simplified for the rest of zh-*.

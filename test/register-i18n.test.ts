@@ -1,11 +1,22 @@
 import { describe, it, expect } from 'vitest'
-import { STRINGS, LANGS, TIMELINE_VALUES, type Lang } from '@/lib/register-i18n'
+import { STRINGS, LANGS, TIMELINE_VALUES, isLang, type Lang } from '@/lib/register-i18n'
 
 const CODES = Object.keys(STRINGS) as Lang[]
 
 describe('register form translations', () => {
   it('covers exactly the languages offered in the picker', () => {
     expect(new Set(CODES)).toEqual(new Set(LANGS.map((l) => l.code)))
+  })
+
+  it('isLang accepts every picker code and rejects junk', () => {
+    for (const { code } of LANGS) expect(isLang(code)).toBe(true)
+    expect(isLang('xx')).toBe(false)
+    expect(isLang('')).toBe(false)
+    expect(isLang(undefined)).toBe(false)
+    expect(isLang(42)).toBe(false)
+    // Object prototype members must not read as languages.
+    expect(isLang('toString')).toBe(false)
+    expect(isLang('constructor')).toBe(false)
   })
 
   it('has no empty strings (englishGoverns exempt for English only)', () => {

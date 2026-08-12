@@ -26,6 +26,7 @@ import {
   VISITOR_COOKIE_PATH,
   serializeVisitorPrefill,
 } from '@/lib/visitor-prefill'
+import { isLang } from '@/lib/register-i18n'
 
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID!,
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
 
     // Language the visitor registered in (for the dashboard flag). Validate
     // against the known set; anything else falls back to English.
-    const visitorLang = ['en', 'es', 'vi', 'zh', 'zh-hant', 'ko', 'hi', 'fr', 'de', 'it', 'el', 'pl', 'ru', 'pt', 'tl', 'pa'].includes(body.lang) ? body.lang : 'en'
+    const visitorLang = isLang(body.lang) ? body.lang : 'en'
 
     if (!firstName || !lastName || !email || !phone || !openHouseId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -455,7 +456,7 @@ export async function POST(request: Request) {
     // Remember this visitor on their own device (lib/visitor-prefill) so the
     // form at their next ohACCESS open house is pre-filled. Server-set so
     // Safari keeps it past 7 days; refreshed on every sign-in so edits stick.
-    const prefill = serializeVisitorPrefill({ firstName, lastName, email, phone })
+    const prefill = serializeVisitorPrefill({ firstName, lastName, email, phone, lang: visitorLang })
     if (prefill) {
       response.cookies.set(VISITOR_COOKIE, prefill, {
         maxAge: VISITOR_COOKIE_MAX_AGE,
