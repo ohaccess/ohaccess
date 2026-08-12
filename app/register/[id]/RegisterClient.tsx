@@ -255,7 +255,7 @@ function ExpiredOpenHouse() {
     setErrors({})
   }
 
-  useEffect(() => { setLang(detectLang()) }, [])
+  useEffect(() => { setLang(detectLang(returningVisitor?.lang)) }, [])
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, '').substring(0, 10)

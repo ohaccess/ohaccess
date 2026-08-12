@@ -1,6 +1,6 @@
 # ohACCESS — Complete Product & Feature Reference (Detailed)
 
-*A single, exhaustive source of truth describing everything ohACCESS is and does — features, mechanics, exact copy, and rules. Written to hand to an AI assistant so it fully understands the product. Reflects what is actually shipped in production.*
+*A single, exhaustive source of truth describing everything ohACCESS is and does — features, mechanics, exact copy, and rules. Written to hand to an AI assistant so it fully understands the product. Reflects what is actually shipped in production. Last updated 2026-08-11.*
 
 ---
 
@@ -25,11 +25,12 @@ The visitor scans the QR and lands on a mobile-optimized form branded with the a
 - **Email** (format-validated).
 - **Phone** (auto-formats to `(XXX) XXX-XXXX`; full North American structural validation — rejects impossible area/exchange codes, N11 service codes, 555-01xx fictional numbers, and all-identical-digit numbers).
 - **Buying timeline** — one of four options (the exact stored values): **"0–3 Months," "3–6 Months," "6–12 Months," "12+ Months."**
+- Optionally, **one agent-defined custom question** (typed answer or multiple choice — see §3.13). Always optional for the visitor; an unanswered question never blocks the code words.
 
 Everything is re-validated server-side so a crafted request can't slip a junk number in.
 
-### 2.2 Six languages
-The form is fully translated into **English, Spanish, Vietnamese, Chinese (Simplified), Korean, and Hindi.** A flag picker sits in the top-right; the form auto-detects the device language and remembers the visitor's choice (localStorage).
+### 2.2 Sixteen languages
+The form is fully translated into **English, Spanish, French, Chinese (Simplified), Tagalog, Chinese (Traditional), Vietnamese, Korean, German, Russian, Portuguese, Hindi, Punjabi, Italian, Polish, and Greek** — ordered roughly by US/Canada speaker counts. A flag picker sits in the top-right; the form auto-detects the device language and remembers the visitor's choice **durably**: a fresh tap is saved on the device (localStorage) and the language of their last completed sign-in also rides in the year-long returning-visitor cookie (§2.6), so the choice survives even Safari's ~7-day purge of site storage. Priority: most recent tap → last sign-in's language → device language → English.
 - **Translated:** all labels, placeholders, timeline labels, error messages, buttons, both consent blocks, and the success screen.
 - **Always English regardless of language:** the submitted timeline value (so dashboards/CRMs parse consistently), the SMS/email code messages themselves, the Terms and Privacy pages, and the words "STOP"/"HELP" (literal carrier keywords). Every non-English consent appends a line stating the English version governs.
 
@@ -45,6 +46,24 @@ There's also a **"Prefer not to register?"** block explaining the NAR-compliant 
 ### 2.5 US + Canada
 Both US and Canadian addresses and phone numbers work (province → state field, postal codes supported). *Note: marketing into Canada is legally gated pending Canadian counsel, but organic Canadian sign-ins function fully.*
 
+### 2.6 Returning visitors are remembered
+A server-set 1-year cookie pre-fills the form at the visitor's *next* ohACCESS open house — any agent's, anywhere. They see a **"Welcome back, [name]"** banner with their info already typed — **in the language they signed in with last time** (the cookie carries it) — and a one-tap **"Not you?"** link clears it all (for borrowed phones). Ten-second sign-ins for repeat visitors.
+
+### 2.7 Post-sign-in feedback
+Below the success screen's confirmation, the visitor is optionally asked to **rate the home 1–10** and tag the price **Too High / Reasonable / Too Low** — plus up to **two more agent-defined questions** (§3.13). One-time and tokenized (can't be forged or spammed), entirely optional, and aggregated **PII-free** into the seller report. Honest market feedback, gathered automatically.
+
+### 2.8 Touring-agreement e-signing
+If the open house requires it, a signing step appears between the form and the code words: the visitor views each PDF (tokenized link), types their full name, ticks an E-SIGN consent box, and signs on their phone. **The code words are held back until they sign.** The signed PDF — the original document(s) merged with an appended signature-certificate page recording signer name, timestamp, IP, device, and a SHA-256 fingerprint per document — is emailed to the visitor **and** the agent in one send. **ohACCESS never stores the signed document** (only a one-line receipt row) — itself a privacy selling point. Agents upload up to **5 blank PDF templates** (≤5 pages, ≤2 MB each) in Settings and attach up to **3 per open house**; the visitor log shows **Signed / Not signed** chips.
+
+### 2.9 Expired-QR lead capture
+Scanning a sign after the open house is over doesn't dead-end: the visitor sees a friendly "this open house has ended" page with a short name/email/phone/zip form that files them as a buyer lead for the agent. A stale sign becomes a lead source.
+
+### 2.10 Next-morning thank-you email
+Every visitor gets an automatic thank-you at **9am local time the day after** their visit: listing recap, the agent's contact card (headshot or initials avatar), the sponsor card where applicable, and the agent's upcoming open houses. If the send window is missed, the email is skipped rather than sent late.
+
+### 2.11 One-click unsubscribe
+Visitor marketing emails (thank-you, invites) carry RFC 8058 one-click unsubscribe honored **globally across all agents**, POST-only so inbox security scanners can't accidentally unsubscribe anyone. (This also satisfies the Gmail/Yahoo bulk-sender requirements.)
+
 ---
 
 ## 3. The Agent Experience
@@ -58,10 +77,12 @@ A two-section form ("Property Details" + "Access Code Words"):
 - **Time zones are handled correctly:** times are entered as wall-clock in the **property's** time zone and stored as precise UTC instants (DST-aware), so an agent scheduling a listing in another time zone still gets correct times everywhere.
 - **Access Code Words:** the agent sets a **Text (SMS) code word** and an **Email code word**, each with an **auto-generate** button. SMS words are curated adjectives (BESPOKE, CHARMING, ELEGANT, LUXE, MODERN, PRISTINE, STATELY, STUNNING, TIMELESS, …); email words are curated home-themed nouns (BUNGALOW, COTTAGE, ESTATE, MANOR, PENTHOUSE, TOWNHOUSE, VILLA, …). Custom words auto-uppercase.
 - Editing the schedule intelligently **re-arms the post-event report** only when the actual start/end instant changes (editing other fields won't re-send it).
+- **Duplicate:** a "⧉ Duplicate" button pre-fills a new open house with every detail except date/times — same property, new day, two clicks.
+- **Overlap warning:** saving an open house that overlaps another of the agent's events pops a soft warning listing the conflicts and explaining that the permanent QR will make guests choose (suggesting the per-event QR instead), with a "Save anyway" option — it never blocks.
 
 ### 3.3 QR codes — three kinds
 1. **Per-open-house QR** — a unique QR for each listing (`/register/[id]`), rendered at 512px, high error-correction.
-2. **Permanent per-agent QR** ("📌 My QR code") — one stable link (`ohaccess.com/r/<code>`) the agent prints **once and reuses forever**. At scan time it resolves dynamically: to the **soonest upcoming/live** open house; if none is upcoming, to the **most recent past** one (so test scans always work); if the agent has zero open houses, to a friendly branded "No open house right now" page with the agent's name.
+2. **Permanent per-agent QR** ("📌 My QR code") — one stable link (`ohaccess.com/r/<code>`) the agent prints **once and reuses forever**. At scan time it resolves dynamically: to the **soonest upcoming/live** open house; if none is upcoming, to the **most recent past** one (so test scans always work); if the agent has zero open houses, to a friendly branded "No open house right now" page with the agent's name. If two of the agent's open houses **overlap**, the scan shows a branded **"Which open house are you at?"** chooser card instead of guessing.
 3. **Demo QR codes** — four printed sales-demo signs the admin can repoint on the fly (internal sales tool; see §7.5).
 
 ### 3.4 Printable branded sign
@@ -78,6 +99,7 @@ A live, sortable table per open house — columns: **Name, Phone, Email, Timelin
   - 🚫 **Opted out** (grey) — the number replied STOP; do not contact.
   - ⚠ **undelivered** (red, phone) / ⚠ **bounced** (red, email) — the code couldn't be delivered (bad contact info).
   - ⚠ **VoIP** (amber) — the number is a non-fixed VoIP/burner (TextNow, Google Voice, etc.), suggesting extra ID verification. *(Legitimate cable/home VoIP is not flagged.)*
+  - **Signed / Not signed** — touring-agreement status, when the open house requires agreements (§2.8).
   - 📝 next to a name — the agent has saved a private note.
 - **Timeline pill** — color-coded hot→cold (0–3 mo orange → 12+ mo grey).
 
@@ -103,7 +125,16 @@ The visitor's code-word email includes an **"Upcoming Open Houses"** section: th
 Every sign-in silently records **IP address, device/user-agent, and phone carrier + line type** (via Twilio Lookup) as a fraud/safety trail. Separately, a **QR scan log** records every time the registration page is loaded — even if the visitor abandons the form — which powers the "scanned but didn't register" analytics and the seller-report funnel.
 
 ### 3.12 Settings the agent controls
-Profile (name, brokerage, display email shown to visitors, phone, license #, state), **branding** (headshot URL, logo URL, landing-page URL, primary + accent brand colors with live preview), **CRM lead email + CRM type**, **Zapier webhook URL**, **referral link**, and **subscription management**. (For team members, brokerage name/logo/colors are locked and managed by the team lead.)
+Profile (name, brokerage, display email shown to visitors, phone, license #, state), **branding** (headshot URL, logo URL, landing-page URL, primary + accent brand colors with live preview), **custom questions** (§3.13), **disclosures & required notices** (§3.14), **agreement templates** (§2.8), **CRM lead email + CRM type**, **Zapier webhook URL**, **referral link**, and **subscription management**. (For team members, brokerage name/logo/colors are locked and managed by the team lead.)
+
+### 3.13 Custom questions
+Agents can add their own questions to the flow: **1 on the sign-in form** and **up to 2 on the post-sign-in success screen** — free-typed or multiple choice (up to 4 options each). Always optional for the visitor: an unanswered question can never block the code words. Each visitor's record stores the question **exactly as it was asked at the time** (later edits can't rewrite history), and answers flow everywhere leads go — the visitor detail view, CSV export, the CRM lead email, and (aggregated, PII-free) the seller report.
+
+### 3.14 Disclosures & required notices
+Agents attach up to **5 label + link pairs** (e.g. Texas IABS, agency disclosure, Consumer Information Statement; HTTPS links only). They're delivered on the sign-in success screen **and** in the code-word email — state-mandated disclosure on autopilot. On a team, brokerage-set disclosures override an individual member's. The exact links shown to each visitor are snapshotted onto their record.
+
+### 3.15 "Invite past visitors" re-marketing
+When an agent publishes a new open house, a 💌 **Invite** button (plus an auto-prompt right after saving) emails past visitors who are **still inside their stated buying window** a personal, agent-voiced invitation with the mapped address, add-to-calendar buttons, an RSVP reply link, and unsubscribe. The eligibility engine is deliberately conservative: invite windows are padded about a month past the stated timeline (0–3 mo → 4 months, 3–6 → 7, 6–12 → 13, 12+ → 16), a repeat visit resets the clock, each visitor gets **at most 2 invites per agent per rolling 30 days**, opt-outs/bounces/already-invited are excluded, batches cap at 200, and the hottest (soonest-expiring) buyers go first. The agent sees a checkbox list plus an honest "not included" breakdown before sending.
 
 ---
 
@@ -111,7 +142,7 @@ Profile (name, brokerage, display email shown to visitors, phone, license #, sta
 
 A shareable, **privacy-safe** results page for the home seller (`/report/<code>`), generated from the dashboard ("📊 Seller report") or linked from the post-event report email.
 
-**Shows:** registered-visitor **count**, a **"Buying within 6 months"** headline (the two soonest timeline buckets), a **timeline distribution** (horizontal bars), a green verified-sign-in trust banner, an "interest at the door" **scan→registration funnel** (only shown when the scan data is reliable for that event), and a "Hosted by" agent contact card + listing link.
+**Shows:** registered-visitor **count**, a **"Buying within 6 months"** headline (the two soonest timeline buckets), a **timeline distribution** (horizontal bars), a green verified-sign-in trust banner, an "interest at the door" **scan→registration funnel** (only shown when the scan data is reliable for that event), the **average 1–10 visitor rating** and **price sentiment** (Too High / Reasonable / Too Low) from post-sign-in feedback, **aggregated custom-question answers**, and a "Hosted by" agent contact card + listing link.
 
 **Deliberately hides all visitor PII** — no names, phones, emails, notes, or per-visitor rows. Visitors consented to the *agent* having their info, not the seller. The page is noindex, rate-limited, one-tap shareable (native share sheet), and branded with the agent's/team's logo. Link previews show the property address.
 
@@ -152,7 +183,7 @@ Service providers — mortgage lenders, title companies, inspectors, insurance a
 
 - **Sponsor portal** (`/sponsor`, separate sign-up): the sponsor builds a **profile card** — full name, company, email, phone, license/NMLS number, landing-page URL, headshot, and logo.
 - **Invite & accept:** the sponsor invites agents by email (7-day links, up to 10 agents by default); each agent must **explicitly accept**, which records the agent's on-file consent. Agents can end a sponsorship anytime from Settings; sponsors can remove agents too.
-- **On the visitor side:** a gold **"Sponsored by" card** appears **below** the agent's card in the visitor email (headshot, company, contact, license #, logo) with a mandatory RESPA-style disclaimer — *"You are not required to use [Company] for any service. You are free to shop around."* — and the **sign-in consent line names the sponsor** in all 6 languages.
+- **On the visitor side:** a gold **"Sponsored by" card** appears **below** the agent's card in the visitor code-word **and next-morning thank-you** emails (headshot, company, contact, license #, logo) with a mandatory RESPA-style disclaimer — *"You are not required to use [Company] for any service. You are free to shop around."* — and the **sign-in consent line names the sponsor** in all 16 languages.
 - **Sponsor dashboard** (Dashboard / Agents / Settings tabs): a Team-style activity view showing **only** the sign-ins stamped to this sponsor (i.e., visitors whose consent named them — a hard privacy boundary; pre-sponsorship sign-ins are invisible), with per-agent rollups and **CSV export**. A sponsor **never** controls any agent's name, logo, or colors.
 - **Legally cleared:** the named-clickwrap-consent + "Sponsored by" labeling + not-required-to-use disclaimer approach was **signed off by an attorney for RESPA/TCPA.**
 - **Billing:** a paying sponsor's agents get Pro-level (uncapped) access. Sponsor billing mirrors Team pricing but is currently collected manually (no self-serve sponsor checkout yet).
@@ -185,6 +216,7 @@ All open houses on a Google Map, color-coded by status (live/upcoming/past), wit
 - **Provision brokerage** — stand up an invoice-based brokerage for 100+/custom deals.
 - **Demo QR codes** — repoint the four printed demo signs at any open house on the fly (Dave's in-person sales workflow).
 - **Referral Sources** (`/admin/sources`) — signups, Pro conversions, and conversion % bucketed by referral code (30-day first-touch attribution), with expandable agent lists.
+- **Legal / preservation holds** — place a hold on an open house's records; held data refuses the retention purge and admin hard-deletes until the hold is released (agent-side deletes still work silently — the archive keeps the held record).
 - **Delete open house** — a true hard delete (for test cleanup / honoring a visitor deletion request; unlike agent-side deletes, this does *not* archive).
 
 ---
@@ -200,6 +232,9 @@ Anyone — **no account needed** — can pay a **one-time $150** at `/gift` to g
 
 ### 8.3 Partner Program page
 `/partners` — a B2B landing page pitching affiliated businesses (lenders, title, inspectors, insurance, roofers, attorneys) to **buy a Team plan and share it with up to 10 agent partners** (or per-seat for more), owning the branding on every visitor email and receiving the leads. Includes an inquiry form (business type, partner count) and **RESPA-conscious** co-marketing language ("consult your own compliance counsel").
+
+### 8.4 Free sign hardware (Pro 2-year)
+The **first 100 individual Pro 2-year subscribers in each state** choose **two pedestal sign stands or one A-frame**, shipped free. The offer copy is phase-aware and always truthful: generic at first ("first 100 agents in each state"), social proof once enough are claimed in that state, scarcity once ≤25 remain, and the offer disappears entirely once the state's 100 are gone. The hardware choice and shipping address are collected right inside Stripe checkout, and a fulfillment email fires automatically on payment. *(Not offered on Team/Brokerage plans; codified in Subscriber Terms §4.9.)*
 
 ---
 
@@ -252,9 +287,11 @@ Every plan is a real **auto-renewing Stripe subscription** (including 2-year), b
 
 ## 12. Marketing Site & SEO
 
-- **Homepage** ("The Record"): a dark editorial landing page with scroll animations, a live check-in demo, a seller-report phone mockup, safety-first messaging ("You owe it to your sellers to protect their home. You owe it to yourself to protect *you*."), a pricing section with a monthly/annual/2-year toggle, and gift + partner-sponsorship cards. *(A 90-second commercial film section is built but hidden until the video is delivered.)*
-- **Other public pages:** Contact, Partners, Resources ("How ohACCESS works" story), Gift, plus the legal pages.
-- **SEO:** Open Graph + Twitter cards site-wide, per-page titles/descriptions, robots.txt, sitemap.xml, and Google Search Console verified.
+- **Homepage** ("The Record"): a dark editorial landing page with scroll animations, a live check-in demo, a seller-report phone mockup, safety-first messaging ("You owe it to your sellers to protect their home. You owe it to yourself to protect *you*."), a pricing section with a monthly/annual/2-year toggle, and gift + partner-sponsorship cards. *(A 90-second commercial film section is built but hidden until the video is delivered.)* The hero photo is **seasonal** — it swaps automatically at the astronomical solstice/equinox instants (table through 2035), with special Halloween (Oct 24–31) and Christmas (Dec 18–25) photos.
+- **Blog** (`/blog`): SEO articles auto-published via an authenticated GrandRanker webhook (sanitized HTML, instant page revalidation, no manual review step); posts feed the sitemap.
+- **FAQ** (`/faq`): 8 server-rendered Q&As with matching FAQPage structured data for Google rich results.
+- **Other public pages:** Contact, Partners, Resources ("How ohACCESS works" story), Gift, plus the legal pages — all sharing one canonical footer (FAQ · Blog · Resources · Partners · Gift · Contact · legal links).
+- **SEO:** Open Graph + Twitter cards site-wide, per-page titles/descriptions, robots.txt, sitemap.xml (including blog posts), Organization + FAQPage JSON-LD, Vercel Analytics, and Google Search Console verified.
 
 ---
 

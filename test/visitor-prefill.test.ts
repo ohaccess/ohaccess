@@ -25,6 +25,26 @@ describe('visitor prefill cookie', () => {
     expect(parseVisitorPrefill(raw)?.firstName).toBe('Sarah')
   })
 
+  it('round-trips the sign-in language', () => {
+    const v = { ...sample, lang: 'vi' as const }
+    expect(parseVisitorPrefill(serializeVisitorPrefill(v))).toEqual(v)
+  })
+
+  it('omits an unknown language instead of failing the whole cookie', () => {
+    const raw = serializeVisitorPrefill({ ...sample, lang: 'xx' as never })
+    expect(parseVisitorPrefill(raw)).toEqual(sample)
+  })
+
+  it('still parses cookies set before the lang field existed', () => {
+    const raw = encodeURIComponent(JSON.stringify(sample))
+    expect(parseVisitorPrefill(raw)).toEqual(sample)
+  })
+
+  it('drops a tampered lang value on parse, keeping the rest', () => {
+    const raw = encodeURIComponent(JSON.stringify({ ...sample, lang: 'toString' }))
+    expect(parseVisitorPrefill(raw)).toEqual(sample)
+  })
+
   it('refuses to serialize incomplete or oversized data', () => {
     expect(serializeVisitorPrefill({ ...sample, email: '' })).toBeNull()
     expect(serializeVisitorPrefill({ ...sample, phone: '   ' })).toBeNull()

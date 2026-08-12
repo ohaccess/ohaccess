@@ -14,6 +14,8 @@
 // - Scoped to Path=/register so it rides along only on sign-in pages.
 // - The value is display convenience only — nothing trusts it server-side.
 
+import { isLang, type Lang } from './register-i18n'
+
 export const VISITOR_COOKIE = 'ohaccess_visitor'
 export const VISITOR_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
 export const VISITOR_COOKIE_PATH = '/register'
@@ -23,6 +25,9 @@ export type VisitorPrefill = {
   lastName: string
   email: string
   phone: string
+  // Language of their last sign-in — restores the picker after Safari has
+  // purged the localStorage choice. Absent on cookies set before it existed.
+  lang?: Lang
 }
 
 // Caps keep the cookie tiny and shrug off junk. Generous for real data.
@@ -41,7 +46,9 @@ export function serializeVisitorPrefill(v: VisitorPrefill): string | null {
   const email = cleanField(v.email)
   const phone = cleanField(v.phone)
   if (!firstName || !lastName || !email || !phone) return null
-  return encodeURIComponent(JSON.stringify({ firstName, lastName, email, phone }))
+  const data: Record<string, string> = { firstName, lastName, email, phone }
+  if (isLang(v.lang)) data.lang = v.lang
+  return encodeURIComponent(JSON.stringify(data))
 }
 
 // Tolerates anything: a tampered or truncated cookie just means no prefill.
@@ -54,7 +61,9 @@ export function parseVisitorPrefill(raw: string | undefined | null): VisitorPref
     const email = cleanField(data?.email)
     const phone = cleanField(data?.phone)
     if (!firstName || !lastName || !email || !phone) return null
-    return { firstName, lastName, email, phone }
+    const out: VisitorPrefill = { firstName, lastName, email, phone }
+    if (isLang(data?.lang)) out.lang = data.lang
+    return out
   } catch {
     return null
   }
