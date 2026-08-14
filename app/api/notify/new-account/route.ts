@@ -1,5 +1,6 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
+import type { User } from '@supabase/supabase-js'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { notifyAdmins } from '@/lib/notify-admin'
 import { escapeHtml } from '@/lib/escape-html'
@@ -12,15 +13,65 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ohaccess.com'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// The first authenticated dashboard load of a fresh account triggers two
-// one-time emails: a heads-up to the ohACCESS team, and the getting-started
-// (welcome) email to the agent. The dashboard calls this on every load; each
-// send claims its own per-account flag with a conditional UPDATE — only the
-// call that flips the column from NULL sends — so both are at-most-once no
-// matter how often this runs. The claims are independent: a failure or an
-// already-set flag on one never blocks the other.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// Two one-time emails for a fresh account: a heads-up to the ohACCESS team,
+// and the getting-started (welcome) email to the agent. Each send claims its
+// own per-account flag with a conditional UPDATE — only the call that flips
+// the column from NULL sends — so both are at-most-once no matter how often
+// or from where this runs.
+//
+// Two callers share this endpoint:
+//   1. The DB trigger (migration 046) the moment Supabase confirms the
+//      agent's email — CRON_SECRET bearer + {userId} body. This is the
+//      primary path: the email lands at confirmation click, before the
+//      agent ever signs in.
+//   2. The dashboard on every authenticated load (user bearer token) — now
+//      the fallback that also covers OAuth signups, which are confirmed at
+//      creation and never fire the UPDATE trigger.
 export async function POST(request: Request) {
-  const user = await getAuthenticatedUser(request)
+  let user: User | null = null
+
+  const cronSecret = process.env.CRON_SECRET
+  const auth = request.headers.get('authorization')
+  if (cronSecret && auth === `Bearer ${cronSecret}`) {
+    const body = await request.json().catch(() => null)
+    const userId = body?.userId
+    if (typeof userId !== 'string' || !UUID_RE.test(userId)) {
+      return NextResponse.json({ error: 'Missing userId' }, { status: 400 })
+    }
+    const { data, error } = await supabase.auth.admin.getUserById(userId)
+    if (error || !data?.user) {
+      return NextResponse.json({ error: 'Unknown user' }, { status: 404 })
+    }
+    // The trigger only fires on confirmation, but guard anyway so a
+    // hand-crafted call can't send ahead of it.
+    if (!data.user.email_confirmed_at) {
+      return NextResponse.json({ ok: true, skipped: 'unconfirmed' })
+    }
+    user = data.user
+
+    // At confirmation time the profile row usually doesn't exist yet (the
+    // dashboard creates it on first load), and the claim UPDATEs below need
+    // a row to flip. Mirrors the dashboard's auto-create: referral source
+    // from auth metadata (stashed at signup, survives the confirmation hop).
+    const metaRef =
+      (user.user_metadata?.referral_source as string | undefined) || null
+    const insertRow: Record<string, unknown> = { id: user.id, email: user.email }
+    if (metaRef) {
+      insertRow.referral_source = metaRef
+      insertRow.referral_source_first_seen_at = new Date().toISOString()
+    }
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert(insertRow, { onConflict: 'id', ignoreDuplicates: true })
+    if (profileError) {
+      console.error('new-account notify: profile ensure failed', profileError)
+    }
+  } else {
+    user = await getAuthenticatedUser(request)
+  }
+
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
