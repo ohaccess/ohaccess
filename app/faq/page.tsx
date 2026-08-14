@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 const FAQS: { q: string; a: string }[] = [
   {
     q: 'What is a verified open house sign-in?',
-    a: 'A verified open house sign-in confirms a visitor’s contact information is real at the moment they register. With ohACCESS, guests scan a QR code, complete a quick digital form, and receive a one-time codeword by text and email. Sharing that codeword with the host proves the phone number and email are genuine — replacing the bad numbers and dead email addresses common on paper sign-in sheets.',
+    a: 'A verified open house sign-in confirms a visitor’s contact information is real at the moment they register. With ohACCESS, guests scan a QR code, complete a quick digital form, and receive a one-time codeword by text and email. Sharing that codeword with the host proves the phone number and email are genuine — replacing the illegible names, bad numbers, and dead email addresses common on paper sign-in sheets.',
   },
   {
     q: 'How do real estate agents capture leads at an open house?',

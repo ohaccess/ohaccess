@@ -19,7 +19,7 @@ const STEPS = [
 
 const SCENES = [
   { time: '0:00–0:08', title: 'The sign goes up.', body: 'Sunday morning. An agent sets the Open House sign and QR placard at a sunlit front door.', vo: '“Every Open House starts the same way — a sign in the yard, and strangers at the door.”' },
-  { time: '0:08–0:16', title: 'The old record.', body: 'Close-up of a paper sign-in sheet: scribbles, a number with nine digits, an email missing its @.', vo: '“For decades, the record of who walked in looked like this. Dead numbers. Bad emails. Ink you can’t read.”' },
+  { time: '0:08–0:16', title: 'The old record.', body: 'Close-up of a paper sign-in sheet: an illegible name, a number with nine digits, an email missing its @.', vo: '“For decades, the record of who walked in looked like this. Names you can’t read. Dead numbers. Bad emails.”' },
   { time: '0:16–0:30', title: 'Thirty seconds at the door.', body: 'A couple arrives. She scans the QR sign; a clean mobile form fills in thirty seconds.', vo: <>“<strong>ohACCESS</strong> changes that in thirty seconds. Visitors scan and register at the door…”</> },
   { time: '0:30–0:42', title: 'The codeword.', body: 'Her phone buzzes: “Your codeword is MAGNOLIA.” A backup codeword lands in her email.', vo: '“…and receive a one-time codeword — sent to the provided phone and email. Bad number? No code. No entry.”' },
   { time: '0:42–0:56', title: '“Magnolia.”', body: 'She says the word at the door. The agent’s phone has already shown her name and 0–3 month timeline.', vo: '“The agent knows who’s walking in before they say ‘Hello’ — verified and logged.”' },
@@ -298,7 +298,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
             <h1 style={{ fontSize: 'clamp(42px,6.4vw,76px)', lineHeight: .98, fontWeight: 800, letterSpacing: '-.035em', textWrap: 'balance', margin: 0 }}>
               <span style={{ display: 'inline-block', animation: 'om-rise .7s .12s both' }}>The clipboard</span> <span style={{ display: 'inline-block', animation: 'om-rise .7s .22s both' }}>has been</span> <span style={{ display: 'inline-block', color: '#c9963a', animation: 'om-rise .7s .34s both' }}>lying to you.</span>
             </h1>
-            <p style={{ fontSize: 'clamp(16px,1.6vw,19px)', lineHeight: 1.55, color: 'rgba(255,255,255,.72)', margin: '24px 0 32px', maxWidth: '44ch', animation: 'om-rise .7s .45s both' }}>Dead numbers. Bounced emails. Ink nobody can read. <strong>ohACCESS</strong> verifies every Open House visitor’s contact info at the door with a one-time codeword — sent to a phone and email that actually work.</p>
+            <p style={{ fontSize: 'clamp(16px,1.6vw,19px)', lineHeight: 1.55, color: 'rgba(255,255,255,.72)', margin: '24px 0 32px', maxWidth: '44ch', animation: 'om-rise .7s .45s both' }}>Illegible names. Dead numbers. Bounced emails. <strong>ohACCESS</strong> verifies every Open House visitor’s contact info at the door with a one-time codeword — sent to a phone and email that actually work.</p>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap', animation: 'om-rise .7s .55s both' }}>
               <Link href="/login?signup=true" className="rec-btn" style={{ background: '#c9963a', color: '#1d1d1f', fontWeight: 700, fontSize: '16px', padding: '15px 28px', borderRadius: '8px' }}>Start Free — 25 check-ins</Link>
               {showFilm && <a href="#film" style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.8)', borderBottom: '1px solid rgba(255,255,255,.35)', paddingBottom: '2px' }}>Watch 90 seconds ↓</a>}
@@ -442,7 +442,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
               <div style={{ fontSize: '16px', fontWeight: 800, color: '#1d1d1f' }}>Paper sheet</div>
               <div style={{ fontSize: '12.5px', color: '#a8a8ad', margin: '2px 0 16px' }}>The clipboard</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', lineHeight: 1.5, color: '#6e6e73' }}>
-                {['Made-up numbers, dead emails, zero verification', 'Handwriting you decode days later — or never', 'Never reaches your CRM; looks dated to sellers'].map(t => (
+                {['Illegible names, made-up numbers, zero verification', 'Handwriting you decode days later — or never', 'Never reaches your CRM; looks dated to sellers'].map(t => (
                   <div key={t} style={{ display: 'flex', gap: '9px' }}><span style={{ color: '#c0392b', fontWeight: 800 }}>✕</span><span>{t}</span></div>
                 ))}
               </div>
@@ -476,7 +476,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
             <div data-reveal="1" style={{ fontSize: 'clamp(30px,4.2vw,52px)', fontWeight: 800, letterSpacing: '-.035em', lineHeight: 1.04, color: '#1d1d1f', textWrap: 'balance' }}>You owe it to your sellers to protect their home. <span style={{ color: '#6e6e73' }}>You owe it to yourself to protect <em>you</em>.</span></div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,260px),1fr))', gap: '16px', marginTop: '40px' }}>
               {[
-                { title: 'Deterrence at the door', body: 'Anyone entering knows their phone is verified and their visit is on the record. People behave differently when they’re not anonymous.' },
+                { title: 'Deterrence at the door', body: 'Anyone entering knows their name is on the record and their phone is verified. People behave differently when they’re not anonymous.' },
                 { title: 'You’re never in the dark', body: 'Instant new-visitor alerts tell you who’s walking in — name and timeline — before you let them in.' },
                 { title: 'A record for the seller, too', body: 'A complete, verified log of who was inside the home — accountability the paper sheet never offered.' },
               ].map(c => (

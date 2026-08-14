@@ -195,7 +195,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
           <>
             <div style={{ background: '#e8f9ee', border: '1px solid #b2f0c8', borderRadius: 12, padding: '11px 14px', marginTop: 10, fontSize: 12.5, color: '#1a7a3c', fontWeight: 600, lineHeight: 1.45 }}>
               ✓ Every visitor&apos;s phone and email were verified at sign-in with a one-time
-              code — no bad numbers, no unreadable sign-in sheets.
+              code — legible names, no bad numbers, no unreadable sign-in sheets.
             </div>
 
             {/* Timeline breakdown */}

@@ -131,7 +131,7 @@ export default function Home() {
           </div>
           <div className="grid-4">
             {[
-              { emoji: '😤', title: 'Bad contact info', body: 'Visitors write dead email addresses and wrong phone numbers with zero accountability.' },
+              { emoji: '😤', title: 'Bad contact info', body: 'Visitors write illegible names, dead email addresses, and wrong phone numbers with zero accountability.' },
               { emoji: '📖', title: 'Illegible handwriting', body: 'Paper sign-in sheets are often unreadable. Agents spend hours decoding contact info they can never use.' },
               { emoji: '🚫', title: 'No verification', body: 'There is no way to know if a visitor gave real contact info until you try — and fail — days later.' },
               { emoji: '🏠', title: 'Safety risk', body: 'Agents let complete strangers into private residences with no verified contact info and no record of who walked through.' },
@@ -178,7 +178,7 @@ export default function Home() {
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <h2 className="section-title">Every guest checks in. No anonymous walk-ins.</h2>
             <p style={{ fontSize: '16px', color: '#6e6e73', maxWidth: '640px', margin: '0 auto' }}>
-              Open houses are the #1 situation where real estate agents report feeling unsafe.<sup>1</sup> A paper sign-in sheet doesn&apos;t change that — anyone can scribble anything and walk in. ohACCESS replaces the clipboard with a verified check-in.
+              Open houses are the #1 situation where real estate agents report feeling unsafe.<sup>1</sup> A paper sign-in sheet doesn&apos;t change that — anyone can scribble an unreadable name and walk in. ohACCESS replaces the clipboard with a verified check-in.
             </p>
           </div>
           <div className="grid-4">

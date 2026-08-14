@@ -1391,7 +1391,7 @@ function OpenHousesTable({
           <SortTh label="Agent" k="agentName" state={state} onSort={onSort} />
           <SortTh label="When" k="when" state={state} onSort={onSort} />
           <SortTh label="Status" k="status" state={state} onSort={onSort} />
-          <SortTh label="Code Word" k="code_word" state={state} onSort={onSort} />
+          <SortTh label="Codeword" k="code_word" state={state} onSort={onSort} />
           <SortTh label="Visitors" k="visitorCount" state={state} onSort={onSort} align="right" />
           <th style={thR}></th>
         </tr>
