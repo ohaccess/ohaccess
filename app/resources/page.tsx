@@ -61,12 +61,12 @@ export default function Resources() {
 
           <div className="howto-row">
             <div className="howto-img">
-              <img src="/resources/paper-signin.jpg" alt="Agent deciphering a messy paper open-house sign-in sheet with illegible handwriting and incomplete contact info" />
+              <img src="/resources/paper-signin.jpg" alt="Agent deciphering a messy paper open-house sign-in sheet with illegible names and incomplete contact info" />
             </div>
             <div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>The problem you already know</div>
               <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
-                Paper sign-in sheets are messy, unreadable, and frankly a liability. Illegible handwriting. Phone numbers off by one digit. No email verification. And when the open house is over, you&apos;re left deciphering chicken scratch. There&apos;s a better way.
+                Paper sign-in sheets are messy, unreadable, and frankly a liability. Illegible names. Phone numbers off by one digit. No email verification. And when the open house is over, you&apos;re left deciphering chicken scratch. There&apos;s a better way.
               </div>
             </div>
           </div>
