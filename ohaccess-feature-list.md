@@ -6,13 +6,13 @@
 
 ## 1. What ohACCESS Is
 
-ohACCESS replaces the paper open-house sign-in sheet with a **verified digital check-in**. A visitor scans a QR code at the door, fills out a short registration form, and instantly receives a **verification "code word" by both SMS and email**. They share that code word with the host agent to gain entry — which proves the phone number and email they entered are real, working, and theirs. The agent gets an instant alert (SMS + email) and a running, verified visitor log.
+ohACCESS replaces the paper open-house sign-in sheet with a **verified digital check-in**. A visitor scans a QR code at the door, fills out a short registration form, and instantly receives a **verification "codeword" by both SMS and email**. They share that codeword with the host agent to gain entry — which proves the phone number and email they entered are real, working, and theirs. The agent gets an instant alert (SMS + email) and a running, verified visitor log.
 
 **Core value:** real estate agents (and the sellers whose homes they show) get a trustworthy record of who actually entered the property, with contact info verified in real time — instead of the fake names and bad numbers people write on paper sheets.
 
 - **Website:** www.ohaccess.com
 - **Status:** Live in production. Paid billing (real credit cards) and SMS delivery are both live.
-- **Two code words per visitor:** an **SMS code word** (an adjective, the *primary*) and an **email code word** (a home-themed noun, the *fallback*), so every visitor has a way in even if one channel is slow. At the door the agent is coached to ask for the **text code first** (a real phone is hardest to fake) and accept the email code only if the text didn't arrive.
+- **Two codewords per visitor:** an **SMS codeword** (an adjective, the *primary*) and an **email codeword** (a home-themed noun, the *fallback*), so every visitor has a way in even if one channel is slow. At the door the agent is coached to ask for the **text code first** (a real phone is hardest to fake) and accept the email code only if the text didn't arrive.
 - **Patent:** U.S. Provisional Patent Application filed May 2026 ("System and Method for Real-Time Contact Verification, Qualified Lead Capture, and Incentive-Based Engagement Validation at In-Person Events"). "Patent Pending" is displayed site-wide.
 
 ---
@@ -25,7 +25,7 @@ The visitor scans the QR and lands on a mobile-optimized form branded with the a
 - **Email** (format-validated).
 - **Phone** (auto-formats to `(XXX) XXX-XXXX`; full North American structural validation — rejects impossible area/exchange codes, N11 service codes, 555-01xx fictional numbers, and all-identical-digit numbers).
 - **Buying timeline** — one of four options (the exact stored values): **"0–3 Months," "3–6 Months," "6–12 Months," "12+ Months."**
-- Optionally, **one agent-defined custom question** (typed answer or multiple choice — see §3.13). Always optional for the visitor; an unanswered question never blocks the code words.
+- Optionally, **one agent-defined custom question** (typed answer or multiple choice — see §3.13). Always optional for the visitor; an unanswered question never blocks the codewords.
 
 Everything is re-validated server-side so a crafted request can't slip a junk number in.
 
@@ -41,7 +41,7 @@ There's also a **"Prefer not to register?"** block explaining the NAR-compliant 
 
 ### 2.4 What the visitor receives
 - **SMS** (tuned to fit one 160-character segment): `SMS code at [address] is "[CODEWORD]". Share code w/ host for access. Reply STOP to opt out.` The word "at" before the address makes it tap-to-open in Apple/Google Maps; the listing short-link is appended only if it still fits in one segment.
-- **Email** (subject: *Your ohACCESS email code: [CODEWORD]*): a branded header, the large email code word, a cross-reference to the separately-texted SMS code, a property-facts card (address, date, hours, beds/baths/sqft, price, listing link), the **agent's contact card** (headshot, name, brokerage, tap-to-call phone, email, logo), and — where applicable — a **"Sponsored by" card** and an **"Upcoming Open Houses" section** (see §3.9 and §3.10).
+- **Email** (subject: *Your ohACCESS email code: [CODEWORD]*): a branded header, the large email codeword, a cross-reference to the separately-texted SMS code, a property-facts card (address, date, hours, beds/baths/sqft, price, listing link), the **agent's contact card** (headshot, name, brokerage, tap-to-call phone, email, logo), and — where applicable — a **"Sponsored by" card** and an **"Upcoming Open Houses" section** (see §3.9 and §3.10).
 
 ### 2.5 US + Canada
 Both US and Canadian addresses and phone numbers work (province → state field, postal codes supported). *Note: marketing into Canada is legally gated pending Canadian counsel, but organic Canadian sign-ins function fully.*
@@ -53,7 +53,7 @@ A server-set 1-year cookie pre-fills the form at the visitor's *next* ohACCESS o
 Below the success screen's confirmation, the visitor is optionally asked to **rate the home 1–10** and tag the price **Too High / Reasonable / Too Low** — plus up to **two more agent-defined questions** (§3.13). One-time and tokenized (can't be forged or spammed), entirely optional, and aggregated **PII-free** into the seller report. Honest market feedback, gathered automatically.
 
 ### 2.8 Touring-agreement e-signing
-If the open house requires it, a signing step appears between the form and the code words: the visitor views each PDF (tokenized link), types their full name, ticks an E-SIGN consent box, and signs on their phone. **The code words are held back until they sign.** The signed PDF — the original document(s) merged with an appended signature-certificate page recording signer name, timestamp, IP, device, and a SHA-256 fingerprint per document — is emailed to the visitor **and** the agent in one send. **ohACCESS never stores the signed document** (only a one-line receipt row) — itself a privacy selling point. Agents upload up to **5 blank PDF templates** (≤5 pages, ≤2 MB each) in Settings and attach up to **3 per open house**; the visitor log shows **Signed / Not signed** chips.
+If the open house requires it, a signing step appears between the form and the codewords: the visitor views each PDF (tokenized link), types their full name, ticks an E-SIGN consent box, and signs on their phone. **The codewords are held back until they sign.** The signed PDF — the original document(s) merged with an appended signature-certificate page recording signer name, timestamp, IP, device, and a SHA-256 fingerprint per document — is emailed to the visitor **and** the agent in one send. **ohACCESS never stores the signed document** (only a one-line receipt row) — itself a privacy selling point. Agents upload up to **5 blank PDF templates** (≤5 pages, ≤2 MB each) in Settings and attach up to **3 per open house**; the visitor log shows **Signed / Not signed** chips.
 
 ### 2.9 Expired-QR lead capture
 Scanning a sign after the open house is over doesn't dead-end: the visitor sees a friendly "this open house has ended" page with a short name/email/phone/zip form that files them as a buyer lead for the agent. A stale sign becomes a lead source.
@@ -72,10 +72,10 @@ Visitor marketing emails (thank-you, invites) carry RFC 8058 one-click unsubscri
 Sign up / log in with email + password or **Google login** (branded "ohaccess.com" consent screen). Signup requires agreeing to Terms + Privacy. Password reset flow included.
 
 ### 3.2 Creating & editing an open house
-A two-section form ("Property Details" + "Access Code Words"):
-- **Property Details:** Street Address (with **Google Places autocomplete** that auto-fills city/state/zip **and the property's true time zone**), Unit/Suite, City, State/Province, Zip/Postal, Listing Price, Square Footage, Bedrooms, Bathrooms, a **date picker** (calendar), **start/end time** pickers, and a Listing URL. Required: address, city, state, date, start time, end time, and both code words.
+A two-section form ("Property Details" + "Access Codewords"):
+- **Property Details:** Street Address (with **Google Places autocomplete** that auto-fills city/state/zip **and the property's true time zone**), Unit/Suite, City, State/Province, Zip/Postal, Listing Price, Square Footage, Bedrooms, Bathrooms, a **date picker** (calendar), **start/end time** pickers, and a Listing URL. Required: address, city, state, date, start time, end time, and both codewords.
 - **Time zones are handled correctly:** times are entered as wall-clock in the **property's** time zone and stored as precise UTC instants (DST-aware), so an agent scheduling a listing in another time zone still gets correct times everywhere.
-- **Access Code Words:** the agent sets a **Text (SMS) code word** and an **Email code word**, each with an **auto-generate** button. SMS words are curated adjectives (BESPOKE, CHARMING, ELEGANT, LUXE, MODERN, PRISTINE, STATELY, STUNNING, TIMELESS, …); email words are curated home-themed nouns (BUNGALOW, COTTAGE, ESTATE, MANOR, PENTHOUSE, TOWNHOUSE, VILLA, …). Custom words auto-uppercase.
+- **Access Codewords:** the agent sets a **Text (SMS) codeword** and an **Email codeword**, each with an **auto-generate** button. SMS words are curated adjectives (BESPOKE, CHARMING, ELEGANT, LUXE, MODERN, PRISTINE, STATELY, STUNNING, TIMELESS, …); email words are curated home-themed nouns (BUNGALOW, COTTAGE, ESTATE, MANOR, PENTHOUSE, TOWNHOUSE, VILLA, …). Custom words auto-uppercase.
 - Editing the schedule intelligently **re-arms the post-event report** only when the actual start/end instant changes (editing other fields won't re-send it).
 - **Duplicate:** a "⧉ Duplicate" button pre-fills a new open house with every detail except date/times — same property, new day, two clicks.
 - **Overlap warning:** saving an open house that overlaps another of the agent's events pops a soft warning listing the conflicts and explaining that the permanent QR will make guests choose (suggesting the per-event QR instead), with a "Save anyway" option — it never blocks.
@@ -88,7 +88,7 @@ A two-section form ("Property Details" + "Access Code Words"):
 ### 3.4 Printable branded sign
 A print-ready, letter-portrait sign generated on demand (from the QR modal or via a public `/api/sign` link used in reminder emails). It carries the agent's/team's logo (or the ohACCESS wordmark as fallback), a **"PLEASE READ"** banner in the brand color, the QR framed in the accent color, and fixed wording:
 > "For the safety of the host, the seller, and the property, all visitors must scan the QR-code and complete the registration form before entering."
-> "A unique code word to enter this Open House is immediately sent via SMS and Email. Share the code word with the host to gain access."
+> "A unique codeword to enter this Open House is immediately sent via SMS and Email. Share the codeword with the host to gain access."
 
 **No address is printed** — so one laminated sign works for every open house *and* for the permanent QR. Other QR-modal actions: download PNG, copy registration URL, native share.
 
@@ -113,13 +113,14 @@ Export the visitor log (First Name, Last Name, Email, Phone, Timeline, Registere
 Every scheduled open house offers **Google, Outlook, and Apple (.ics)** calendar links, anchored to the property's time zone.
 
 ### 3.9 Automated agent emails
-- **~24-hour reminder email** — sent the day before each open house: the day/time and Google-Maps-linked address, **QR sign + PNG download links** (both the per-event and the universal QR), a sign-placement tip (near the front door, not the curb), two ready-to-read **door scripts** (a welcome ask and a gentle response to hesitation), **live samples** of the exact visitor SMS and email using that event's real code words, and (for self-paid Pro agents) a referral nudge.
+- **Getting-started (welcome) email** — sent **once per account** on the first dashboard load after signup (post-email-confirmation, or immediately for Google OAuth): the two-step quick start (Settings profile/branding → first open house), links to the two **YouTube tutorials** (Settings, New Open House), the rundown of everything that happens automatically, three "hidden gem" features (💌 Invite, ⧉ Duplicate, 🎁 Refer an Agent), and the 25-free-sign-ins note. From `ohACCESS <hello@mail.ohaccess.com>`, replies to `support@ohaccess.com`. A per-account `welcome_email_sent_at` claim (migration 045) makes it at-most-once; existing accounts were backfilled so only new signups receive it. Copy source of truth: `docs/welcome-email-draft.md`.
+- **~24-hour reminder email** — sent the day before each open house: the day/time and Google-Maps-linked address, **QR sign + PNG download links** (both the per-event and the universal QR), a sign-placement tip (near the front door, not the curb), two ready-to-read **door scripts** (a welcome ask and a gentle response to hesitation), **live samples** of the exact visitor SMS and email using that event's real codewords, and (for self-paid Pro agents) a referral nudge.
 - **Post-event report email** — ~30 minutes after the open house ends: registration and verified-at-door counts, and the **full lead list grouped by buying timeline** (names, phones, emails — this internal email *does* contain full contact info), plus a "Share your results with the seller" button linking to the privacy-safe seller report.
 
 Both emails inherit team/brokerage branding when the agent is on a team.
 
 ### 3.10 Upcoming Open Houses cross-promotion
-The visitor's code-word email includes an **"Upcoming Open Houses"** section: the next 5 open houses (within 10 days, same state) from the agent **and their teammates** (never brokerage-wide, to avoid channel conflict), each with a Maps-linked address, price/beds/baths, and add-to-calendar links. Tagline: "Come explore our other listings."
+The visitor's codeword email includes an **"Upcoming Open Houses"** section: the next 5 open houses (within 10 days, same state) from the agent **and their teammates** (never brokerage-wide, to avoid channel conflict), each with a Maps-linked address, price/beds/baths, and add-to-calendar links. Tagline: "Come explore our other listings."
 
 ### 3.11 Forensic / fraud capture
 Every sign-in silently records **IP address, device/user-agent, and phone carrier + line type** (via Twilio Lookup) as a fraud/safety trail. Separately, a **QR scan log** records every time the registration page is loaded — even if the visitor abandons the form — which powers the "scanned but didn't register" analytics and the seller-report funnel.
@@ -128,10 +129,10 @@ Every sign-in silently records **IP address, device/user-agent, and phone carrie
 Profile (name, brokerage, display email shown to visitors, phone, license #, state), **branding** (headshot URL, logo URL, landing-page URL, primary + accent brand colors with live preview), **custom questions** (§3.13), **disclosures & required notices** (§3.14), **agreement templates** (§2.8), **CRM lead email + CRM type**, **Zapier webhook URL**, **referral link**, and **subscription management**. (For team members, brokerage name/logo/colors are locked and managed by the team lead.)
 
 ### 3.13 Custom questions
-Agents can add their own questions to the flow: **1 on the sign-in form** and **up to 2 on the post-sign-in success screen** — free-typed or multiple choice (up to 4 options each). Always optional for the visitor: an unanswered question can never block the code words. Each visitor's record stores the question **exactly as it was asked at the time** (later edits can't rewrite history), and answers flow everywhere leads go — the visitor detail view, CSV export, the CRM lead email, and (aggregated, PII-free) the seller report.
+Agents can add their own questions to the flow: **1 on the sign-in form** and **up to 2 on the post-sign-in success screen** — free-typed or multiple choice (up to 4 options each). Always optional for the visitor: an unanswered question can never block the codewords. Each visitor's record stores the question **exactly as it was asked at the time** (later edits can't rewrite history), and answers flow everywhere leads go — the visitor detail view, CSV export, the CRM lead email, and (aggregated, PII-free) the seller report.
 
 ### 3.14 Disclosures & required notices
-Agents attach up to **5 label + link pairs** (e.g. Texas IABS, agency disclosure, Consumer Information Statement; HTTPS links only). They're delivered on the sign-in success screen **and** in the code-word email — state-mandated disclosure on autopilot. On a team, brokerage-set disclosures override an individual member's. The exact links shown to each visitor are snapshotted onto their record.
+Agents attach up to **5 label + link pairs** (e.g. Texas IABS, agency disclosure, Consumer Information Statement; HTTPS links only). They're delivered on the sign-in success screen **and** in the codeword email — state-mandated disclosure on autopilot. On a team, brokerage-set disclosures override an individual member's. The exact links shown to each visitor are snapshotted onto their record.
 
 ### 3.15 "Invite past visitors" re-marketing
 When an agent publishes a new open house, a 💌 **Invite** button (plus an auto-prompt right after saving) emails past visitors who are **still inside their stated buying window** a personal, agent-voiced invitation with the mapped address, add-to-calendar buttons, an RSVP reply link, and unsubscribe. The eligibility engine is deliberately conservative: invite windows are padded about a month past the stated timeline (0–3 mo → 4 months, 3–6 → 7, 6–12 → 13, 12+ → 16), a repeat visit resets the clock, each visitor gets **at most 2 invites per agent per rolling 30 days**, opt-outs/bounces/already-invited are excluded, batches cap at 200, and the hottest (soonest-expiring) buyers go first. The agent sees a checkbox list plus an honest "not included" breakdown before sending.
@@ -183,7 +184,7 @@ Service providers — mortgage lenders, title companies, inspectors, insurance a
 
 - **Sponsor portal** (`/sponsor`, separate sign-up): the sponsor builds a **profile card** — full name, company, email, phone, license/NMLS number, landing-page URL, headshot, and logo.
 - **Invite & accept:** the sponsor invites agents by email (7-day links, up to 10 agents by default); each agent must **explicitly accept**, which records the agent's on-file consent. Agents can end a sponsorship anytime from Settings; sponsors can remove agents too.
-- **On the visitor side:** a gold **"Sponsored by" card** appears **below** the agent's card in the visitor code-word **and next-morning thank-you** emails (headshot, company, contact, license #, logo) with a mandatory RESPA-style disclaimer — *"You are not required to use [Company] for any service. You are free to shop around."* — and the **sign-in consent line names the sponsor** in all 16 languages.
+- **On the visitor side:** a gold **"Sponsored by" card** appears **below** the agent's card in the visitor codeword **and next-morning thank-you** emails (headshot, company, contact, license #, logo) with a mandatory RESPA-style disclaimer — *"You are not required to use [Company] for any service. You are free to shop around."* — and the **sign-in consent line names the sponsor** in all 16 languages.
 - **Sponsor dashboard** (Dashboard / Agents / Settings tabs): a Team-style activity view showing **only** the sign-ins stamped to this sponsor (i.e., visitors whose consent named them — a hard privacy boundary; pre-sponsorship sign-ins are invisible), with per-agent rollups and **CSV export**. A sponsor **never** controls any agent's name, logo, or colors.
 - **Legally cleared:** the named-clickwrap-consent + "Sponsored by" labeling + not-required-to-use disclaimer approach was **signed off by an attorney for RESPA/TCPA.**
 - **Billing:** a paying sponsor's agents get Pro-level (uncapped) access. Sponsor billing mirrors Team pricing but is currently collected manually (no self-serve sponsor checkout yet).
@@ -276,7 +277,7 @@ Every plan is a real **auto-renewing Stripe subscription** (including 2-year), b
 
 ## 11. Security, Privacy & Compliance
 
-- **Row-Level Security** on all core tables; rate limiting throughout; HTML-escaped emails; SSRF-guarded outbound calls; and **code words are never returned in any API response** (preserving door verification).
+- **Row-Level Security** on all core tables; rate limiting throughout; HTML-escaped emails; SSRF-guarded outbound calls; and **codewords are never returned in any API response** (preserving door verification).
 - **Rate limits** on registration (per phone: 8/hr; per open house and per IP: 60/hr) and on sensitive endpoints (checkout, portal, invites, etc.).
 - **Delivery monitoring** via signed Resend (email) and Twilio (SMS) status webhooks — failures are terminal and surface as badges; an agent-CC delivery can't overwrite a visitor's real bounce.
 - **SMS compliance:** a **global STOP opt-out list** honored across *all* agents (a number that opts out via one agent is suppressed everywhere), HELP handling, and a Twilio toll-free-verified sending number.
