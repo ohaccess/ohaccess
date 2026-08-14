@@ -4,16 +4,21 @@ import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors
 import { usPhoneError } from '@/lib/phone'
 import { STRINGS, LANGS, TIMELINE_VALUES, FEEDBACK_PRICE_VALUES, detectLang, saveLang, type Lang } from '@/lib/register-i18n'
 import type { OpenHouseDisplay } from '@/lib/open-house-display'
+import type { ExpiredAgentContact } from '@/lib/expired-lead'
 import { VISITOR_COOKIE, VISITOR_COOKIE_PATH, type VisitorPrefill } from '@/lib/visitor-prefill'
 
 // The open-house display data is fetched by the server page (page.tsx) and
 // passed in ready to render — no client fetch, so the form appears as soon
 // as the JS loads. null means not found/expired. returningVisitor carries the
 // contact info saved on this device at a previous sign-in (or null).
-export default function RegisterClient({ id, initialOpenHouse, returningVisitor }: {
+// expiredAgent is only set when the open house is gone AND its agent is still
+// on trial or paying — the expired card then shows their contact info and
+// routes the lead to them instead of to ohACCESS.
+export default function RegisterClient({ id, initialOpenHouse, returningVisitor, expiredAgent }: {
   id: string
   initialOpenHouse: OpenHouseDisplay | null
   returningVisitor: VisitorPrefill | null
+  expiredAgent: ExpiredAgentContact | null
 }) {
   const [openHouse] = useState<any>(initialOpenHouse)
   const [submitting, setSubmitting] = useState(false)
@@ -85,6 +90,12 @@ function ExpiredOpenHouse() {
     return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
   }
 
+  // The hosting agent, when they're still on trial or paying (server-decided).
+  // With an agent the lead goes to them via /api/expired-lead; without one it
+  // goes to ohACCESS via /api/contact (the original behavior).
+  const agent = expiredAgent
+  const agentFirstName = agent?.fullName?.trim().split(/\s+/)[0] || 'the agent'
+
   const handleSubmit = async () => {
     const newErrors: any = {}
     if (!form.name.trim()) newErrors.name = 'Please enter your name'
@@ -96,18 +107,33 @@ function ExpiredOpenHouse() {
 
     setSubmitting(true)
     try {
-      await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          brokerage: `Buyer Lead — Zip: ${form.zip}`,
-          agentCount: 'N/A',
-          message: `Buyer lead from expired QR code. Name: ${form.name}, Email: ${form.email}, Phone: ${form.phone}, Zip: ${form.zip}`
+      if (agent) {
+        const res = await fetch('/api/expired-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            openHouseId: id,
+            name: form.name,
+            email: form.email,
+            phone: form.phone,
+            zip: form.zip
+          })
         })
-      })
+        if (!res.ok) throw new Error('expired-lead failed')
+      } else {
+        await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            phone: form.phone,
+            brokerage: `Buyer Lead — Zip: ${form.zip}`,
+            agentCount: 'N/A',
+            message: `Buyer lead from expired QR code. Name: ${form.name}, Email: ${form.email}, Phone: ${form.phone}, Zip: ${form.zip}`
+          })
+        })
+      }
       setSubmitted(true)
     } catch {
       alert('Something went wrong. Please try again.')
@@ -157,9 +183,26 @@ function ExpiredOpenHouse() {
             This open house has ended
           </div>
           <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6' }}>
-            But your home search doesn't have to. Leave your info and we'll connect you with a local agent who can help.
+            {agent
+              ? `There's no longer an open house at this link — but ${agentFirstName} can still help with your home search.`
+              : "But your home search doesn't have to. Leave your info and we'll connect you with a local agent who can help."}
           </div>
         </div>
+
+        {agent && (
+          <div style={{ background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '14px', padding: '14px 16px', marginBottom: '4px', textAlign: 'center' }}>
+            <div style={{ fontSize: '15px', fontWeight: '700', color: '#1d1d1f' }}>{agent.fullName || 'Your host agent'}</div>
+            {agent.brokerage && (
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>{agent.brokerage}</div>
+            )}
+            <div style={{ fontSize: '14px', marginTop: '8px' }}>
+              {agent.phone && (
+                <a href={`tel:${agent.phone.replace(/\D/g, '')}`} style={{ color: '#0071e3', textDecoration: 'none', display: 'block', marginBottom: '4px' }}>📞 {agent.phone}</a>
+              )}
+              <a href={`mailto:${agent.email}`} style={{ color: '#0071e3', textDecoration: 'none', display: 'block' }}>✉️ {agent.email}</a>
+            </div>
+          </div>
+        )}
 
         {!submitted ? (
           <>
@@ -217,11 +260,13 @@ function ExpiredOpenHouse() {
               disabled={submitting}
               style={{ display: 'block', width: '100%', marginTop: '20px', padding: '14px', background: '#1d1d1f', color: 'white', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '700', cursor: submitting ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: submitting ? 0.7 : 1 }}
             >
-              {submitting ? 'Submitting...' : 'Connect me with an agent →'}
+              {submitting ? 'Submitting...' : agent ? 'Send my info →' : 'Connect me with an agent →'}
             </button>
 
             <div style={{ marginTop: '12px', fontSize: '11px', color: '#aeaeb2', textAlign: 'center', lineHeight: '1.6' }}>
-              By submitting you agree to be contacted by a licensed real estate agent.
+              {agent
+                ? `By submitting you agree to be contacted by ${agent.fullName || 'the hosting agent'}.`
+                : 'By submitting you agree to be contacted by a licensed real estate agent.'}
             </div>
           </>
         ) : (
@@ -230,10 +275,12 @@ function ExpiredOpenHouse() {
               ✓
             </div>
             <div style={{ fontSize: '18px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>
-              You're on the list!
+              {agent ? "You're all set!" : "You're on the list!"}
             </div>
             <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6' }}>
-              A local agent will be in touch shortly to help with your home search.
+              {agent
+                ? `${agentFirstName === 'the agent' ? 'The agent' : agentFirstName} has your info and will be in touch shortly.`
+                : 'A local agent will be in touch shortly to help with your home search.'}
             </div>
             <div style={{ marginTop: '20px', fontSize: '12px', color: '#6e6e73' }}>
               <a href="https://ohaccess.com" style={{ color: '#6e6e73', textDecoration: 'none' }}>Powered by ohACCESS</a> · <span style={{ fontWeight: '600' }}>Patent Pending</span>

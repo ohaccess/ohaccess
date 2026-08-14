@@ -1,6 +1,7 @@
 import { headers, cookies } from 'next/headers'
 import { getClientIpFromHeaders } from '@/lib/rate-limit'
 import { getOpenHouseDisplay } from '@/lib/open-house-display'
+import { resolveExpiredAgent } from '@/lib/expired-lead'
 import { VISITOR_COOKIE, parseVisitorPrefill } from '@/lib/visitor-prefill'
 import RegisterClient from './RegisterClient'
 
@@ -18,11 +19,16 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
     userAgent: h.get('user-agent'),
   })
 
+  // Deleted open house: if its agent (recovered from the archive) is still on
+  // trial or paying, the expired card shows their contact info and sends them
+  // the lead; otherwise the lead goes to ohACCESS. null = the ohACCESS path.
+  const expiredAgent = openHouse ? null : await resolveExpiredAgent(id)
+
   // Returning visitor: /api/register saved their contact info in a cookie on
   // this device at a previous ohACCESS open house (any agent's). Garbage or
   // absent parses to null and the form simply starts blank.
   const jar = await cookies()
   const returningVisitor = parseVisitorPrefill(jar.get(VISITOR_COOKIE)?.value)
 
-  return <RegisterClient id={id} initialOpenHouse={openHouse} returningVisitor={returningVisitor} />
+  return <RegisterClient id={id} initialOpenHouse={openHouse} returningVisitor={returningVisitor} expiredAgent={expiredAgent} />
 }
