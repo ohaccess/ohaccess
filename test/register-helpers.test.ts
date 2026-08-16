@@ -10,6 +10,7 @@ import {
   buildUpcomingOpenHousesHtml,
   agentCopyRecipients,
   isVirtualNumber,
+  phoneLineKind,
   twilioStatusCallbackUrl,
   normalizeDisclosureLinks,
   resolveDisclosureLinks,
@@ -313,6 +314,27 @@ describe('isVirtualNumber', () => {
     expect(isVirtualNumber(null)).toBe(false)
     expect(isVirtualNumber(undefined)).toBe(false)
     expect(isVirtualNumber('')).toBe(false)
+  })
+})
+
+describe('phoneLineKind', () => {
+  it('labels a carrier cell line as mobile', () => {
+    expect(phoneLineKind('mobile')).toBe('mobile')
+  })
+  it('groups landline and cable-company home service as one home phone', () => {
+    expect(phoneLineKind('landline')).toBe('home')
+    expect(phoneLineKind('fixedVoip')).toBe('home')
+  })
+  it('labels burner-app numbers as virtual', () => {
+    expect(phoneLineKind('nonFixedVoip')).toBe('virtual')
+  })
+  it('labels nothing when the lookup is missing or a type we do not name', () => {
+    expect(phoneLineKind(null)).toBe(null)
+    expect(phoneLineKind(undefined)).toBe(null)
+    expect(phoneLineKind('')).toBe(null)
+    expect(phoneLineKind('tollFree')).toBe(null)
+    expect(phoneLineKind('voicemail')).toBe(null)
+    expect(phoneLineKind('unknown')).toBe(null)
   })
 })
 

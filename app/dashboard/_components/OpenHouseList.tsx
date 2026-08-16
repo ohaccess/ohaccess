@@ -1,9 +1,9 @@
 'use client'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { timelineStyle, timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type Sortable } from '@/lib/sort'
-import { isVirtualNumber } from '@/lib/register-helpers'
+import { phoneLineKind, PHONE_LINE_CHIPS } from '@/lib/register-helpers'
 import { langMeta } from '@/lib/register-i18n'
 
 // The main "Dashboard" view: stat cards, the agent's open-house cards (with
@@ -14,6 +14,7 @@ import { langMeta } from '@/lib/register-i18n'
 // Columns + sort accessors for the per-open-house visitor list. Clicking a
 // header toggles sort (shared useSortable/applySort, same as the admin tables).
 const VISITOR_COLUMNS: { label: string; key: string }[] = [
+  { label: 'Lang', key: 'lang' },
   { label: 'Name', key: 'name' },
   { label: 'Phone', key: 'phone' },
   { label: 'Email', key: 'email' },
@@ -22,12 +23,143 @@ const VISITOR_COLUMNS: { label: string; key: string }[] = [
   { label: '✓', key: 'verified' },
 ]
 const VISITOR_ACC: Record<string, (v: any) => Sortable> = {
+  lang: (v) => langMeta(v.lang).label,
   name: (v) => `${v.first_name || ''} ${v.last_name || ''}`.trim(),
   phone: (v) => v.phone,
   email: (v) => v.email,
   timeline: (v) => timelineRank(v.purchasing_timeline),
   time: (v) => (v.registered_at ? new Date(v.registered_at).getTime() : null),
   verified: (v) => !!v.verified,
+}
+
+// Hover/tap explainer bubble. A native `title` is too slow and too cramped for
+// the multi-line badge explanations, so this renders a real popover. Positioned
+// `fixed` off the trigger's rect so it isn't clipped by the visitor table's
+// horizontal-scroll container.
+function Tip({ children, body, width = 300 }: { children: ReactNode; body: ReactNode; width?: number }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; w: number; maxH: number } | null>(null)
+
+  const show = () => {
+    const r = ref.current?.getBoundingClientRect()
+    if (!r) return
+    const w = Math.min(width, window.innerWidth - 24)
+    const left = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), Math.max(12, window.innerWidth - w - 12))
+    // Open on whichever side of the trigger has more room, and cap the bubble
+    // to that room (it scrolls past the cap) so a long explanation is never
+    // clipped by the top or bottom of the window.
+    const below = window.innerHeight - r.bottom - 20
+    const above = r.top - 20
+    return above > below
+      ? setPos({ bottom: window.innerHeight - r.top + 8, left, w, maxH: above })
+      : setPos({ top: r.bottom + 8, left, w, maxH: below })
+  }
+  const hide = () => setPos(null)
+
+  // A bubble pinned to viewport coordinates goes stale the moment anything
+  // scrolls underneath it, so close on any scroll.
+  useEffect(() => {
+    if (!pos) return
+    window.addEventListener('scroll', hide, true)
+    return () => window.removeEventListener('scroll', hide, true)
+  }, [pos])
+
+  return (
+    <span
+      ref={ref}
+      style={{ display: 'inline-block' }}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      // Tap works on touch, where there is no hover. stopPropagation keeps a
+      // tap on a column header's "?" from also re-sorting the table.
+      onClick={(e) => { e.stopPropagation(); pos ? hide() : show() }}
+    >
+      {children}
+      {pos && (
+        <span role="tooltip" style={{
+          position: 'fixed', left: `${pos.left}px`, width: `${pos.w}px`, zIndex: 3000,
+          ...(pos.top !== undefined ? { top: `${pos.top}px` } : { bottom: `${pos.bottom}px` }),
+          maxHeight: `${pos.maxH}px`, overflowY: 'auto',
+          background: 'white', border: '1px solid #d1d1d6', borderRadius: '12px', padding: '12px 14px',
+          boxShadow: '0 8px 28px rgba(0,0,0,0.14)', fontSize: '12px', fontWeight: 400, lineHeight: 1.45,
+          color: '#1d1d1f', textTransform: 'none', letterSpacing: 'normal', whiteSpace: 'normal',
+          fontFamily: "'Plus Jakarta Sans', sans-serif", cursor: 'default',
+        }}>{body}</span>
+      )}
+    </span>
+  )
+}
+
+const helpIconStyle = { marginLeft: '5px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '14px', height: '14px', borderRadius: '50%', background: '#e8e8ed', color: '#6e6e73', fontSize: '9px', fontWeight: 700, cursor: 'help', verticalAlign: 'middle' as const }
+
+// One "⚠ badge — what it means" line inside a column's help bubble.
+const HelpLine = ({ term, children }: { term: string; children: ReactNode }) => (
+  <div style={{ marginTop: '8px' }}>
+    <strong style={{ color: '#1d1d1f' }}>{term}</strong>
+    <div style={{ color: '#6e6e73', marginTop: '2px' }}>{children}</div>
+  </div>
+)
+
+// Plain-English explanations of the flags and actions in the visitor log,
+// shown by the "?" next to the Phone / Email / ✓ column headers.
+const COLUMN_HELP: Record<string, ReactNode> = {
+  phone: (
+    <>
+      <div style={{ fontWeight: 700 }}>Phone labels</div>
+      <div style={{ color: '#6e6e73', marginTop: '4px' }}>
+        We check what kind of number each visitor gave you, so you know how to reach them again.
+      </div>
+      <HelpLine term="📱 Mobile">
+        A regular carrier cell line. Texts reach it, so this is the number to follow up on.
+      </HelpLine>
+      <HelpLine term="☎ Home phone">
+        A house or office line — a landline, or home phone service from a cable company. It
+        can&apos;t receive text messages, so their codeword only reached them by email. Follow up with
+        a phone call or an email.
+      </HelpLine>
+      <HelpLine term="⚠ VoIP">
+        An internet phone number (Google Voice, TextNow, and similar) instead of a regular carrier
+        mobile line. Plenty of people use them for real — but they&apos;re free and quick to create
+        anonymously, so it&apos;s a reasonable prompt to ask for photo ID at the door.
+      </HelpLine>
+      <HelpLine term="⚠ undelivered">
+        The carrier rejected the codeword text. Usually a mistyped number, a landline, or a
+        disconnected line — so this visitor never got their codeword by text.
+      </HelpLine>
+      <HelpLine term="🚫 Opted out">
+        This number replied STOP to a text. By law they can&apos;t be texted again unless they reply
+        START, so follow up by phone call or email instead.
+      </HelpLine>
+    </>
+  ),
+  email: (
+    <>
+      <div style={{ fontWeight: 700 }}>Email flags</div>
+      <HelpLine term="⚠ bounced">
+        The codeword email couldn&apos;t be delivered — the address doesn&apos;t exist, was mistyped,
+        or the mailbox is full or blocking us. It also appears if they marked the email as spam.
+        Treat the address as bad and get a better one before you follow up.
+      </HelpLine>
+    </>
+  ),
+  verified: (
+    <>
+      <div style={{ fontWeight: 700 }}>Verifying a visitor</div>
+      <HelpLine term="What it means">
+        Your own confirmation that you actually met this person at the door. The codeword proves the
+        phone or email they gave you is real; verifying is you confirming the person in front of you
+        is the one who registered. Only you can set it — visitors can&apos;t.
+      </HelpLine>
+      <HelpLine term="When">
+        As they walk in, right after they show you their codeword (and ID, if you ask for one).
+      </HelpLine>
+      <HelpLine term="How">
+        Tap <strong>Verify</strong>{' '}on their row — or open the visitor and tap &ldquo;Mark as verified
+        at door.&rdquo; Tap again to undo. Verified visitors count toward the &ldquo;Verified at
+        Door&rdquo; number at the top of your dashboard.
+      </HelpLine>
+    </>
+  ),
 }
 
 const getTimelineBadge = (timeline: string) => {
@@ -46,7 +178,21 @@ const optedOutBadgeStyle = { marginLeft: '6px', background: '#f2f2f7', color: '#
 // host, deliberately amber (a nudge), never red (an accusation).
 const signedBadgeStyle = { marginLeft: '6px', background: '#e8f9ee', color: '#1a7a3c', border: '1px solid #b2f0c8', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 const unsignedBadgeStyle = { marginLeft: '6px', background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
-const voipBadgeStyle = { marginLeft: '6px', background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+// Line-type chips: mobile and home phone are neutral facts (same grey as the
+// opted-out chip), only the burner-app signal is amber.
+const lineChipStyle = {
+  plain: { marginLeft: '6px', background: '#f2f2f7', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const },
+  warn: { marginLeft: '6px', background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const },
+}
+
+// The one chip that describes what kind of phone number this is. Nothing is
+// shown when Twilio's lookup came back empty or with a type we don't label.
+const PhoneLineChip = ({ lineType }: { lineType: string | null | undefined }) => {
+  const kind = phoneLineKind(lineType)
+  if (!kind) return null
+  const chip = PHONE_LINE_CHIPS[kind]
+  return <span title={chip.tip} style={lineChipStyle[chip.tone]}>{chip.label}</span>
+}
 
 // Derive an open house's lifecycle state from its schedule, since the stored
 // `status` is only ever 'active' and never transitions. Falls back to the
@@ -333,6 +479,9 @@ export default function OpenHouseList({
                         <th key={col.key} onClick={() => visitorSort.onSort(col.key)} title="Sort" style={{ textAlign: 'left', padding: '8px', fontSize: '10px', fontWeight: '600', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid #d1d1d6', whiteSpace: 'nowrap', cursor: 'pointer', userSelect: 'none' }}>
                           {col.label}
                           <span style={{ marginLeft: '4px', fontSize: '9px', color: active ? '#1d1d1f' : '#c7c7cc' }}>{active ? (visitorSort.state.dir === 'asc' ? '▲' : '▼') : '↕'}</span>
+                          {COLUMN_HELP[col.key] && (
+                            <Tip body={COLUMN_HELP[col.key]}><span style={helpIconStyle}>?</span></Tip>
+                          )}
                         </th>
                       )
                     })}
@@ -342,7 +491,11 @@ export default function OpenHouseList({
                   {sortedVisitors.map((v, i) => (
                     <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
-                        <span title={`Registered in ${langMeta(v.lang).label}`} style={{ marginRight: '6px' }}>{langMeta(v.lang).flag}</span>
+                        <Tip width={220} body={<><strong>{langMeta(v.lang).label}</strong><div style={{ color: '#6e6e73', marginTop: '2px' }}>The language this visitor signed in with — the one to greet and follow up in.</div></>}>
+                          <span style={{ cursor: 'help' }}>{langMeta(v.lang).flag}</span>
+                        </Tip>
+                      </td>
+                      <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
                         <button onClick={() => setVisitorModal(v)} style={{ background: 'none', border: 'none', padding: 0, color: accentText, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px', textAlign: 'left' }}>
                           {v.first_name} {v.last_name}{v.notes ? ' 📝' : ''}
                         </button>
@@ -350,7 +503,7 @@ export default function OpenHouseList({
                           ? <span title="Signed the required agreement — copies were emailed to you both" style={signedBadgeStyle}>✍ Signed</span>
                           : <span title="Hasn't signed the required agreement — ask before letting them tour" style={unsignedBadgeStyle}>✍ Not signed</span>)}
                       </td>
-                      <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}{v.sms_opted_out ? <span title="This number replied STOP — do not contact" style={optedOutBadgeStyle}>🚫 Opted out</span> : deliveryFlag(v.sms_status) ? <span title="Text could not be delivered to this number" style={deliveryBadgeStyle}>⚠ undelivered</span> : null}{isVirtualNumber(v.phone_line_type) && <span title="Internet/VoIP number (TextNow, Google Voice, …), not a carrier mobile line. Many are legitimate — consider extra ID verification." style={voipBadgeStyle}>⚠ VoIP</span>}</td>
+                      <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}{v.sms_opted_out ? <span title="This number replied STOP — do not contact" style={optedOutBadgeStyle}>🚫 Opted out</span> : deliveryFlag(v.sms_status) ? <span title="Text could not be delivered to this number" style={deliveryBadgeStyle}>⚠ undelivered</span> : null}<PhoneLineChip lineType={v.phone_line_type} /></td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.email}{deliveryFlag(v.email_status) && <span title="Email bounced — this address may be invalid" style={deliveryBadgeStyle}>⚠ bounced</span>}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{new Date(v.registered_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>

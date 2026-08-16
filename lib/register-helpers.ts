@@ -330,3 +330,38 @@ ${customLines}</p>
 export function isVirtualNumber(lineType: string | null | undefined): boolean {
   return lineType === 'nonFixedVoip'
 }
+
+// The Twilio Lookup line types, collapsed into the three kinds an agent
+// actually acts on. Anything else Twilio can return (tollFree, voicemail,
+// premium, unknown, ...) is left unlabelled rather than guessed at.
+export type PhoneLineKind = 'mobile' | 'home' | 'virtual'
+
+export function phoneLineKind(lineType: string | null | undefined): PhoneLineKind | null {
+  if (lineType === 'mobile') return 'mobile'
+  // Both can't receive texts: a real landline, and fixedVoip — cable-company
+  // home phone service (Comcast Voice etc.), which is an ordinary house line.
+  if (lineType === 'landline' || lineType === 'fixedVoip') return 'home'
+  if (isVirtualNumber(lineType)) return 'virtual'
+  return null
+}
+
+// How each kind is shown in the visitor log and the visitor detail panel, in
+// one place so both stay identical. Mobile and home phone are neutral facts
+// ('plain'); only the burner-app signal is styled as a warning.
+export const PHONE_LINE_CHIPS: Record<PhoneLineKind, { label: string; tip: string; tone: 'plain' | 'warn' }> = {
+  mobile: {
+    label: '📱 Mobile',
+    tip: 'A carrier mobile line — text messages reach this number.',
+    tone: 'plain',
+  },
+  home: {
+    label: '☎ Home phone',
+    tip: "A home or office line (a landline, or cable-company phone service). It can't receive text messages — follow up by phone call or email.",
+    tone: 'plain',
+  },
+  virtual: {
+    label: '⚠ VoIP',
+    tip: 'Internet/VoIP number (TextNow, Google Voice, …), not a carrier mobile line. Many are legitimate — consider extra ID verification.',
+    tone: 'warn',
+  },
+}

@@ -2,8 +2,9 @@
 import { useState } from 'react'
 import { onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { timelineStyle } from '@/lib/timeline'
-import { isVirtualNumber } from '@/lib/register-helpers'
+import { phoneLineKind, PHONE_LINE_CHIPS } from '@/lib/register-helpers'
 import { normalizeCustomAnswers } from '@/lib/custom-questions'
+import { langMeta } from '@/lib/register-i18n'
 
 // A hard delivery failure reported by Resend (email) or Twilio (SMS) means the
 // visitor's contact info is likely bad.
@@ -11,7 +12,19 @@ const deliveryFailed = (status: string | null | undefined): boolean =>
   status === 'bounced' || status === 'complained' || status === 'undelivered' || status === 'failed'
 const failBadge = { marginLeft: '8px', background: '#fff0f0', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 const optedOutBadge = { marginLeft: '8px', background: '#f2f2f7', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
-const voipBadge = { marginLeft: '8px', background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+// What kind of number this is (mobile / home phone / VoIP), same wording as the
+// dashboard visitor log. Mobile and home phone are neutral facts; only the
+// burner-app signal is amber.
+const lineChip = {
+  plain: { marginLeft: '8px', background: '#f2f2f7', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const },
+  warn: { marginLeft: '8px', background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const },
+}
+const PhoneLineChip = ({ lineType }: { lineType: string | null | undefined }) => {
+  const kind = phoneLineKind(lineType)
+  if (!kind) return null
+  const chip = PHONE_LINE_CHIPS[kind]
+  return <span title={chip.tip} style={lineChip[chip.tone]}>{chip.label}</span>
+}
 // Agreement chips — same look as the dashboard visitor log's, shown only
 // when the open house requires a signed agreement (requireAgreement prop).
 const signedBadge = { marginLeft: '10px', background: '#e8f9ee', color: '#1a7a3c', border: '1px solid #b2f0c8', borderRadius: '6px', padding: '2px 8px', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap' as const, verticalAlign: 'middle' }
@@ -113,8 +126,11 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
       </div>
 
       <div style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
-        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{visitor.sms_opted_out ? <span style={optedOutBadge} title="This number replied STOP — do not contact">🚫 opted out</span> : deliveryFailed(visitor.sms_status) ? <span style={failBadge} title="Text could not be delivered to this number">⚠ text undelivered</span> : null}{isVirtualNumber(visitor.phone_line_type) && <span style={voipBadge} title="Internet/VoIP number (TextNow, Google Voice, …), not a carrier mobile line. Many are legitimate — consider extra ID verification.">⚠ VoIP number</span>}</div>
+        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{visitor.sms_opted_out ? <span style={optedOutBadge} title="This number replied STOP — do not contact">🚫 opted out</span> : deliveryFailed(visitor.sms_status) ? <span style={failBadge} title="Text could not be delivered to this number">⚠ text undelivered</span> : null}<PhoneLineChip lineType={visitor.phone_line_type} /></div>
         <div><div style={label}>Email</div><a href={`mailto:${visitor.email}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600, wordBreak: 'break-all' }}>{visitor.email || '—'}</a>{deliveryFailed(visitor.email_status) && <span style={failBadge} title="Email bounced — this address may be invalid">⚠ email bounced</span>}</div>
+        {/* The language they signed in with — the one to greet and follow up
+            in. Unknown/legacy rows fall back to English, same as the log. */}
+        <div><div style={label}>Language</div><div style={{ fontSize: '14px', color: '#1d1d1f' }}>{`${langMeta(visitor.lang).flag} ${langMeta(visitor.lang).label}`}</div></div>
         <div><div style={label}>Registered</div><div style={{ fontSize: '14px', color: '#1d1d1f' }}>{visitor.registered_at ? new Date(visitor.registered_at).toLocaleString() : '—'}</div></div>
         {(visitor.feedback_rating || visitor.feedback_price) && (
           <div>
