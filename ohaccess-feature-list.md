@@ -35,7 +35,7 @@ The form is fully translated into **English, Spanish, French, Chinese (Simplifie
 - **Always English regardless of language:** the submitted timeline value (so dashboards/CRMs parse consistently), the SMS/email code messages themselves, the Terms and Privacy pages, and the words "STOP"/"HELP" (literal carrier keywords). Every non-English consent appends a line stating the English version governs.
 
 ### 2.3 Consent (named clickwrap)
-Consent is an **extended clickwrap** — not a checkbox. By tapping the request button the visitor agrees to receive a one-time SMS access code (with "Message & data rates may apply. Reply STOP to opt out, HELP for help.") and agrees to the ohACCESS Terms & Privacy Policy **and** to be contacted by the host agent — **and, if the open house is sponsored, the named sponsor** — by phone, text, and email. The consent line literally names the agent and sponsor.
+Consent is an **extended clickwrap** — not a checkbox. By tapping the request button the visitor agrees to receive a one-time SMS codeword (with "Message & data rates may apply. Reply STOP to opt out, HELP for help.") and agrees to the ohACCESS Terms & Privacy Policy **and** to be contacted by the host agent — **and, if the open house is sponsored, the named sponsor** — by phone, text, and email. The consent line literally names the agent and sponsor.
 
 There's also a **"Prefer not to register?"** block explaining the NAR-compliant alternative (schedule a private showing with the buyer's agent of your choice under a written buyer-representation agreement) — this preserves the legal validity of the consent by offering a real alternative.
 
@@ -72,10 +72,10 @@ Visitor marketing emails (thank-you, invites) carry RFC 8058 one-click unsubscri
 Sign up / log in with email + password or **Google login** (branded "ohaccess.com" consent screen). Signup requires agreeing to Terms + Privacy. Password reset flow included.
 
 ### 3.2 Creating & editing an open house
-A two-section form ("Property Details" + "Access Codewords"):
+A two-section form ("Property Details" + "Codewords"):
 - **Property Details:** Street Address (with **Google Places autocomplete** that auto-fills city/state/zip **and the property's true time zone**), Unit/Suite, City, State/Province, Zip/Postal, Listing Price, Square Footage, Bedrooms, Bathrooms, a **date picker** (calendar), **start/end time** pickers, and a Listing URL. Required: address, city, state, date, start time, end time, and both codewords.
 - **Time zones are handled correctly:** times are entered as wall-clock in the **property's** time zone and stored as precise UTC instants (DST-aware), so an agent scheduling a listing in another time zone still gets correct times everywhere.
-- **Access Codewords:** the agent sets a **Text (SMS) codeword** and an **Email codeword**, each with an **auto-generate** button. SMS words are curated adjectives (BESPOKE, CHARMING, ELEGANT, LUXE, MODERN, PRISTINE, STATELY, STUNNING, TIMELESS, …); email words are curated home-themed nouns (BUNGALOW, COTTAGE, ESTATE, MANOR, PENTHOUSE, TOWNHOUSE, VILLA, …). Custom words auto-uppercase.
+- **Codewords:** the agent sets a **Text (SMS) codeword** and an **Email codeword**, each with an **auto-generate** button. SMS words are curated adjectives (BESPOKE, CHARMING, ELEGANT, LUXE, MODERN, PRISTINE, STATELY, STUNNING, TIMELESS, …); email words are curated home-themed nouns (BUNGALOW, COTTAGE, ESTATE, MANOR, PENTHOUSE, TOWNHOUSE, VILLA, …). Custom words auto-uppercase.
 - Editing the schedule intelligently **re-arms the post-event report** only when the actual start/end instant changes (editing other fields won't re-send it).
 - **Duplicate:** a "⧉ Duplicate" button pre-fills a new open house with every detail except date/times — same property, new day, two clicks.
 - **Overlap warning:** saving an open house that overlaps another of the agent's events pops a soft warning listing the conflicts and explaining that the permanent QR will make guests choose (suggesting the per-event QR instead), with a "Save anyway" option — it never blocks.

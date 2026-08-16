@@ -1,7 +1,7 @@
 export const metadata = {
   title: 'SMS Opt-In Consent Proof — ohACCESS',
   description:
-    'Proof of express SMS opt-in consent for ohACCESS open-house access codes. For carrier toll-free verification review.',
+    'Proof of express SMS opt-in consent for ohACCESS open-house codewords. For carrier toll-free verification review.',
 }
 
 export default function OptInProof() {
@@ -31,7 +31,7 @@ export default function OptInProof() {
             SMS Opt-In Consent Proof
           </h1>
           <div style={{ fontSize: '14px', color: '#3a3a3c', lineHeight: '1.7' }}>
-            This page documents how end users provide express consent to receive a one-time SMS access code from ohACCESS.
+            This page documents how end users provide express consent to receive a one-time SMS codeword from ohACCESS.
             It is provided as opt-in evidence for toll-free messaging verification.
           </div>
         </div>
@@ -42,7 +42,7 @@ export default function OptInProof() {
           <div><strong>Legal business name:</strong> OHACCESS LLC</div>
           <div><strong>Brand / DBA:</strong> ohACCESS</div>
           <div><strong>Website:</strong> https://www.ohaccess.com</div>
-          <div><strong>Use case:</strong> Two transactional message types — (1) <strong>one-time access codes</strong> (two-factor/verification) sent to open-house visitors, and (2) <strong>account notifications</strong> sent to the hosting real estate agent when a new visitor registers. No marketing messages are sent through this number.</div>
+          <div><strong>Use case:</strong> Two transactional message types — (1) <strong>one-time codewords</strong> (two-factor/verification) sent to open-house visitors, and (2) <strong>account notifications</strong> sent to the hosting real estate agent when a new visitor registers. No marketing messages are sent through this number.</div>
         </div>
 
         {/* Workflow steps */}
@@ -58,11 +58,11 @@ export default function OptInProof() {
           </li>
           <li style={{ marginBottom: '10px' }}>
             <strong>Enter number and give express consent.</strong> The visitor enters their mobile number and taps
-            &ldquo;Request Access Code.&rdquo; The consent disclosure shown directly below the button captures express written
+            &ldquo;Request Codeword.&rdquo; The consent disclosure shown directly below the button captures express written
             consent at the moment of submission.
           </li>
           <li>
-            <strong>Receive the one-time SMS code.</strong> The visitor immediately receives a one-time SMS access code to
+            <strong>Receive the one-time SMS codeword.</strong> The visitor immediately receives a one-time SMS codeword to
             present at the door.
           </li>
         </ol>
@@ -85,8 +85,8 @@ export default function OptInProof() {
         <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1d1d1f', marginBottom: '16px' }}>Exact consent language shown on the page</h2>
         <div style={{ background: '#f5f5f7', border: '1px solid #e5e5ea', borderRadius: '12px', padding: '20px 24px', marginBottom: '40px', fontSize: '14px', lineHeight: '1.75', color: '#1d1d1f' }}>
           <p style={{ marginBottom: '12px' }}>
-            &ldquo;By entering your number and tapping <strong>Request Access Code</strong>, you agree to receive a one-time
-            SMS access code from ohACCESS to enter this open house. Message &amp; data rates may apply. Reply STOP to opt out,
+            &ldquo;By entering your number and tapping <strong>Request Codeword</strong>, you agree to receive a one-time
+            SMS codeword from ohACCESS to enter this open house. Message &amp; data rates may apply. Reply STOP to opt out,
             HELP for help.&rdquo;
           </p>
           <p>
@@ -96,7 +96,7 @@ export default function OptInProof() {
         </div>
 
         {/* Sample message — message type 1 */}
-        <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>Message type 1 — one-time access code (to the visitor)</h2>
+        <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>Message type 1 — one-time codeword (to the visitor)</h2>
         <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>The verification/2FA code a visitor receives after opting in above.</div>
         <div style={{ background: '#f5f5f7', border: '1px solid #e5e5ea', borderRadius: '12px', padding: '20px 24px', marginBottom: '40px', fontSize: '14px', lineHeight: '1.75', color: '#1d1d1f', fontFamily: 'monospace' }}>
           ohACCESS: Your one-time entry code for 123 Main St is 4827. Show this text at the door to gain access. Msg &amp; data

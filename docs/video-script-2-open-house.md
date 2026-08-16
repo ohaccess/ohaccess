@@ -33,7 +33,7 @@ you have one.
 
 ## Scene 3 — Codewords (1:15–2:00)
 
-[SCREEN] Scroll to **Access Codewords**. Click auto-generate on each —
+[SCREEN] Scroll to **Codewords**. Click auto-generate on each —
 let words like STUNNING and VILLA pop in.
 
 VO: Now, the heart of ohACCESS: the codewords. When a visitor signs in,

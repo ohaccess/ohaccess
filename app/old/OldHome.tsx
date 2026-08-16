@@ -229,7 +229,7 @@ export default function Home() {
           <div className="grid-3">
             {[
               { emoji: '📱', title: 'QR code per open house', body: 'Every listing gets a unique QR code. Display it at the entrance — buyers scan and register in seconds.' },
-              { emoji: '✅', title: 'Real-time verification', body: 'Codeword delivered instantly via SMS and email. No valid contact info = no access code.' },
+              { emoji: '✅', title: 'Real-time verification', body: 'Codeword delivered instantly via SMS and email. No valid contact info = no codeword.' },
               { emoji: '🔔', title: 'Instant agent alerts', body: 'Know who is walking in before they reach the door. Name, phone, email, and buying timeline — instantly. Tap the alert link to verify them and add private notes.' },
               { emoji: '📋', title: 'Verified visitor log', body: 'Every registration saved automatically. Mark visitors as verified at the door and export to CSV.' },
               { emoji: '🔗', title: 'Automatic CRM sync', body: 'Every verified sign-in lands in your CRM as a new lead automatically — Follow Up Boss, kvCORE, Lofty, and more. CSV export too.' },

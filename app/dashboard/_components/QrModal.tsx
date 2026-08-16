@@ -54,7 +54,7 @@ export default function QrModal({
         </div>
 
         <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '20px' }}>
-          Visitors scan this code to register and receive their access code
+          Visitors scan this code to register and receive their codeword
         </div>
 
         {/* Action buttons */}

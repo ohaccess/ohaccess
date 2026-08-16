@@ -94,6 +94,6 @@ Founder, ohACCESS
 ---
 
 *Draft notes (not part of the email):*
-- *"codeword"/"codewords" (one word) used throughout — matches the dashboard's "Access Codewords" section and all visitor-facing copy (Dave's call, 2026-08-13).*
+- *"codeword"/"codewords" (one word) used throughout — matches the dashboard's "Codewords" section and all visitor-facing copy (Dave's call, 2026-08-13).*
 - *The 25-free-sign-ins line intentionally frames the trial as "one or two open houses" — sets the expectation that upgrading is normal.*
 - *Nothing here mentions Teams, Sponsorships, or gifting — a brand-new solo agent doesn't need them on day one, and the email stays scannable.*

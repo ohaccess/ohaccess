@@ -386,7 +386,7 @@ export async function sendVisitorCodewordMessages(params: {
               By registering you agreed to the ohACCESS <a href="https://ohaccess.com/terms" style="color: #6e6e73;">Terms of Service</a>.<br/>
               You consent to be contacted by the host agent${sponsorConsentName ? ` and today's sponsor, ${escapeHtml(sponsorConsentName)}` : ''}.<br/>
               Reply STOP to any text to opt out · <a href="https://ohaccess.com/privacy" style="color: #6e6e73;">Privacy Policy</a><br/>
-              <em style="color: #6e6e73;">Heads up: opting out blocks access codes for all future ohACCESS open houses.</em>
+              <em style="color: #6e6e73;">Heads up: opting out blocks codewords for all future ohACCESS open houses.</em>
             </div>
           </div>
         </div>

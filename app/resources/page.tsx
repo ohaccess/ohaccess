@@ -159,7 +159,7 @@ export default function Resources() {
             🪧 Welcome Sign Templates
           </h2>
           <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
-            Print-ready welcome signs to display at your open house entrance. Visitors scan the QR code to register and receive their access code.
+            Print-ready welcome signs to display at your open house entrance. Visitors scan the QR code to register and receive their codeword.
           </div>
 
           <div className="resources-grid">
