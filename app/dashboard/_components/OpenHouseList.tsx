@@ -424,7 +424,10 @@ export default function OpenHouseList({
                   </div>
                 )})()}
               </div>
-              <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'nowrap' }} onClick={e => e.stopPropagation()}>
+              {/* Scrolls sideways like the visitor log below: on a phone these
+                  six actions are wider than the card, and without this the
+                  ones on the right (Edit, Delete) are simply unreachable. */}
+              <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any, paddingBottom: '2px' }} onClick={e => e.stopPropagation()}>
                 <button disabled={locked} onClick={async (e) => {
                   e.stopPropagation()
                   if (guardLocked()) return
