@@ -75,6 +75,18 @@ export function twilioStatusCallbackUrl(appUrl: string): string {
   return `${origin.replace(/\/$/, '')}/api/webhooks/twilio-status`
 }
 
+// Which sender Twilio should send as. Prefer the Messaging Service: it carries
+// the branded STOP/HELP auto-replies (Advanced Opt-Out), which the bare number
+// can't — a bare number answers HELP with Twilio's generic default, naming
+// neither ohACCESS nor a support contact, which CTIA expects a HELP reply to do.
+//
+// Falls back to the bare number when the SID isn't set, so a missing env var
+// degrades to the old behavior instead of taking SMS down mid-open-house.
+export function twilioSender(): { messagingServiceSid: string } | { from: string } {
+  const sid = process.env.TWILIO_MESSAGING_SERVICE_SID
+  return sid ? { messagingServiceSid: sid } : { from: process.env.TWILIO_PHONE_NUMBER! }
+}
+
 // Only http(s) URLs are allowed to be forwarded/embedded — blocks javascript:,
 // data:, file:, and other schemes (and, for outbound calls, non-web targets).
 export function isHttpUrl(value: string | null | undefined): value is string {

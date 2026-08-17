@@ -10,6 +10,7 @@ import {
   safeUrl,
   isHexColor,
   twilioStatusCallbackUrl,
+  twilioSender,
   agentCopyRecipients,
   buildDisclosuresHtml,
   resolveDisclosureLinks,
@@ -214,7 +215,7 @@ export async function sendVisitorCodewordMessages(params: {
     try {
       visitorSms = await twilioClient.messages.create({
         body: smsBody,
-        from: process.env.TWILIO_PHONE_NUMBER!,
+        ...twilioSender(),
         to: normalizePhone(phone) || phone,
         // Twilio posts delivery updates (delivered/undelivered/failed) here so we
         // can flag bad numbers on the agent dashboard.
