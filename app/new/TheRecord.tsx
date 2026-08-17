@@ -360,36 +360,44 @@ export default function TheRecord() {
               next.config), and the player iframe is only created once the
               visitor presses play. Loading the embed up front would pull ~1MB
               of YouTube script into every homepage visit. */}
-          <div data-reveal="1" style={{ margin: '36px clamp(20px,5vw,48px) 0', position: 'relative', aspectRatio: '16/9', borderRadius: '18px', overflow: 'hidden', background: '#1d1d1f', boxShadow: '0 24px 64px rgba(29,29,31,.3)' }}>
-            {filmPlaying ? (
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${FILM_ID}?autoplay=1&rel=0&modestbranding=1`}
-                title="ohACCESS: Verified Open House Visitor Check-Ins"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setFilmPlaying(true)}
-                aria-label="Play the 90-second ohACCESS film"
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: 0, border: 0, background: 'none', cursor: 'pointer', display: 'block' }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://i.ytimg.com/vi/${FILM_ID}/maxresdefault.jpg`}
-                  alt=""
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          {/* Width is capped by viewport HEIGHT, not just the gutters: at full
+              page width a 16:9 player is taller than a laptop screen, so the
+              bottom of the film ran off the fold. 62vh of height back-solved
+              through the aspect ratio (× 16/9) leaves room for the heading
+              above it. On phones the viewport is tall and narrow, so 100%
+              still wins and nothing changes there. */}
+          <div data-reveal="1" style={{ margin: '36px auto 0', padding: '0 clamp(20px,5vw,48px)', width: 'min(100%, calc(62vh * 16 / 9 + 2 * clamp(20px,5vw,48px)))', boxSizing: 'border-box' }}>
+            <div style={{ position: 'relative', aspectRatio: '16/9', borderRadius: '18px', overflow: 'hidden', background: '#1d1d1f', boxShadow: '0 24px 64px rgba(29,29,31,.3)' }}>
+              {filmPlaying ? (
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${FILM_ID}?autoplay=1&rel=0&modestbranding=1`}
+                  title="ohACCESS: Verified Open House Visitor Check-Ins"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
                 />
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', background: 'linear-gradient(to top,rgba(29,29,31,.55),rgba(29,29,31,.15))' }}>
-                  <div className="rec-play" style={{ width: '84px', height: '84px', borderRadius: '50%', background: '#c9963a', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 34px rgba(0,0,0,.4)' }}>
-                    <div style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '14px 0 14px 24px', borderColor: 'transparent transparent transparent #1d1d1f', marginLeft: '6px' }} />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setFilmPlaying(true)}
+                  aria-label="Play the 90-second ohACCESS film"
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: 0, border: 0, background: 'none', cursor: 'pointer', display: 'block' }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://i.ytimg.com/vi/${FILM_ID}/maxresdefault.jpg`}
+                    alt=""
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', background: 'linear-gradient(to top,rgba(29,29,31,.55),rgba(29,29,31,.15))' }}>
+                    <div className="rec-play" style={{ width: '84px', height: '84px', borderRadius: '50%', background: '#c9963a', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 34px rgba(0,0,0,.4)' }}>
+                      <div style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '14px 0 14px 24px', borderColor: 'transparent transparent transparent #1d1d1f', marginLeft: '6px' }} />
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', letterSpacing: '.04em' }}>WATCH THE FILM · 1:27</div>
                   </div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', letterSpacing: '.04em' }}>WATCH THE FILM · 1:27</div>
-                </div>
-              </button>
-            )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
