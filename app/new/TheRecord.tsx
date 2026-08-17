@@ -1,8 +1,8 @@
 'use client'
 // "The Record" — parallel landing page from the Claude Design handoff
 // (design-drop/). The prototype's inline styles and script are the spec;
-// this is a faithful port to React. The #film section ships with a poster
-// placeholder + play button until the 90-second film is delivered.
+// this is a faithful port to React. The #film section plays the 90-second
+// film from YouTube (see FILM_ID).
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -17,16 +17,6 @@ const STEPS = [
   { n: 5, title: 'Leads land', body: 'Live log, instant alerts, CRM sync, and a post-event report — automatic.' },
 ]
 
-const SCENES = [
-  { time: '0:00–0:08', title: 'The sign goes up.', body: 'Sunday morning. An agent sets the Open House sign and QR placard at a sunlit front door.', vo: '“Every Open House starts the same way — a sign in the yard, and strangers at the door.”' },
-  { time: '0:08–0:16', title: 'The old record.', body: 'Close-up of a paper sign-in sheet: an illegible name, a number with nine digits, an email missing its @.', vo: '“For decades, the record of who walked in looked like this. Names you can’t read. Dead numbers. Bad emails.”' },
-  { time: '0:16–0:30', title: 'Thirty seconds at the door.', body: 'A couple arrives. She scans the QR sign; a clean mobile form fills in thirty seconds.', vo: <>“<strong>ohACCESS</strong> changes that in thirty seconds. Visitors scan and register at the door…”</> },
-  { time: '0:30–0:42', title: 'The codeword.', body: 'Her phone buzzes: “Your codeword is MAGNOLIA.” A backup codeword lands in her email.', vo: '“…and receive a one-time codeword — sent to the provided phone and email. Bad number? No code. No entry.”' },
-  { time: '0:42–0:56', title: '“Magnolia.”', body: 'She says the word at the door. The agent’s phone has already shown her name and 0–3 month timeline.', vo: '“The agent knows who’s walking in before they say ‘Hello’ — verified and logged.”' },
-  { time: '0:56–1:10', title: 'Doors close, work’s done.', body: 'That evening: the dashboard’s visitor log; leads appearing inside a CRM, one by one.', vo: '“When the doors close, the work is already done — every lead verified and delivered to your CRM.”' },
-  { time: '1:10–1:25', title: 'Proof for the seller.', body: 'The agent texts the seller a report card: 14 verified visitors, 5 buying within 3 months.', vo: <>“And the seller gets proof it was worth opening their door. <strong>ohACCESS</strong>. The verified Open House.”</>, dark: true },
-]
-
 const LOG_ROWS = [
   { order: 0, final: 1, name: 'Marcus Lee', meta: '(415) 555-0290 · verified 2:19 PM', tag: 'BUYING 0–3 MO', tagBg: '#eafaf0', tagColor: '#1d8f45' },
   { order: 1, final: 3, name: 'Dana Kowalski', meta: '(510) 555-0311 · verified 2:26 PM', tag: '12+ MO', tagBg: '#f2f2f5', tagColor: '#6e6e73' },
@@ -35,6 +25,9 @@ const LOG_ROWS = [
 ]
 
 const CRMS = ['Follow Up Boss', 'kvCORE', 'Lofty', 'Sierra Interactive', 'Real Geeks']
+
+// The 90-second film: https://youtu.be/hdKk1-WxNWU (1:27, public on @ohACCESS)
+const FILM_ID = 'hdKk1-WxNWU'
 
 const NAV_LINKS = [
   { href: '#how', label: 'How It Works' },
@@ -47,11 +40,11 @@ const NAV_LINKS = [
 const sectionPad = 'clamp(56px,8vw,96px) clamp(20px,5vw,48px)'
 const eyebrow: React.CSSProperties = { fontSize: '13px', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#c9963a', marginBottom: '14px' }
 
-// showFilm=false (the homepage, until the 90-second film is delivered) hides
-// the #film section plus the nav link and hero anchor that point to it.
-export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
+export default function TheRecord() {
   const rootRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  // The film's YouTube iframe is mounted only after the visitor presses play.
+  const [filmPlaying, setFilmPlaying] = useState(false)
   const [billing, setBilling] = useState<'monthly' | 'annual' | '2year'>('monthly')
   // Free sign-hardware offer: live per-state status (three-phase copy). null
   // until loaded — render the generic phase meanwhile, which claims nothing
@@ -78,7 +71,6 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
     const holiday = getHoliday()
     if (holiday) setHeroSrc(heroImage(holiday))
   }, [])
-  const navLinks = showFilm ? NAV_LINKS : NAV_LINKS.filter(l => l.href !== '#film')
 
   useEffect(() => {
     const root = rootRef.current
@@ -274,7 +266,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
         <div style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '16px clamp(20px,5vw,48px)', background: 'rgba(29,29,31,.82)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,.1)' }}>
           <div onClick={() => { setMenuOpen(false); window.scrollTo({ top: 0 }) }} style={{ fontWeight: 800, fontSize: '18px', color: '#fff', letterSpacing: '-.02em', cursor: 'pointer' }}>oh<span style={{ color: '#c9963a' }}>ACCESS</span></div>
           <div className="rec-nav-links">
-            {navLinks.map(l => <a key={l.href} href={l.href} style={{ padding: '8px 0' }}>{l.label}</a>)}
+            {NAV_LINKS.map(l => <a key={l.href} href={l.href} style={{ padding: '8px 0' }}>{l.label}</a>)}
             <Link href="/login" style={{ padding: '8px 0' }}>Sign-In</Link>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -286,7 +278,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
         {/* mobile menu */}
         {menuOpen && (
           <div style={{ position: 'sticky', top: '64px', zIndex: 49, background: '#2a2a2c', padding: '16px clamp(20px,5vw,48px)', display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.85)', borderBottom: '1px solid rgba(255,255,255,.1)' }}>
-            {navLinks.map(l => <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)}>{l.label}</a>)}
+            {NAV_LINKS.map(l => <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)}>{l.label}</a>)}
             <Link href="/login" onClick={() => setMenuOpen(false)}>Sign-In</Link>
           </div>
         )}
@@ -301,7 +293,7 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
             <p style={{ fontSize: 'clamp(16px,1.6vw,19px)', lineHeight: 1.55, color: 'rgba(255,255,255,.72)', margin: '24px 0 32px', maxWidth: '44ch', animation: 'om-rise .7s .45s both' }}>Illegible names. Dead numbers. Bounced emails. <strong>ohACCESS</strong> verifies every Open House visitor’s contact info at the door with a one-time codeword — sent to a phone and email that actually work.</p>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap', animation: 'om-rise .7s .55s both' }}>
               <Link href="/login?signup=true" className="rec-btn" style={{ background: '#c9963a', color: '#1d1d1f', fontWeight: 700, fontSize: '16px', padding: '15px 28px', borderRadius: '8px' }}>Start Free — 25 check-ins</Link>
-              {showFilm && <a href="#film" style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.8)', borderBottom: '1px solid rgba(255,255,255,.35)', paddingBottom: '2px' }}>Watch 90 seconds ↓</a>}
+              <a href="#film" style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.8)', borderBottom: '1px solid rgba(255,255,255,.35)', paddingBottom: '2px' }}>Watch 90 seconds ↓</a>
             </div>
             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.45)', marginTop: '16px', animation: 'om-rise .7s .62s both' }}>No credit card. Verified leads by Sunday.</div>
           </div>
@@ -357,38 +349,49 @@ export default function TheRecord({ showFilm = true }: { showFilm?: boolean }) {
           </div>
         </div>
 
-        {/* the 90-second film — hidden on the homepage until the film is delivered */}
-        {showFilm && <div id="film" style={{ background: '#f5f5f7', padding: 'clamp(56px,8vw,96px) 0' }}>
+        {/* the 90-second film */}
+        <div id="film" style={{ background: '#f5f5f7', padding: 'clamp(56px,8vw,96px) 0' }}>
           <div style={{ padding: '0 clamp(20px,5vw,48px)' }}>
             <div style={{ ...eyebrow, marginBottom: '10px' }}>The 90-second film</div>
             <div style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', maxWidth: '24ch' }}>One Open House, from yard sign to seller report.</div>
           </div>
-          {/* FILM SLOT — replace the poster with the final poster frame and wire
-              the play button to a native <video> when the film is delivered. */}
+          {/* FILM SLOT — a click-to-play facade: the poster is YouTube's own
+              frame (a plain <img>, so no remote host has to be whitelisted in
+              next.config), and the player iframe is only created once the
+              visitor presses play. Loading the embed up front would pull ~1MB
+              of YouTube script into every homepage visit. */}
           <div data-reveal="1" style={{ margin: '36px clamp(20px,5vw,48px) 0', position: 'relative', aspectRatio: '16/9', borderRadius: '18px', overflow: 'hidden', background: '#1d1d1f', boxShadow: '0 24px 64px rgba(29,29,31,.3)' }}>
-            <Image src={heroSrc} alt="" fill sizes="100vw" style={{ objectFit: 'cover', opacity: .55 }} />
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', background: 'linear-gradient(to top,rgba(29,29,31,.55),rgba(29,29,31,.15))', pointerEvents: 'none' }}>
-              <div className="rec-play" style={{ width: '84px', height: '84px', borderRadius: '50%', background: '#c9963a', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 34px rgba(0,0,0,.4)', pointerEvents: 'auto', cursor: 'pointer' }}>
-                <div style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '14px 0 14px 24px', borderColor: 'transparent transparent transparent #1d1d1f', marginLeft: '6px' }} />
-              </div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', letterSpacing: '.04em' }}>WATCH THE FILM · 1:30</div>
-            </div>
+            {filmPlaying ? (
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${FILM_ID}?autoplay=1&rel=0&modestbranding=1`}
+                title="ohACCESS: Verified Open House Visitor Check-Ins"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setFilmPlaying(true)}
+                aria-label="Play the 90-second ohACCESS film"
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', padding: 0, border: 0, background: 'none', cursor: 'pointer', display: 'block' }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://i.ytimg.com/vi/${FILM_ID}/maxresdefault.jpg`}
+                  alt=""
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', background: 'linear-gradient(to top,rgba(29,29,31,.55),rgba(29,29,31,.15))' }}>
+                  <div className="rec-play" style={{ width: '84px', height: '84px', borderRadius: '50%', background: '#c9963a', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 34px rgba(0,0,0,.4)' }}>
+                    <div style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '14px 0 14px 24px', borderColor: 'transparent transparent transparent #1d1d1f', marginLeft: '6px' }} />
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', letterSpacing: '.04em' }}>WATCH THE FILM · 1:27</div>
+                </div>
+              </button>
+            )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', padding: '44px clamp(20px,5vw,48px) 0' }}>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: '#1d1d1f' }}>Read the story, scene by scene</div>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#6e6e73' }}>scroll the strip →</div>
-          </div>
-          <div data-reveal="1" style={{ display: 'flex', gap: '14px', overflowX: 'auto', scrollSnapType: 'x mandatory', padding: '36px clamp(20px,5vw,48px) 12px', scrollbarWidth: 'thin' }}>
-            {SCENES.map((sc, i) => (
-              <div key={i} style={{ flex: 'none', width: 'min(72vw,290px)', scrollSnapAlign: 'start', background: sc.dark ? '#1d1d1f' : '#fff', borderRadius: '14px', padding: '22px 22px 24px', boxShadow: sc.dark ? 'none' : '0 2px 10px rgba(0,0,0,.05)' }}>
-                <div style={{ fontSize: '12px', fontWeight: 800, color: '#c9963a', letterSpacing: '.06em' }}>SCENE {i + 1} · {sc.time}</div>
-                <div style={{ fontSize: '17px', fontWeight: 800, color: sc.dark ? '#fff' : '#1d1d1f', margin: '10px 0 8px' }}>{sc.title}</div>
-                <div style={{ fontSize: '14px', lineHeight: 1.55, color: sc.dark ? 'rgba(255,255,255,.85)' : '#1d1d1f' }}>{sc.body}</div>
-                <div style={{ fontSize: '13.5px', lineHeight: 1.55, color: sc.dark ? 'rgba(255,255,255,.6)' : '#6e6e73', fontStyle: 'italic', marginTop: '12px', borderLeft: '2px solid #c9963a', paddingLeft: '12px' }}>{sc.vo}</div>
-              </div>
-            ))}
-          </div>
-        </div>}
+        </div>
 
         {/* live log → CRM */}
         <div id="leads" style={{ background: '#1d1d1f', color: '#fff', padding: sectionPad, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,340px),1fr))', gap: 'clamp(36px,5vw,64px)', alignItems: 'center' }}>

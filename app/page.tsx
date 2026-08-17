@@ -11,10 +11,9 @@ export const metadata: Metadata = {
     "The verified open house sign-in for real estate agents. Replace paper sheets with QR-code check-in that confirms every visitor's phone and email — and sends leads to your CRM.",
 }
 
-// Homepage: "The Record" design, promoted from /new on 2026-07-23 with the
-// 90-second-film section hidden until the film is delivered. When it arrives,
-// wire the video into TheRecord's film section and flip showFilm to true (or
-// drop the prop). References: /new = complete design incl. film placeholder,
+// Homepage: "The Record" design, promoted from /new on 2026-07-23. The
+// 90-second-film section went live on 2026-08-16 when the film was delivered
+// (https://youtu.be/hdKk1-WxNWU). References: /new = the same design,
 // /old = archived previous homepage. SEO metadata inherits from layout.tsx.
 // Organization schema so Google connects the brand name, logo, and domain.
 const ORG_SCHEMA = {
@@ -32,7 +31,7 @@ export default function Home() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_SCHEMA) }} />
       <RecoveryRedirect />
-      <TheRecord showFilm={false} />
+      <TheRecord />
     </>
   )
 }
