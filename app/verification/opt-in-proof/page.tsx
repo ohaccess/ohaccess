@@ -97,10 +97,15 @@ export default function OptInProof() {
 
         {/* Sample message — message type 1 */}
         <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>Message type 1 — one-time codeword (to the visitor)</h2>
-        <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>The verification/2FA code a visitor receives after opting in above.</div>
-        <div style={{ background: '#f5f5f7', border: '1px solid #e5e5ea', borderRadius: '12px', padding: '20px 24px', marginBottom: '40px', fontSize: '14px', lineHeight: '1.75', color: '#1d1d1f', fontFamily: 'monospace' }}>
-          ohACCESS: Your one-time entry code for 123 Main St is 4827. Show this text at the door to gain access. Msg &amp; data
-          rates may apply. Reply STOP to opt out, HELP for help.
+        <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>The one-time verification codeword a visitor receives after opting in above.</div>
+        <div style={{ background: '#f5f5f7', border: '1px solid #e5e5ea', borderRadius: '12px', padding: '20px 24px', marginBottom: '10px', fontSize: '14px', lineHeight: '1.75', color: '#1d1d1f', fontFamily: 'monospace' }}>
+          Codeword at 123 Main St, 75229 is &ldquo;LUXE&rdquo;. Share with host for access. Reply STOP to opt out.
+          https://ohaccess.com/r/aB3xK9
+        </div>
+        <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '40px', lineHeight: '1.7' }}>
+          The address and codeword vary per open house. The trailing link is a tracked ohACCESS short link to the property
+          listing; it is appended only when the hosting agent has supplied a listing URL and the message still fits one
+          segment, and is otherwise omitted.
         </div>
 
         {/* Sample message — message type 2 */}
@@ -110,9 +115,15 @@ export default function OptInProof() {
           provide their own mobile number and agree to receive operational SMS alerts about their open houses. They receive a
           transactional notification each time a new visitor registers. Agents can stop these any time by replying STOP.
         </div>
-        <div style={{ background: '#f5f5f7', border: '1px solid #e5e5ea', borderRadius: '12px', padding: '20px 24px', marginBottom: '40px', fontSize: '14px', lineHeight: '1.75', color: '#1d1d1f', fontFamily: 'monospace' }}>
-          ohACCESS Alert: A new visitor just registered at your 123 Main St open house. Open your ohACCESS dashboard to view
-          their details. Reply STOP to opt out, HELP for help.
+        <div style={{ background: '#f5f5f7', border: '1px solid #e5e5ea', borderRadius: '12px', padding: '20px 24px', marginBottom: '10px', fontSize: '14px', lineHeight: '1.75', color: '#1d1d1f', fontFamily: 'monospace' }}>
+          ohACCESS: New visitor at 123 Main St. Jane Smith, (214) 555-0142, jane@email.com, Timeline: 0&ndash;3 Months, Time:
+          6/3/26, 12:47 PM https://ohaccess.com/r/aB3xK9
+        </div>
+        <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '40px', lineHeight: '1.7' }}>
+          The trailing link is a tracked ohACCESS short link to that visitor&rsquo;s record, where the agent verifies them and
+          adds notes. A number identified as VoIP/internet is flagged inline for the agent. This alert carries no STOP
+          footer of its own; agents opt out at the carrier level by replying STOP to the number, which Twilio honors for all
+          subsequent messages.
         </div>
 
         {/* Policy links */}
