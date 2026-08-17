@@ -92,7 +92,7 @@ export default function Privacy() {
           <Section title="3. How We Use Your Information">
             <p><strong>For Open House Visitors, we use Visitor Data to:</strong></p>
             <ul style={{ paddingLeft: '24px', marginTop: '8px', marginBottom: '16px' }}>
-              <li style={{ marginBottom: '8px' }}>Deliver your access code via SMS and email</li>
+              <li style={{ marginBottom: '8px' }}>Deliver your codeword via SMS and email</li>
               <li style={{ marginBottom: '8px' }}>Verify your identity and phone number information at the open house entrance</li>
               <li style={{ marginBottom: '8px' }}>Detect and prevent the use of fraudulent phone numbers</li>
               <li style={{ marginBottom: '8px' }}>Detect, prevent, and investigate fraud, misuse, security incidents, and threats to the safety of properties, property owners, agents, and other visitors</li>
