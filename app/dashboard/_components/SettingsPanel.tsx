@@ -6,8 +6,8 @@ import { fillBorder } from '@/lib/colors'
 import { isLegacyTwoYear, isComped, isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { normalizeAgreementTemplates, MAX_AGREEMENT_TEMPLATES } from '@/lib/agreements'
 import { regionFor, countryOptions, flagFor } from '@/lib/regions'
-import { splitStoredPhone, storablePhone } from '@/lib/phone'
-import PhoneInput from '@/app/_components/PhoneInput'
+import { splitStoredPhone, storablePhone, formatNationalAsYouType } from '@/lib/phone'
+import PhoneInput, { type PhoneValue } from '@/app/_components/PhoneInput'
 
 // The Settings view: subscription/billing, agent profile, branding & photos,
 // brand colors, CRM lead-intake, and the Zapier webhook. Presentational —
@@ -651,13 +651,17 @@ export default function SettingsPanel({
   // fields exist, the phone picker's default dial code. See lib/regions.ts.
   const region = regionFor(agentCountry)
   const countries = countryOptions()
-  // The phone picker's country while a number is being typed. profiles.phone
-  // holds the STORED string ("(512) 555-1234" for +1 countries, E.164 for the
-  // rest); a half-typed non-+1 number can't tell us its country yet, so the
-  // picker remembers the choice itself until the number is complete.
-  const [phonePickerCountry, setPhonePickerCountry] = useState<string | null>(null)
-  const phoneSplit = splitStoredPhone(profile?.phone, agentCountry)
-  const phoneValue = { country: phonePickerCountry ?? phoneSplit.country, national: phoneSplit.national }
+  // The phone picker's live state: chip country + national text. profiles.phone
+  // holds only the STORED string ("(512) 555-1234" for +1 countries, E.164 for
+  // the rest), which can't represent a half-typed number or a just-switched
+  // country — so the input owns its state and the stored value is derived from
+  // it on every change (storablePhone).
+  const [phoneInput, setPhoneInput] = useState<PhoneValue>(() => splitStoredPhone(profile?.phone, agentCountry))
+  // A country default that arrives after mount (the /api/geo lookup) or a
+  // Country-dropdown change moves the picker while the number box is empty.
+  useEffect(() => {
+    setPhoneInput(prev => (prev.national ? prev : { country: agentCountry, national: '' }))
+  }, [agentCountry])
 
   // Disclosure/notice rows live in `profile` like every other setting, so the
   // existing saveSettings picks them up. Rows are kept as typed (including
@@ -918,10 +922,24 @@ export default function SettingsPanel({
               value={agentCountry}
               onChange={e => {
                 const next = e.target.value
-                // Keep the phone picker in step with the new country only if
-                // the agent hasn't already typed a number from somewhere else.
-                if (!profile?.phone) setPhonePickerCountry(null)
-                setProfile({ ...profile, country: next })
+                // The phone picker follows the country. Digits already in the
+                // box are re-read in the new country (the agent sees the field
+                // change, and save blocks anything invalid) — except a saved
+                // international number ("+61…"), which knows its own country
+                // and stays put; its chip can still be changed by hand.
+                const stored = (profile?.phone || '').trim()
+                if (stored.startsWith('+')) {
+                  setProfile({ ...profile, country: next })
+                  return
+                }
+                const digits = phoneInput.national.replace(/\D/g, '')
+                const national = digits ? formatNationalAsYouType(digits, next) : ''
+                setPhoneInput({ country: next, national })
+                setProfile({
+                  ...profile,
+                  country: next,
+                  phone: national ? (storablePhone(national, next) ?? national) : '',
+                })
               }}
             >
               {countries.map(c => (
@@ -957,10 +975,10 @@ export default function SettingsPanel({
           <div>
             <label style={labelStyle}>Mobile Phone</label>
             <PhoneInput
-              value={phoneValue}
+              value={phoneInput}
               inputStyle={inputStyle}
               onChange={next => {
-                setPhonePickerCountry(next.country)
+                setPhoneInput(next)
                 // Store the canonical form once the number is complete;
                 // until then keep the partial text so typing isn't fought.
                 setProfile({ ...profile, phone: next.national ? (storablePhone(next.national, next.country) ?? next.national) : '' })
