@@ -88,9 +88,12 @@ export default function PhoneInput({
             fontSize: '16px', // keeps iOS from zooming when the list opens
           }}
         >
+          {/* Name FIRST: the browser's built-in type-to-jump matches the
+              start of the label, so a leading flag emoji breaks typing
+              "aus" to reach Australia. Flag rides at the end instead. */}
           {options.map(o => (
             <option key={o.code} value={o.code}>
-              {flagFor(o.code)} {o.name} ({o.dialCode})
+              {o.name} ({o.dialCode}) {flagFor(o.code)}
             </option>
           ))}
         </select>

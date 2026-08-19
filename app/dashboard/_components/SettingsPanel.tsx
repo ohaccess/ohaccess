@@ -955,8 +955,10 @@ export default function SettingsPanel({
                 })
               }}
             >
+              {/* Name first so the browser's type-to-jump works (a leading
+                  flag emoji defeats it) — type "aus" to reach Australia. */}
               {countries.map(c => (
-                <option key={c.code} value={c.code}>{flagFor(c.code)} {c.name}</option>
+                <option key={c.code} value={c.code}>{c.name} {flagFor(c.code)}</option>
               ))}
             </select>
             <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px', lineHeight: '1.4' }}>
