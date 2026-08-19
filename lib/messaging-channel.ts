@@ -21,8 +21,10 @@
 // pre-2026-08-19 SMS-only product):
 //   TWILIO_WHATSAPP_FROM                  the WhatsApp sender, "whatsapp:+1888…"
 //   TWILIO_WHATSAPP_CODEWORD_CONTENT_SID  the approved template's Content SID
-//                                         (HX…) with two variables:
-//                                         {{1}} = address, {{2}} = codeword
+//                                         (HX…)
+//   TWILIO_WHATSAPP_TEMPLATE_KIND         what that template's variables carry
+//                                         (see whatsAppTemplateKind below):
+//                                         link (default) | word | auth
 //   WHATSAPP_FIRST_COUNTRIES              comma-separated ISO codes that
 //                                         replace the default list below
 // Setup steps for Dave are in docs/international-setup.md.
@@ -77,6 +79,23 @@ export function whatsAppFirstCountries(env: Env = process.env): Set<string> {
 // WhatsApp message can go out. Missing either → WhatsApp is simply off.
 export function whatsAppConfigured(env: Env = process.env): boolean {
   return !!(env.TWILIO_WHATSAPP_FROM && env.TWILIO_WHATSAPP_CODEWORD_CONTENT_SID)
+}
+
+// The shape of the approved template, i.e. what goes in its variables:
+//   link  — "{{1}}" = address, "{{2}}" = a check-in-details LINK that opens
+//           the page showing the codeword (lib/codeword-link.ts). This is the
+//           one Meta approves for an unverified business — three "here is
+//           your word" wordings were rejected as authentication content.
+//   word  — "{{1}}" = address, "{{2}}" = the codeword itself (the original
+//           design; only approvable once Meta stops reading it as an OTP).
+//   auth  — Meta's fixed Authentication format, "{{1}}" = the codeword
+//           ("LOVELY is your verification code."); needs business
+//           verification before Meta will even create it.
+export type WhatsAppTemplateKind = 'link' | 'word' | 'auth'
+
+export function whatsAppTemplateKind(env: Env = process.env): WhatsAppTemplateKind {
+  const k = (env.TWILIO_WHATSAPP_TEMPLATE_KIND || '').trim().toLowerCase()
+  return k === 'word' || k === 'auth' ? k : 'link'
 }
 
 // The channel to TRY FIRST for a number in `country` (ISO code, from the

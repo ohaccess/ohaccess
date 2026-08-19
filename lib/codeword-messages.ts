@@ -8,9 +8,11 @@ import {
   preferredCodewordChannel,
   isWhatsAppFallbackError,
   whatsAppConfigured,
+  whatsAppTemplateKind,
   whatsAppAddress,
   type CodewordChannel,
 } from '@/lib/messaging-channel'
+import { codewordLinkPath } from '@/lib/codeword-link'
 import {
   buildSmsBody,
   isHttpUrl,
@@ -239,16 +241,30 @@ export async function sendVisitorCodewordMessages(params: {
         // can flag bad numbers on the agent dashboard.
         statusCallback,
       })
-    // The template carries the same two facts as the SMS — {{1}} address,
-    // {{2}} codeword — in WhatsApp-approved wording (docs/international-setup.md
-    // has the exact template text). No listing link: template bodies are
-    // fixed at approval time.
-    const sendWhatsApp = () =>
+    // What the approved template's variables carry depends on its kind (see
+    // whatsAppTemplateKind): the default "link" template says "tap to view
+    // your check-in details" and the page behind the link shows the codeword
+    // — Meta rejects Utility templates that put the word in the message
+    // itself. The link is minted here, once per WhatsApp send, as a tracked
+    // ohaccess.com/r/ short code wrapping the HMAC-signed page URL (never
+    // returned to the browser — that would leak the word to a fake number).
+    // No listing link in any variant: template bodies are fixed at approval.
+    const whatsAppVariables = async (): Promise<Record<string, string>> => {
+      const kind = whatsAppTemplateKind()
+      const word = smsCodeWord ?? ''
+      const address = smsAddress ?? ''
+      if (kind === 'auth') return { 1: word }
+      if (kind === 'word') return { 1: address, 2: word }
+      const full = `${APP_URL}${codewordLinkPath(visitorId)}`
+      const short = await createShortUrl(full, openHouse.agent_id, openHouse.id, 'codeword_link')
+      return { 1: address, 2: short || full }
+    }
+    const sendWhatsApp = async () =>
       twilioClient.messages.create({
         from: whatsAppAddress(process.env.TWILIO_WHATSAPP_FROM!),
         to: whatsAppAddress(to),
         contentSid: process.env.TWILIO_WHATSAPP_CODEWORD_CONTENT_SID!,
-        contentVariables: JSON.stringify({ 1: smsAddress, 2: smsCodeWord }),
+        contentVariables: JSON.stringify(await whatsAppVariables()),
         statusCallback,
       })
 

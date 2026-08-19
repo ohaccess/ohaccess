@@ -117,24 +117,33 @@ WhatsApp only lets a business start a conversation with a **pre-approved
 template**. Ours mirrors the SMS.
 
 1. Twilio Console → **Messaging → Content Template Builder → Create new**.
-2. Name: `ohaccess_checkin` · Language: **English** · Category: **Utility**
-   · Content type: **Text**.
+2. Name: `ohaccess_checkin_link` · Language: **English** · Category:
+   **Utility** · Content type: **Text**.
 3. Body — paste exactly:
 
    ```
-   You're checked in for the open house at {{1}}. To be let in, tell the host the word {{2}} at the door. We've also emailed it to you as a backup.
+   You are checked in for the open house at {{1}}. Tap to view your check-in details: {{2}} (a copy was also emailed to you).
    ```
 
    Sample values when it asks: `{{1}}` = `123 Main St, 78701`, `{{2}}` =
-   `LOVELY`.
+   `https://ohaccess.com/r/abc123`.
 
-   ⚠️ Wording matters. The first attempt — *"Your ohACCESS codeword for the
-   open house at {{1}} is "{{2}}"…"* — was **rejected by Meta as
-   INCORRECT_CATEGORY**: anything shaped like *"…code is XYZ"* counts as
-   Authentication content, which must use Meta's rigid OTP format (no
-   address, no "share with the host"). Framing it as a check-in
-   confirmation ("tell the host the word …") keeps it Utility. Avoid the
-   words code / codeword / verify / password in the template body.
+   ⚠️ Why a LINK and not the word itself (learned 2026-08-19): Meta's
+   reviewer rejects any Utility template that puts a secret word in the
+   message — three wordings ("your codeword … is X", "tell the host the
+   word X", "host will ask for today's greeting: X") all came back
+   **INCORRECT_CATEGORY / authentication content** within seconds. The
+   category Meta wants for that (Authentication, "X is your verification
+   code") is **only available after Meta business verification**. A plain
+   check-in confirmation with a link passes the classifier. The link opens
+   `/checkin/<visitor>/<signature>` — a page showing the codeword(s),
+   reachable only via that signed link, which is delivered to the WhatsApp
+   number and nowhere else (lib/codeword-link.ts).
+
+   Once business verification is approved you *can* switch to an
+   Authentication template (word in the message, Meta's fixed wording, copy-
+   code button) by creating it in Twilio with content type
+   *whatsapp/authentication* and setting `TWILIO_WHATSAPP_TEMPLATE_KIND=auth`.
 4. Save → **Submit for WhatsApp approval**. Approval is typically minutes to a
    few hours. The page shows the template's **Content SID** (`HX` + 32
    characters) — copy it.
@@ -152,6 +161,7 @@ Note):
 | --- | --- |
 | `TWILIO_WHATSAPP_FROM` | `whatsapp:+1XXXXXXXXXX` — the sender number from 3a (the `whatsapp:` prefix is optional; the code adds it) |
 | `TWILIO_WHATSAPP_CODEWORD_CONTENT_SID` | the `HX…` Content SID from 3b |
+| `TWILIO_WHATSAPP_TEMPLATE_KIND` (optional) | what the template's variables carry: `link` (default — address + check-in link), `word` (address + the word), `auth` (Meta Authentication format, word only) |
 | `WHATSAPP_FIRST_COUNTRIES` (optional) | comma-separated ISO codes to REPLACE the built-in WhatsApp-first list, e.g. `IN,AE,BR`. Leave unset for the default list (India, the Gulf states, Egypt, Philippines, Indonesia, Vietnam, Pakistan, Bangladesh, Sri Lanka, Nigeria, Kenya, Ghana, Turkey, Brazil, Argentina, Colombia) |
 
 Redeploy. Done — WhatsApp is live.
