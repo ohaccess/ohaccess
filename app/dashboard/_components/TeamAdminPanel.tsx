@@ -403,7 +403,16 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
           </label>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          {/* Cancel = re-read the saved team settings; load() puts every form
+              field (name, logo, colors, CRM) back to what the server holds. */}
+          <button
+            onClick={async () => { setBusy('cancel'); await load(); setBusy(null); showToast('Changes discarded — nothing was saved') }}
+            disabled={busy !== null}
+            style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            {busy === 'cancel' ? 'Discarding…' : 'Cancel'}
+          </button>
           <button onClick={saveSettings} disabled={busy !== null} style={{ ...btn(primary), opacity: busy ? 0.6 : 1 }}>
             {busy === 'settings' ? 'Saving…' : '✓ Save team settings'}
           </button>

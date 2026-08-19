@@ -726,13 +726,32 @@ export default function SponsorDashboard() {
                   )}
                 </div>
               </div>
-              <button
-                onClick={saveProfile}
-                disabled={saving}
-                style={{ marginTop: '18px', width: '100%', background: PRIMARY, color: 'white', border: 'none', borderRadius: '10px', padding: '13px', fontSize: '15px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: saving ? 0.7 : 1 }}
-              >
-                {saving ? 'Saving...' : isNew ? 'Create sponsor profile →' : 'Save changes'}
-              </button>
+              <div style={{ marginTop: '18px', display: 'flex', gap: '8px' }}>
+                {/* Cancel = re-read the saved sponsor row and put every field
+                    back. Hidden on first-time setup — nothing saved to go
+                    back to yet. */}
+                {!isNew && (
+                  <button
+                    onClick={async () => {
+                      if (!user) return
+                      const { data } = await supabase.from('sponsors').select('*').eq('owner_id', user.id).maybeSingle()
+                      if (data) { setSponsor(data); showToast('Changes discarded — nothing was saved') }
+                      else showToast('Could not reload your saved profile — try again', 'error')
+                    }}
+                    disabled={saving}
+                    style={{ flex: '0 0 auto', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '10px', padding: '13px 22px', fontSize: '15px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button
+                  onClick={saveProfile}
+                  disabled={saving}
+                  style={{ flex: '1 1 auto', background: PRIMARY, color: 'white', border: 'none', borderRadius: '10px', padding: '13px', fontSize: '15px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: saving ? 0.7 : 1 }}
+                >
+                  {saving ? 'Saving...' : isNew ? 'Create sponsor profile →' : 'Save changes'}
+                </button>
+              </div>
             </div>
           </div>
         )}

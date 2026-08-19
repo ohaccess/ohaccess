@@ -175,6 +175,16 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
         />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
           {savedNotes && <span style={{ fontSize: '13px', color: '#30d158', fontWeight: 600 }}>✓ Saved</span>}
+          {/* Cancel = put the box back to the last-saved note; only offered
+              while there's an unsaved edit to throw away. */}
+          {dirty && !savingNotes && (
+            <button
+              onClick={() => setNotes(visitor.notes || '')}
+              style={{ background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '10px', padding: '10px 20px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
+              Cancel
+            </button>
+          )}
           <button
             onClick={saveNotes}
             disabled={savingNotes || !dirty}

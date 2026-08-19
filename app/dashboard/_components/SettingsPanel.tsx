@@ -5,7 +5,7 @@ import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { fillBorder } from '@/lib/colors'
 import { isLegacyTwoYear, isComped, isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { normalizeAgreementTemplates, MAX_AGREEMENT_TEMPLATES } from '@/lib/agreements'
-import { regionFor, countryOptions, flagFor } from '@/lib/regions'
+import { regionFor, countryOptions, flagFor, inferProfileCountry } from '@/lib/regions'
 import { splitStoredPhone, storablePhone, formatNationalAsYouType } from '@/lib/phone'
 import PhoneInput, { type PhoneValue } from '@/app/_components/PhoneInput'
 
@@ -662,6 +662,24 @@ export default function SettingsPanel({
   useEffect(() => {
     setPhoneInput(prev => (prev.national ? prev : { country: agentCountry, national: '' }))
   }, [agentCountry])
+
+  // Cancel = discard everything typed since the last save: re-read the saved
+  // profile row and put every field (and the phone picker) back. Agreement
+  // templates are untouched — those save immediately on upload, so they have
+  // nothing pending to discard.
+  const [reverting, setReverting] = useState(false)
+  const cancelSettings = async () => {
+    setReverting(true)
+    const { data } = await supabase.from('profiles').select('*').eq('id', agentId).single()
+    setReverting(false)
+    if (!data) {
+      showToast('Could not reload your saved settings — try again', 'error')
+      return
+    }
+    setProfile(data)
+    setPhoneInput(splitStoredPhone(data.phone, inferProfileCountry(data)))
+    showToast('Changes discarded — nothing was saved')
+  }
 
   // Disclosure/notice rows live in `profile` like every other setting, so the
   // existing saveSettings picks them up. Rows are kept as typed (including
@@ -1322,7 +1340,10 @@ export default function SettingsPanel({
 
       </div>{/* end two-column card grid */}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
+        <button onClick={cancelSettings} disabled={reverting} style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: reverting ? 'default' : 'pointer', opacity: reverting ? 0.6 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          {reverting ? 'Discarding…' : 'Cancel'}
+        </button>
         <button onClick={saveSettings} style={{ padding: '9px 18px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
           ✓ Save settings
         </button>
