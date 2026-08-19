@@ -117,16 +117,24 @@ WhatsApp only lets a business start a conversation with a **pre-approved
 template**. Ours mirrors the SMS.
 
 1. Twilio Console → **Messaging → Content Template Builder → Create new**.
-2. Name: `ohaccess_codeword` · Language: **English** · Category: **Utility**
+2. Name: `ohaccess_checkin` · Language: **English** · Category: **Utility**
    · Content type: **Text**.
 3. Body — paste exactly:
 
    ```
-   Your ohACCESS codeword for the open house at {{1}} is "{{2}}". Share it with the host for access. A backup codeword was also emailed to you.
+   You're checked in for the open house at {{1}}. To be let in, tell the host the word {{2}} at the door. We've also emailed it to you as a backup.
    ```
 
    Sample values when it asks: `{{1}}` = `123 Main St, 78701`, `{{2}}` =
    `LOVELY`.
+
+   ⚠️ Wording matters. The first attempt — *"Your ohACCESS codeword for the
+   open house at {{1}} is "{{2}}"…"* — was **rejected by Meta as
+   INCORRECT_CATEGORY**: anything shaped like *"…code is XYZ"* counts as
+   Authentication content, which must use Meta's rigid OTP format (no
+   address, no "share with the host"). Framing it as a check-in
+   confirmation ("tell the host the word …") keeps it Utility. Avoid the
+   words code / codeword / verify / password in the template body.
 4. Save → **Submit for WhatsApp approval**. Approval is typically minutes to a
    few hours. The page shows the template's **Content SID** (`HX` + 32
    characters) — copy it.
