@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizePhone, usPhoneError, isPossibleUsPhone } from '@/lib/phone'
+import { normalizePhone, usPhoneError, isPossibleUsPhone, phoneMatchVariants } from '@/lib/phone'
 
 describe('normalizePhone', () => {
   it('normalizes a formatted 10-digit number to E.164', () => {
@@ -59,5 +59,30 @@ describe('isPossibleUsPhone', () => {
     expect(isPossibleUsPhone('4158675309')).toBe(true)
     expect(isPossibleUsPhone('2222222222')).toBe(false)
     expect(isPossibleUsPhone('')).toBe(false)
+  })
+})
+
+describe('phoneMatchVariants', () => {
+  it('covers every spelling a stored US number might have', () => {
+    expect(phoneMatchVariants('(415) 867-5309').sort()).toEqual(
+      ['(415) 867-5309', '+14158675309', '4158675309'].sort()
+    )
+  })
+  it('keeps the raw input as typed alongside the canonical forms', () => {
+    const v = phoneMatchVariants('415-867-5309')
+    expect(v).toContain('415-867-5309')
+    expect(v).toContain('(415) 867-5309')
+    expect(v).toContain('+14158675309')
+    expect(v).toContain('4158675309')
+    expect(new Set(v).size).toBe(v.length) // no duplicates
+  })
+  it('strips a leading 1 country code before building variants', () => {
+    expect(phoneMatchVariants('+1 415 867 5309')).toContain('(415) 867-5309')
+    expect(phoneMatchVariants('14158675309')).toContain('+14158675309')
+  })
+  it('falls back to just the raw input for non-10-digit numbers', () => {
+    expect(phoneMatchVariants('12345')).toEqual(['12345'])
+    expect(phoneMatchVariants('')).toEqual([])
+    expect(phoneMatchVariants(null)).toEqual([])
   })
 })

@@ -11,6 +11,8 @@ import {
   agentCopyRecipients,
   isVirtualNumber,
   phoneLineKind,
+  pickCachedPhoneIntel,
+  type PhoneIntelCandidate,
   twilioStatusCallbackUrl,
   normalizeDisclosureLinks,
   resolveDisclosureLinks,
@@ -335,6 +337,75 @@ describe('phoneLineKind', () => {
     expect(phoneLineKind('tollFree')).toBe(null)
     expect(phoneLineKind('voicemail')).toBe(null)
     expect(phoneLineKind('unknown')).toBe(null)
+  })
+})
+
+describe('pickCachedPhoneIntel', () => {
+  const NOW = Date.parse('2026-08-19T12:00:00Z')
+  const daysAgo = (n: number) => new Date(NOW - n * 24 * 60 * 60 * 1000).toISOString()
+  const me = { firstName: 'Dana', lastName: 'Lee', email: 'dana@example.com' }
+  const row = (over: Partial<PhoneIntelCandidate> = {}): PhoneIntelCandidate => ({
+    first_name: 'Dana',
+    last_name: 'Lee',
+    email: 'dana@example.com',
+    phone_carrier: 'T-Mobile USA, Inc.',
+    phone_line_type: 'mobile',
+    registered_at: daysAgo(30),
+    ...over,
+  })
+
+  it('reuses a recent lookup for the same person', () => {
+    expect(pickCachedPhoneIntel([row()], me, NOW)).toEqual({
+      carrier: 'T-Mobile USA, Inc.',
+      lineType: 'mobile',
+    })
+  })
+  it('matches on email alone (name spelled differently)', () => {
+    expect(pickCachedPhoneIntel([row({ first_name: 'D.', last_name: 'Lee-Smith' })], me, NOW))
+      .toEqual({ carrier: 'T-Mobile USA, Inc.', lineType: 'mobile' })
+  })
+  it('matches on full name alone (different email)', () => {
+    expect(pickCachedPhoneIntel([row({ email: 'dana.work@corp.example' })], me, NOW))
+      .toEqual({ carrier: 'T-Mobile USA, Inc.', lineType: 'mobile' })
+  })
+  it('ignores case and stray whitespace when comparing', () => {
+    const c = row({ first_name: '  dana ', last_name: 'LEE', email: 'Dana@Example.com ' })
+    expect(pickCachedPhoneIntel([c], { firstName: 'DANA', lastName: 'lee', email: 'dana@example.com' }, NOW))
+      .not.toBeNull()
+  })
+  it('does NOT reuse when both name and email differ (possible recycled number)', () => {
+    const spouse = row({ first_name: 'Sam', last_name: 'Lee', email: 'sam@example.com' })
+    expect(pickCachedPhoneIntel([spouse], me, NOW)).toBeNull()
+  })
+  it('finds this visitor beneath a partner who shares the number', () => {
+    const spouse = row({ first_name: 'Sam', last_name: 'Lee', email: 'sam@example.com', registered_at: daysAgo(1) })
+    const mine = row({ phone_carrier: 'Verizon', registered_at: daysAgo(40) })
+    expect(pickCachedPhoneIntel([spouse, mine], me, NOW)).toEqual({ carrier: 'Verizon', lineType: 'mobile' })
+  })
+  it('prefers the newest matching row regardless of input order', () => {
+    const older = row({ phone_line_type: 'landline', registered_at: daysAgo(200) })
+    const newer = row({ phone_line_type: 'mobile', registered_at: daysAgo(5) })
+    expect(pickCachedPhoneIntel([older, newer], me, NOW)?.lineType).toBe('mobile')
+    expect(pickCachedPhoneIntel([newer, older], me, NOW)?.lineType).toBe('mobile')
+  })
+  it('does NOT reuse a result older than 12 months', () => {
+    expect(pickCachedPhoneIntel([row({ registered_at: daysAgo(366) })], me, NOW)).toBeNull()
+    expect(pickCachedPhoneIntel([row({ registered_at: daysAgo(364) })], me, NOW)).not.toBeNull()
+  })
+  it('skips rows where the earlier lookup failed (no line type)', () => {
+    expect(pickCachedPhoneIntel([row({ phone_line_type: null })], me, NOW)).toBeNull()
+    expect(pickCachedPhoneIntel([row({ phone_line_type: '' })], me, NOW)).toBeNull()
+  })
+  it('skips rows with a missing or unparseable timestamp', () => {
+    expect(pickCachedPhoneIntel([row({ registered_at: null })], me, NOW)).toBeNull()
+    expect(pickCachedPhoneIntel([row({ registered_at: 'yesterday' })], me, NOW)).toBeNull()
+  })
+  it('keeps a null carrier when Twilio only returned the line type', () => {
+    expect(pickCachedPhoneIntel([row({ phone_carrier: null })], me, NOW))
+      .toEqual({ carrier: null, lineType: 'mobile' })
+  })
+  it('returns null for no candidates', () => {
+    expect(pickCachedPhoneIntel([], me, NOW)).toBeNull()
   })
 })
 
