@@ -79,6 +79,11 @@ export async function GET(request: Request) {
       if (c.types.includes('country')) placeCountry = c.short_name
     })
     city = city || postalTown || sublocality || adminArea2
+    // In the UK, level 1 is the constituent country ("England") — the county
+    // ("Greater Manchester" for Milnrow) lives at level 2. The Royal Mail
+    // post town (postal_town, "Rochdale") is a town, not a county, so it
+    // stays out of this field.
+    if (placeCountry === 'GB' && adminArea2) state = adminArea2
 
     // Resolve the property's timezone from its coordinates so open-house times
     // are anchored to the property, not whoever is scheduling. Requires the

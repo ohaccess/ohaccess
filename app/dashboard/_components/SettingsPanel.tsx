@@ -940,16 +940,11 @@ export default function SettingsPanel({
               value={agentCountry}
               onChange={e => {
                 const next = e.target.value
-                // The phone picker follows the country. Digits already in the
-                // box are re-read in the new country (the agent sees the field
-                // change, and save blocks anything invalid) — except a saved
-                // international number ("+61…"), which knows its own country
-                // and stays put; its chip can still be changed by hand.
-                const stored = (profile?.phone || '').trim()
-                if (stored.startsWith('+')) {
-                  setProfile({ ...profile, country: next })
-                  return
-                }
+                // One-way street (Dave's rule, 2026-08-19): changing the
+                // Country ALWAYS moves the phone picker with it — no
+                // exceptions — with any digits already in the box re-read in
+                // the new country (visibly; save blocks anything invalid).
+                // Changing the phone picker never touches the Country.
                 const digits = phoneInput.national.replace(/\D/g, '')
                 const national = digits ? formatNationalAsYouType(digits, next) : ''
                 setPhoneInput({ country: next, national })
