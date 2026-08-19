@@ -51,6 +51,24 @@ describe('register form translations', () => {
     }
   })
 
+  it('keeps the {button} placeholder in every WhatsApp consent and names WhatsApp in the channel copy', () => {
+    for (const code of CODES) {
+      const t = STRINGS[code]
+      expect(t.consentWhatsApp, code).toContain('{button}')
+      expect(t.consentWhatsApp, code).toContain('WhatsApp')
+      expect(t.sentBody1WhatsApp, code).toContain('WhatsApp')
+      expect(t.checkWhatsApp, code).toContain('WhatsApp')
+      // WhatsApp is not an SMS carrier channel — no STOP/HELP keyword promise.
+      expect(t.consentWhatsApp, code).not.toContain('STOP')
+    }
+  })
+
+  it('no longer limits phone numbers to the US/Canada in any language', () => {
+    for (const code of CODES) {
+      expect(STRINGS[code].errPhone, code).not.toMatch(/U\.S\.|US |Canad|EE\. UU|Hoa Kỳ|美国|美國|미국|अमेरिक|ਅਮਰੀਕ|Kanad|Канад|Καναδ|Canada/)
+    }
+  })
+
   it('adds an English-version-governs note to every non-English consent', () => {
     for (const code of CODES) {
       if (code === 'en') continue

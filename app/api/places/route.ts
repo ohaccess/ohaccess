@@ -1,11 +1,23 @@
 import { NextResponse } from 'next/server'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthenticatedUser } from '@/lib/auth'
+import { normalizeCountry } from '@/lib/regions'
 
 type AddressComponent = {
   long_name: string
   short_name: string
   types: string[]
+}
+
+// Which countries the address search looks in. Google's autocomplete wants
+// a restriction (unrestricted "123 Main" returns noise from five continents),
+// so we restrict to the AGENT's country — their listings are there. US and
+// Canadian agents keep the original US+Canada pair (border markets, and the
+// behaviour every existing agent has today). Anyone else gets their own
+// country. Unknown/missing → the US+Canada default.
+function countryFilter(country: string | null): string {
+  if (!country || country === 'US' || country === 'CA') return 'country:us|country:ca'
+  return `country:${country.toLowerCase()}`
 }
 
 export async function GET(request: Request) {
@@ -23,6 +35,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const input = searchParams.get('input')
   const placeId = searchParams.get('placeId')
+  const country = normalizeCountry(searchParams.get('country'))
 
   if (!input && !placeId) {
     return NextResponse.json({ error: 'Missing input or placeId' }, { status: 400 })
@@ -42,15 +55,30 @@ export async function GET(request: Request) {
     let streetNumber = ''
     let route = ''
     let city = ''
+    let postalTown = ''
+    let sublocality = ''
+    let adminArea2 = ''
     let state = ''
     let zip = ''
+    let placeCountry = ''
     components.forEach((c) => {
       if (c.types.includes('street_number')) streetNumber = c.long_name
       if (c.types.includes('route')) route = c.long_name
       if (c.types.includes('locality')) city = c.long_name
+      // What Google calls the town varies by country: the UK mostly uses
+      // postal_town, parts of Asia and Latin America use sublocality, and a
+      // few places only carry a level-2 admin area. Prefer locality, then
+      // the fallbacks in that order.
+      if (c.types.includes('postal_town')) postalTown = c.long_name
+      if (c.types.includes('sublocality_level_1') || c.types.includes('sublocality')) sublocality = sublocality || c.long_name
+      if (c.types.includes('administrative_area_level_2')) adminArea2 = c.long_name
+      // short_name gives TX / ON / NSW where a country uses codes and the
+      // full name ("England", "Bavaria") where it doesn't — both fine.
       if (c.types.includes('administrative_area_level_1')) state = c.short_name
       if (c.types.includes('postal_code')) zip = c.long_name
+      if (c.types.includes('country')) placeCountry = c.short_name
     })
+    city = city || postalTown || sublocality || adminArea2
 
     // Resolve the property's timezone from its coordinates so open-house times
     // are anchored to the property, not whoever is scheduling. Requires the
@@ -75,14 +103,13 @@ export async function GET(request: Request) {
       city,
       state,
       zip,
+      country: normalizeCountry(placeCountry),
       timezone,
     })
   }
 
   const res = await fetch(
-    // US + Canada — Canadian components map cleanly (province -> state
-    // short_name like ON, postal code -> zip).
-    `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input!)}&types=address&components=${encodeURIComponent('country:us|country:ca')}&key=${apiKey}`
+    `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input!)}&types=address&components=${encodeURIComponent(countryFilter(country))}&key=${apiKey}`
   )
   const data = await res.json()
   if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {

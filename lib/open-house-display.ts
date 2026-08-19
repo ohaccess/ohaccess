@@ -1,6 +1,8 @@
 import 'server-only'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { normalizeCustomQuestions, questionsForSurface } from '@/lib/custom-questions'
+import { inferProfileCountry, normalizeCountry } from '@/lib/regions'
+import { whatsAppConfigured, whatsAppFirstCountries } from '@/lib/messaging-channel'
 
 // The shape handed to the register page — safe display fields only.
 export type OpenHouseDisplay = NonNullable<Awaited<ReturnType<typeof getOpenHouseDisplay>>>
@@ -25,9 +27,13 @@ export async function getOpenHouseDisplay(
 ) {
   if (!UUID_RE.test(id)) return null
 
+  // select('*') rather than a column list: this is the one public page of
+  // the product, and a column that's in the code but not yet in the database
+  // (a deploy landing before its migration — e.g. 048's `country`) would
+  // otherwise 404 every sign-in. Only the safe fields below are returned.
   const { data: oh, error } = await supabase
     .from('open_houses')
-    .select('id, property_address, listing_price, bedrooms, bathrooms, square_footage, open_house_date, open_house_hours, status, agent_id')
+    .select('*')
     .eq('id', id)
     .maybeSingle()
 
@@ -53,7 +59,7 @@ export async function getOpenHouseDisplay(
 
   const { data: agent } = await supabase
     .from('profiles')
-    .select('full_name, primary_color, accent_color, sponsor_id, custom_questions')
+    .select('*')
     .eq('id', oh.agent_id)
     .maybeSingle()
 
@@ -83,12 +89,26 @@ export async function getOpenHouseDisplay(
     }
   }
 
+  // Which country the property is in — decides the default dial code on the
+  // sign-in form's phone field and whether the US-only NAR notice shows.
+  // Rows from before migration 048 have no country; the agent's (saved or
+  // inferred) country stands in, which for those rows is US or Canada.
+  const country = normalizeCountry(oh.country) ?? inferProfileCountry(agent)
+
   // Shape matches what the register page expects: open-house fields with a
   // nested `profiles` object for the agent's branding. agent_id is
   // intentionally omitted.
   return {
     id: oh.id,
     property_address: oh.property_address,
+    country,
+    // Lets the form say "WhatsApp" instead of "SMS" for numbers that will be
+    // messaged that way (lib/messaging-channel.ts). Nothing secret: the
+    // sender/template SIDs stay server-side; only the on/off + country list.
+    whatsapp: {
+      enabled: whatsAppConfigured(),
+      countries: whatsAppConfigured() ? [...whatsAppFirstCountries()] : [],
+    },
     listing_price: oh.listing_price,
     bedrooms: oh.bedrooms,
     bathrooms: oh.bathrooms,

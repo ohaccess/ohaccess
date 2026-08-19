@@ -14,7 +14,7 @@ const RETENTION_MS = 3 * 365 * 24 * 60 * 60 * 1000
 // NB: must stay ONE string literal — Supabase infers the row type from it at
 // compile time, and a concatenated string degrades to an untyped result.
 const VISITOR_FIELDS =
-  'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, source, notes, sms_opted_out, ip_address, user_agent, phone_carrier, phone_line_type, registered_at, sponsor_id, sponsor_name, disclosures_sent, lang, custom_answers, email_message_id, email_status, sms_message_sid, sms_status, delivery_updated_at, feedback_rating, feedback_price, feedback_submitted_at, thank_you_sent_at, legal_hold'
+  'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, source, notes, sms_opted_out, ip_address, user_agent, phone_carrier, phone_line_type, registered_at, sponsor_id, sponsor_name, disclosures_sent, lang, custom_answers, email_message_id, email_status, sms_message_sid, sms_status, codeword_channel, delivery_updated_at, feedback_rating, feedback_price, feedback_submitted_at, thank_you_sent_at, legal_hold'
 
 type ArchivableVisitor = {
   id: string
@@ -44,6 +44,7 @@ type ArchivableVisitor = {
   email_status: string | null
   sms_message_sid: string | null
   sms_status: string | null
+  codeword_channel: string | null
   delivery_updated_at: string | null
   // Post-visit record.
   feedback_rating: number | null
@@ -86,6 +87,7 @@ function toArchiveRow(v: ArchivableVisitor, propertyAddress: string | null, fall
     email_status: v.email_status,
     sms_message_sid: v.sms_message_sid,
     sms_status: v.sms_status,
+    codeword_channel: v.codeword_channel ?? null,
     delivery_updated_at: v.delivery_updated_at,
     feedback_rating: v.feedback_rating,
     feedback_price: v.feedback_price,

@@ -12,6 +12,9 @@ const deliveryFailed = (status: string | null | undefined): boolean =>
   status === 'bounced' || status === 'complained' || status === 'undelivered' || status === 'failed'
 const failBadge = { marginLeft: '8px', background: '#fff0f0', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 const optedOutBadge = { marginLeft: '8px', background: '#f2f2f7', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+// Codeword went by WhatsApp (lib/messaging-channel.ts) — the visitor will
+// show a WhatsApp message at the door, not a text.
+const whatsAppBadge = { marginLeft: '8px', background: '#e9f9ee', color: '#1a7f37', border: '1px solid #b7e4c4', borderRadius: '6px', padding: '1px 6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 // What kind of number this is (mobile / home phone / VoIP), same wording as the
 // dashboard visitor log. Mobile and home phone are neutral facts; only the
 // burner-app signal is amber.
@@ -126,7 +129,7 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
       </div>
 
       <div style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
-        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{visitor.sms_opted_out ? <span style={optedOutBadge} title="This number replied STOP — do not contact">🚫 opted out</span> : deliveryFailed(visitor.sms_status) ? <span style={failBadge} title="Text could not be delivered to this number">⚠ text undelivered</span> : null}<PhoneLineChip lineType={visitor.phone_line_type} /></div>
+        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{visitor.sms_opted_out ? <span style={optedOutBadge} title="This number replied STOP — do not contact">🚫 opted out</span> : deliveryFailed(visitor.sms_status) ? <span style={failBadge} title={visitor.codeword_channel === 'whatsapp' ? 'WhatsApp message could not be delivered to this number' : 'Text could not be delivered to this number'}>⚠ {visitor.codeword_channel === 'whatsapp' ? 'WhatsApp' : 'text'} undelivered</span> : visitor.codeword_channel === 'whatsapp' ? <span style={whatsAppBadge} title="Codeword was sent by WhatsApp, not SMS — ask to see the WhatsApp message">WhatsApp</span> : null}<PhoneLineChip lineType={visitor.phone_line_type} /></div>
         <div><div style={label}>Email</div><a href={`mailto:${visitor.email}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600, wordBreak: 'break-all' }}>{visitor.email || '—'}</a>{deliveryFailed(visitor.email_status) && <span style={failBadge} title="Email bounced — this address may be invalid">⚠ email bounced</span>}</div>
         {/* The language they signed in with — the one to greet and follow up
             in. Unknown/legacy rows fall back to English, same as the log. */}

@@ -2,8 +2,15 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import twilio from 'twilio'
 import { Resend } from 'resend'
 import { escapeHtml } from '@/lib/escape-html'
-import { normalizePhone } from '@/lib/phone'
+import { normalizePhone, phoneCountry } from '@/lib/phone'
 import { createShortUrl } from '@/lib/short-urls'
+import {
+  preferredCodewordChannel,
+  isWhatsAppFallbackError,
+  whatsAppConfigured,
+  whatsAppAddress,
+  type CodewordChannel,
+} from '@/lib/messaging-channel'
 import {
   buildSmsBody,
   isHttpUrl,
@@ -192,16 +199,27 @@ export async function sendVisitorCodewordMessages(params: {
     )
   }
 
-  // ① VISITOR SMS — keep under SMS_MAX_LENGTH where possible so Twilio
-  // bills 1 segment. The "Reply STOP to opt out" line stays in the base
-  // message even if it pushes us to 2 segments for very long addresses —
-  // TCPA opt-out signaling is more important than the marginal cost.
+  // ① VISITOR SMS (or WhatsApp) — keep under SMS_MAX_LENGTH where possible
+  // so Twilio bills 1 segment. The "Reply STOP to opt out" line stays in the
+  // base message even if it pushes us to 2 segments for very long addresses
+  // — TCPA opt-out signaling is more important than the marginal cost.
   //
   // Skipped for opted-out numbers (they get the email code instead).
   // Sending would just bounce with Twilio error 21610.
+  //
+  // Channel (lib/messaging-channel.ts): numbers in countries our SMS routes
+  // don't serve go out over WhatsApp instead, as an approved template
+  // (business-initiated WhatsApp messages must be templates); anyone else's
+  // SMS that Twilio rejects with a routing error ("can't reach that region
+  // from here") is retried over WhatsApp before we give up. WhatsApp is only
+  // ever tried when the sender + template are configured — otherwise this
+  // is exactly the SMS-only behaviour it always was.
   let visitorSms: Awaited<ReturnType<typeof twilioClient.messages.create>> | null = null
   let smsSendFailed = false
+  let channelUsed: CodewordChannel | null = null
   if (channels.sms && phone && !phoneOptedOut) {
+    const to = normalizePhone(phone) || phone
+    const statusCallback = twilioStatusCallbackUrl(APP_URL)
     const smsBody = buildSmsBody(
       // "at" before the address (not "for") so iPhone data detectors link it
       // to Apple Maps — street-only addresses need that context cue.
@@ -212,21 +230,54 @@ export async function sendVisitorCodewordMessages(params: {
         ...(listingShortUrl ? [{ label: '', url: listingShortUrl }] : []),
       ]
     )
-    try {
-      visitorSms = await twilioClient.messages.create({
+    const sendSms = () =>
+      twilioClient.messages.create({
         body: smsBody,
         ...twilioSender(),
-        to: normalizePhone(phone) || phone,
+        to,
         // Twilio posts delivery updates (delivered/undelivered/failed) here so we
         // can flag bad numbers on the agent dashboard.
-        statusCallback: twilioStatusCallbackUrl(APP_URL),
+        statusCallback,
       })
+    // The template carries the same two facts as the SMS — {{1}} address,
+    // {{2}} codeword — in WhatsApp-approved wording (docs/international-setup.md
+    // has the exact template text). No listing link: template bodies are
+    // fixed at approval time.
+    const sendWhatsApp = () =>
+      twilioClient.messages.create({
+        from: whatsAppAddress(process.env.TWILIO_WHATSAPP_FROM!),
+        to: whatsAppAddress(to),
+        contentSid: process.env.TWILIO_WHATSAPP_CODEWORD_CONTENT_SID!,
+        contentVariables: JSON.stringify({ 1: smsAddress, 2: smsCodeWord }),
+        statusCallback,
+      })
+
+    const preferred = preferredCodewordChannel(phoneCountry(phone))
+    try {
+      if (preferred === 'whatsapp') {
+        visitorSms = await sendWhatsApp()
+        channelUsed = 'whatsapp'
+      } else {
+        try {
+          visitorSms = await sendSms()
+          channelUsed = 'sms'
+        } catch (err) {
+          if (whatsAppConfigured() && isWhatsAppFallbackError(err)) {
+            console.warn('Visitor SMS unroutable, retrying over WhatsApp:', (err as { code?: unknown })?.code)
+            visitorSms = await sendWhatsApp()
+            channelUsed = 'whatsapp'
+          } else {
+            throw err
+          }
+        }
+      }
     } catch (err) {
       // Twilio rejected the number outright (invalid / unreachable). Don't fail
       // the caller — the visitor still gets their email code — but record it so
       // the agent dashboard flags the bad number right away.
       smsSendFailed = true
-      console.error('Visitor SMS send failed:', err)
+      channelUsed = preferred
+      console.error('Visitor codeword message send failed:', err)
     }
   }
 
@@ -410,6 +461,12 @@ export async function sendVisitorCodewordMessages(params: {
   if (channels.email) update.email_message_id = emailMessageId
   if (channels.sms) {
     update.sms_message_sid = visitorSms?.sid ?? null
+    // Which channel carried (or was meant to carry) the codeword — the
+    // dashboard labels WhatsApp deliveries so the agent knows what to ask
+    // the visitor to show. Null (= SMS) for plain SMS sends, so an SMS-only
+    // deployment never touches the column and doesn't depend on migration
+    // 048 having run.
+    if (channelUsed === 'whatsapp') update.codeword_channel = channelUsed
     // A send-time rejection won't get a delivery callback, so flag it now.
     if (smsSendFailed) {
       update.sms_status = 'failed'

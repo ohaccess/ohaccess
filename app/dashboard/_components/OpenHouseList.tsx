@@ -173,6 +173,8 @@ const deliveryFlag = (status: string | null | undefined): boolean =>
   status === 'bounced' || status === 'complained' || status === 'undelivered' || status === 'failed'
 const deliveryBadgeStyle = { marginLeft: '6px', background: '#fff0f0', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 const optedOutBadgeStyle = { marginLeft: '6px', background: '#f2f2f7', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+// Codeword went by WhatsApp (lib/messaging-channel.ts) rather than SMS.
+const whatsAppBadgeStyle = { marginLeft: '6px', background: '#e9f9ee', color: '#1a7f37', border: '1px solid #b7e4c4', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 // Agreement chips — only shown when the open house requires a signed
 // agreement (migration 043). "Not signed" is a door-side prompt for the
 // host, deliberately amber (a nudge), never red (an accusation).
@@ -506,7 +508,7 @@ export default function OpenHouseList({
                           ? <span title="Signed the required agreement — copies were emailed to you both" style={signedBadgeStyle}>✍ Signed</span>
                           : <span title="Hasn't signed the required agreement — ask before letting them tour" style={unsignedBadgeStyle}>✍ Not signed</span>)}
                       </td>
-                      <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}{v.sms_opted_out ? <span title="This number replied STOP — do not contact" style={optedOutBadgeStyle}>🚫 Opted out</span> : deliveryFlag(v.sms_status) ? <span title="Text could not be delivered to this number" style={deliveryBadgeStyle}>⚠ undelivered</span> : null}<PhoneLineChip lineType={v.phone_line_type} /></td>
+                      <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}{v.sms_opted_out ? <span title="This number replied STOP — do not contact" style={optedOutBadgeStyle}>🚫 Opted out</span> : deliveryFlag(v.sms_status) ? <span title={v.codeword_channel === 'whatsapp' ? 'WhatsApp message could not be delivered to this number' : 'Text could not be delivered to this number'} style={deliveryBadgeStyle}>⚠ undelivered</span> : v.codeword_channel === 'whatsapp' ? <span title="Codeword was sent by WhatsApp, not SMS" style={whatsAppBadgeStyle}>WhatsApp</span> : null}<PhoneLineChip lineType={v.phone_line_type} /></td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.email}{deliveryFlag(v.email_status) && <span title="Email bounced — this address may be invalid" style={deliveryBadgeStyle}>⚠ bounced</span>}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{new Date(v.registered_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>

@@ -2,6 +2,7 @@
 import type { CSSProperties } from 'react'
 import { SMS_CODE_WORD_MAX_LENGTH, sanitizeSmsCodeWord } from '@/lib/register-helpers'
 import { MAX_OPEN_HOUSE_AGREEMENT_DOCS, type AgreementTemplate } from '@/lib/agreements'
+import type { RegionConfig } from '@/lib/regions'
 
 // The New / Edit Open House form: property details (with Google address
 // autocomplete + a date-picker calendar) and the two access code words.
@@ -26,6 +27,7 @@ export default function NewOpenHouseForm({
   setShowSuggestions,
   getAddressSuggestions,
   selectAddress,
+  addressRegion,
   generateSmsWord,
   generateEmailWord,
   createOpenHouse,
@@ -53,6 +55,10 @@ export default function NewOpenHouseForm({
   setShowSuggestions: (v: boolean) => void
   getAddressSuggestions: (input: string) => void
   selectAddress: (placeId: string) => void
+  // Labels/required-ness for the property's country (state vs province vs
+  // county, ZIP vs postcode). Defaults to the agent's country until an
+  // address is picked.
+  addressRegion: RegionConfig
   generateSmsWord: () => string
   generateEmailWord: () => string
   createOpenHouse: () => void
@@ -131,11 +137,11 @@ export default function NewOpenHouseForm({
             <input style={inputStyle} type="text" placeholder="Auto-filled" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} />
           </div>
           <div>
-            <label style={labelStyle}>State / Province <span style={{ color: '#ff3b30' }}>*</span></label>
+            <label style={labelStyle}>{addressRegion.address.regionLabel}{addressRegion.address.regionRequired && <> <span style={{ color: '#ff3b30' }}>*</span></>}</label>
             <input style={inputStyle} type="text" placeholder="Auto-filled" value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} />
           </div>
           <div>
-            <label style={labelStyle}>Zip / Postal Code</label>
+            <label style={labelStyle}>{addressRegion.address.postalLabel}</label>
             <input style={inputStyle} type="text" placeholder="Auto-filled" value={form.zip_code} onChange={e => setForm({ ...form, zip_code: e.target.value })} />
           </div>
           <div>

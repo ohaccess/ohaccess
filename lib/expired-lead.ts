@@ -3,6 +3,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { isEmail } from '@/lib/register-helpers'
 import { escapeHtml } from '@/lib/escape-html'
+import { inferProfileCountry } from '@/lib/regions'
 
 // Expired-link referral loop: when a visitor scans the QR for an open house
 // that no longer exists, the register page falls back to a lead-capture card.
@@ -23,6 +24,8 @@ export type ExpiredAgentContact = {
   email: string
   phone: string | null
   propertyAddress: string | null
+  // ISO country of the agent — the lead form's default phone dial code.
+  country: string
 }
 
 type StandingFields = {
@@ -70,11 +73,12 @@ export async function resolveExpiredAgent(
     .maybeSingle()
   if (!archived?.agent_id) return null
 
+  // select('*'): `country` (migration 048) may not exist yet on a database
+  // the code reached first — naming it would fail the whole lookup and
+  // wrongly route the lead to ohACCESS instead of the agent.
   const { data: agent } = await supabase
     .from('profiles')
-    .select(
-      'id, full_name, email, display_email, phone, brokerage, tier, sponsor_id, billing_interval, stripe_subscription_id, current_period_end, bonus_visitors'
-    )
+    .select('*')
     .eq('id', archived.agent_id)
     .maybeSingle()
   if (!agent) return null
@@ -113,6 +117,7 @@ export async function resolveExpiredAgent(
     email,
     phone: agent.phone || null,
     propertyAddress: archived.property_address || null,
+    country: inferProfileCountry(agent),
   }
 }
 

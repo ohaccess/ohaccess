@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
-import { usPhoneError } from '@/lib/phone'
+import { phoneError } from '@/lib/phone'
 import { isEmail } from '@/lib/register-helpers'
 import { escapeHtml } from '@/lib/escape-html'
 import { resolveExpiredAgent, buildExpiredLeadEmail } from '@/lib/expired-lead'
@@ -34,7 +34,9 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
-    const phoneErr = usPhoneError(phone)
+    // "(512) 555-1234" for +1 numbers, E.164 for any other country — the
+    // form's country picker produces exactly those (lib/phone.ts).
+    const phoneErr = phoneError(phone)
     if (phoneErr) {
       return NextResponse.json({ error: phoneErr }, { status: 400 })
     }

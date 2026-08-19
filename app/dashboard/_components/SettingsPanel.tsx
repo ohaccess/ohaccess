@@ -5,11 +5,14 @@ import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { fillBorder } from '@/lib/colors'
 import { isLegacyTwoYear, isComped, isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { normalizeAgreementTemplates, MAX_AGREEMENT_TEMPLATES } from '@/lib/agreements'
+import { regionFor, countryOptions, flagFor } from '@/lib/regions'
+import { splitStoredPhone, storablePhone } from '@/lib/phone'
+import PhoneInput from '@/app/_components/PhoneInput'
 
 // The Settings view: subscription/billing, agent profile, branding & photos,
 // brand colors, CRM lead-intake, and the Zapier webhook. Presentational —
-// profile state, formatPhone, and saveSettings live in page.tsx and pass in
-// as props. SubscriptionSection (billing UI) lives here since only this view
+// profile state, the agent's country, and saveSettings live in page.tsx and
+// pass in as props. SubscriptionSection (billing UI) lives here since only this view
 // uses it.
 
 const BILLING_OPTIONS = [
@@ -599,7 +602,7 @@ export default function SettingsPanel({
   teamPaymentFailed,
   isTeamAdmin,
   sponsorCovered,
-  formatPhone,
+  agentCountry,
   saveSettings,
   primaryColor,
   onPrimary,
@@ -619,7 +622,8 @@ export default function SettingsPanel({
   teamPaymentFailed: boolean
   isTeamAdmin: boolean
   sponsorCovered: boolean
-  formatPhone: (value: string) => string
+  // ISO country the profile belongs to (saved, or inferred for legacy rows).
+  agentCountry: string
   saveSettings: () => void
   primaryColor: string
   onPrimary: string
@@ -642,6 +646,18 @@ export default function SettingsPanel({
   // still shows underneath the sponsor card.
   const ownPaidActive =
     ['pro', 'team', 'brokerage'].includes(profile?.tier || 'free') && !isExpiredPrepaidAccess(profile)
+
+  // Regional switches for the Agent Profile card — labels, which licence
+  // fields exist, the phone picker's default dial code. See lib/regions.ts.
+  const region = regionFor(agentCountry)
+  const countries = countryOptions()
+  // The phone picker's country while a number is being typed. profiles.phone
+  // holds the STORED string ("(512) 555-1234" for +1 countries, E.164 for the
+  // rest); a half-typed non-+1 number can't tell us its country yet, so the
+  // picker remembers the choice itself until the number is complete.
+  const [phonePickerCountry, setPhonePickerCountry] = useState<string | null>(null)
+  const phoneSplit = splitStoredPhone(profile?.phone, agentCountry)
+  const phoneValue = { country: phonePickerCountry ?? phoneSplit.country, national: phoneSplit.national }
 
   // Disclosure/notice rows live in `profile` like every other setting, so the
   // existing saveSettings picks them up. Rows are kept as typed (including
@@ -896,7 +912,28 @@ export default function SettingsPanel({
             <input style={inputStyle} type="text" placeholder="Sarah Connelly" value={profile?.full_name || ''} onChange={e => setProfile({ ...profile, full_name: e.target.value })} />
           </div>
           <div>
-            <label style={labelStyle}>Brokerage</label>
+            <label style={labelStyle}>Country</label>
+            <select
+              style={{ ...inputStyle, appearance: 'auto' as const, cursor: 'pointer' }}
+              value={agentCountry}
+              onChange={e => {
+                const next = e.target.value
+                // Keep the phone picker in step with the new country only if
+                // the agent hasn't already typed a number from somewhere else.
+                if (!profile?.phone) setPhonePickerCountry(null)
+                setProfile({ ...profile, country: next })
+              }}
+            >
+              {countries.map(c => (
+                <option key={c.code} value={c.code}>{flagFor(c.code)} {c.name}</option>
+              ))}
+            </select>
+            <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px', lineHeight: '1.4' }}>
+              Sets your phone&apos;s dial code, where the address search looks, and the licence fields below.
+            </div>
+          </div>
+          <div>
+            <label style={labelStyle}>{region.brokerageLabel}</label>
             {profile?.brokerage_id ? (
               <>
                 <input style={{ ...inputStyle, background: '#ececf0', color: '#8e8e93', cursor: 'not-allowed' }} type="text" placeholder="Managed by your team" value={profile?.brokerage || ''} disabled readOnly />
@@ -905,7 +942,7 @@ export default function SettingsPanel({
                 </div>
               </>
             ) : (
-              <input style={inputStyle} type="text" placeholder="Premier Realty Group" value={profile?.brokerage || ''} onChange={e => setProfile({ ...profile, brokerage: e.target.value })} />
+              <input style={inputStyle} type="text" placeholder={region.brokeragePlaceholder} value={profile?.brokerage || ''} onChange={e => setProfile({ ...profile, brokerage: e.target.value })} />
             )}
           </div>
           <div>
@@ -918,17 +955,55 @@ export default function SettingsPanel({
             </div>
           </div>
           <div>
-            <label style={labelStyle}>Phone</label>
-            <input style={inputStyle} type="tel" placeholder="(214) 555-0182" value={profile?.phone || ''} onChange={e => setProfile({ ...profile, phone: formatPhone(e.target.value) })} />
+            <label style={labelStyle}>Mobile Phone</label>
+            <PhoneInput
+              value={phoneValue}
+              inputStyle={inputStyle}
+              onChange={next => {
+                setPhonePickerCountry(next.country)
+                // Store the canonical form once the number is complete;
+                // until then keep the partial text so typing isn't fought.
+                setProfile({ ...profile, phone: next.national ? (storablePhone(next.national, next.country) ?? next.national) : '' })
+              }}
+            />
+            <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px', lineHeight: '1.4' }}>
+              New-visitor alerts are texted here.
+            </div>
           </div>
-          <div>
-            <label style={labelStyle}>License Number</label>
-            <input style={inputStyle} type="text" placeholder="TX-123456" value={profile?.license_number || ''} onChange={e => setProfile({ ...profile, license_number: e.target.value })} />
-          </div>
-          <div>
-            <label style={labelStyle}>State</label>
-            <input style={inputStyle} type="text" placeholder="TX" value={profile?.state || ''} onChange={e => setProfile({ ...profile, state: e.target.value })} />
-          </div>
+          {region.licence && (
+            <div>
+              <label style={labelStyle}>
+                {region.licence.numberLabel}
+                {region.licence.optional && <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: '400' }}> (optional)</span>}
+              </label>
+              <input style={inputStyle} type="text" placeholder={region.licence.numberPlaceholder} value={profile?.license_number || ''} onChange={e => setProfile({ ...profile, license_number: e.target.value })} />
+            </div>
+          )}
+          {region.licence?.regionLabel && (
+            <div>
+              <label style={labelStyle}>{region.licence.regionLabel}</label>
+              {region.licence.regions ? (
+                <select
+                  style={{ ...inputStyle, appearance: 'auto' as const, cursor: 'pointer' }}
+                  value={(profile?.state || '').toUpperCase()}
+                  onChange={e => setProfile({ ...profile, state: e.target.value })}
+                >
+                  <option value="">Select…</option>
+                  {/* A legacy value the list doesn't know (free text from
+                      before the dropdown) stays selectable so it isn't
+                      silently dropped on the next save. */}
+                  {profile?.state && !region.licence.regions.some(r => r.code === (profile.state || '').toUpperCase()) && (
+                    <option value={(profile.state || '').toUpperCase()}>{profile.state}</option>
+                  )}
+                  {region.licence.regions.map(r => (
+                    <option key={r.code} value={r.code}>{r.name} ({r.code})</option>
+                  ))}
+                </select>
+              ) : (
+                <input style={inputStyle} type="text" placeholder={region.licence.regionLabel} value={profile?.state || ''} onChange={e => setProfile({ ...profile, state: e.target.value })} />
+              )}
+            </div>
+          )}
           <div>
             <label style={labelStyle}>Agent Landing Page URL</label>
             <input style={inputStyle} type="url" placeholder="https://yourwebsite.com/bio" value={profile?.landing_page_url || ''} onChange={e => setProfile({ ...profile, landing_page_url: e.target.value })} />

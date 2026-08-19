@@ -1,7 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
-import { usPhoneError } from '@/lib/phone'
+import { phoneError, storablePhone, splitStoredPhone, normalizePhone } from '@/lib/phone'
+import { regionFor } from '@/lib/regions'
+import PhoneInput, { type PhoneValue } from '@/app/_components/PhoneInput'
 import { STRINGS, LANGS, TIMELINE_VALUES, FEEDBACK_PRICE_VALUES, detectLang, saveLang, type Lang } from '@/lib/register-i18n'
 import type { OpenHouseDisplay } from '@/lib/open-house-display'
 import type { ExpiredAgentContact } from '@/lib/expired-lead'
@@ -64,31 +66,44 @@ export default function RegisterClient({ id, initialOpenHouse, returningVisitor,
   // Whether the form is showing remembered details (drives the "welcome
   // back" banner). "Not you?" clears the fields AND the device cookie.
   const [prefilled, setPrefilled] = useState(!!returningVisitor)
+  // The property's country decides the phone picker's default dial code and
+  // whether the US-only NAR notice shows. Rows from before migration 048
+  // resolve to US/Canada server-side.
+  const propertyCountry: string = initialOpenHouse?.country ?? 'US'
+  const propertyRegion = regionFor(propertyCountry)
   const [form, setForm] = useState({
     firstName: returningVisitor?.firstName ?? '',
     lastName: returningVisitor?.lastName ?? '',
     email: returningVisitor?.email ?? '',
+    // What gets SUBMITTED: "(512) 555-1234" for +1 numbers (the shape every
+    // existing row holds), E.164 for everything else — see lib/phone.ts.
     phone: returningVisitor?.phone ?? ''
   }
 )
+  // What the visitor SEES in the phone field: picker country + national text.
+  const [phoneInput, setPhoneInput] = useState<PhoneValue>(() =>
+    splitStoredPhone(returningVisitor?.phone, propertyCountry)
+  )
   const clearPrefill = () => {
     setForm({ firstName: '', lastName: '', email: '', phone: '' })
+    setPhoneInput({ country: propertyCountry, national: '' })
     document.cookie = `${VISITOR_COOKIE}=; Max-Age=0; path=${VISITOR_COOKIE_PATH}`
     setPrefilled(false)
   }
+  // Whether this number's codeword will arrive by WhatsApp rather than SMS
+  // (countries our SMS routes don't serve — the server decides for real in
+  // lib/messaging-channel.ts; this just picks the matching copy).
+  const viaWhatsApp =
+    !!initialOpenHouse?.whatsapp?.enabled &&
+    (initialOpenHouse.whatsapp.countries as string[]).includes(phoneInput.country)
 function ExpiredOpenHouse() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', zip: '' })
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [errors, setErrors] = useState<any>({})
-
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, '').substring(0, 10)
-    if (digits.length === 0) return ''
-    if (digits.length <= 3) return `(${digits}`
-    if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`
-    return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
-  }
+  // The listing is gone, so the best default dial code is the host agent's
+  // country (US when the lead is going to ohACCESS instead).
+  const [phoneInput, setPhoneInput] = useState<PhoneValue>({ country: expiredAgent?.country ?? 'US', national: '' })
 
   // The hosting agent, when they're still on trial or paying (server-decided).
   // With an agent the lead goes to them via /api/expired-lead; without one it
@@ -100,7 +115,7 @@ function ExpiredOpenHouse() {
     const newErrors: any = {}
     if (!form.name.trim()) newErrors.name = 'Please enter your name'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email)) newErrors.email = 'Please enter a valid email'
-    const phoneErr = usPhoneError(form.phone)
+    const phoneErr = phoneError(form.phone, phoneInput.country)
     if (phoneErr) newErrors.phone = phoneErr
     if (!form.zip.trim()) newErrors.zip = 'Please enter your zip / postal code'
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return }
@@ -197,7 +212,7 @@ function ExpiredOpenHouse() {
             )}
             <div style={{ fontSize: '14px', marginTop: '8px' }}>
               {agent.phone && (
-                <a href={`tel:${agent.phone.replace(/\D/g, '')}`} style={{ color: '#0071e3', textDecoration: 'none', display: 'block', marginBottom: '4px' }}>📞 {agent.phone}</a>
+                <a href={`tel:${normalizePhone(agent.phone) ?? agent.phone.replace(/[^\d+]/g, '')}`} style={{ color: '#0071e3', textDecoration: 'none', display: 'block', marginBottom: '4px' }}>📞 {agent.phone}</a>
               )}
               <a href={`mailto:${agent.email}`} style={{ color: '#0071e3', textDecoration: 'none', display: 'block' }}>✉️ {agent.email}</a>
             </div>
@@ -231,13 +246,16 @@ function ExpiredOpenHouse() {
             </div>
 
             <div>
-              <label style={labelStyle}>Phone Number <span style={{ color: '#ff3b30' }}>*</span></label>
-              <input
-                style={{ ...inputStyle, border: errors.phone ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
-                type="tel"
-                placeholder="(000) 000-0000"
-                value={form.phone}
-                onChange={e => { setForm({ ...form, phone: formatPhone(e.target.value) }); setErrors({ ...errors, phone: null }) }}
+              <label style={labelStyle}>Mobile Number <span style={{ color: '#ff3b30' }}>*</span></label>
+              <PhoneInput
+                value={phoneInput}
+                inputStyle={inputStyle}
+                error={!!errors.phone}
+                onChange={next => {
+                  setPhoneInput(next)
+                  setForm({ ...form, phone: next.national ? (storablePhone(next.national, next.country) ?? next.national) : '' })
+                  setErrors({ ...errors, phone: null })
+                }}
               />
               {errors.phone && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.phone}</div>}
             </div>
@@ -250,7 +268,7 @@ function ExpiredOpenHouse() {
                 placeholder="75201"
                 value={form.zip}
                 onChange={e => { setForm({ ...form, zip: e.target.value }); setErrors({ ...errors, zip: null }) }}
-                maxLength={7}
+                maxLength={12}
               />
               {errors.zip && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.zip}</div>}
             </div>
@@ -304,22 +322,15 @@ function ExpiredOpenHouse() {
 
   useEffect(() => { setLang(detectLang(returningVisitor?.lang)) }, [])
 
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, '').substring(0, 10)
-    if (digits.length === 0) return ''
-    if (digits.length <= 3) return `(${digits}`
-    if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`
-    return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
-  }
-
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)
   }
 
-  // usPhoneError's specific messages ("area code can't start with...") only
+  // phoneError's specific messages ("area code can't start with...") only
   // exist in English; other languages get the generic translated message.
-  const phoneErrMsg = (value: string) => {
-    const err = usPhoneError(value)
+  // The number is read in the picker's country when it has no "+".
+  const phoneErrMsg = (value: string, country: string = phoneInput.country) => {
+    const err = phoneError(value, country)
     if (!err) return null
     return lang === 'en' ? err : t.errPhone
   }
@@ -683,20 +694,22 @@ function ExpiredOpenHouse() {
             />
             {errors.email && <div style={{ fontSize: '11px', color: '#ff3b30', marginTop: '4px' }}>{errors.email}</div>}
 
-            {/* Phone */}
+            {/* Phone — country picker + national number. Defaults to the
+                property's country; stored/submitted as "(512) 555-1234" for
+                +1 numbers and E.164 for every other country. */}
             <label style={labelStyle}>{t.phone} <span style={{ color: '#ff3b30' }}>*</span></label>
-            <input
-              style={{ ...inputStyle, border: errors.phone ? '1px solid #ff3b30' : '1px solid #d1d1d6' }}
-              type="tel"
-              placeholder="(000) 000-0000"
-              value={form.phone}
-              onChange={e => {
-                const next = formatPhone(e.target.value)
-                setForm({ ...form, phone: next })
+            <PhoneInput
+              value={phoneInput}
+              inputStyle={inputStyle}
+              error={!!errors.phone}
+              onChange={next => {
+                setPhoneInput(next)
+                const stored = next.national ? (storablePhone(next.national, next.country) ?? next.national) : ''
+                setForm({ ...form, phone: stored })
                 // Flag a bad number the moment a full one is entered; stay quiet
                 // while they're still typing.
-                const complete = next.replace(/\D/g, '').length >= 10
-                setErrors({ ...errors, phone: complete ? phoneErrMsg(next) : null })
+                const complete = next.national.replace(/\D/g, '').length >= 10 || stored.startsWith('+')
+                setErrors({ ...errors, phone: complete ? phoneErrMsg(stored, next.country) : null })
               }}
               onBlur={() => {
                 if (form.phone) setErrors({ ...errors, phone: phoneErrMsg(form.phone) })
@@ -783,9 +796,9 @@ function ExpiredOpenHouse() {
 
             {/* TOS */}
             <div style={{ marginTop: '14px', padding: '13px 15px', background: '#f5f5f7', borderRadius: '10px', fontSize: '12px', color: '#48484a', lineHeight: '1.6', textAlign: 'left', border: '1px solid #e5e5ea' }}>
-              {t.consentSms.split('{button}')[0]}
+              {(viaWhatsApp ? t.consentWhatsApp : t.consentSms).split('{button}')[0]}
               <strong style={{ color: '#1d1d1f' }}>{t.requestBtnName}</strong>
-              {t.consentSms.split('{button}')[1]}<br /><br />
+              {(viaWhatsApp ? t.consentWhatsApp : t.consentSms).split('{button}')[1]}<br /><br />
               {t.agreePrefix}
               <a href="/terms" style={{ color: '#1d1d1f', fontWeight: '700', textDecoration: 'underline' }}>
                 {t.termsLink}
@@ -805,10 +818,14 @@ function ExpiredOpenHouse() {
             </div>
 
             {/* Alternative to acceptance — preserves the validity of consent
-                by giving the visitor an obvious, named alternative path. */}
-            <div style={{ marginTop: '10px', padding: '13px 15px', background: '#fdfaf3', borderRadius: '10px', fontSize: '12px', color: '#48484a', lineHeight: '1.6', textAlign: 'left', border: '1px solid #ead9ad' }}>
-              <strong style={{ color: '#1d1d1f' }}>{t.narTitle}</strong> {t.narBody}
-            </div>
+                by giving the visitor an obvious, named alternative path. The
+                NAR written-buyer-agreement rule is a US one, so the notice
+                only appears on US properties (lib/regions.ts). */}
+            {propertyRegion.showNarNotice && (
+              <div style={{ marginTop: '10px', padding: '13px 15px', background: '#fdfaf3', borderRadius: '10px', fontSize: '12px', color: '#48484a', lineHeight: '1.6', textAlign: 'left', border: '1px solid #ead9ad' }}>
+                <strong style={{ color: '#1d1d1f' }}>{t.narTitle}</strong> {t.narBody}
+              </div>
+            )}
           </>
         ) : agreementDocs.length > 0 && !agreementSigned ? (
           /* Touring-agreement screen — the host requires signed document(s)
@@ -912,14 +929,14 @@ function ExpiredOpenHouse() {
               {t.thankYou}
             </div>
             <div style={{ fontSize: '14px', color: '#6e6e73', background: '#f5f5f7', borderRadius: '12px', padding: '12px 16px', marginBottom: '12px', lineHeight: '1.5' }}>
-{t.sentBody1} <br/><br/>{t.sentBody2}
+{viaWhatsApp ? t.sentBody1WhatsApp : t.sentBody1} <br/><br/>{t.sentBody2}
             </div>
             <div style={{ fontSize: '15px', color: '#6e6e73', marginBottom: '10px' }}>
               <strong>{openHouse.property_address}</strong><br />
               <strong>{openHouse.open_house_date} · {openHouse.open_house_hours}</strong>
             </div>
             <div style={{ fontSize: '12px', color: accentText, fontWeight: '600' }}>
-                {t.checkPhone}
+                {viaWhatsApp ? t.checkWhatsApp : t.checkPhone}
               </div>
               <div style={{ fontSize: '12px', color: accentText, fontWeight: '600', marginTop: '4px' }}>
                 {t.checkEmail}

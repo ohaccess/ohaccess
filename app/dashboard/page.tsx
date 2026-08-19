@@ -14,6 +14,8 @@ import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { normalizeCustomAnswers } from '@/lib/custom-questions'
 import { sanitizeSmsCodeWord } from '@/lib/register-helpers'
 import { normalizeAgreementTemplates } from '@/lib/agreements'
+import { regionFor, inferProfileCountry, normalizeCountry, countryFromLocale, countryName } from '@/lib/regions'
+import { phoneError } from '@/lib/phone'
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
@@ -44,6 +46,9 @@ export default function Dashboard() {
     city: '',
     state: '',
     zip_code: '',
+    // ISO code of the property's country, from the address lookup (falls
+    // back to the agent's country at save time).
+    country: '',
     listing_price: '',
     bedrooms: '',
     bathrooms: '',
@@ -313,16 +318,48 @@ export default function Dashboard() {
   const generateSmsWord = () => SMS_WORDS[Math.floor(Math.random() * SMS_WORDS.length)]
   const generateEmailWord = () => EMAIL_WORDS[Math.floor(Math.random() * EMAIL_WORDS.length)]
 
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, '').substring(0, 10)
-    if (digits.length === 0) return ''
-    if (digits.length <= 3) return `(${digits}`
-    if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`
-    return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
-  }
+  // The agent's country (ISO code) drives the regional switches — labels,
+  // licence fields, phone dial code, where the address search looks. Saved
+  // on profiles.country once the agent saves Settings; until then, inferred.
+  const agentCountry = inferProfileCountry(profile)
+  const agentRegion = regionFor(agentCountry)
+  // Whether migration 048 (profiles.country / open_houses.country) has run
+  // on this database. The profile row comes back from select('*'), so the key
+  // is simply absent until it has — and writing an unknown column would fail
+  // the whole save. Until then the country is inferred, never persisted, and
+  // everything else works; run the SQL and it starts saving.
+  const countryColumnReady = !!profile && Object.prototype.hasOwnProperty.call(profile, 'country')
+
+  // First visit after the international rollout (profiles.country still
+  // null): pick a sensible default so Settings opens with the right country
+  // already selected. An account that has a licence state or phone on file is
+  // a legacy US/Canada agent — infer from those. A brand-new, empty profile
+  // takes the browser's location (Vercel's IP header via /api/geo), then the
+  // browser locale ("en-AU"), then US. Never overwrites a saved choice.
+  useEffect(() => {
+    if (!profile?.id || profile.country) return
+    let cancelled = false
+    const pick = async () => {
+      let country: string | null = null
+      const hasLegacyData = !!(profile.state || profile.phone)
+      if (hasLegacyData) {
+        country = inferProfileCountry(profile)
+      } else {
+        try {
+          const res = await fetch('/api/geo')
+          if (res.ok) country = normalizeCountry((await res.json())?.country)
+        } catch {}
+        if (!country) country = countryFromLocale(typeof navigator !== 'undefined' ? navigator.language : null)
+        if (!country) country = 'US'
+      }
+      if (!cancelled) setProfile((p: any) => (p && !p.country ? { ...p, country } : p))
+    }
+    pick()
+    return () => { cancelled = true }
+  }, [profile?.id, profile?.country])
 
   const resetForm = () => setForm({
-    street_address: '', address_2: '', city: '', state: '', zip_code: '',
+    street_address: '', address_2: '', city: '', state: '', zip_code: '', country: '',
     listing_price: '', bedrooms: '', bathrooms: '',
     square_footage: '', open_house_date: '', open_house_date_iso: '',
     open_house_start_time: '', open_house_end_time: '',
@@ -445,7 +482,9 @@ export default function Dashboard() {
   const getAddressSuggestions = async (value: string) => {
     if (value.length < 3) { setShowSuggestions(false); return }
     try {
-      const res = await fetch(`/api/places?input=${encodeURIComponent(value)}`, {
+      // The search looks in the agent's own country (US/Canadian agents get
+      // both) — see countryFilter in /api/places.
+      const res = await fetch(`/api/places?input=${encodeURIComponent(value)}&country=${encodeURIComponent(agentCountry)}`, {
         headers: await authHeaders()
       })
       const data = await res.json()
@@ -473,6 +512,7 @@ export default function Dashboard() {
           city: data.city,
           state: data.state,
           zip_code: data.zip,
+          country: data.country || prev.country || agentCountry,
           property_timezone: data.timezone || ''
         }))
       }
@@ -496,10 +536,43 @@ export default function Dashboard() {
     })
   }
 
+  // The property's country: what the address lookup said, else the agent's.
+  const propertyCountry = () => normalizeCountry(form.country) ?? agentCountry
+  const propertyRegion = () => regionFor(propertyCountry())
+
+  // The one-line address stored on the open house and shown everywhere.
+  // US/Canada keep the exact "street, city, ST zip" shape they've always had.
+  // Elsewhere the state/region is optional and the country name is appended,
+  // so maps links and the geocoder can't land on a same-named street abroad.
+  const buildPropertyAddress = () => {
+    const street = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}`
+    const region = propertyRegion()
+    if (!region.address.includeCountryInAddress) {
+      return `${street}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
+    }
+    const regionPart = [form.state, form.zip_code].filter(Boolean).join(' ')
+    return [street, form.city, regionPart, countryName(region.country)].filter(Boolean).join(', ')
+  }
+
+  // Required fields for a listing: address, city, both codewords — plus the
+  // state/province where the property's country has them (US, Canada,
+  // Australia…). Returns the toast message, or null when everything's there.
+  const missingListingFields = (): string | null => {
+    const region = propertyRegion()
+    const needState = region.address.regionRequired
+    if (!form.street_address || !form.city || (needState && !form.state) || !form.code_word || !form.code_word_email) {
+      return needState
+        ? `Please fill in the address, city, ${region.address.regionLabel.toLowerCase()}, and both codewords (text + email).`
+        : 'Please fill in the address, city, and both codewords (text + email).'
+    }
+    return null
+  }
+
   const createOpenHouse = async () => {
     if (guardLocked()) return
-    if (!form.street_address || !form.city || !form.state || !form.code_word || !form.code_word_email) {
-      showToast('Please fill in the address, city, state, and both codewords (text + email).')
+    const missing = missingListingFields()
+    if (missing) {
+      showToast(missing)
       return
     }
     // Re-clean the text code on save, not just on keystroke — a paste, an
@@ -529,7 +602,7 @@ export default function Dashboard() {
     }
     overlapAcknowledged.current = false
     const hoursText = `${fmtTime12(form.open_house_start_time)} – ${fmtTime12(form.open_house_end_time)}`
-    const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
+    const fullAddress = buildPropertyAddress()
     const { data, error } = await supabase.from('open_houses').insert({
       agent_id: user.id,
       property_address: fullAddress,
@@ -538,6 +611,7 @@ export default function Dashboard() {
       city: form.city,
       state: form.state,
       zip_code: form.zip_code,
+      ...(countryColumnReady ? { country: propertyCountry() } : {}),
       listing_price: form.listing_price,
       bedrooms: form.bedrooms,
       bathrooms: form.bathrooms,
@@ -587,6 +661,7 @@ export default function Dashboard() {
       city: oh.city || '',
       state: oh.state || '',
       zip_code: oh.zip_code || '',
+      country: oh.country || '',
       listing_price: oh.listing_price || '',
       bedrooms: oh.bedrooms || '',
       bathrooms: oh.bathrooms || '',
@@ -624,6 +699,7 @@ export default function Dashboard() {
       city: oh.city || '',
       state: oh.state || '',
       zip_code: oh.zip_code || '',
+      country: oh.country || '',
       listing_price: oh.listing_price || '',
       bedrooms: oh.bedrooms || '',
       bathrooms: oh.bathrooms || '',
@@ -647,8 +723,9 @@ export default function Dashboard() {
 
   const updateOpenHouse = async () => {
     if (guardLocked()) return
-    if (!form.street_address || !form.city || !form.state || !form.code_word || !form.code_word_email) {
-      showToast('Please fill in the address, city, state, and both codewords (text + email).')
+    const missing = missingListingFields()
+    if (missing) {
+      showToast(missing)
       return
     }
     const smsCode = sanitizeSmsCodeWord(form.code_word)
@@ -674,7 +751,7 @@ export default function Dashboard() {
     }
     overlapAcknowledged.current = false
     const hoursText = `${fmtTime12(form.open_house_start_time)} – ${fmtTime12(form.open_house_end_time)}`
-    const fullAddress = `${form.street_address}${form.address_2 ? ' ' + form.address_2 : ''}, ${form.city}, ${form.state}${form.zip_code ? ' ' + form.zip_code : ''}`
+    const fullAddress = buildPropertyAddress()
     // Only clear report_sent_at when the SCHEDULE actually changed — a reschedule
     // should re-trigger the post-event report, but editing any other field must
     // not re-send a report that already went out. Compare by instant (DB and
@@ -690,6 +767,7 @@ export default function Dashboard() {
       city: form.city,
       state: form.state,
       zip_code: form.zip_code,
+      ...(countryColumnReady ? { country: propertyCountry() } : {}),
       listing_price: form.listing_price,
       bedrooms: form.bedrooms,
       bathrooms: form.bathrooms,
@@ -787,6 +865,19 @@ export default function Dashboard() {
       showToast('CRM lead email must be a valid email address', 'error')
       return
     }
+    // The agent's phone is where new-visitor alerts are texted, so it has to
+    // be a real, complete number for the agent's country (US/Canadian
+    // numbers get the same NANP rules the visitor form applies; any other
+    // country is checked against its own numbering plan). Blank is fine —
+    // alerts simply aren't texted.
+    const agentPhone = (profile?.phone || '').trim()
+    if (agentPhone) {
+      const err = phoneError(agentPhone, agentCountry)
+      if (err) {
+        showToast(`Phone: ${err}`, 'error')
+        return
+      }
+    }
     // Disclosure links: drop rows the agent left entirely blank, then require
     // both halves of anything they did start. Rejecting (rather than silently
     // dropping) a half-filled row makes a typo visible instead of quietly
@@ -844,10 +935,14 @@ export default function Dashboard() {
     const { error } = await supabase.from('profiles').update({
       full_name: profile?.full_name,
       brokerage: profile?.brokerage,
-      phone: profile?.phone,
+      phone: agentPhone || null,
       display_email: profile?.display_email,
-      license_number: profile?.license_number,
-      state: profile?.state,
+      // Licence fields only mean something where the agent's country
+      // licenses agents (see lib/regions.ts); elsewhere they're hidden in
+      // Settings and cleared here so stale values can't leak into emails.
+      license_number: agentRegion.licence ? profile?.license_number : null,
+      state: agentRegion.licence?.regionLabel ? profile?.state : null,
+      ...(countryColumnReady ? { country: agentCountry } : {}),
       headshot_url: profile?.headshot_url,
       logo_url: profile?.logo_url,
       primary_color: profile?.primary_color,
@@ -1045,6 +1140,7 @@ export default function Dashboard() {
             setShowSuggestions={setShowSuggestions}
             getAddressSuggestions={getAddressSuggestions}
             selectAddress={selectAddress}
+            addressRegion={propertyRegion()}
             generateSmsWord={generateSmsWord}
             generateEmailWord={generateEmailWord}
             createOpenHouse={createOpenHouse}
@@ -1073,7 +1169,7 @@ export default function Dashboard() {
             teamPaymentFailed={teamPaymentFailed}
             isTeamAdmin={isTeamAdmin}
             sponsorCovered={sponsorCovered}
-            formatPhone={formatPhone}
+            agentCountry={agentCountry}
             saveSettings={saveSettings}
             primaryColor={primaryColor}
             onPrimary={onPrimary}

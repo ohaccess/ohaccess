@@ -4,7 +4,8 @@ import { NextResponse } from 'next/server'
 import twilio from 'twilio'
 import { Resend } from 'resend'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
-import { normalizePhone, phoneMatchVariants, usPhoneError } from '@/lib/phone'
+import { normalizePhone, phoneMatchVariants, phoneError, formatPhoneDisplay } from '@/lib/phone'
+import { inferProfileCountry } from '@/lib/regions'
 import {
   isEmail,
   buildCrmLeadEmail,
@@ -59,12 +60,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Reject structurally-impossible phone numbers (bad area code, service
-    // codes, fictional 555 range, etc.) — the form blocks these client-side,
-    // but enforce it here too so a crafted request can't slip a junk number in.
-    const phoneError = usPhoneError(phone)
-    if (phoneError) {
-      return NextResponse.json({ error: phoneError }, { status: 400 })
+    // Reject structurally-impossible phone numbers — the form blocks these
+    // client-side, but enforce it here too so a crafted request can't slip a
+    // junk number in. The form submits +1 numbers as "(512) 555-1234" (the
+    // shape every row has always held) and every other country as E.164, so
+    // a "+" number is checked against its own country's plan and anything
+    // else gets the strict NANP rules (bad area code, service codes, the
+    // fictional 555 range…).
+    const phoneProblem = phoneError(phone)
+    if (phoneProblem) {
+      return NextResponse.json({ error: phoneProblem }, { status: 400 })
     }
 
     const ip = getClientIp(request)
@@ -184,11 +189,20 @@ export async function POST(request: Request) {
     const successQuestions = questionsForSurface(customQuestions, 'success')
 
     const streetAddress = openHouse.street_address || openHouse.property_address
-    const now = new Date().toLocaleString('en-US', {
-      timeZone: 'America/Chicago',
-      dateStyle: 'short',
-      timeStyle: 'short'
-    })
+    // Sign-in time in the alert to the agent, in the PROPERTY's timezone
+    // (open_houses.timezone, from the address lookup) so an agent anywhere
+    // sees their own local time. Legacy rows without one fall back to the
+    // Central Time the alert always used.
+    let now: string
+    try {
+      now = new Date().toLocaleString('en-US', {
+        timeZone: openHouse.timezone || 'America/Chicago',
+        dateStyle: 'short',
+        timeStyle: 'short'
+      })
+    } catch {
+      now = new Date().toLocaleString('en-US', { timeZone: 'America/Chicago', dateStyle: 'short', timeStyle: 'short' })
+    }
 
     const agentTier = agent?.tier || 'free'
     // A LEGACY 2-year prepay or an admin comp (both: paid tier, no Stripe
@@ -462,7 +476,13 @@ export async function POST(request: Request) {
     // visitor row was allowed; the agent should always be notified.
     // Include a tap-through link to the visitor page where the agent can
     // verify and add notes (best-effort short link).
-    if (agent?.phone) {
+    // The agent's number is stored as "(512) 555-1234" for +1 countries and
+    // E.164 elsewhere (lib/phone.ts); Twilio wants E.164, read in the agent's
+    // own country. Best-effort: an alert that can't be sent (bad number, a
+    // country our SMS routes don't reach) is logged, never allowed to fail
+    // the sign-in — the visitor row and codeword are already done by now.
+    const agentAlertTo = agent?.phone ? normalizePhone(agent.phone, inferProfileCountry(agent)) : null
+    if (agentAlertTo) {
       let visitorShortUrl: string | null = null
       try {
         visitorShortUrl = await createShortUrl(
@@ -473,16 +493,20 @@ export async function POST(request: Request) {
         )
       } catch { /* skip link on failure */ }
 
-      await twilioClient.messages.create({
-        // Kept lean so long names/emails still fit one segment: short prefix
-        // and a bare verify/notes link (no label).
-        // VoIP flag (plain text, not emoji — emoji forces UCS-2 encoding and
-        // triples SMS cost). nonFixedVoip = TextNow/Google Voice-style app
-        // number, worth extra scrutiny at the door.
-        body: `ohACCESS: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${phone}${isVirtualNumber(phoneLineType) ? ' (FYI - VoIP/internet number)' : ''}, ${email}, Timeline: ${purchasingTimeline}, Time: ${now}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
-        ...twilioSender(),
-        to: agent.phone
-      })
+      try {
+        await twilioClient.messages.create({
+          // Kept lean so long names/emails still fit one segment: short prefix
+          // and a bare verify/notes link (no label).
+          // VoIP flag (plain text, not emoji — emoji forces UCS-2 encoding and
+          // triples SMS cost). nonFixedVoip = TextNow/Google Voice-style app
+          // number, worth extra scrutiny at the door.
+          body: `ohACCESS: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${formatPhoneDisplay(phone)}${isVirtualNumber(phoneLineType) ? ' (FYI - VoIP/internet number)' : ''}, ${email}, Timeline: ${purchasingTimeline}, Time: ${now}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
+          ...twilioSender(),
+          to: agentAlertTo
+        })
+      } catch (err) {
+        console.error('Agent alert SMS failed:', err)
+      }
     }
 
     // Intentionally do NOT return codeWord — that would defeat the SMS/email
