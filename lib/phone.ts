@@ -43,3 +43,23 @@ export function usPhoneError(input: string | null | undefined): string | null {
 export function isPossibleUsPhone(input: string | null | undefined): boolean {
   return usPhoneError(input) === null
 }
+
+// Every spelling of a US number we might find in visitors.phone, for an
+// `IN (...)` match against stored rows. The sign-in form always submits
+// "(512) 555-1234", so that is what nearly every row holds — but the API
+// accepts any structurally-valid format from a crafted request and stores it
+// as sent, so also try E.164, bare digits, and the input as typed. Plain
+// strings on purpose: a btree index on phone serves the IN() directly.
+export function phoneMatchVariants(input: string | null | undefined): string[] {
+  const raw = (input || '').trim()
+  const out = new Set<string>()
+  if (raw) out.add(raw)
+  const digits = raw.replace(/\D/g, '')
+  const d = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits
+  if (d.length === 10) {
+    out.add(`(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`)
+    out.add(`+1${d}`)
+    out.add(d)
+  }
+  return [...out]
+}

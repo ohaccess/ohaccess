@@ -4,13 +4,16 @@ import { NextResponse } from 'next/server'
 import twilio from 'twilio'
 import { Resend } from 'resend'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
-import { normalizePhone, usPhoneError } from '@/lib/phone'
+import { normalizePhone, phoneMatchVariants, usPhoneError } from '@/lib/phone'
 import {
   isEmail,
   buildCrmLeadEmail,
   resolveDisclosureLinks,
   isVirtualNumber,
   twilioSender,
+  pickCachedPhoneIntel,
+  PHONE_INTEL_CANDIDATES,
+  type PhoneIntel,
 } from '@/lib/register-helpers'
 import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import {
@@ -228,13 +231,55 @@ export async function POST(request: Request) {
       phoneOptedOut = !!optOut
     }
 
-    // Carrier + line type via Twilio Lookup (~$0.008/call). Line type is the
-    // burner-number signal: "nonFixedVoip" means a TextNow/Google Voice-style
-    // app number rather than a real mobile line. Best-effort with a hard 3s
-    // cap — a slow or failed lookup must never block the sign-in.
+    // Carrier + line type. Line type is the burner-number signal:
+    // "nonFixedVoip" means a TextNow/Google Voice-style app number rather
+    // than a real mobile line.
+    //
+    // First, our own records: has this number been looked up in the last
+    // year for this same visitor, at any ohACCESS open house (live or
+    // archived)? Then reuse that answer and skip the paid lookup — see
+    // pickCachedPhoneIntel for the age and same-person rules. Best-effort:
+    // a DB hiccup just means we pay Twilio as before.
     let phoneCarrier: string | null = null
     let phoneLineType: string | null = null
+    let cachedIntel: PhoneIntel | null = null
     if (normalizedPhone) {
+      try {
+        const variants = phoneMatchVariants(phone)
+        const cols = 'first_name, last_name, email, phone_carrier, phone_line_type, registered_at'
+        const [live, archived] = await Promise.all([
+          supabase
+            .from('visitors')
+            .select(cols)
+            .in('phone', variants)
+            .not('phone_line_type', 'is', null)
+            .order('registered_at', { ascending: false })
+            .limit(PHONE_INTEL_CANDIDATES),
+          supabase
+            .from('visitor_archive')
+            .select(cols)
+            .in('phone', variants)
+            .not('phone_line_type', 'is', null)
+            .order('registered_at', { ascending: false })
+            .limit(PHONE_INTEL_CANDIDATES),
+        ])
+        if (live.error) console.error('Phone intel cache (visitors) failed:', live.error)
+        if (archived.error) console.error('Phone intel cache (archive) failed:', archived.error)
+        cachedIntel = pickCachedPhoneIntel(
+          [...(live.data ?? []), ...(archived.data ?? [])],
+          { firstName, lastName, email }
+        )
+      } catch (err) {
+        console.error('Phone intel cache check failed:', err)
+      }
+    }
+
+    // Otherwise Twilio Lookup (~$0.008/call), best-effort with a hard 3s cap
+    // — a slow or failed lookup must never block the sign-in.
+    if (cachedIntel) {
+      phoneCarrier = cachedIntel.carrier
+      phoneLineType = cachedIntel.lineType
+    } else if (normalizedPhone) {
       try {
         const lookup = await Promise.race([
           twilioClient.lookups.v2

@@ -343,6 +343,71 @@ export function isVirtualNumber(lineType: string | null | undefined): boolean {
   return lineType === 'nonFixedVoip'
 }
 
+// ---- Phone-intel cache ------------------------------------------------------
+// Every sign-in used to pay Twilio (~$0.008) for the number's carrier + line
+// type, even when the same buyer had signed in at four other ohACCESS open
+// houses that weekend. The answer is already on those earlier visitor rows
+// (phone_carrier / phone_line_type, live and archived), so /api/register now
+// checks there first and only calls Twilio for a number it hasn't seen.
+//
+// Two guards keep the reused value trustworthy — line type is the agent's
+// burner-number signal, so a stale or wrong answer matters:
+//   * Age: reuse only a result under PHONE_INTEL_MAX_AGE (12 months). Line
+//     types drift when numbers are ported (landline → mobile, mobile → VoIP);
+//     rare, but a yearly re-check costs a penny.
+//   * Same person: reuse only when the earlier sign-in matches this visitor's
+//     email OR full name. A number showing up under a different name AND
+//     email may be a recycled number (carriers reassign them), whose line
+//     type could have changed with its owner — so that pays for a fresh look.
+// The earlier visitor's details are compared here and nothing else: the
+// agent sees exactly the carrier/line type Twilio would have returned, never
+// anything about where else the number signed in.
+export const PHONE_INTEL_MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000
+
+// Newest-first rows to fetch from each of visitors / visitor_archive. Small
+// on purpose: a shared household number might have a partner's sign-ins on
+// top, and we want to find this visitor's own row beneath them.
+export const PHONE_INTEL_CANDIDATES = 10
+
+export type PhoneIntelCandidate = {
+  first_name: string | null
+  last_name: string | null
+  email: string | null
+  phone_carrier: string | null
+  phone_line_type: string | null
+  registered_at: string | null
+}
+
+export type PhoneIntel = { carrier: string | null; lineType: string }
+
+function foldText(value: string | null | undefined): string {
+  return (value || '').trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+export function pickCachedPhoneIntel(
+  candidates: PhoneIntelCandidate[],
+  visitor: { firstName: string; lastName: string; email: string },
+  now: number = Date.now()
+): PhoneIntel | null {
+  const email = foldText(visitor.email)
+  const name = foldText(`${visitor.firstName} ${visitor.lastName}`)
+  const cutoff = now - PHONE_INTEL_MAX_AGE_MS
+
+  const usable = candidates
+    .map(c => ({ c, at: Date.parse(c.registered_at ?? '') }))
+    .filter(({ c, at }) => !!c.phone_line_type && Number.isFinite(at) && at >= cutoff)
+    .sort((a, b) => b.at - a.at)
+
+  for (const { c } of usable) {
+    const sameEmail = !!email && foldText(c.email) === email
+    const sameName = !!name.trim() && foldText(`${c.first_name ?? ''} ${c.last_name ?? ''}`) === name
+    if (sameEmail || sameName) {
+      return { carrier: c.phone_carrier ?? null, lineType: c.phone_line_type as string }
+    }
+  }
+  return null
+}
+
 // The Twilio Lookup line types, collapsed into the three kinds an agent
 // actually acts on. Anything else Twilio can return (tollFree, voicemail,
 // premium, unknown, ...) is left unlabelled rather than guessed at.
