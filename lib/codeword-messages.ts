@@ -255,8 +255,19 @@ export async function sendVisitorCodewordMessages(params: {
     const preferred = preferredCodewordChannel(phoneCountry(phone))
     try {
       if (preferred === 'whatsapp') {
-        visitorSms = await sendWhatsApp()
-        channelUsed = 'whatsapp'
+        // WhatsApp-first country. If WhatsApp itself fails (template still
+        // under Meta review, sender offline, a Meta-side hiccup), fall back
+        // to SMS rather than give up — it's the visitor's codeword, and in
+        // several of these countries (Brazil, Argentina, Colombia) SMS does
+        // get through. The SMS attempt's own failure is what gets recorded.
+        try {
+          visitorSms = await sendWhatsApp()
+          channelUsed = 'whatsapp'
+        } catch (err) {
+          console.warn('Visitor WhatsApp send failed, falling back to SMS:', (err as { code?: unknown })?.code)
+          visitorSms = await sendSms()
+          channelUsed = 'sms'
+        }
       } else {
         try {
           visitorSms = await sendSms()
