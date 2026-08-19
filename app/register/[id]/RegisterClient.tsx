@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { phoneError, storablePhone, splitStoredPhone, normalizePhone } from '@/lib/phone'
-import { regionFor } from '@/lib/regions'
+import { regionFor, areaAbbrev } from '@/lib/regions'
 import PhoneInput, { type PhoneValue } from '@/app/_components/PhoneInput'
 import { STRINGS, LANGS, TIMELINE_VALUES, FEEDBACK_PRICE_VALUES, detectLang, saveLang, type Lang } from '@/lib/register-i18n'
 import type { OpenHouseDisplay } from '@/lib/open-house-display'
@@ -625,7 +625,7 @@ function ExpiredOpenHouse() {
                 {openHouse.property_address}
               </div>
               <div style={{ fontSize: '12px', color: '#6e6e73' }}>
-                {openHouse.bedrooms} bed · {openHouse.bathrooms} bath · {openHouse.square_footage} sq ft · {openHouse.listing_price}
+                {openHouse.bedrooms} bed · {openHouse.bathrooms} bath · {openHouse.square_footage} {areaAbbrev(propertyRegion.areaUnit)} · {openHouse.listing_price}
               </div>
               <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>
                 {openHouse.open_house_date} · {openHouse.open_house_hours} · {agent?.full_name}

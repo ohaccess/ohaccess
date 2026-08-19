@@ -66,6 +66,41 @@ export type RegionConfig = {
   // The NAR (National Association of REALTORS®) written-buyer-agreement
   // notice is a US rule; it only makes sense on US open houses.
   showNarNotice: boolean
+  // How floor area is quoted in listings: square feet (US, Canada, UK, India,
+  // Hong Kong, Singapore, UAE…) or square metres (most of the world). Decides
+  // the "Square Footage" vs "Square Metres" label on the open-house form and
+  // the "sq ft" / "m²" suffix wherever the number is shown. The stored value
+  // is whatever the agent typed — no conversion, just the unit word.
+  areaUnit: AreaUnit
+}
+
+export type AreaUnit = 'sqft' | 'sqm'
+
+// Countries whose property market quotes floor area in square feet. Everyone
+// else (including Australia, New Zealand, Ireland, South Africa, the EU,
+// Latin America, Japan, the Philippines) uses square metres.
+export const SQFT_COUNTRIES = new Set(['US', 'CA', 'GB', 'IN', 'HK', 'SG', 'AE', 'PK', 'BD', 'MM', 'LR'])
+
+export function areaUnitFor(country: string | null | undefined): AreaUnit {
+  const code = normalizeCountry(country) ?? 'US'
+  return SQFT_COUNTRIES.has(code) ? 'sqft' : 'sqm'
+}
+
+// Labels for the unit: the form field's title, the short suffix after a
+// number ("2,450 sq ft" / "228 m²"), and an example value for placeholders.
+export function areaLabel(unit: AreaUnit): string {
+  return unit === 'sqft' ? 'Square Footage' : 'Square Metres'
+}
+export function areaAbbrev(unit: AreaUnit): string {
+  return unit === 'sqft' ? 'sq ft' : 'm²'
+}
+export function areaPlaceholder(unit: AreaUnit): string {
+  return unit === 'sqft' ? '2,450' : '228'
+}
+// "2,450 sq ft" / "228 m²" for a stored value, or '' when there is none.
+export function formatArea(value: string | null | undefined, country: string | null | undefined): string {
+  const v = (value || '').trim()
+  return v ? `${v} ${areaAbbrev(areaUnitFor(country))}` : ''
 }
 
 // ---- Sub-region lists -------------------------------------------------------
@@ -154,6 +189,7 @@ const DEFAULT_REGION: RegionConfig = {
   },
   phonePlaceholder: 'Mobile number',
   showNarNotice: false,
+  areaUnit: 'sqm',
 }
 
 // Spelling follows the country: "License" in the US, "Licence" in the rest
@@ -520,7 +556,7 @@ export function flagFor(country: string | null | undefined): string {
 export function regionFor(country: string | null | undefined): RegionConfig {
   const code = normalizeCountry(country) ?? 'US'
   const overrides = REGIONS[code] ?? {}
-  return { ...DEFAULT_REGION, ...overrides, country: code }
+  return { ...DEFAULT_REGION, ...overrides, country: code, areaUnit: areaUnitFor(code) }
 }
 
 // The countries with an explicit entry above (useful for tests and docs).

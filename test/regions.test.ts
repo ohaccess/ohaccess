@@ -176,3 +176,22 @@ describe('mainCountryForCallingCode', () => {
     expect(mainCountryForCallingCode('')).toBeNull()
   })
 })
+
+describe('floor-area unit', () => {
+  it('uses square feet where the market does and square metres everywhere else', async () => {
+    const { areaUnitFor, areaLabel, areaAbbrev, formatArea, regionFor } = await import('@/lib/regions')
+    for (const c of ['US', 'CA', 'GB', 'IN', 'HK', 'SG', 'AE']) expect(areaUnitFor(c), c).toBe('sqft')
+    for (const c of ['AU', 'NZ', 'IE', 'ZA', 'DE', 'FR', 'MX', 'BR', 'JP', 'PH']) expect(areaUnitFor(c), c).toBe('sqm')
+    expect(areaUnitFor(null)).toBe('sqft') // unknown → US default, as everywhere else
+    expect(regionFor('AU').areaUnit).toBe('sqm')
+    expect(regionFor('US').areaUnit).toBe('sqft')
+    expect(areaLabel('sqft')).toBe('Square Footage')
+    expect(areaLabel('sqm')).toBe('Square Metres')
+    expect(areaAbbrev('sqft')).toBe('sq ft')
+    expect(areaAbbrev('sqm')).toBe('m²')
+    expect(formatArea('2,450', 'US')).toBe('2,450 sq ft')
+    expect(formatArea('228', 'AU')).toBe('228 m²')
+    expect(formatArea('', 'AU')).toBe('')
+    expect(formatArea(null, 'US')).toBe('')
+  })
+})

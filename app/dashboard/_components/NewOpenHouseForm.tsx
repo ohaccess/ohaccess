@@ -2,7 +2,7 @@
 import type { CSSProperties } from 'react'
 import { SMS_CODE_WORD_MAX_LENGTH, sanitizeSmsCodeWord } from '@/lib/register-helpers'
 import { MAX_OPEN_HOUSE_AGREEMENT_DOCS, type AgreementTemplate } from '@/lib/agreements'
-import type { RegionConfig } from '@/lib/regions'
+import { areaLabel, areaPlaceholder, type RegionConfig } from '@/lib/regions'
 
 // The New / Edit Open House form: property details (with Google address
 // autocomplete + a date-picker calendar) and the two access code words.
@@ -149,8 +149,8 @@ export default function NewOpenHouseForm({
             <input style={inputStyle} type="text" placeholder="$625,000" value={form.listing_price} onChange={e => setForm({ ...form, listing_price: e.target.value })} />
           </div>
           <div>
-            <label style={labelStyle}>Square Footage</label>
-            <input style={inputStyle} type="text" placeholder="2,450" value={form.square_footage} onChange={e => setForm({ ...form, square_footage: e.target.value })} />
+            <label style={labelStyle}>{areaLabel(addressRegion.areaUnit)}</label>
+            <input style={inputStyle} type="text" placeholder={areaPlaceholder(addressRegion.areaUnit)} value={form.square_footage} onChange={e => setForm({ ...form, square_footage: e.target.value })} />
           </div>
           <div>
             <label style={labelStyle}>Bedrooms</label>

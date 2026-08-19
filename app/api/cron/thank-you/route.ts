@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { isHexColor, safeUrl, isEmail, buildUpcomingOpenHousesHtml, type UpcomingOpenHouse } from '@/lib/register-helpers'
 import { onColor } from '@/lib/colors'
+import { formatArea } from '@/lib/regions'
 import { buildThankYouEmail, thankYouSendState, type ThankYouSponsorCard } from '@/lib/thank-you-email'
 
 export const runtime = 'nodejs'
@@ -58,7 +59,7 @@ async function handle(request: Request) {
 
   if (ohIds.length) {
     const { data } = await supabase.from('open_houses')
-      .select('id, agent_id, street_address, property_address, city, state, timezone, listing_url, listing_price, bedrooms, bathrooms, square_footage')
+      .select('id, agent_id, street_address, property_address, city, state, timezone, listing_url, listing_price, bedrooms, bathrooms, square_footage, country')
       .in('id', ohIds)
     for (const oh of data ?? []) ohMap.set(oh.id, oh)
   }
@@ -111,7 +112,7 @@ async function handle(request: Request) {
       oh.listing_price ? String(oh.listing_price) : '',
       oh.bedrooms ? `${oh.bedrooms} bd` : '',
       oh.bathrooms ? `${oh.bathrooms} ba` : '',
-      oh.square_footage ? `${oh.square_footage} sqft` : '',
+      formatArea(oh.square_footage, oh.country),
     ].filter(Boolean).join(' · ')
 
     const upcomingHtml = await buildUpcoming(agent, oh, v.open_house_id)

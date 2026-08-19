@@ -13,6 +13,7 @@ import {
   type CodewordChannel,
 } from '@/lib/messaging-channel'
 import { codewordLinkPath } from '@/lib/codeword-link'
+import { areaAbbrev, areaUnitFor } from '@/lib/regions'
 import {
   buildSmsBody,
   isHttpUrl,
@@ -92,6 +93,8 @@ export async function sendVisitorCodewordMessages(params: {
     square_footage: string | null
     listing_price: string | null
     state: string | null
+    // ISO code of the property's country (migration 048); decides sq ft vs m².
+    country?: string | null
   }
   agent: {
     full_name?: string | null
@@ -441,7 +444,7 @@ export async function sendVisitorCodewordMessages(params: {
               <strong style="color: #1d1d1f;">${escapeHtml(fullAddress)}</strong><br/>
               📅 ${escapeHtml(openHouse.open_house_date)}<br/>
               🕒 ${escapeHtml(openHouse.open_house_hours)}<br/>
-              🛏 ${escapeHtml(openHouse.bedrooms || '—')} bed · 🛁 ${escapeHtml(openHouse.bathrooms || '—')} bath · 📐 ${escapeHtml(openHouse.square_footage || '—')} sq ft <br/>
+              🛏 ${escapeHtml(openHouse.bedrooms || '—')} bed · 🛁 ${escapeHtml(openHouse.bathrooms || '—')} bath · 📐 ${escapeHtml(openHouse.square_footage || '—')} ${areaAbbrev(areaUnitFor(openHouse.country))} <br/>
               💰 ${escapeHtml(openHouse.listing_price || '—')}<br/>
               ${listingShortUrl ? `📝 <a href="${escapeHtml(listingShortUrl)}" style="color: #0071e3; font-weight: 600; font-size: 13px;">Full listing details </a>` : ''}
             </div>
