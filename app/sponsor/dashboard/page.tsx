@@ -735,7 +735,7 @@ export default function SponsorDashboard() {
                     onClick={async () => {
                       if (!user) return
                       const { data } = await supabase.from('sponsors').select('*').eq('owner_id', user.id).maybeSingle()
-                      if (data) { setSponsor(data); showToast('Changes discarded — nothing was saved') }
+                      if (data) { setSponsor(data); showToast('Changes discarded — nothing was saved'); setView('dashboard') }
                       else showToast('Could not reload your saved profile — try again', 'error')
                     }}
                     disabled={saving}

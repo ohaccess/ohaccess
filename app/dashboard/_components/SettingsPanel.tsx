@@ -604,6 +604,7 @@ export default function SettingsPanel({
   sponsorCovered,
   agentCountry,
   saveSettings,
+  onCancel,
   primaryColor,
   onPrimary,
   primaryBtnBorder,
@@ -625,6 +626,9 @@ export default function SettingsPanel({
   // ISO country the profile belongs to (saved, or inferred for legacy rows).
   agentCountry: string
   saveSettings: () => void
+  // Called after Cancel finishes reverting — the dashboard uses it to leave
+  // the Settings view (Cancel = discard AND go back, like the open-house form).
+  onCancel: () => void
   primaryColor: string
   onPrimary: string
   primaryBtnBorder: string
@@ -679,6 +683,7 @@ export default function SettingsPanel({
     setProfile(data)
     setPhoneInput(splitStoredPhone(data.phone, inferProfileCountry(data)))
     showToast('Changes discarded — nothing was saved')
+    onCancel()
   }
 
   // Disclosure/notice rows live in `profile` like every other setting, so the

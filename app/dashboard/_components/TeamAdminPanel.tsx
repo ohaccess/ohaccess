@@ -49,9 +49,12 @@ const btn = (bg: string) => ({
   fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
 })
 
-export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
+export default function TeamAdminPanel({ supabase, showToast, onSaved, onCancel }: {
   supabase: any
   showToast: (m: string, t?: 'success' | 'error') => void
+  // Called after Cancel finishes reverting — the dashboard returns to the
+  // Dashboard view.
+  onCancel?: () => void
   onSaved?: () => void | Promise<void>
 }) {
   const [loading, setLoading] = useState(true)
@@ -407,7 +410,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved }: {
           {/* Cancel = re-read the saved team settings; load() puts every form
               field (name, logo, colors, CRM) back to what the server holds. */}
           <button
-            onClick={async () => { setBusy('cancel'); await load(); setBusy(null); showToast('Changes discarded — nothing was saved') }}
+            onClick={async () => { setBusy('cancel'); await load(); setBusy(null); showToast('Changes discarded — nothing was saved'); onCancel?.() }}
             disabled={busy !== null}
             style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >

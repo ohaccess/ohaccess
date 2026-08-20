@@ -1171,6 +1171,7 @@ export default function Dashboard() {
             sponsorCovered={sponsorCovered}
             agentCountry={agentCountry}
             saveSettings={saveSettings}
+            onCancel={() => setView('dashboard')}
             primaryColor={primaryColor}
             onPrimary={onPrimary}
             primaryBtnBorder={primaryBtnBorder}
@@ -1184,7 +1185,7 @@ export default function Dashboard() {
 
         {/* TEAM VIEW (team-lead only) */}
         {view === 'team' && isTeamAdmin && (
-          <TeamAdminPanel supabase={supabase} showToast={showToast} onSaved={() => loadProfile(user.id)} />
+          <TeamAdminPanel supabase={supabase} showToast={showToast} onSaved={() => loadProfile(user.id)} onCancel={() => setView('dashboard')} />
         )}
 
         {/* BROKERAGE ACTIVITY VIEW (team-lead only) — every agent's open
