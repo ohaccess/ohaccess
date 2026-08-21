@@ -112,7 +112,9 @@ export async function POST(request: Request) {
       customer: customerId,
       mode: 'subscription',
       line_items: [{ price: cfg.priceId, quantity: seatCount }],
-      success_url: `${APP_URL}/dashboard?view=settings&checkout=success`,
+      // {CHECKOUT_SESSION_ID} is filled in by Stripe; the dashboard trades it
+      // for the paid amount to report the purchase to the ad platforms.
+      success_url: `${APP_URL}/dashboard?view=settings&checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_URL}/dashboard?view=settings&checkout=cancel`,
       allow_promotion_codes: true,
       // metadata travels through to the webhook so we know what to provision

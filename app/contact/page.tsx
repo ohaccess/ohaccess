@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Footer from '../_components/Footer'
+import { trackLead } from '@/lib/marketing-tags'
 
 export default function Contact() {
   const [form, setForm] = useState({
@@ -25,6 +26,7 @@ export default function Contact() {
         body: JSON.stringify(form)
       })
       setSubmitted(true)
+      trackLead()
     } catch {
       alert('Something went wrong. Please email us directly at sales@ohaccess.com')
     } finally {

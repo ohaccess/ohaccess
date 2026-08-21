@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { trackSignup } from '@/lib/marketing-tags'
 
 function LoginForm() {
   const searchParams = useSearchParams()
@@ -157,6 +158,7 @@ function LoginForm() {
       if (error) {
         setError(error.message)
       } else {
+        trackSignup()
         // Record the click-through acceptance for the legal audit trail.
         // Best-effort; if it fails we still let signup succeed (Supabase
         // has already accepted the agreement via the required checkbox).

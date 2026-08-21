@@ -14,6 +14,7 @@ import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { normalizeCustomAnswers } from '@/lib/custom-questions'
 import { sanitizeSmsCodeWord } from '@/lib/register-helpers'
 import { normalizeAgreementTemplates } from '@/lib/agreements'
+import { loadMarketingTags, trackPurchase } from '@/lib/marketing-tags'
 import { regionFor, inferProfileCountry, normalizeCountry, countryFromLocale, countryName } from '@/lib/regions'
 import { phoneError } from '@/lib/phone'
 
@@ -145,6 +146,29 @@ export default function Dashboard() {
 
   useEffect(() => { checkUser() }, [])
 
+  // Tell the ad platforms about the purchase Stripe just redirected back from.
+  // Best-effort: the tags start loading right away so the event goes out as
+  // soon as the amount comes back; any failure is silent (never blocks the UI).
+  const reportPurchase = async (sessionId: string | null) => {
+    if (!sessionId) return
+    try {
+      loadMarketingTags()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const res = await fetch(`/api/stripe/checkout-session?id=${encodeURIComponent(sessionId)}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (!res.ok) return
+      const json = await res.json()
+      trackPurchase({
+        value: (json.amount_total ?? 0) / 100,
+        currency: json.currency || 'usd',
+        transactionId: json.id,
+        plan: json.plan || undefined,
+      })
+    } catch {}
+  }
+
   // Honor ?view= and ?checkout= params from Stripe redirects and pricing CTAs.
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -154,6 +178,7 @@ export default function Dashboard() {
     const checkout = params.get('checkout')
     if (checkout === 'success') {
       showToast('Subscription activated — welcome aboard!')
+      reportPurchase(params.get('session_id'))
     } else if (checkout === 'cancel') {
       showToast('Checkout canceled. You can upgrade anytime from settings.', 'error')
     }

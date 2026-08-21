@@ -4,6 +4,12 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import RefCapture from "./_components/RefCapture";
 import ImpersonationBanner from "./_components/ImpersonationBanner";
+import MarketingTags from "./_components/MarketingTags";
+
+// Meta's domain-verification tag (Events Manager → Brand Safety → Domains).
+// Required before Meta will let ad campaigns optimize for web events on
+// ohaccess.com. Env-driven so it can be set from Vercel without a code change.
+const metaDomainVerification = process.env.NEXT_PUBLIC_META_DOMAIN_VERIFICATION;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -70,6 +76,9 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
+  ...(metaDomainVerification
+    ? { verification: { other: { "facebook-domain-verification": [metaDomainVerification] } } }
+    : {}),
 };
 
 export default function RootLayout({
@@ -89,6 +98,9 @@ export default function RootLayout({
         {/* Maps JS is no longer loaded here — OpenHouseMap owns the script
             tag; every other page was paying ~200KB for nothing. */}
         <Analytics />
+        {/* Ad tags (Meta Pixel / Google Ads) — marketing routes only; the
+            component decides per route, see lib/marketing-tags. */}
+        <MarketingTags />
       </body>
     </html>
   );
