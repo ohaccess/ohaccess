@@ -169,18 +169,19 @@ function buildReminderHtml(args: {
       ${sectionTitle('At the door')}
       <div style="font-size:14px;line-height:1.7;">
         ohACCESS works best when <strong>everyone</strong> scans — it's the security layer between the
-        street and your seller's home. Politely insist each visitor completes the form and shares
-        their codeword before touring. A script that works:
+        street and your seller's home. Greet visitors outside, before they reach the door, and kindly
+        insist each one signs in and shares their codeword first. A script that works:
       </div>
       <div style="border-left:3px solid ${e(accent)};padding:8px 12px;margin-top:10px;font-size:14px;line-height:1.7;color:#1d1d1f;font-style:italic;">
-        "Welcome in! Real quick before you head through — we ask every visitor to scan the sign and
-        grab today's codeword. It's a security step the sellers asked for, it takes about 20 seconds,
-        and then the home is all yours to explore."
+        "Hi, welcome! Before we head inside — the sellers have asked that every guest sign in first.
+        Just scan the sign right here and it'll send you today's codeword. Tell me the word and
+        you're in — takes about 20 seconds, and then the whole home is yours to explore."
       </div>
       <div style="font-size:13px;color:#6e6e73;margin-top:8px;">If someone hesitates:</div>
       <div style="border-left:3px solid ${e(accent)};padding:8px 12px;margin-top:6px;font-size:14px;line-height:1.7;color:#1d1d1f;font-style:italic;">
-        "Totally fair — it's required for everyone who walks through, myself included. It just confirms
-        who's in the home today; your info comes straight to me and is never sold."
+        "I completely understand. It's the one thing the sellers asked of me — everyone signs in
+        before stepping inside, myself included, so they always know who's been in their home.
+        Your info comes straight to me for feedback and follow-up — it's never sold."
       </div>
     </div>
 
