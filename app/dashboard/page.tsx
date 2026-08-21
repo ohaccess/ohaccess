@@ -311,8 +311,14 @@ export default function Dashboard() {
     }
 
   const loadOpenHouses = async (userId: string) => {
-    const { data } = await supabase.from('open_houses').select('*').eq('agent_id', userId).order('created_at', { ascending: false })
+    const { data } = await supabase.from('open_houses').select('*').eq('agent_id', userId)
     if (data) {
+      // Upcoming/newest open houses at the top, older ones lower. Legacy rows
+      // saved before scheduling existed have no start_at; they sort by when
+      // they were created instead.
+      data.sort((a, b) =>
+        new Date(b.start_at ?? b.created_at).getTime() - new Date(a.start_at ?? a.created_at).getTime()
+      )
       setOpenHouses(data)
       if (data.length > 0) { setSelectedOH(data[0]); await loadVisitors(data[0].id) }
     }
