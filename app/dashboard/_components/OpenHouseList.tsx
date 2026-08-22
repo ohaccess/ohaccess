@@ -502,8 +502,13 @@ export default function OpenHouseList({
                       </td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
                         <button onClick={() => setVisitorModal(v)} style={{ background: 'none', border: 'none', padding: 0, color: accentText, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px', textAlign: 'left' }}>
-                          {v.first_name} {v.last_name}{v.notes ? ' 📝' : ''}
+                          {v.first_name} {v.last_name}
                         </button>
+                        {v.notes && (
+                          <Tip width={260} body={<><strong>Notes</strong><div style={{ color: '#6e6e73', marginTop: '2px', whiteSpace: 'pre-wrap' }}>{v.notes}</div></>}>
+                            <span style={{ cursor: 'help', marginLeft: '4px' }}>📝</span>
+                          </Tip>
+                        )}
                         {selectedOH?.require_agreement && (v.agreement_signed
                           ? <span title="Signed the required agreement — copies were emailed to you both" style={signedBadgeStyle}>✍ Signed</span>
                           : <span title="Hasn't signed the required agreement — ask before letting them tour" style={unsignedBadgeStyle}>✍ Not signed</span>)}
