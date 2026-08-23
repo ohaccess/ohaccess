@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useMemo, useRef, type ReactNode, type CSSProperties } from 'react'
+import { Fragment, useState, useEffect, useMemo, useRef, type ReactNode, type CSSProperties } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { timelineStyle, timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type Sortable } from '@/lib/sort'
@@ -379,6 +379,38 @@ export default function OpenHouseList({
     [visitors, visitorSort.state]
   )
 
+  // Narrow = phones and small tablets: no room for the two-column split, so
+  // the visitor log renders beneath the selected card instead. Starts false
+  // and syncs in the effect — reading matchMedia during the first render
+  // breaks hydration (the server can't know the viewport).
+  const [isNarrow, setIsNarrow] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 900px)')
+    const apply = () => setIsNarrow(mq.matches)
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
+  }, [])
+
+  // Busy accounts: live/upcoming open houses are never hidden; ended ones fill
+  // the list to 24 total but never more than 12 of them, and the rest collapse
+  // behind a "Show N past open houses" line. Because an event's state is
+  // derived from its dates (ohState), editing a past event to a future date
+  // reactivates it and automatically lifts it out of the cap's reach.
+  const [showAllPast, setShowAllPast] = useState(false)
+  const nonEndedCount = openHouses.reduce((n, oh) => n + (ohState(oh) !== 'ended' ? 1 : 0), 0)
+  const endedCap = Math.max(0, Math.min(12, 24 - nonEndedCount))
+  let endedShown = 0
+  const cappedOhs = openHouses.filter(oh => {
+    if (ohState(oh) !== 'ended') return true
+    if (endedShown < endedCap) { endedShown++; return true }
+    // Keep a selected ended event visible past the cap — collapsing the list
+    // must never hide the log the agent is looking at.
+    return oh.id === selectedOH?.id
+  })
+  const hiddenCount = openHouses.length - cappedOhs.length
+  const visibleOhs = showAllPast ? openHouses : cappedOhs
+
   return (
     <>
       <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Dashboard</div>
@@ -409,12 +441,18 @@ export default function OpenHouseList({
           No open houses yet. Create your first one!
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+        /* Split view (Dave's pick): cards down the left, visitor log sticky on
+           the right, so a long list never buries the log. On narrow screens
+           the wrappers go inert and the log renders inside the card stack,
+           directly beneath the selected card. */
+        <div style={isNarrow ? undefined : { display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px', ...(isNarrow ? {} : { flex: '1 1 40%', minWidth: 0 }) }}>
           {/* Cards have no bottom padding and overflow hidden: the stat band
               runs edge-to-edge along each card's bottom (Dave's pick — canvas
               Option C), clipped by the card's own rounded corners. */}
-          {openHouses.map(oh => (
-            <div key={oh.id} style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentText : '#d1d1d6'}`, borderRadius: '18px', padding: '16px 18px 0', overflow: 'hidden', cursor: 'pointer' }}
+          {visibleOhs.map(oh => (
+            <Fragment key={oh.id}>
+            <div style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentText : '#d1d1d6'}`, borderRadius: '18px', padding: '16px 18px 0', overflow: 'hidden', cursor: 'pointer' }}
               onClick={async () => { setSelectedOH(oh); await loadVisitors(oh.id) }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: OH_BADGE[ohState(oh)].dot, flexShrink: 0 }} />
@@ -497,11 +535,40 @@ export default function OpenHouseList({
                 )
               })()}
             </div>
+            {isNarrow && selectedOH?.id === oh.id && renderVisitorLog()}
+            </Fragment>
           ))}
+          {/* Ended events past the cap collapse behind this one line. */}
+          {hiddenCount > 0 && (
+            <button onClick={() => setShowAllPast(v => !v)} style={{ background: 'white', border: '1px dashed #d1d1d6', borderRadius: '12px', padding: '11px', fontSize: '12px', fontWeight: 600, color: '#6e6e73', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              {showAllPast ? `▲ Show fewer past open houses` : `▼ Show ${hiddenCount} past open house${hiddenCount === 1 ? '' : 's'}`}
+            </button>
+          )}
+        </div>
+        {!isNarrow && (
+          /* Sticky: the log stays on screen while the card list scrolls;
+             a taller-than-viewport log scrolls inside its own pane. */
+          <div style={{ flex: '1 1 60%', minWidth: 0, position: 'sticky', top: '16px', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto' }}>
+            {renderVisitorLog()}
+          </div>
+        )}
         </div>
       )}
 
-      {selectedOH && (
+    </>
+  )
+
+  // The visitor log card, rendered in two places: the sticky right pane on
+  // desktop, and beneath the selected card on narrow screens. A hoisted plain
+  // function (called as renderVisitorLog(), not mounted as a component) so
+  // React keeps the table's element identity stable across renders.
+  function renderVisitorLog() {
+    if (!selectedOH) return (
+      <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '40px', textAlign: 'center', color: '#6e6e73', fontSize: '13px' }}>
+        Select an open house to see its visitor log.
+      </div>
+    )
+    return (
         <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
             <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Visitor log — {selectedOH.property_address}</div>
@@ -568,7 +635,6 @@ export default function OpenHouseList({
             </div>
           )}
         </div>
-      )}
-    </>
-  )
+    )
+  }
 }
