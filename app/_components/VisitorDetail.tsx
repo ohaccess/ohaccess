@@ -171,7 +171,9 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
           onChange={e => setNotes(e.target.value)}
           placeholder="e.g. Pre-approved, wants 3BR, serious buyer — following up Monday."
           rows={4}
-          style={{ width: '100%', background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '12px', padding: '12px', fontSize: '14px', color: '#1d1d1f', outline: 'none', boxSizing: 'border-box', fontFamily: "'Plus Jakarta Sans', sans-serif", resize: 'vertical' }}
+          // 16px is the threshold below which iOS Safari auto-zooms the page
+          // when a field is focused (same rule as the sign-in form's inputs).
+          style={{ width: '100%', background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '12px', padding: '12px', fontSize: '16px', color: '#1d1d1f', outline: 'none', boxSizing: 'border-box', fontFamily: "'Plus Jakarta Sans', sans-serif", resize: 'vertical' }}
         />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
           {savedNotes && <span style={{ fontSize: '13px', color: '#30d158', fontWeight: 600 }}>✓ Saved</span>}
