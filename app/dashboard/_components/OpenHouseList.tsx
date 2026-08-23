@@ -468,13 +468,15 @@ export default function OpenHouseList({
                   missing from the map shows zeros. Upcoming cards show invites
                   sent; live/ended show visitors, rating, price feel and 0–3
                   month buyers — the feedback cells only once someone has
-                  answered. */}
+                  answered. Scrolls sideways on a phone like the button row
+                  above — wrapping made the band two ragged lines (Dave's
+                  call). */}
               {ohStats && (() => {
                 const s = ohStats[oh.id] ?? { visitors: 0, ratingAvg: null, ratingCount: 0, priceVerdict: null, hotBuyers: 0, invites: 0 }
                 const stat = { display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' as const }
                 const num = { color: '#1d1d1f' }
                 return (
-                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' as const, gap: '6px 24px', margin: '0 -18px', background: '#fafafa', borderTop: '1px solid #ececf0', padding: '9px 18px 9px 40px', fontSize: '12px', color: '#6e6e73' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', gap: '24px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any, margin: '0 -18px', background: '#fafafa', borderTop: '1px solid #ececf0', padding: '9px 18px 9px 40px', fontSize: '12px', color: '#6e6e73' }}>
                     {ohState(oh) === 'upcoming' ? (
                       <span style={stat}>💌 <strong style={num}>{s.invites}</strong>{s.invites === 1 ? 'invite sent' : 'invites sent'}</span>
                     ) : (
