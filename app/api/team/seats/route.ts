@@ -185,7 +185,7 @@ export async function POST(request: Request) {
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
                 <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-                  <div style="font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
+                  <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
                 </div>
                 <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; color: #1d1d1f; font-size: 14px; line-height: 1.6;">
                   <p>Hi ${escapeHtml((owner.full_name || '').trim() || 'there')},</p>

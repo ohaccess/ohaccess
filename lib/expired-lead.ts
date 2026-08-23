@@ -148,7 +148,7 @@ export function buildExpiredLeadEmail(
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
       <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-        <div style="font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
+        <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
         <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px;">New Buyer Lead</div>
       </div>
       <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px;">
@@ -167,7 +167,7 @@ export function buildExpiredLeadEmail(
         </div>
       </div>
       <div style="text-align: center; padding: 16px; font-size: 11px; color: #aeaeb2;">
-        Sent by ohACCESS · www.ohaccess.com
+        Sent by <span style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;"><span style="font-weight: 300;">oh</span><strong>ACCESS</strong></span> · www.ohaccess.com
       </div>
     </div>`
 

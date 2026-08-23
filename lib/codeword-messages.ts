@@ -430,7 +430,7 @@ export async function sendVisitorCodewordMessages(params: {
         html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 8px;">
           <div style="background: ${headerColor}; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-            <div style="font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
+            <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
             <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px;">Your codeword is ready</div>
           </div>
           <div style="background: white; border-radius: 0 0 16px 16px; padding: 14px;">

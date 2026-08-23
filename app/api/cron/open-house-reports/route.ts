@@ -109,7 +109,7 @@ function buildReportHtml(args: {
     </div>` : ''}
     <div style="margin-top:24px;padding-top:14px;border-top:1px solid #e5e5ea;font-size:11px;color:#aeaeb2;text-align:center;">
       ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" style="max-height:48px;max-width:160px;object-fit:contain;margin-bottom:8px;" /><br/>` : ''}
-      Sent by ohACCESS · Tip: export the full list anytime from your dashboard.
+      Sent by <span style="font-weight:300;">oh</span><strong>ACCESS</strong> · Tip: export the full list anytime from your dashboard.
     </div>
   </div>`
 }

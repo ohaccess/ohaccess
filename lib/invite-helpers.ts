@@ -236,7 +236,7 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
         <tr><td style="background:${o.primary};text-align:center;padding:28px 20px;">
-          <div style="font-size:30px;font-weight:400;letter-spacing:-1px;color:${o.onPrimary};">oh<b style="font-weight:800;">ACCESS</b></div>
+          <div style="font-size:30px;font-weight:200;letter-spacing:-1px;color:${o.onPrimary};">oh<b style="font-weight:800;">ACCESS</b></div>
         </td></tr>
         <tr><td style="padding:28px 26px;">
           <div style="font-size:22px;font-weight:800;color:#1d1d1f;">You&rsquo;re invited.</div>
@@ -269,7 +269,7 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
           <div style="border-top:1px solid #ececf0;margin-top:24px;padding-top:14px;font-size:11px;color:#9a9aa0;line-height:1.5;text-align:center;">
             You&rsquo;re receiving this because you signed in at one of ${e(o.agentName)}&rsquo;s open houses and agreed to hear about other properties.<br>
             <a href="${e(o.unsubscribeUrl)}" style="color:#9a9aa0;">Unsubscribe</a> &mdash; one click, and you won&rsquo;t get open-house invites again.<br>
-            Powered by ohACCESS.com &middot; Patent Pending
+            Powered by <span style="font-weight:300;">oh</span><b style="font-weight:700;">ACCESS</b>.com &middot; Patent Pending
           </div>
         </td></tr>
       </table>
