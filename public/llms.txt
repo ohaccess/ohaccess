@@ -1,0 +1,22 @@
+# ohACCESS
+
+> ohACCESS is the verified open house sign-in for real estate agents. It replaces the paper sign-in sheet: a visitor scans a QR code at the door, fills out a short form on their own phone, and instantly receives two codewords — one by text message and one by email (WhatsApp for international numbers). The visitor shares a codeword with the host agent to enter the property, which proves the phone number and email they entered are real and theirs. The agent gets an instant text and email alert for every sign-in, plus a running verified visitor log.
+
+## Key facts
+
+- The visitor never types a codeword into any app or screen — they tell it to the host agent at the door. Codewords are per-event words the agent sets; they never expire.
+- Free trial: the first 25 visitor registrations are free with every feature included, no credit card. After that: Pro $15/month ($150/year, $240/2 years) for a solo agent; Team flat $120/month for 2–10 agents; Brokerage $11 per agent per month for 11–100 agents. Pricing never varies with usage.
+- Leads reach the agent's CRM automatically via a formatted lead email to the CRM's intake address (verified with Follow Up Boss) or a Zapier webhook. There is no native API sync.
+- After each event, agents can share a privacy-safe Seller Report: visitor count, buying-timeline breakdown, average 1–10 rating, and price feedback — never visitor names or contact info.
+- The sign-in form supports 16 languages. US, Canada, and international addresses and phones are supported.
+- Safety features: verified identity at the door, instant new-visitor alerts, VoIP/burner-number flagging, and a time-stamped forensic record of every sign-in. Patent Pending.
+
+## Pages
+
+- [Home](https://www.ohaccess.com/): product overview, live demo, pricing
+- [FAQ](https://www.ohaccess.com/faq): common questions about verified check-in
+- [Blog](https://www.ohaccess.com/blog): guides on open house lead capture, verification, and safety
+- [Resources](https://www.ohaccess.com/resources): how ohACCESS works, step by step
+- [Partners](https://www.ohaccess.com/partners): co-marketing program for lenders, title companies, and inspectors
+- [Gift](https://www.ohaccess.com/gift): give any agent a year of Pro
+- [Terms](https://www.ohaccess.com/terms) · [Privacy](https://www.ohaccess.com/privacy)

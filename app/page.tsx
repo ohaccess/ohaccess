@@ -8,7 +8,7 @@ import RecoveryRedirect from './_components/RecoveryRedirect'
 export const metadata: Metadata = {
   title: { absolute: 'ohACCESS – Verified Open House Check-In' },
   description:
-    "The verified open house sign-in for real estate agents. Replace paper sheets with QR-code check-in that confirms every visitor's phone and email — and sends leads to your CRM.",
+    "The verified open house sign-in for real estate agents. QR-code check-in that confirms every visitor's phone and email — and sends leads to your CRM.",
 }
 
 // Homepage: "The Record" design, promoted from /new on 2026-07-23. The
