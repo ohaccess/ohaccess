@@ -44,7 +44,7 @@ const baseOpts: ThankYouEmailOpts = {
   fullAddress: '4124 Cory Lee Court, Arlington, TX', dateLabel: 'Jul 24, 2026',
   agentName: 'Kathryn Chen', brokerage: 'Reflect Real Estate',
   headshotUrl: null, agentLogoUrl: null, agentPhone: '(817) 555-0142', agentEmail: 'kathryn@reflectre.com',
-  listingUrl: null, facts: null, upcomingHtml: '', sponsor: null,
+  listingUrl: null, facts: null, feedbackUrl: null, upcomingHtml: '', sponsor: null,
 }
 
 describe('buildThankYouEmail', () => {
@@ -60,6 +60,15 @@ describe('buildThankYouEmail', () => {
     expect(html).not.toContain('The home you visited')
     expect(html).not.toContain('View the listing')
     expect(html).not.toContain('Sponsored by')
+  })
+
+  it('shows the feedback invite only while a feedback URL is set', () => {
+    const withUrl = buildThankYouEmail({ ...baseOpts, feedbackUrl: 'https://www.ohaccess.com/feedback/abc' })
+    expect(withUrl.html).toContain('How was the home?')
+    expect(withUrl.html).toContain('https://www.ohaccess.com/feedback/abc')
+
+    const without = buildThankYouEmail(baseOpts)
+    expect(without.html).not.toContain('How was the home?')
   })
 
   it('shows listing link, upcoming and sponsor when present', () => {

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { phoneError, storablePhone, splitStoredPhone, normalizePhone } from '@/lib/phone'
 import { regionFor, areaAbbrev } from '@/lib/regions'
@@ -34,6 +34,13 @@ export default function RegisterClient({ id, initialOpenHouse, returningVisitor,
   const [fbSubmitting, setFbSubmitting] = useState(false)
   const [fbDone, setFbDone] = useState(false)
   const [fbError, setFbError] = useState(false)
+  // Floating "after your tour" chip on the success screen, pointing down at
+  // the feedback card. Starts as "in view" (chip hidden) and only appears
+  // once the observer reports the card off-screen — so a viewport tall
+  // enough to show the card never gets a chip, and neither does a browser
+  // without IntersectionObserver.
+  const fbCardRef = useRef<HTMLDivElement | null>(null)
+  const [fbCardInView, setFbCardInView] = useState(true)
   // Disclosure/notice links the host agent supplies (an IABS, a Consumer
   // Information Statement, whatever their state or broker requires). Returned
   // by /api/register and shown here as well as in the code-word email, so a
@@ -321,6 +328,19 @@ function ExpiredOpenHouse() {
   }
 
   useEffect(() => { setLang(detectLang(returningVisitor?.lang)) }, [])
+
+  // The feedback card only mounts on the success screen, so re-run when the
+  // screens change and pick it up once its ref is attached.
+  useEffect(() => {
+    const card = fbCardRef.current
+    if (!card || typeof IntersectionObserver === 'undefined') return
+    const obs = new IntersectionObserver(
+      entries => setFbCardInView(entries[0]?.isIntersecting ?? true),
+      { threshold: 0.2 }
+    )
+    obs.observe(card)
+    return () => obs.disconnect()
+  }, [submitted, agreementSigned, fbDone])
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)
@@ -971,15 +991,24 @@ function ExpiredOpenHouse() {
             )}
 
             {/* Post-visit feedback — optional, asked "after your tour". Answers
-                are aggregated PII-free into the seller report. */}
+                are aggregated PII-free into the seller report. The card is
+                deliberately loud (accent banner, own frame): the plain version
+                sat below the fold and visitors pocketed the phone at the
+                codeword without ever seeing it. */}
             {feedbackToken && (
-              <div style={{ marginTop: '14px', paddingTop: '16px', borderTop: '1px solid #e5e5ea', textAlign: 'left' }}>
+              <div ref={fbCardRef} style={{ marginTop: '16px', textAlign: 'left' }}>
                 {fbDone ? (
                   <div style={{ background: '#e8f9ee', border: '1px solid #b2f0c8', borderRadius: '12px', padding: '14px 16px', fontSize: '13.5px', color: '#1a7a3c', fontWeight: 600, lineHeight: 1.5, textAlign: 'center' }}>
                     {t.feedbackThanks}
                   </div>
                 ) : (
-                  <>
+                  <div style={{ border: '1px solid #d1d1d6', borderRadius: '14px', overflow: 'hidden' }}>
+                    {/* onAccent (not a tint) keeps the banner legible whatever
+                        brand color the agent picked, near-white included. */}
+                    <div style={{ background: accentColor, color: onAccent, padding: '11px 14px', fontSize: '14px', fontWeight: 800, borderBottom: '1px solid #d1d1d6' }}>
+                      {`⭐ ${t.feedbackNudge}`}
+                    </div>
+                    <div style={{ padding: '14px' }}>
                     <div style={{ fontSize: '13.5px', color: '#1d1d1f', lineHeight: 1.5, marginBottom: '12px' }}>
                       <strong>{t.feedbackAfter}</strong>{t.feedbackIntro.split('{after}')[1]}
                     </div>
@@ -1047,9 +1076,23 @@ function ExpiredOpenHouse() {
                     >
                       {fbSubmitting ? t.feedbackSubmitting : t.feedbackSubmit}
                     </button>
-                  </>
+                    </div>
+                  </div>
                 )}
               </div>
+            )}
+
+            {/* Floating chip that scrolls the visitor down to the feedback
+                card. Hidden while the card is on screen (fbCardInView) and
+                gone for good once feedback is in. */}
+            {feedbackToken && !fbDone && !fbCardInView && (
+              <button
+                type="button"
+                onClick={() => fbCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                style={{ position: 'fixed', bottom: '18px', left: '50%', transform: 'translateX(-50%)', zIndex: 100, maxWidth: 'calc(100vw - 32px)', overflow: 'hidden', textOverflow: 'ellipsis', background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '999px', padding: '12px 18px', fontSize: '13px', fontWeight: 700, boxShadow: '0 4px 14px rgba(0,0,0,0.22)', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}
+              >
+                {`⭐ ${t.feedbackNudge} ↓`}
+              </button>
             )}
           </div>
         )}

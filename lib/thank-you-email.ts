@@ -72,6 +72,7 @@ export type ThankYouEmailOpts = {
   agentEmail: string     // where replies go (agent's public/display email)
   listingUrl: string | null
   facts: string | null   // "$625,000 · 4 bd · 3 ba · 2,450 sqft"
+  feedbackUrl: string | null // /feedback/<token> — null once feedback is in
   upcomingHtml: string   // pre-rendered by buildUpcomingOpenHousesHtml ('' if none)
   sponsor: ThankYouSponsorCard | null
 }
@@ -90,6 +91,17 @@ export function buildThankYouEmail(o: ThankYouEmailOpts): { subject: string; htm
       <div style="font-size:15px;font-weight:700;color:#1d1d1f;">${e(o.fullAddress)}</div>
       ${o.facts ? `<div style="font-size:14px;color:#6e6e73;margin-top:3px;">${e(o.facts)}</div>` : ''}
       ${listingUrl ? `<a href="${e(listingUrl)}" style="display:inline-block;margin-top:12px;background:${accent};color:${o.onAccent};text-decoration:none;font-size:14px;font-weight:700;padding:9px 16px;border-radius:8px;">View the listing &rarr;</a>` : ''}
+    </div>` : ''
+
+  // "How was the home?" — the after-your-tour questions from the sign-in
+  // success screen, offered again here because most visitors pocket the phone
+  // at the codeword and never see them. Omitted once feedback is in.
+  const feedbackUrl = safeUrl(o.feedbackUrl)
+  const feedbackSection = feedbackUrl ? `
+    <div style="background:#f6f7f9;border-radius:12px;padding:16px 18px;margin:18px 0;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:${accent};text-transform:uppercase;margin-bottom:6px;">How was the home?</div>
+      <div style="font-size:14px;color:#444;line-height:1.6;">Your quick impressions help the seller &mdash; it takes about 30 seconds.</div>
+      <a href="${e(feedbackUrl)}" style="display:inline-block;margin-top:12px;background:${accent};color:${o.onAccent};text-decoration:none;font-size:14px;font-weight:700;padding:9px 16px;border-radius:8px;">Share your feedback &rarr;</a>
     </div>` : ''
 
   // Agent avatar: real headshot when set, initials circle otherwise.
@@ -139,6 +151,7 @@ export function buildThankYouEmail(o: ThankYouEmailOpts): { subject: string; htm
           <div style="font-size:15px;color:#444;line-height:1.6;margin-top:10px;">Hi ${e(o.visitorFirst)}, thanks for visiting the open house at <strong>${street}</strong>${cityBit} yesterday &mdash; it was great to have you.</div>
 
           ${listingSection}
+          ${feedbackSection}
 
           <div style="font-size:15px;color:#444;line-height:1.6;margin:18px 0 14px;">Questions about this home, or want to see it again? Just reply to this email or give me a call &mdash; happy to set up a private showing whenever works for you.</div>
 

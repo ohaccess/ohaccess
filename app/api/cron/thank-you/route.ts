@@ -35,7 +35,7 @@ async function handle(request: Request) {
 
   const { data: visitors, error } = await supabase
     .from('visitors')
-    .select('id, first_name, email, email_status, registered_at, open_house_id, agent_id, sponsor_id')
+    .select('id, first_name, email, email_status, registered_at, open_house_id, agent_id, sponsor_id, feedback_token, feedback_submitted_at')
     .is('thank_you_sent_at', null)
     .gte('registered_at', floorIso)
     .not('email', 'is', null)
@@ -137,6 +137,12 @@ async function handle(request: Request) {
       agentEmail: agent.display_email || agent.email || 'support@ohaccess.com',
       listingUrl: oh.listing_url,
       facts: facts || null,
+      // The after-tour questions, for the visitors who never scrolled back to
+      // them on the success screen. Dropped once they've answered (there or
+      // via an earlier email).
+      feedbackUrl: v.feedback_token && !v.feedback_submitted_at
+        ? `${APP_URL}/feedback/${v.feedback_token}`
+        : null,
       upcomingHtml,
       sponsor,
     })
