@@ -23,6 +23,10 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null)
   const [openHouses, setOpenHouses] = useState<any[]>([])
   const [visitors, setVisitors] = useState<any[]>([])
+  // Per-open-house numbers for the card stat strips, keyed by open house id
+  // (see /api/dashboard/oh-stats). null until the fetch lands — the strips
+  // simply don't render yet (a card missing from the map shows zeros).
+  const [ohStats, setOhStats] = useState<Record<string, any> | null>(null)
   const [selectedOH, setSelectedOH] = useState<any>(null)
   const [view, setView] = useState<'dashboard' | 'new' | 'settings' | 'team' | 'activity'>('dashboard')
   const [loading, setLoading] = useState(true)
@@ -320,8 +324,20 @@ export default function Dashboard() {
         new Date(b.start_at ?? b.created_at).getTime() - new Date(a.start_at ?? a.created_at).getTime()
       )
       setOpenHouses(data)
+      void loadOhStats()
       if (data.length > 0) { setSelectedOH(data[0]); await loadVisitors(data[0].id) }
     }
+  }
+
+  // Card stat strips. Best-effort and non-blocking: a failure just means the
+  // strips stay blank, never a broken dashboard.
+  const loadOhStats = async () => {
+    try {
+      const res = await fetch('/api/dashboard/oh-stats', { headers: await authHeaders() })
+      if (!res.ok) return
+      const json = await res.json()
+      setOhStats(json.stats || {})
+    } catch { /* blank strips */ }
   }
 
   const loadVisitors = async (openHouseId: string) => {
@@ -1122,6 +1138,7 @@ export default function Dashboard() {
           <OpenHouseList
             user={user}
             openHouses={openHouses}
+            ohStats={ohStats}
             selectedOH={selectedOH}
             visitors={visitors}
             isPaidTier={isPaidTier}

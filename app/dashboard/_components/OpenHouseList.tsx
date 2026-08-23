@@ -1,15 +1,16 @@
 'use client'
-import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, useRef, type ReactNode, type CSSProperties } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { timelineStyle, timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type Sortable } from '@/lib/sort'
 import { phoneLineKind, PHONE_LINE_CHIPS } from '@/lib/register-helpers'
 import { langMeta } from '@/lib/register-i18n'
 
-// The main "Dashboard" view: stat cards, the agent's open-house cards (with
-// QR / copy / edit / delete actions), and the visitor log for the selected
-// open house. Extracted verbatim from page.tsx; state + branding + action
-// callbacks are passed in so page.tsx stays the coordinator.
+// The main "Dashboard" view: the agent's open-house cards (with per-event
+// stat strips and QR / copy / edit / delete actions), and the visitor log
+// for the selected open house. Extracted verbatim from page.tsx; state +
+// branding + action callbacks are passed in so page.tsx stays the
+// coordinator.
 
 // Columns + sort accessors for the per-open-house visitor list. Clicking a
 // header toggles sort (shared useSortable/applySort, same as the admin tables).
@@ -155,8 +156,7 @@ const COLUMN_HELP: Record<string, ReactNode> = {
       </HelpLine>
       <HelpLine term="How">
         Tap <strong>Verify</strong>{' '}on their row — or open the visitor and tap &ldquo;Mark as verified
-        at door.&rdquo; Tap again to undo. Verified visitors count toward the &ldquo;Verified at
-        Door&rdquo; number at the top of your dashboard.
+        at door.&rdquo; Tap again to undo.
       </HelpLine>
     </>
   ),
@@ -180,6 +180,14 @@ const whatsAppBadgeStyle = { marginLeft: '6px', background: '#e9f9ee', color: '#
 // host, deliberately amber (a nudge), never red (an accusation).
 const signedBadgeStyle = { marginLeft: '6px', background: '#e8f9ee', color: '#1a7a3c', border: '1px solid #b2f0c8', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 const unsignedBadgeStyle = { marginLeft: '6px', background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+// Price-feel chip on each open house card's stat strip — the majority After
+// Tour price answer. "Too High" is amber (a nudge toward the price talk),
+// "Reasonable" green, "Too Low" the same blue as the Upcoming badge.
+const priceChipStyle: Record<string, CSSProperties> = {
+  'Too High': { background: '#fff8e6', color: '#8a6100', border: '1px solid #f0d896', borderRadius: '20px', padding: '2px 9px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' },
+  'Reasonable': { background: '#e8f9ee', color: '#1a7a3c', border: '1px solid #b2f0c8', borderRadius: '20px', padding: '2px 9px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' },
+  'Too Low': { background: '#e5f0ff', color: '#0040a0', border: '1px solid #b8d4f5', borderRadius: '20px', padding: '2px 9px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' },
+}
 // Line-type chips: mobile and home phone are neutral facts (same grey as the
 // opted-out chip), only the burner-app signal is amber.
 const lineChipStyle = {
@@ -297,6 +305,7 @@ function TrialBanner({ agentId, supabase, accentColor, trialLimit }: { agentId: 
 export default function OpenHouseList({
   user,
   openHouses,
+  ohStats,
   selectedOH,
   visitors,
   isPaidTier,
@@ -330,6 +339,9 @@ export default function OpenHouseList({
 }: {
   user: any
   openHouses: any[]
+  // Per-open-house card numbers keyed by open house id, from
+  // /api/dashboard/oh-stats (null until that fetch lands).
+  ohStats: Record<string, { visitors: number; ratingAvg: number | null; ratingCount: number; priceVerdict: string | null; hotBuyers: number; invites: number }> | null
   selectedOH: any
   visitors: any[]
   isPaidTier: boolean
@@ -380,19 +392,6 @@ export default function OpenHouseList({
         <TrialBanner agentId={user?.id} supabase={supabase} accentColor={accentColor} trialLimit={trialLimit} />
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
-        {[
-          { label: 'Active Open Houses', value: openHouses.filter(oh => ohState(oh) !== 'ended').length },
-          { label: 'Total Registrations', value: visitors.length, accent: true },
-          { label: 'Verified at Door', value: visitors.filter(v => v.verified).length }
-        ].map(stat => (
-          <div key={stat.label} style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '16px 18px' }}>
-            <div style={{ fontSize: '11px', fontWeight: '500', color: '#6e6e73', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>{stat.label}</div>
-            <div style={{ fontSize: '28px', fontWeight: '600', color: stat.accent ? accentText : '#1d1d1f', letterSpacing: '-1px' }}>{stat.value}</div>
-          </div>
-        ))}
-      </div>
-
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f' }}>Your open houses</div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -411,14 +410,17 @@ export default function OpenHouseList({
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+          {/* Cards have no bottom padding and overflow hidden: the stat band
+              runs edge-to-edge along each card's bottom (Dave's pick — canvas
+              Option C), clipped by the card's own rounded corners. */}
           {openHouses.map(oh => (
-            <div key={oh.id} style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentText : '#d1d1d6'}`, borderRadius: '18px', padding: '14px 18px', cursor: 'pointer' }}
+            <div key={oh.id} style={{ background: 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentText : '#d1d1d6'}`, borderRadius: '18px', padding: '16px 18px 0', overflow: 'hidden', cursor: 'pointer' }}
               onClick={async () => { setSelectedOH(oh); await loadVisitors(oh.id) }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: OH_BADGE[ohState(oh)].dot, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{oh.property_address}</div>
-                  <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>{oh.open_house_date} · {oh.open_house_hours} · 📱 <strong>{oh.code_word}</strong> · ✉️ <strong>{oh.code_word_email || oh.code_word}</strong></div>
+                  <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: 1.5 }}>{oh.open_house_date} · {oh.open_house_hours} · 📱 <strong>{oh.code_word}</strong> · ✉️ <strong>{oh.code_word_email || oh.code_word}</strong></div>
                 </div>
                 {(() => { const b = OH_BADGE[ohState(oh)]; return (
                   <div style={{ background: b.bg, color: b.color, fontSize: '11px', fontWeight: '600', padding: '3px 9px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
@@ -428,8 +430,9 @@ export default function OpenHouseList({
               </div>
               {/* Scrolls sideways like the visitor log below: on a phone these
                   six actions are wider than the card, and without this the
-                  ones on the right (Edit, Delete) are simply unreachable. */}
-              <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any, paddingBottom: '2px' }} onClick={e => e.stopPropagation()}>
+                  ones on the right (Edit, Delete) are simply unreachable.
+                  Left margin lines the row up with the address text. */}
+              <div style={{ display: 'flex', gap: '5px', margin: '12px 0 0 22px', flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any, paddingBottom: '14px' }} onClick={e => e.stopPropagation()}>
                 <button disabled={locked} onClick={async (e) => {
                   e.stopPropagation()
                   if (guardLocked()) return
@@ -442,21 +445,55 @@ export default function OpenHouseList({
                     reader.readAsDataURL(blob)
                   })
                   setQrModal({ oh, url, dataUrl, blob })
-                }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📱 QR Code</button>
+                }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📱 QR Code</button>
                 <button disabled={locked} onClick={(e) => {
                   e.stopPropagation()
                   if (guardLocked()) return
                   const url = `${window.location.origin}/register/${oh.id}`
                   navigator.clipboard.writeText(url)
                   showToast('Registration URL copied!')
-                }} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
+                }} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
                 {ohState(oh) !== 'ended' && (
-                  <button disabled={locked} onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openInvites(oh) }} title="Email the past visitors who are still in their buying window a personal invite to this open house" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>💌 Invite</button>
+                  <button disabled={locked} onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openInvites(oh) }} title="Email the past visitors who are still in their buying window a personal invite to this open house" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>💌 Invite</button>
                 )}
-                <button disabled={locked} onClick={(e) => { e.stopPropagation(); startCopy(oh) }} title="Start a new open house with these same details — just pick the new date and times" style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⧉ Duplicate</button>
-                <button disabled={locked} onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
-                <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }} style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '5px 8px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🗑 Delete</button>
+                <button disabled={locked} onClick={(e) => { e.stopPropagation(); startCopy(oh) }} title="Start a new open house with these same details — just pick the new date and times" style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⧉ Duplicate</button>
+                <button disabled={locked} onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
+                <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }} style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🗑 Delete</button>
               </div>
+              {/* Stat band (canvas Option C): a quiet full-bleed strip along
+                  the card's bottom — the negative margins undo the card's side
+                  padding, and 40px of left padding lines the numbers up with
+                  the address text. Nothing renders until the
+                  /api/dashboard/oh-stats fetch lands (ohStats null); a card
+                  missing from the map shows zeros. Upcoming cards show invites
+                  sent; live/ended show visitors, rating, price feel and 0–3
+                  month buyers — the feedback cells only once someone has
+                  answered. */}
+              {ohStats && (() => {
+                const s = ohStats[oh.id] ?? { visitors: 0, ratingAvg: null, ratingCount: 0, priceVerdict: null, hotBuyers: 0, invites: 0 }
+                const stat = { display: 'inline-flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' as const }
+                const num = { color: '#1d1d1f' }
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' as const, gap: '6px 24px', margin: '0 -18px', background: '#fafafa', borderTop: '1px solid #ececf0', padding: '9px 18px 9px 40px', fontSize: '12px', color: '#6e6e73' }}>
+                    {ohState(oh) === 'upcoming' ? (
+                      <span style={stat}>💌 <strong style={num}>{s.invites}</strong>{s.invites === 1 ? 'invite sent' : 'invites sent'}</span>
+                    ) : (
+                      <>
+                        <span style={stat}>👥 <strong style={num}>{s.visitors}</strong>{s.visitors === 1 ? 'visitor' : 'visitors'}</span>
+                        {s.ratingCount > 0 && s.ratingAvg !== null && (
+                          <span style={stat}>⭐ <strong style={num}>{s.ratingAvg}</strong>{`from ${s.ratingCount}`}</span>
+                        )}
+                        {s.priceVerdict && (
+                          <span style={stat}>🏷️ <span style={priceChipStyle[s.priceVerdict] || priceChipStyle['Reasonable']}>{s.priceVerdict}</span></span>
+                        )}
+                        {s.hotBuyers > 0 && (
+                          <span style={stat}>🔥 <strong style={num}>{s.hotBuyers}</strong>{'buying in 0–3 mo'}</span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
           ))}
         </div>
