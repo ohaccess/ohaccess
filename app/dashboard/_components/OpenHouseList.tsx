@@ -431,14 +431,14 @@ export default function OpenHouseList({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f' }}>Your open houses</div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button disabled={locked} onClick={exportAllCSV} title="One CSV of every visitor from all your open houses" style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            📥 Export all
-          </button>
           <button disabled={locked} onClick={() => { if (guardLocked()) return; openPermanentQr() }} title="One QR code that always points to your next open house — print it once, reuse it forever" style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             📌 My QR code
           </button>
           <button disabled={locked} onClick={() => { if (guardLocked()) return; setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             + New open house
+          </button>
+          <button disabled={locked} onClick={exportAllCSV} title="One CSV of every visitor from all your open houses" style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            📥 Export all
           </button>
         </div>
       </div>
