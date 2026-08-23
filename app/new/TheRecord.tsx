@@ -330,7 +330,7 @@ export default function TheRecord() {
               but the white now extends up to the nav so steps pass underneath. */}
           <div style={{ position: 'sticky', top: '64px', alignSelf: 'start', background: '#fff', zIndex: 1, paddingTop: '32px', paddingBottom: '16px' }}>
             <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#6e6e73' }}>How it works</div>
-            <div style={{ fontSize: 'clamp(30px,3.4vw,42px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', marginTop: '12px', lineHeight: 1.05 }}>Ten seconds to understand.<br /><span style={{ color: '#c9963a' }}>Thirty to check-in.</span></div>
+            <h2 style={{ fontSize: 'clamp(30px,3.4vw,42px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', marginTop: '12px', lineHeight: 1.05 }}>Ten seconds to understand.<br /><span style={{ color: '#c9963a' }}>Thirty to check-in.</span></h2>
             <div style={{ marginTop: '22px', height: '3px', width: '120px', background: '#ececf0', borderRadius: '2px' }}>
               <div data-stepbar="1" style={{ height: '3px', width: '20%', background: '#c9963a', borderRadius: '2px', transition: 'width .4s' }} />
             </div>
@@ -341,7 +341,7 @@ export default function TheRecord() {
               <div key={s.n} data-step={s.n} style={{ display: 'flex', gap: 'clamp(16px,3vw,28px)', padding: 'clamp(24px,3vw,36px) 0', borderBottom: i < STEPS.length - 1 ? '1px solid #e5e5ea' : 'none', alignItems: 'baseline', transition: 'opacity .4s', opacity: .35 }}>
                 <div style={{ fontSize: 'clamp(40px,5vw,56px)', fontWeight: 800, color: s.n === 5 ? '#30d158' : '#c9963a', letterSpacing: '-.03em', width: '64px', flex: 'none', transition: 'transform .4s' }}>{s.n}</div>
                 <div>
-                  <div style={{ fontSize: 'clamp(18px,2vw,22px)', fontWeight: 700, color: '#1d1d1f' }}>{s.title}</div>
+                  <h3 style={{ fontSize: 'clamp(18px,2vw,22px)', fontWeight: 700, color: '#1d1d1f' }}>{s.title}</h3>
                   <div style={{ fontSize: '15px', lineHeight: 1.55, color: '#6e6e73', marginTop: '5px', maxWidth: '44ch' }}>{s.body}</div>
                 </div>
               </div>
@@ -353,7 +353,7 @@ export default function TheRecord() {
         <div id="film" style={{ background: '#f5f5f7', padding: 'clamp(56px,8vw,96px) 0' }}>
           <div style={{ padding: '0 clamp(20px,5vw,48px)' }}>
             <div style={{ ...eyebrow, marginBottom: '10px' }}>The 90-second film</div>
-            <div style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', maxWidth: '24ch' }}>One Open House, from yard sign to seller report.</div>
+            <h2 style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', maxWidth: '24ch' }}>One Open House, from yard sign to seller report.</h2>
           </div>
           {/* FILM SLOT — a click-to-play facade: the poster is YouTube's own
               frame (a plain <img>, so no remote host has to be whitelisted in
@@ -386,7 +386,8 @@ export default function TheRecord() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`https://i.ytimg.com/vi/${FILM_ID}/maxresdefault.jpg`}
-                    alt=""
+                    alt="The ohACCESS film: one Open House, from yard sign to seller report"
+                    loading="lazy"
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', background: 'linear-gradient(to top,rgba(29,29,31,.55),rgba(29,29,31,.15))' }}>
@@ -405,7 +406,7 @@ export default function TheRecord() {
         <div id="leads" style={{ background: '#1d1d1f', color: '#fff', padding: sectionPad, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,340px),1fr))', gap: 'clamp(36px,5vw,64px)', alignItems: 'center' }}>
           <div>
             <div style={eyebrow}>Live log → your CRM</div>
-            <div style={{ fontSize: 'clamp(30px,4vw,44px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, maxWidth: '18ch' }}>Your follow-up list writes itself.</div>
+            <h2 style={{ fontSize: 'clamp(30px,4vw,44px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, maxWidth: '18ch' }}>Your follow-up list writes itself.</h2>
             <p style={{ fontSize: 'clamp(15px,1.5vw,17px)', lineHeight: 1.6, color: 'rgba(255,255,255,.7)', margin: '22px 0 28px', maxWidth: '46ch' }}>Every check-in appears in your live visitor log the moment the codeword is issued — name, verified phone and email, buying timeline. When the event ends, the whole list is already in your CRM. No transcribing, no Monday data entry.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px', fontWeight: 600 }}>
               {['Instant alert on every new visitor', 'Hot buyers flagged: 0–3 month timelines up top', 'Automated post-event report in your inbox'].map(t => (
@@ -446,7 +447,7 @@ export default function TheRecord() {
 
         {/* comparison */}
         <div style={{ background: '#fff', padding: sectionPad }}>
-          <div style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', marginBottom: '8px' }}>The sign-in sheet, on trial.</div>
+          <h2 style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', marginBottom: '8px' }}>The sign-in sheet, on trial.</h2>
           <div style={{ fontSize: '16px', color: '#6e6e73', marginBottom: '32px' }}>What actually happens to a visitor’s contact info, three ways.</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,280px),1fr))', gap: '16px' }}>
             <div data-reveal="1" className="rec-cmp" style={{ border: '1px solid #e5e5ea', borderRadius: '14px', padding: '26px 26px 28px' }}>
@@ -484,7 +485,7 @@ export default function TheRecord() {
         <div id="safety" style={{ background: '#f5f5f7', padding: sectionPad }}>
           <div style={{ maxWidth: '980px', margin: '0 auto' }}>
             <div style={eyebrow}>Safety</div>
-            <div data-reveal="1" style={{ fontSize: 'clamp(30px,4.2vw,52px)', fontWeight: 800, letterSpacing: '-.035em', lineHeight: 1.04, color: '#1d1d1f', textWrap: 'balance' }}>You owe it to your sellers to protect their home. <span style={{ color: '#6e6e73' }}>You owe it to yourself to protect <em>you</em>.</span></div>
+            <h2 data-reveal="1" style={{ fontSize: 'clamp(30px,4.2vw,52px)', fontWeight: 800, letterSpacing: '-.035em', lineHeight: 1.04, color: '#1d1d1f', textWrap: 'balance' }}>You owe it to your sellers to protect their home. <span style={{ color: '#6e6e73' }}>You owe it to yourself to protect <em>you</em>.</span></h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,260px),1fr))', gap: '16px', marginTop: '40px' }}>
               {[
                 { title: 'Deterrence at the door', body: 'Anyone entering knows their name is on the record and their phone is verified. People behave differently when they’re not anonymous.' },
@@ -505,7 +506,7 @@ export default function TheRecord() {
         <div id="report" style={{ background: '#1d1d1f', color: '#fff', padding: sectionPad, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,340px),1fr))', gap: 'clamp(36px,5vw,64px)', alignItems: 'center' }}>
           <div>
             <div style={eyebrow}>The seller report card</div>
-            <div style={{ fontSize: 'clamp(32px,4vw,44px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, maxWidth: '18ch' }}>The text that wins your next listing.</div>
+            <h2 style={{ fontSize: 'clamp(32px,4vw,44px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, maxWidth: '18ch' }}>The text that wins your next listing.</h2>
             <p style={{ fontSize: 'clamp(15px,1.5vw,17px)', lineHeight: 1.6, color: 'rgba(255,255,255,.7)', margin: '22px 0 28px', maxWidth: '46ch' }}>After every Open House, <strong>ohACCESS</strong> builds a report you can send the homeowner in one tap: verified turnout, buyer timelines, proof the afternoon was worth it. Sellers talk. So do their neighbors.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px', fontWeight: 600 }}>
               {['Verified visitor count — full transparency, no guesses', 'Buyer timelines: who’s buying in 0–3 months', 'Sharable with your seller in one tap'].map(t => (
@@ -552,7 +553,7 @@ export default function TheRecord() {
 
         {/* pricing */}
         <div id="pricing" style={{ background: '#fff', padding: sectionPad }}>
-          <div style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', marginBottom: '8px' }}>Priced like a lockbox, not like software.</div>
+          <h2 style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 800, letterSpacing: '-.03em', color: '#1d1d1f', marginBottom: '8px' }}>Priced like a lockbox, not like software.</h2>
           <div style={{ fontSize: '16px', color: '#6e6e73', marginBottom: '24px' }}>Start Free. One verified lead pays for decades.</div>
           <div style={{ display: 'inline-flex', background: '#f5f5f7', borderRadius: '10px', padding: '4px', gap: '2px', marginBottom: '28px', flexWrap: 'wrap' }}>
             {(['monthly', 'annual', '2year'] as const).map(b => (
