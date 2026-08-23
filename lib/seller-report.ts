@@ -5,7 +5,12 @@
 // buyers directly either).
 
 import { TIMELINE_ORDER } from '@/lib/timeline'
-import { normalizeCustomAnswers, normalizeCustomQuestions } from '@/lib/custom-questions'
+import {
+  normalizeCustomAnswers,
+  normalizeCustomQuestions,
+  MAX_CHOICE_OPTIONS,
+  MAX_OPTION_LENGTH,
+} from '@/lib/custom-questions'
 
 export interface SellerReportStats {
   total: number
@@ -61,7 +66,8 @@ export function buildSellerReportStats(
   // The agent's profiles.custom_questions jsonb, used only to learn each
   // question's type and option order. Answers snapshot their own prompt, so a
   // question deleted from Settings still reports under the prompt it was
-  // asked with (as free text — its option list is gone).
+  // asked with (charted when its answers still read as choice picks — see
+  // build() — free text otherwise).
   agentQuestions: unknown = null
 ): SellerReportStats {
   const total = visitors.length
@@ -125,6 +131,32 @@ export function buildSellerReportStats(
         responses: entry.answers.length,
         choices: labels.map(label => ({ label, count: entry.answers.filter(a => a === label).length })),
         answers: [],
+      }
+    }
+    // A question deleted from Settings lost its option list, but its stored
+    // answers still betray a choice question: /api/register + /api/feedback
+    // only ever recorded a choice answer VERBATIM from the option list, so a
+    // few short, repeating values is a former multiple-choice question —
+    // chart it (most-picked first, no configured order left to follow)
+    // instead of listing "Yes" fourteen times as prose. Genuine free text
+    // keeps many distinct answers and stays a list; the repeat requirement
+    // also keeps a lone one-word answer readable as a quote.
+    if (!live) {
+      const distinct = [...new Set(entry.answers)]
+      if (
+        distinct.length <= MAX_CHOICE_OPTIONS &&
+        entry.answers.length > distinct.length &&
+        distinct.every(a => a.length <= MAX_OPTION_LENGTH)
+      ) {
+        return {
+          id,
+          prompt: entry.prompt,
+          responses: entry.answers.length,
+          choices: distinct
+            .map(label => ({ label, count: entry.answers.filter(a => a === label).length }))
+            .sort((a, b) => b.count - a.count),
+          answers: [],
+        }
       }
     }
     return { id, prompt: live?.prompt || entry.prompt, responses: entry.answers.length, choices: null, answers: entry.answers }

@@ -185,6 +185,43 @@ describe('buildSellerReportStats', () => {
       ])
     })
 
+    it('charts a deleted choice question from its repeating answers, most-picked first', () => {
+      const a = (answer: string) =>
+        withAnswers([{ id: 'gone', prompt: 'Do you currently have a property to sell?', answer }])
+      const stats = buildSellerReportStats(
+        [a('Yes'), a('No'), a('No'), a('No'), a('Yes')],
+        0,
+        [] // question deleted from Settings — no option list left
+      )
+      expect(stats.customQuestions).toEqual([
+        {
+          id: 'gone',
+          prompt: 'Do you currently have a property to sell?',
+          responses: 5,
+          choices: [
+            { label: 'No', count: 3 },
+            { label: 'Yes', count: 2 },
+          ],
+          answers: [],
+        },
+      ])
+    })
+
+    it('keeps a deleted free-text question as a list — its answers are all distinct', () => {
+      const a = (answer: string) => withAnswers([{ id: 'gone', prompt: 'Any feedback?', answer }])
+      const stats = buildSellerReportStats(
+        [a('Loved the garden'), a('Kitchen felt dated'), a('Great street')],
+        0,
+        []
+      )
+      expect(stats.customQuestions[0].choices).toBeNull()
+      expect(stats.customQuestions[0].answers).toEqual([
+        'Loved the garden',
+        'Kitchen felt dated',
+        'Great street',
+      ])
+    })
+
     it('orders live questions by the agent’s configured order, then deleted ones', () => {
       const questions = [
         { id: 'a', prompt: 'First?', type: 'text', options: [], surface: 'signin' },
