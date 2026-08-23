@@ -862,43 +862,87 @@ export default function Dashboard() {
     setVisitors(visitors.map(v => v.id === visitorId ? { ...v, verified: !current } : v))
   }
 
-  const exportCSV = () => {
-    if (guardLocked()) return
-    // Custom answers are free text and routinely contain commas, so every field
-    // is now RFC-4180 quoted. Without this a single "Yes, pre-approved" answer
-    // would shift each following column by one.
-    const csvCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
-
-    // One column per question actually answered by someone in this log, keyed
-    // by question id but LABELLED with the prompt as it was asked.
-    const questionColumns: { id: string; prompt: string }[] = []
-    for (const v of visitors) {
-      for (const a of normalizeCustomAnswers(v.custom_answers)) {
-        if (!questionColumns.some(q => q.id === a.id)) {
-          questionColumns.push({ id: a.id, prompt: a.prompt })
-        }
-      }
-    }
-
-    const headers = [
-      'First Name','Last Name','Email','Phone','Timeline','Registered','Verified',
-      ...questionColumns.map(q => q.prompt),
-    ]
-    const rows = visitors.map(v => {
-      const answers = normalizeCustomAnswers(v.custom_answers)
-      return [
-        v.first_name, v.last_name, v.email, v.phone, v.purchasing_timeline,
-        new Date(v.registered_at).toLocaleString(), v.verified ? 'Yes' : 'No',
-        ...questionColumns.map(q => answers.find(a => a.id === q.id)?.answer ?? ''),
-      ]
-    })
-    const csv = [headers, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
+  // Custom answers are free text and routinely contain commas, so every field
+  // is RFC-4180 quoted. Without this a single "Yes, pre-approved" answer
+  // would shift each following column by one.
+  const csvCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
+  const downloadCSV = (headerRow: string[], rows: unknown[][], filename: string) => {
+    const csv = [headerRow, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${selectedOH?.property_address}-visitors.csv`
+    a.download = filename
     a.click()
+  }
+
+  // One column per question actually answered by someone in the set, keyed
+  // by question id but LABELLED with the prompt as it was asked.
+  const questionColumnsFor = (vs: any[]) => {
+    const cols: { id: string; prompt: string }[] = []
+    for (const v of vs) {
+      for (const a of normalizeCustomAnswers(v.custom_answers)) {
+        if (!cols.some(q => q.id === a.id)) cols.push({ id: a.id, prompt: a.prompt })
+      }
+    }
+    return cols
+  }
+  const VISITOR_CSV_HEADERS = ['First Name','Last Name','Email','Phone','Timeline','Registered','Verified']
+  const visitorCells = (v: any, questionColumns: { id: string; prompt: string }[]) => {
+    const answers = normalizeCustomAnswers(v.custom_answers)
+    return [
+      v.first_name, v.last_name, v.email, v.phone, v.purchasing_timeline,
+      new Date(v.registered_at).toLocaleString(), v.verified ? 'Yes' : 'No',
+      ...questionColumns.map(q => answers.find(a => a.id === q.id)?.answer ?? ''),
+    ]
+  }
+
+  const exportCSV = () => {
+    if (guardLocked()) return
+    const qs = questionColumnsFor(visitors)
+    downloadCSV(
+      [...VISITOR_CSV_HEADERS, ...qs.map(q => q.prompt)],
+      visitors.map(v => visitorCells(v, qs)),
+      `${selectedOH?.property_address}-visitors.csv`
+    )
+  }
+
+  // "Export all" at the top of the dashboard: every visitor across every open
+  // house in one file, so an agent with dozens of events doesn't open each
+  // log to export it. Same columns as the per-event export, prefixed with
+  // which open house (address + date) each row came from. Fetched in pages —
+  // Supabase silently caps a single select at 1000 rows, and a quietly
+  // truncated "export all" is worse than none.
+  const exportAllCSV = async () => {
+    if (guardLocked()) return
+    const all: any[] = []
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase.from('visitors').select('*').eq('agent_id', user.id)
+        .order('registered_at', { ascending: false }).range(from, from + 999)
+      if (error) { showToast('Could not load your visitors. Please try again.', 'error'); return }
+      all.push(...(data || []))
+      if (!data || data.length < 1000) break
+    }
+    if (all.length === 0) { showToast('No visitors to export yet.', 'error'); return }
+
+    // Group rows by open house in the dashboard's order (newest event first;
+    // the sort is stable, so within an event visitors stay newest-first). A
+    // row whose open house is somehow gone still exports, just without the
+    // address — never silently dropped.
+    const ohOrder = new Map(openHouses.map((oh, i) => [oh.id, i]))
+    const ohById = new Map(openHouses.map(oh => [oh.id, oh]))
+    all.sort((a, b) =>
+      (ohOrder.get(a.open_house_id) ?? openHouses.length) - (ohOrder.get(b.open_house_id) ?? openHouses.length)
+    )
+    const qs = questionColumnsFor(all)
+    downloadCSV(
+      ['Open House', 'Event Date', ...VISITOR_CSV_HEADERS, ...qs.map(q => q.prompt)],
+      all.map(v => {
+        const oh = ohById.get(v.open_house_id)
+        return [oh?.property_address ?? '', oh?.open_house_date ?? '', ...visitorCells(v, qs)]
+      }),
+      'ohACCESS-all-visitors.csv'
+    )
   }
 
   const saveSettings = async () => {
@@ -1158,6 +1202,7 @@ export default function Dashboard() {
             startEdit={startEdit}
             startCopy={startCopy}
             exportCSV={exportCSV}
+            exportAllCSV={exportAllCSV}
             toggleVerified={toggleVerified}
             setView={setView}
             setEditingOH={setEditingOH}
