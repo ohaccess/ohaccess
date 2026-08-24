@@ -2,6 +2,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { archiveVisitorById } from '@/lib/visitor-archive'
+import { agentTrialLocked } from '@/lib/trial-cap'
 
 // DELETE: remove a single visitor, archiving the record first (visitor_archive,
 // migration 026) — the dashboard's "Delete visitor" button must not destroy
@@ -22,6 +23,17 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!visitor) return NextResponse.json({ error: 'Visitor not found' }, { status: 404 })
   if (visitor.agent_id !== user.id) {
     return NextResponse.json({ error: 'That visitor is not yours' }, { status: 403 })
+  }
+
+  // Trial lockout (lib/trial-cap.ts): a free agent past the cap can't delete
+  // visitors — removing rows would pull the count back under the cap and
+  // re-open registration, letting the trial reset forever. Enforced here,
+  // not just in the dashboard's disabled buttons.
+  if (await agentTrialLocked(supabase, user.id)) {
+    return NextResponse.json(
+      { error: 'Your free trial is used up — subscribe to keep managing your visitors.' },
+      { status: 403 }
+    )
   }
 
   // Archive BEFORE deleting; if archiving fails, abort — never silently

@@ -840,6 +840,10 @@ export default function Dashboard() {
   }
 
   const deleteOpenHouse = async (ohId: string) => {
+    // Locked accounts can't delete either (the server enforces this too) —
+    // deleting an open house cascades its visitors, which would pull the
+    // count back under the trial cap and re-open registration.
+    if (guardLocked()) return
     // Server-side cascade delete (clears short_urls + visitors, then the open
     // house) — the client can't delete short_urls (locked by RLS), which is why
     // a direct client delete failed silently on a FK violation.
@@ -1074,7 +1078,7 @@ export default function Dashboard() {
         </div>
         <div style={{ display: 'flex', gap: '4px' }} className="dash-nav-desktop">
           {navViews.map(v => (
-            <button key={v} onClick={() => { setView(v); if (v !== 'new') setEditingOH(null) }} style={{ background: view === v ? navActiveBg : 'transparent', border: 'none', color: onPrimary, padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
+            <button key={v} onClick={() => { if (v === 'new' && guardLocked()) return; setView(v); if (v !== 'new') setEditingOH(null) }} style={{ background: view === v ? navActiveBg : 'transparent', border: 'none', color: onPrimary, padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '13px', fontWeight: view === v ? '600' : '400' }}>
               {navLabel(v)}
             </button>
           ))}
@@ -1093,7 +1097,7 @@ export default function Dashboard() {
       {mobileMenuOpen && (
         <div style={{ background: primaryColor, borderTop: `1px solid ${primaryIsLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'}`, padding: '8px 16px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {navViews.map(v => (
-            <button key={v} onClick={() => { setView(v); if (v !== 'new') setEditingOH(null); setMobileMenuOpen(false) }}
+            <button key={v} onClick={() => { if (v === 'new' && guardLocked()) return; setView(v); if (v !== 'new') setEditingOH(null); setMobileMenuOpen(false) }}
               style={{ background: view === v ? navActiveBg : 'transparent', border: 'none', color: onPrimary, padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '14px', fontWeight: view === v ? '600' : '400', textAlign: 'left' as const }}>
               {navLabelMobile(v)}
             </button>
@@ -1331,6 +1335,7 @@ export default function Dashboard() {
               supabase={supabase}
               primaryColor={primaryColor}
               accentColor={accentColor}
+              locked={locked}
               requireAgreement={!!openHouses.find(oh => oh.id === visitorModal.open_house_id)?.require_agreement}
               onChange={(fields) => {
                 setVisitors(prev => prev.map(v => v.id === visitorModal.id ? { ...v, ...fields } : v))

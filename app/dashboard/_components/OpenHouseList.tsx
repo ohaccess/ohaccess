@@ -431,13 +431,13 @@ export default function OpenHouseList({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f' }}>Your open houses</div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button disabled={locked} onClick={() => { if (guardLocked()) return; openPermanentQr() }} title="One QR code that always points to your next open house — print it once, reuse it forever" style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <button onClick={() => { if (guardLocked()) return; openPermanentQr() }} title="One QR code that always points to your next open house — print it once, reuse it forever" style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             📌 My QR code
           </button>
-          <button disabled={locked} onClick={() => { if (guardLocked()) return; setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <button onClick={() => { if (guardLocked()) return; setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             + New open house
           </button>
-          <button disabled={locked} onClick={exportAllCSV} title="One CSV of every visitor from all your open houses" style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <button onClick={exportAllCSV} title="One CSV of every visitor from all your open houses" style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             📥 Export all
           </button>
         </div>
@@ -478,7 +478,7 @@ export default function OpenHouseList({
                   ones on the right (Edit, Delete) are simply unreachable.
                   Left margin lines the row up with the address text. */}
               <div style={{ display: 'flex', gap: '5px', margin: '12px 0 0 22px', flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any, paddingBottom: '14px' }} onClick={e => e.stopPropagation()}>
-                <button disabled={locked} onClick={async (e) => {
+                <button onClick={async (e) => {
                   e.stopPropagation()
                   if (guardLocked()) return
                   const url = `${window.location.origin}/register/${oh.id}`
@@ -491,7 +491,7 @@ export default function OpenHouseList({
                   })
                   setQrModal({ oh, url, dataUrl, blob })
                 }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📱 QR Code</button>
-                <button disabled={locked} onClick={(e) => {
+                <button onClick={(e) => {
                   e.stopPropagation()
                   if (guardLocked()) return
                   const url = `${window.location.origin}/register/${oh.id}`
@@ -499,11 +499,14 @@ export default function OpenHouseList({
                   showToast('Registration URL copied!')
                 }} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
                 {ohState(oh) !== 'ended' && (
-                  <button disabled={locked} onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openInvites(oh) }} title="Email the past visitors who are still in their buying window a personal invite to this open house" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>💌 Invite</button>
+                  <button onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openInvites(oh) }} title="Email the past visitors who are still in their buying window a personal invite to this open house" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>💌 Invite</button>
                 )}
-                <button disabled={locked} onClick={(e) => { e.stopPropagation(); startCopy(oh) }} title="Start a new open house with these same details — just pick the new date and times" style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⧉ Duplicate</button>
-                <button disabled={locked} onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
-                <button onClick={(e) => { e.stopPropagation(); setDeleteConfirm(oh.id) }} style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🗑 Delete</button>
+                <button onClick={(e) => { e.stopPropagation(); startCopy(oh) }} title="Start a new open house with these same details — just pick the new date and times" style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⧉ Duplicate</button>
+                <button onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
+                {/* Delete is locked too (and server-enforced): deleting an
+                    open house cascades its visitors, which would pull the
+                    count back under the trial cap and re-open registration. */}
+                <button onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; setDeleteConfirm(oh.id) }} style={{ background: '#fff0f0', color: '#cc0000', border: '1px solid #ffcccc', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🗑 Delete</button>
               </div>
               {/* Stat band (canvas Option C): a quiet full-bleed strip along
                   the card's bottom — the negative margins undo the card's side
@@ -580,8 +583,8 @@ export default function OpenHouseList({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
             <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Visitor log — {selectedOH.property_address}</div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button disabled={locked} onClick={() => { if (guardLocked()) return; openSellerReport(selectedOH.id) }} title="A shareable results page for your seller — visitor counts and buyer timelines, no visitor contact info" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>📊 Seller report</button>
-              <button disabled={locked} onClick={exportCSV} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
+              <button onClick={() => { if (guardLocked()) return; openSellerReport(selectedOH.id) }} title="A shareable results page for your seller — visitor counts and buyer timelines, no visitor contact info" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>📊 Seller report</button>
+              <button onClick={exportCSV} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
             </div>
           </div>
           {visitors.length === 0 ? (
@@ -631,7 +634,7 @@ export default function OpenHouseList({
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{new Date(v.registered_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
-                        <button disabled={locked} onClick={() => toggleVerified(v.id, v.verified)} style={{ background: v.verified ? '#30d158' : primaryColor, color: v.verified ? 'white' : onPrimary, border: v.verified ? 'none' : primaryBtnBorder, borderRadius: '6px', padding: '4px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+                        <button onClick={() => toggleVerified(v.id, v.verified)} style={{ background: v.verified ? '#30d158' : primaryColor, color: v.verified ? 'white' : onPrimary, border: v.verified ? 'none' : primaryBtnBorder, borderRadius: '6px', padding: '4px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                           {v.verified ? '✓' : 'Verify'}
                         </button>
                       </td>

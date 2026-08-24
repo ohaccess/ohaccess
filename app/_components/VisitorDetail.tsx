@@ -38,7 +38,7 @@ const unsignedBadge = { marginLeft: '10px', background: '#fff8e6', color: '#8a61
 // toggle and notes-save logic live in exactly one place. Saves via the
 // (authenticated) supabase client; the visitors RLS policy already restricts
 // writes to the owning agent.
-export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d1f', accentColor = '#0071e3', requireAgreement = false, onChange, onDelete }: {
+export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d1f', accentColor = '#0071e3', requireAgreement = false, locked = false, onChange, onDelete }: {
   visitor: any
   supabase: any
   primaryColor?: string
@@ -46,6 +46,10 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
   // True when this visitor's open house requires a signed touring agreement;
   // shows the Signed / Not signed chip (visitor.agreement_signed) by the name.
   requireAgreement?: boolean
+  // Trial lockout: the agent used up their free registrations. Viewing stays,
+  // but verify / notes / delete answer with a subscribe message instead of
+  // acting (the delete route enforces this server-side too).
+  locked?: boolean
   onChange?: (fields: { verified?: boolean; notes?: string }) => void
   // When provided, a "Delete visitor" button is shown. Called after the visitor
   // is successfully deleted, so the parent can close the modal / refresh its list.
@@ -65,11 +69,21 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(false)
+  const [lockedMessage, setLockedMessage] = useState(false)
 
   const tl = timelineStyle(visitor.purchasing_timeline)
   const dirty = notes !== (visitor.notes || '')
 
+  // Every action answers with the subscribe line while the trial is used up.
+  const guardLocked = (): boolean => {
+    if (!locked) return false
+    setLockedMessage(true)
+    setTimeout(() => setLockedMessage(false), 4000)
+    return true
+  }
+
   const toggleVerify = async () => {
+    if (guardLocked()) return
     const next = !verified
     setBusyVerify(true)
     setVerified(next)
@@ -80,6 +94,7 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
   }
 
   const saveNotes = async () => {
+    if (guardLocked()) return
     setSavingNotes(true)
     setSavedNotes(false)
     const { error } = await supabase.from('visitors').update({ notes }).eq('id', visitor.id)
@@ -93,6 +108,7 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
   }
 
   const deleteVisitor = async () => {
+    if (guardLocked()) return
     setDeleting(true)
     setDeleteError(false)
     // Server-side delete (owner-checked) so the record is archived first —
@@ -156,6 +172,12 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
         ))}
       </div>
 
+      {lockedMessage && (
+        <div style={{ marginTop: '14px', background: '#fff0f0', border: '1px solid #f0c0c0', borderRadius: '10px', padding: '10px 12px', fontSize: '13px', fontWeight: 600, color: '#cc0000' }}>
+          You&apos;ve used all your free registrations. Subscribe to continue using ohACCESS.
+        </div>
+      )}
+
       <button
         onClick={toggleVerify}
         disabled={busyVerify}
@@ -201,7 +223,7 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
         <div style={{ marginTop: '22px', paddingTop: '18px', borderTop: '1px solid #f2f2f7' }}>
           {!confirmingDelete ? (
             <button
-              onClick={() => { setConfirmingDelete(true); setDeleteError(false) }}
+              onClick={() => { if (guardLocked()) return; setConfirmingDelete(true); setDeleteError(false) }}
               style={{ width: '100%', background: 'none', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '12px', padding: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
             >
               Delete visitor
