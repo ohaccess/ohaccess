@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from '@/lib/auth'
 import { getClientIp } from '@/lib/rate-limit'
 import { archiveVisitorsForOpenHouse } from '@/lib/visitor-archive'
 import { getOpenHouseDisplay } from '@/lib/open-house-display'
+import { agentTrialLocked } from '@/lib/trial-cap'
 
 // GET: public, read-only display data for the visitor registration page.
 // The register page now server-renders this data itself (same shared
@@ -46,6 +47,17 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!oh) return NextResponse.json({ error: 'Open house not found' }, { status: 404 })
   if (oh.agent_id !== user.id) {
     return NextResponse.json({ error: 'That open house is not yours' }, { status: 403 })
+  }
+
+  // Trial lockout (lib/trial-cap.ts): a free agent past the cap can't delete
+  // open houses — the visitor cascade would pull the count back under the
+  // cap and re-open registration, letting the trial reset forever. Enforced
+  // here, not just in the dashboard's disabled buttons.
+  if (await agentTrialLocked(supabase, user.id)) {
+    return NextResponse.json(
+      { error: 'Your free trial is used up — subscribe to keep managing your open houses.' },
+      { status: 403 }
+    )
   }
 
   // Archive the visitor log BEFORE deleting it (visitor_archive, migration

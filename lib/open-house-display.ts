@@ -3,6 +3,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { normalizeCustomQuestions, questionsForSurface } from '@/lib/custom-questions'
 import { inferProfileCountry, normalizeCountry } from '@/lib/regions'
 import { whatsAppConfigured, whatsAppFirstCountries } from '@/lib/messaging-channel'
+import { registrationClosed } from '@/lib/trial-cap'
 
 // The shape handed to the register page — safe display fields only.
 export type OpenHouseDisplay = NonNullable<Awaited<ReturnType<typeof getOpenHouseDisplay>>>
@@ -95,6 +96,19 @@ export async function getOpenHouseDisplay(
   // inferred) country stands in, which for those rows is US or Canada.
   const country = normalizeCountry(oh.country) ?? inferProfileCountry(agent)
 
+  // Trial cap (lib/trial-cap.ts): when the agent's free allowance is used up
+  // and this isn't the one open house still inside its grace window, the
+  // register page shows a closed card instead of the form — the visitor with
+  // a pre-printed QR sign in front of them finds out at scan time, not after
+  // filling everything in. Best-effort open on error: a hiccup here must not
+  // brick the sign-in page (the register API enforces the cap regardless).
+  let signInClosed = false
+  try {
+    signInClosed = await registrationClosed(supabase, oh, agent)
+  } catch (err) {
+    console.error('trial-cap check failed (leaving sign-in open):', err)
+  }
+
   // Shape matches what the register page expects: open-house fields with a
   // nested `profiles` object for the agent's branding. agent_id is
   // intentionally omitted.
@@ -116,6 +130,8 @@ export async function getOpenHouseDisplay(
     open_house_date: oh.open_house_date,
     open_house_hours: oh.open_house_hours,
     status: oh.status,
+    // True = render the closed card instead of the sign-in form (trial cap).
+    signInClosed,
     profiles: {
       full_name: agent?.full_name ?? null,
       primary_color: agent?.primary_color ?? null,

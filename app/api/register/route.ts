@@ -17,6 +17,7 @@ import {
   type PhoneIntel,
 } from '@/lib/register-helpers'
 import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
+import { capCrossingVisitor, graceAllowsRegistration } from '@/lib/trial-cap'
 import {
   normalizeCustomQuestions,
   questionsForSurface,
@@ -218,17 +219,33 @@ export async function POST(request: Request) {
 
     // Trial cap check — BEFORE creating the visitor row, so over-quota
     // requests can't pollute the agent's visitor log. The cap is 25 plus any
-    // admin-gifted bonus_visitors (referral thank-yous).
+    // admin-gifted bonus_visitors (referral thank-yous). One exception (lib/
+    // trial-cap.ts): the open house the cap-crossing visitor signed in at
+    // keeps collecting until shortly after its scheduled end, so an event in
+    // progress never starts turning people away at the door. Every other
+    // open house is closed — the register page shows the closed card before
+    // anyone can even fill the form; this is the enforcement behind it.
     if (!isPro) {
       const { count } = await supabase
         .from('visitors')
         .select('*', { count: 'exact', head: true })
         .eq('agent_id', openHouse.agent_id)
 
-      if ((count ?? 0) >= trialLimitFor(agent)) {
-        return NextResponse.json({
-          error: 'This agent has reached their free trial limit. Please ask them to upgrade to Pro at ohaccess.com'
-        }, { status: 403 })
+      const limit = trialLimitFor(agent)
+      if ((count ?? 0) >= limit) {
+        const cap = await capCrossingVisitor(supabase, openHouse.agent_id, limit)
+        const inGrace = graceAllowsRegistration({
+          nowMs: Date.now(),
+          openHouseId: openHouse.id,
+          startAt: openHouse.start_at,
+          endAt: openHouse.end_at,
+          capVisitorOpenHouseId: cap?.open_house_id ?? null,
+        })
+        if (!inGrace) {
+          return NextResponse.json({
+            error: 'This agent has reached their free trial limit. Please ask them to upgrade to Pro at ohaccess.com'
+          }, { status: 403 })
+        }
       }
     }
 

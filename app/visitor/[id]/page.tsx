@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import VisitorDetail from '@/app/_components/VisitorDetail'
+import { trialLimitFor, isExpiredPrepaidAccess } from '@/lib/billing-plans'
 
 // Standalone, mobile-optimized visitor page — the destination of the agent's
 // SMS/email "view & add notes" link. Requires login; if the agent isn't signed
@@ -11,6 +12,7 @@ export default function VisitorPage({ params }: { params: Promise<{ id: string }
   const { id } = React.use(params)
   const [visitor, setVisitor] = useState<any>(null)
   const [requireAgreement, setRequireAgreement] = useState(false)
+  const [locked, setLocked] = useState(false)
   const [status, setStatus] = useState<'loading' | 'ready' | 'notfound'>('loading')
 
   useEffect(() => {
@@ -36,6 +38,29 @@ export default function VisitorPage({ params }: { params: Promise<{ id: string }
             data.agreement_signed = (receipts || []).length > 0
           }
         } catch { /* no chip */ }
+        // Trial lockout, same rule as the dashboard: a free agent past the
+        // cap gets read-only visitor pages (verify/notes/delete answer with
+        // the subscribe message; the delete route enforces it server-side).
+        // Best-effort — a lookup failure leaves the page unlocked.
+        try {
+          const uid = session.user.id
+          const [{ data: profile }, { count }] = await Promise.all([
+            supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
+            supabase.from('visitors').select('*', { count: 'exact', head: true }).eq('agent_id', uid),
+          ])
+          let paid =
+            ['pro', 'team', 'brokerage'].includes(profile?.tier || 'free') &&
+            !isExpiredPrepaidAccess(profile)
+          if (!paid && profile?.sponsor_id) {
+            const { data: sp } = await supabase
+              .from('sponsors')
+              .select('billing_status')
+              .eq('id', profile.sponsor_id)
+              .maybeSingle()
+            paid = sp?.billing_status === 'active'
+          }
+          setLocked(!paid && (count ?? 0) >= trialLimitFor(profile))
+        } catch { /* leave unlocked */ }
         setVisitor(data)
         setStatus('ready')
       }
@@ -68,6 +93,7 @@ export default function VisitorPage({ params }: { params: Promise<{ id: string }
               visitor={visitor}
               supabase={supabase}
               requireAgreement={requireAgreement}
+              locked={locked}
               onDelete={() => { window.location.href = '/dashboard' }}
             />
           )}

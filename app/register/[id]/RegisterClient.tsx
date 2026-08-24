@@ -548,6 +548,39 @@ function ExpiredOpenHouse() {
   const onAccent = onColor(accentColor)
   const accentBtnBorder = fillBorder(accentColor)
 
+  // Trial cap (lib/trial-cap.ts): the agent's free allowance is used up and
+  // this open house isn't inside its grace window, so a visitor scanning a
+  // pre-printed QR sign gets this card at scan time — never a form that only
+  // errors after they've filled everything in. Wording is deliberately
+  // neutral: the visitor at the door doesn't need to know anything about the
+  // agent's plan. English-only, same as the expired-QR fallback page.
+  if (openHouse.signInClosed) {
+    return (
+      <main style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: '40px' }}>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+        <div style={{ background: primaryColor, width: '100%', padding: '22px 20px 16px', textAlign: 'center' }}>
+          <div style={{ fontSize: '20px', fontWeight: '200', color: onPrimary, letterSpacing: '-0.5px' }}>
+            oh<span style={{ fontWeight: '700' }}>ACCESS</span>
+          </div>
+        </div>
+        <div style={{ width: '100%', maxWidth: '420px', padding: '0 16px', boxSizing: 'border-box' }}>
+          <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '28px 22px', marginTop: '24px', textAlign: 'center' }}>
+            <div style={{ fontSize: '34px', marginBottom: '10px' }}>🏡</div>
+            <div style={{ fontSize: '18px', fontWeight: 700, color: '#1d1d1f', marginBottom: '8px' }}>Welcome!</div>
+            <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: 1.6 }}>
+              {agent?.full_name
+                ? <>Online sign-in isn&apos;t available for this open house. Please introduce yourself to <strong style={{ color: '#1d1d1f' }}>{agent.full_name}</strong> — they&apos;ll be happy to welcome you in.</>
+                : <>Online sign-in isn&apos;t available for this open house. Please introduce yourself to the hosting agent — they&apos;ll be happy to welcome you in.</>}
+            </div>
+            {openHouse.property_address && (
+              <div style={{ marginTop: '14px', fontSize: '12px', color: '#aeaeb2' }}>{openHouse.property_address}</div>
+            )}
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   const inputStyle = {
     width: '100%',
     background: '#f5f5f7',
