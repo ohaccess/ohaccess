@@ -4,7 +4,7 @@ import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { stripe, getPriceConfig, isTier, isBillingInterval } from '@/lib/stripe'
 import { isValidSeatCount, isExpiredPrepaidAccess, isComped, MIN_BROKERAGE_SEATS, MAX_BROKERAGE_SEATS } from '@/lib/billing-plans'
-import { HARDWARE_OFFER_ACTIVE, HARDWARE_CHOICES } from '@/lib/hardware-offer'
+import { HARDWARE_OFFER_ACTIVE, HARDWARE_CHOICES, STRIPE_HARDWARE_VALUES } from '@/lib/hardware-offer'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://ohaccess.com'
 
@@ -143,8 +143,8 @@ export async function POST(request: Request) {
                 label: { type: 'custom', custom: 'Your free sign hardware' },
                 dropdown: {
                   options: [
-                    { value: 'pedestal_pair', label: HARDWARE_CHOICES.pedestal_pair },
-                    { value: 'a_frame', label: HARDWARE_CHOICES.a_frame },
+                    { value: STRIPE_HARDWARE_VALUES.pedestal_pair, label: HARDWARE_CHOICES.pedestal_pair },
+                    { value: STRIPE_HARDWARE_VALUES.a_frame, label: HARDWARE_CHOICES.a_frame },
                   ],
                 },
               },

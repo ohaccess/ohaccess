@@ -47,6 +47,22 @@ export function isHardwareChoice(value: unknown): value is HardwareChoice {
   return value === 'pedestal_pair' || value === 'a_frame'
 }
 
+// Stripe rejects dropdown option values containing anything but letters and
+// digits (no underscores), so checkout sends these and the webhook maps them
+// back to the HardwareChoice names the hardware_claims table requires.
+export const STRIPE_HARDWARE_VALUES: Record<HardwareChoice, string> = {
+  pedestal_pair: 'pedestalpair',
+  a_frame: 'aframe',
+}
+
+export function hardwareChoiceFromStripe(raw: unknown): HardwareChoice | null {
+  if (isHardwareChoice(raw)) return raw
+  const match = (Object.keys(STRIPE_HARDWARE_VALUES) as HardwareChoice[]).find(
+    (choice) => STRIPE_HARDWARE_VALUES[choice] === raw
+  )
+  return match ?? null
+}
+
 // 2-letter codes → display names. DC included (it has agents too); the offer
 // copy says "state" but the cap applies per code, which is what the shipping
 // address yields.

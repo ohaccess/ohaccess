@@ -3,6 +3,8 @@ import {
   offerPhase,
   normalizeStateCode,
   isHardwareChoice,
+  hardwareChoiceFromStripe,
+  STRIPE_HARDWARE_VALUES,
   STATE_LIMIT,
   SCARCITY_THRESHOLD,
   SOCIAL_PROOF_THRESHOLD,
@@ -63,5 +65,31 @@ describe('isHardwareChoice', () => {
     expect(isHardwareChoice('a_frame')).toBe(true)
     expect(isHardwareChoice('both_please')).toBe(false)
     expect(isHardwareChoice(undefined)).toBe(false)
+  })
+})
+
+describe('STRIPE_HARDWARE_VALUES', () => {
+  it('values are strictly alphanumeric (Stripe rejects anything else)', () => {
+    for (const value of Object.values(STRIPE_HARDWARE_VALUES)) {
+      expect(value).toMatch(/^[a-zA-Z0-9]+$/)
+    }
+  })
+})
+
+describe('hardwareChoiceFromStripe', () => {
+  it('maps the Stripe dropdown values back to internal choices', () => {
+    expect(hardwareChoiceFromStripe(STRIPE_HARDWARE_VALUES.pedestal_pair)).toBe('pedestal_pair')
+    expect(hardwareChoiceFromStripe(STRIPE_HARDWARE_VALUES.a_frame)).toBe('a_frame')
+  })
+
+  it('accepts the internal names too', () => {
+    expect(hardwareChoiceFromStripe('pedestal_pair')).toBe('pedestal_pair')
+    expect(hardwareChoiceFromStripe('a_frame')).toBe('a_frame')
+  })
+
+  it('returns null for anything else', () => {
+    expect(hardwareChoiceFromStripe('bothplease')).toBeNull()
+    expect(hardwareChoiceFromStripe(undefined)).toBeNull()
+    expect(hardwareChoiceFromStripe(null)).toBeNull()
   })
 })

@@ -8,7 +8,7 @@ import { notifyAdmins } from '@/lib/notify-admin'
 import { ensureManagedBrokerage } from '@/lib/team'
 import { MIN_BROKERAGE_SEATS } from '@/lib/billing-plans'
 import { generateGiftCode } from '@/lib/gift'
-import { HARDWARE_CHOICES, isHardwareChoice, normalizeStateCode } from '@/lib/hardware-offer'
+import { HARDWARE_CHOICES, hardwareChoiceFromStripe, normalizeStateCode } from '@/lib/hardware-offer'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -278,7 +278,7 @@ async function handleGiftPurchase(session: Stripe.Checkout.Session) {
 async function recordHardwareClaim(session: Stripe.Checkout.Session, profileId: string) {
   try {
     const choiceRaw = session.custom_fields?.find((f) => f.key === 'hardware_choice')?.dropdown?.value
-    const choice = isHardwareChoice(choiceRaw) ? choiceRaw : null
+    const choice = hardwareChoiceFromStripe(choiceRaw)
     const shipping = session.collected_information?.shipping_details ?? null
     const state = normalizeStateCode(shipping?.address?.state)
     if (!choice || !shipping || !state) {
