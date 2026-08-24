@@ -153,12 +153,16 @@ export function buildThankYouEmail(o: ThankYouEmailOpts): { subject: string; htm
           ${listingSection}
           ${feedbackSection}
 
-          <div style="font-size:15px;color:#444;line-height:1.6;margin:18px 0 14px;">Questions about this home, or want to see it again? Just reply to this email or give me a call &mdash; happy to set up a private showing whenever works for you.</div>
-
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7f9;border-radius:12px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7f9;border-radius:12px;margin-top:18px;">
             <tr>
-              <td style="padding:14px 0 14px 16px;width:66px;vertical-align:middle;">${avatar}</td>
-              <td style="padding:14px 16px 14px 12px;vertical-align:middle;">
+              <td colspan="2" style="padding:16px 16px 0;">
+                <div style="font-size:17px;font-weight:800;color:#1d1d1f;">Want to see it again &mdash; or tour more homes?</div>
+                <div style="font-size:14px;color:#444;line-height:1.6;margin-top:4px;">Just reply to this email or give me a call &mdash; I'm happy to set up a private showing whenever works for you.</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0 16px 16px;width:66px;vertical-align:middle;">${avatar}</td>
+              <td style="padding:10px 16px 16px 12px;vertical-align:middle;">
                 <div style="font-size:15px;font-weight:700;color:#1d1d1f;">${e(o.agentName)}</div>
                 ${o.brokerage ? `<div style="font-size:13px;color:#6e6e73;">${e(o.brokerage)}</div>` : ''}
                 <div style="font-size:13px;margin-top:3px;">${phoneBit}<a href="mailto:${e(o.agentEmail)}" style="color:${accent};text-decoration:none;">${e(o.agentEmail)}</a></div>

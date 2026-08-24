@@ -107,6 +107,25 @@ function buildReminderHtml(args: {
   const sectionTitle = (label: string) => `
       <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${e(accent)};margin-bottom:8px;">${label}</div>`
 
+  // Word-of-mouth nudge — shown to every agent (unlike the referral reward,
+  // which is Pro-only), so it can't reference "your link above".
+  const spreadTheWordHtml = `
+    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+      ${sectionTitle('Spread the word')}
+      <div style="font-size:14px;line-height:1.7;">
+        Verified sign-ins work best when everyone around you expects them. Two conversations worth having:
+      </div>
+      <div style="font-size:14px;line-height:1.7;margin-top:8px;">
+        <strong>Your team &amp; broker</strong> &mdash; ohACCESS has team accounts with shared branding,
+        so every open house across your office gets the same secure sign-in. Worth a mention at your
+        next office meeting.
+      </div>
+      <div style="font-size:14px;line-height:1.7;margin-top:8px;">
+        <strong>Your referral partners</strong> &mdash; lenders and title reps can sponsor your open
+        houses and put their card in front of every verified visitor. They'll thank you for the introduction.
+      </div>
+    </div>`
+
   const referralHtml = referralUrl ? `
     <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
       ${sectionTitle('Save on your subscription')}
@@ -205,6 +224,7 @@ function buildReminderHtml(args: {
       </div>
     </div>
 
+    ${spreadTheWordHtml}
     ${referralHtml}
 
     <div style="margin-top:24px;padding-top:14px;border-top:1px solid #e5e5ea;font-size:11px;color:#aeaeb2;text-align:center;">

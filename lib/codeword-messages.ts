@@ -449,6 +449,8 @@ export async function sendVisitorCodewordMessages(params: {
               ${listingShortUrl ? `📝 <a href="${escapeHtml(listingShortUrl)}" style="color: #0071e3; font-weight: 600; font-size: 13px;">Full listing details </a>` : ''}
             </div>
             <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+              <div style="font-size: 15px; font-weight: 800; color: #1d1d1f;">Want a private tour?</div>
+              <div style="font-size: 12px; color: #6e6e73; line-height: 1.6; margin: 3px 0 12px;">I'm happy to show you this home &mdash; or any other &mdash; on your schedule. Call me or just reply to this email.</div>
               <div style="display: flex; align-items: center;">
                 ${headshotUrl ? `<img src="${escapeHtml(headshotUrl)}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #d1d1d6;margin-right:20px;" />` : ''}
                 <div>
