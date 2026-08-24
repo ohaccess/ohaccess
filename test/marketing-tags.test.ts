@@ -102,9 +102,23 @@ describe('loadMarketingTags / track*', () => {
   })
 
   it('reports signup to every platform, with the Ads label when configured', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+    vi.stubGlobal('fetch', fetchMock)
     const m = await load('/login')
-    m.trackSignup()
-    expect(fbqCalls()).toContainEqual(['track', 'CompleteRegistration'])
+    m.trackSignup('agent@example.com')
+    // Browser pixel leg carries an eventID…
+    const reg = fbqCalls().find((c) => c[1] === 'CompleteRegistration')
+    expect(reg?.[0]).toBe('track')
+    const eventId = (reg?.[3] as { eventID?: string } | undefined)?.eventID
+    expect(eventId).toBeTruthy()
+    // …and the Conversions API leg posts the SAME id, so Meta deduplicates.
+    expect(fetchMock).toHaveBeenCalledOnce()
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/meta-event')
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+      eventName: 'CompleteRegistration',
+      eventId,
+      email: 'agent@example.com',
+    })
     expect(gtagCalls()).toContainEqual(['event', 'sign_up', { method: 'email' }])
     expect(gtagCalls()).toContainEqual(['event', 'conversion', { send_to: 'AW-111/SIGN' }])
   })
@@ -126,12 +140,16 @@ describe('loadMarketingTags / track*', () => {
   })
 
   it('loads nothing when the browser sends Global Privacy Control', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
     const m = await load('/', { gpc: true })
     expect(m.loadMarketingTags()).toBe(false)
-    m.trackSignup()
+    m.trackSignup('agent@example.com')
     expect(injected).toEqual([])
     expect(win().fbq).toBeUndefined()
     expect(win().dataLayer).toBeUndefined()
+    // GPC also suppresses the server-side Conversions API leg.
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('loads nothing when no IDs are configured', async () => {
