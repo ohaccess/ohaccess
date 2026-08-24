@@ -127,6 +127,13 @@ export async function POST(request: Request) {
           replyTo: 'support@ohaccess.com',
           subject,
           html,
+          // Mailbox providers favor mail that offers a way out; an unsubscribe
+          // link in the client also absorbs clicks that would otherwise hit
+          // "Report spam". No token infra for agents, so route to the
+          // monitored inbox.
+          headers: {
+            'List-Unsubscribe': '<mailto:support@ohaccess.com?subject=Unsubscribe>',
+          },
         })
         welcomeSent = true
       } catch (e) {
