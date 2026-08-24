@@ -158,7 +158,7 @@ function LoginForm() {
       if (error) {
         setError(error.message)
       } else {
-        trackSignup()
+        trackSignup(email)
         // Record the click-through acceptance for the legal audit trail.
         // Best-effort; if it fails we still let signup succeed (Supabase
         // has already accepted the agreement via the required checkbox).

@@ -158,11 +158,35 @@ function googleAdsConversion(label: string, params: Record<string, unknown> = {}
 // Account created (signup form submitted; email confirmation still pending).
 // Fired here rather than on the confirmation click because that click often
 // happens on another device, where the ad-click attribution cookie isn't.
-export function trackSignup() {
+//
+// Meta gets the event twice — browser pixel + Conversions API relay
+// (app/api/meta-event) — sharing one eventID so Meta deduplicates. The server
+// copy survives iOS tracking prevention and ad blockers, which drop 20–40% of
+// browser pixel events.
+export function trackSignup(email?: string) {
   loadMarketingTags()
-  window.fbq?.('track', 'CompleteRegistration')
+  const eventId =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`
+  window.fbq?.('track', 'CompleteRegistration', {}, { eventID: eventId })
   window.gtag?.('event', 'sign_up', { method: 'email' })
   googleAdsConversion(GOOGLE_ADS_SIGNUP_LABEL)
+  // Fire-and-forget: tracking must never delay or break the signup flow.
+  // keepalive lets the request finish even if the page navigates away.
+  if (META_PIXEL_ID && !gpcOptOut()) {
+    fetch('/api/meta-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        eventName: 'CompleteRegistration',
+        eventId,
+        email,
+        sourceUrl: window.location.href,
+      }),
+    }).catch(() => {})
+  }
 }
 
 // Contact / partner inquiry form submitted.

@@ -24,6 +24,8 @@ one for **Production** (Preview too if you want to test on a preview URL), then
 | `NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL` | Same idea | Another conversion action: Purchase, count **Every**, "Use different values for each conversion" |
 | `NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL` | Same idea (optional) | Another conversion action: Submit lead form (contact / partner inquiry) |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | `G-` followed by letters/digits (optional) | Google Analytics 4 → Admin → Data streams → Web → Measurement ID |
+| `META_CAPI_ACCESS_TOKEN` | Long token (a secret — no `NEXT_PUBLIC_` prefix, ever) | Meta Events Manager → your dataset → Settings → Conversions API → Generate access token |
+| `META_TEST_EVENT_CODE` | `TEST` followed by digits (temporary) | Meta Events Manager → your dataset → Test events tab. Set it only while verifying, then delete it from Vercel — while it's set, events go to the test view instead of real reporting |
 
 Only set the ones you have. A missing Google Ads label just means that
 conversion isn't sent to Google Ads (the GA4 event still is); a missing pixel
@@ -34,7 +36,7 @@ ID means Meta simply doesn't load.
 | Moment | Meta | Google Ads / GA4 |
 | --- | --- | --- |
 | Any marketing page view (incl. clicking between pages) | `PageView` | Ads remarketing hit; GA4 `page_view` |
-| Sign-up form submitted on /login | `CompleteRegistration` | `sign_up` + Ads conversion (signup label) |
+| Sign-up form submitted on /login | `CompleteRegistration` — sent twice (browser pixel + server Conversions API) with a shared event id so Meta counts it once; the server copy survives iOS tracking prevention and ad blockers | `sign_up` + Ads conversion (signup label) |
 | Contact or Partners form submitted | `Lead` | `generate_lead` + Ads conversion (lead label) |
 | Stripe checkout completed (back on the dashboard) | `Purchase` with amount + currency | `purchase` with amount, currency, Stripe session id + Ads conversion (purchase label) |
 
@@ -53,6 +55,11 @@ Google see is what was actually charged.
 4. Meta Events Manager → Test events shows PageViews within a minute. Google
    Ads conversions show "Recording conversions" the first time one fires (a
    test signup with a throwaway email works).
+5. **Conversions API dedup check**: with `META_CAPI_ACCESS_TOKEN` and
+   `META_TEST_EVENT_CODE` set, do a test signup on /login. Test events should
+   show `CompleteRegistration` twice — once "Browser", once "Server" — marked
+   as deduplicated (one conversion, not two). Then delete
+   `META_TEST_EVENT_CODE` from Vercel and redeploy.
 
 ## Good to know
 
@@ -67,7 +74,11 @@ Google see is what was actually charged.
 - **Privacy Policy §10** was updated to disclose the Meta Pixel and Google
   tags, name the opt-outs, and state that GPC is honored. The version number
   and effective date were left alone for you to decide.
-- Not done (say the word if you want them later): Meta Conversions API /
-  Google enhanced conversions (server-side, hashed-email matching — better
-  attribution on iOS), a cookie-consent banner (not required for a US-only
-  B2B audience; would be needed before advertising to EU/UK visitors).
+- **Meta Conversions API is installed** (added 2026-08-23): the signup
+  conversion is also sent server-side with the email SHA-256-hashed, so iOS
+  tracking prevention and ad blockers can't eat it. It obeys the same rules —
+  inert until the token is set, skipped for Global Privacy Control browsers.
+- Not done (say the word if you want them later): Google enhanced conversions
+  (Google's equivalent of the above), a cookie-consent banner (not required
+  for a US-only B2B audience; would be needed before advertising to EU/UK
+  visitors).
