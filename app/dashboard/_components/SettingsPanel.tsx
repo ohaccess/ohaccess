@@ -1015,6 +1015,9 @@ export default function SettingsPanel({
                 {region.licence.optional && <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: '400' }}> (optional)</span>}
               </label>
               <input style={inputStyle} type="text" placeholder={region.licence.numberPlaceholder} value={profile?.license_number || ''} onChange={e => setProfile({ ...profile, license_number: e.target.value })} />
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '4px', lineHeight: '1.4' }}>
+                If filled in, this appears on your card in visitor emails.
+              </div>
             </div>
           )}
           {region.licence?.regionLabel && (

@@ -101,6 +101,8 @@ export async function sendVisitorCodewordMessages(params: {
     brokerage?: string | null
     display_email?: string | null
     email?: string | null
+    license_number?: string | null
+    state?: string | null
     headshot_url?: string | null
     primary_color?: string | null
     logo_url?: string | null
@@ -321,6 +323,13 @@ export async function sendVisitorCodewordMessages(params: {
     const agentPhone = escapeHtml((agent as { phone?: string | null } | null)?.phone || '')
     // Dialable form for the tel: link; null if the number can't be normalized.
     const agentPhoneTel = normalizePhone((agent as { phone?: string | null } | null)?.phone)
+    // Licence line, gated on the number: the state only ever rides along with
+    // a licence number, never on its own.
+    const agentLicenseNumber = (agent?.license_number || '').trim()
+    const agentLicenseState = (agent?.state || '').trim()
+    const agentLicense = agentLicenseNumber
+      ? escapeHtml(agentLicenseState ? `${agentLicenseNumber} · ${agentLicenseState}` : agentLicenseNumber)
+      : ''
     const headshotUrl = safeUrl(agent?.headshot_url)
 
     // Team/brokerage members inherit their team's branding (logo + header
@@ -458,6 +467,7 @@ export async function sendVisitorCodewordMessages(params: {
                   <div style="font-size: 12px; color: #6e6e73;">${agentBrokerage}</div>
                   ${agentDisplayEmail ? `<div style="font-size: 12px; color: #0071e3;">${agentDisplayEmail}</div>` : ''}
                   ${agentPhone ? `<div style="font-size: 12px;">${agentPhoneTel ? `<a href="tel:${escapeHtml(agentPhoneTel)}" style="color: #0071e3; text-decoration: none;">${agentPhone}</a>` : `<span style="color: #6e6e73;">${agentPhone}</span>`}</div>` : ''}
+                  ${agentLicense ? `<div style="font-size: 11px; color: #6e6e73;">${agentLicense}</div>` : ''}
                   ${agentShortUrl ? `<div><a href="${escapeHtml(agentShortUrl)}" style="font-size: 12px; color: #0071e3;">Agent information</a></div>` : ''}
                 </div>
               </div>
