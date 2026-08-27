@@ -37,6 +37,7 @@ export function buildWelcomeEmail(o: { firstName?: string | null; appUrl: string
   const gold = '#c9963a'
   const settingsUrl = `${o.appUrl}/dashboard?view=settings`
   const newOhUrl = `${o.appUrl}/dashboard?view=new`
+  const pricingUrl = `${o.appUrl}/#pricing`
   const greeting = o.firstName?.trim() ? `Hi ${e(o.firstName.trim())},` : 'Hi there,'
 
   const sectionTitle = (label: string) => `
@@ -102,6 +103,11 @@ export function buildWelcomeEmail(o: { firstName?: string | null; appUrl: string
     <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
       ${sectionTitle('Step 3 — Display your welcome sign (optional)')}
       <div style="font-size:14px;line-height:1.7;">Two ways agents display it at the door:</div>
+      <div style="font-size:14px;line-height:1.7;margin-top:10px;background:#fff9ec;border:1px solid #f0dfb8;border-radius:8px;padding:12px 14px;">
+        🎁 <strong>Founding-member bonus:</strong> the first 100 agents in your state to lock in a
+        2-year plan get two pedestal stands or one A-frame sign, on us.
+        <a href="${e(pricingUrl)}" style="color:${gold};font-weight:700;">See pricing →</a> for details.
+      </div>
       <ul style="font-size:14px;line-height:1.7;margin:10px 0 0;padding-left:20px;">
         <li style="margin-bottom:10px;">
           <strong>Pedestal stand</strong> — a weighted floor stand for an 8.5×11" sign, right at the
