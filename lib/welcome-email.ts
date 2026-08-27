@@ -62,7 +62,7 @@ export function buildWelcomeEmail(o: { firstName?: string | null; appUrl: string
       Welcome to ohACCESS! You're about to replace the paper sign-in sheet with verified digital
       check-ins — legible names, real phone numbers, real leads.
     </div>
-    <div style="font-size:14px;line-height:1.7;margin-top:12px;">Getting started takes two steps:</div>
+    <div style="font-size:14px;line-height:1.7;margin-top:12px;">Getting started takes three steps:</div>
 
     <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
       ${sectionTitle('Step 1 — Set up your profile (about 5 minutes)')}
@@ -97,6 +97,34 @@ export function buildWelcomeEmail(o: { firstName?: string | null; appUrl: string
         it at every open house.
       </div>
       ${watchLink('Your first open house', WELCOME_VIDEO_OPEN_HOUSE)}
+    </div>
+
+    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+      ${sectionTitle('Step 3 — Display your welcome sign (optional)')}
+      <div style="font-size:14px;line-height:1.7;">Two ways agents display it at the door:</div>
+      <ul style="font-size:14px;line-height:1.7;margin:10px 0 0;padding-left:20px;">
+        <li style="margin-bottom:10px;">
+          <strong>Pedestal stand</strong> — a weighted floor stand for an 8.5×11" sign, right at the
+          entrance. <a href="https://amzn.to/4vgxnAr" style="color:${gold};font-weight:700;">Get one on Amazon →</a>
+          Pair it with the <a href="https://canva.link/b76tfh40e386it6" style="color:${gold};font-weight:700;">8.5×11 Canva template</a>,
+          or just use the branded sign from <strong>📱 QR Code</strong> on your open house card — same
+          size, already carrying your branding and that event's QR code. Its <strong>📌 My QR code</strong>
+          button gives you one 8.5×11 sign you can reuse at every open house without reprinting.
+        </li>
+        <li>
+          <strong>A-frame sidewalk sign</strong> — a double-sided sign to guide visitors in from the
+          street. <a href="https://amzn.to/4v48sQg" style="color:${gold};font-weight:700;">Get one on Amazon →</a>
+          Pair it with the <a href="https://canva.link/0c68v28pdk4m53p" style="color:${gold};font-weight:700;">24×36 Canva template</a> sized to fit.
+        </li>
+      </ul>
+      <div style="font-size:14px;line-height:1.7;margin-top:10px;">
+        Best practice: place the sign outside, between the house and the road — slightly closer to the
+        house, but far enough from the front door that you still control who's approaching before they
+        reach it.
+      </div>
+      <div style="font-size:12px;color:#aeaeb2;margin-top:12px;line-height:1.6;">
+        As an Amazon Associate, ohACCESS earns from qualifying purchases — these links cost you nothing extra.
+      </div>
     </div>
 
     <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
