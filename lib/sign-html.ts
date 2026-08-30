@@ -14,12 +14,19 @@ const safe = (v: string) => String(v || '').replace(/[<>"'`]/g, '')
 // heading cycler): full color (default) floods the page with the primary
 // color, white-card logo and QR, accent banner; ink saver is the white-
 // background original.
-export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; primaryColor: string; onPrimary: string; accentColor: string; onAccent?: string }): string {
+export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; brokerageName?: string; primaryColor: string; onPrimary: string; accentColor: string; onAccent?: string }): string {
   const primary = safe(opts.primaryColor) || '#1d1d1f'
   const onPrimary = safe(opts.onPrimary) || '#ffffff'
   const accent = safe(opts.accentColor) || '#1d1d1f'
   const onAccent = safe(opts.onAccent || '') || '#ffffff'
   const logoUrl = /^https?:\/\//i.test(opts.logoUrl || '') ? safe(opts.logoUrl) : ''
+  const brandName = safe(opts.brokerageName || '').trim()
+  // No logo: the brokerage name in the primary color takes the logo's spot;
+  // the ohACCESS wordmark only appears when there's no name either. The same
+  // markup doubles as the onerror fallback for a broken logo URL.
+  const brandFallback = brandName
+    ? `<div class="brandname">${brandName}</div>`
+    : `<div class="wordmark">oh<b>ACCESS</b></div><div class="tagline">VERIFIED OPEN HOUSE CHECK-IN</div>`
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -40,6 +47,9 @@ export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; primaryC
   .logo { max-height: 90px; max-width: 64%; object-fit: contain; }
   .wordmark { font-size: 50px; font-weight: 400; letter-spacing: -1px; }
   .wordmark b { font-weight: 800; }
+  /* Brokerage-name stand-in for a missing logo: primary color, sized to sit
+     inside the same fixed-height brand area (long names wrap to two lines). */
+  .brandname { font-size: 34px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.15; color: ${primary}; max-width: 92%; }
   .tagline { font-size: 14px; font-weight: 600; letter-spacing: 5px; margin-top: 6px; }
   .rule { border: none; border-top: 3px solid ${accent}; margin: 7px 0; }
   .banner { background: ${primary}; color: ${onPrimary}; font-size: 27px; font-weight: 800; letter-spacing: 8px; padding: 10px 10px; margin-bottom: 8px; cursor: pointer; }
@@ -76,8 +86,8 @@ export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; primaryC
   <button class="print-btn" id="printBtn" type="button">🖨 Print</button>
   <div class="sign">
     <div class="brandhead">${logoUrl
-      ? `<img class="logo" src="${logoUrl}" alt="Logo" onerror="this.style.display='none';document.getElementById('wm').style.display='block'"><div class="wordmark" id="wm" style="display:none">oh<b>ACCESS</b></div>`
-      : `<div class="wordmark">oh<b>ACCESS</b></div><div class="tagline">VERIFIED OPEN HOUSE CHECK-IN</div>`}</div>
+      ? `<img class="logo" src="${logoUrl}" alt="Logo" onerror="this.style.display='none';document.getElementById('wm').style.display='block'"><div id="wm" style="display:none">${brandFallback}</div>`
+      : brandFallback}</div>
     <hr class="rule">
     <div class="banner" id="banner">YOUR ATTENTION PLEASE</div>
     <div class="banner-hint">Click the banner to switch headings, then press Print. These tips and the Print button won't print.</div>

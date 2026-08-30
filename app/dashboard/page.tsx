@@ -1318,6 +1318,7 @@ export default function Dashboard() {
           onAccent={onAccent}
           accentBtnBorder={accentBtnBorder}
           logoUrl={profile?.logo_url || ''}
+          brokerageName={profile?.brokerage || ''}
         />
       )}
 

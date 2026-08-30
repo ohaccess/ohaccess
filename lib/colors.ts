@@ -42,3 +42,17 @@ export function readableOnLight(hex: string): string {
 export function fillBorder(hex: string): string {
   return isLightColor(hex) ? '1px solid rgba(0,0,0,0.15)' : 'none'
 }
+
+// Normalized form for comparing two hex colors ("#ABC" matches "#aabbcc").
+function normalizeHex(hex: string): string {
+  const c = (hex || '').replace('#', '').toLowerCase()
+  return c.length === 3 ? c.split('').map(x => x + x).join('') : c
+}
+
+// Color for initials/figures drawn ON a primary-color fill (the fallback
+// avatar circle): the accent color — unless the agent picked the same color
+// for both, where the initials would vanish; then white or black, whichever
+// reads against the primary.
+export function accentOnPrimary(primary: string, accent: string): string {
+  return normalizeHex(primary) === normalizeHex(accent) ? onColor(primary) : accent
+}

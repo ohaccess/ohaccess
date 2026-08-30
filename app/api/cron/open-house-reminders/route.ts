@@ -88,6 +88,7 @@ function buildReminderHtml(args: {
   primary: string
   accent: string
   logoUrl: string | null
+  brokerage: string | null
   ohQrUrl: string
   ohSignUrl: string
   universalQrUrl: string | null
@@ -99,7 +100,7 @@ function buildReminderHtml(args: {
   const e = escapeHtml
   const {
     agentName, address, streetAddress, dayLine, timeLine, primary, accent,
-    logoUrl, ohQrUrl, ohSignUrl, universalQrUrl, universalSignUrl,
+    logoUrl, brokerage, ohQrUrl, ohSignUrl, universalQrUrl, universalSignUrl,
     smsSample, emailCodeWord, referralUrl,
   } = args
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
@@ -228,7 +229,11 @@ function buildReminderHtml(args: {
     ${referralHtml}
 
     <div style="margin-top:24px;padding-top:14px;border-top:1px solid #e5e5ea;font-size:11px;color:#aeaeb2;text-align:center;">
-      ${logoUrl ? `<img src="${e(logoUrl)}" style="max-height:48px;max-width:160px;object-fit:contain;margin-bottom:8px;" /><br/>` : ''}
+      ${logoUrl
+        ? `<img src="${e(logoUrl)}" style="max-height:48px;max-width:160px;object-fit:contain;margin-bottom:8px;" /><br/>`
+        : brokerage
+          ? `<div style="font-size:16px;font-weight:800;letter-spacing:-0.3px;color:${e(primary)};margin-bottom:8px;">${e(brokerage)}</div>`
+          : ''}
       Sent by <span style="font-weight:300;">oh</span><strong>ACCESS</strong> · You're receiving this because you have an open house scheduled. Manage open houses anytime from your <a href="${e(`${APP_URL}/dashboard`)}" style="color:#aeaeb2;">dashboard</a>.
     </div>
   </div>`
@@ -267,7 +272,7 @@ async function handle(request: Request) {
   for (const oh of due ?? []) {
     const { data: agent } = await supabase
       .from('profiles')
-      .select('full_name, email, display_email, primary_color, accent_color, logo_url, brokerage_id, tier, billing_interval, stripe_subscription_id, current_period_end')
+      .select('full_name, email, display_email, brokerage, primary_color, accent_color, logo_url, brokerage_id, tier, billing_interval, stripe_subscription_id, current_period_end')
       .eq('id', oh.agent_id)
       .maybeSingle()
 
@@ -333,6 +338,7 @@ async function handle(request: Request) {
       primary: brandColor && isHexColor(brandColor) ? brandColor : '#1d1d1f',
       accent: agent?.accent_color && isHexColor(agent.accent_color) ? agent.accent_color : '#0071e3',
       logoUrl: safeUrl(brandLogo) || null,
+      brokerage: agent?.brokerage || null,
       ohQrUrl,
       ohSignUrl,
       universalQrUrl,

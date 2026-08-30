@@ -37,11 +37,12 @@ function buildReportHtml(args: {
   primary: string
   accent: string
   logoUrl: string | null
+  brokerage: string | null
   visitors: Visitor[]
   tz: string | null
   reportUrl: string | null
 }): string {
-  const { agentName, address, primary, accent, logoUrl, visitors, tz, reportUrl } = args
+  const { agentName, address, primary, accent, logoUrl, brokerage, visitors, tz, reportUrl } = args
   const verified = visitors.filter(v => v.verified).length
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 
@@ -108,7 +109,11 @@ function buildReportHtml(args: {
       <a href="${escapeHtml(reportUrl)}" style="display:inline-block;margin-top:10px;background:${escapeHtml(primary)};color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:8px;">View &amp; share the seller report</a>
     </div>` : ''}
     <div style="margin-top:24px;padding-top:14px;border-top:1px solid #e5e5ea;font-size:11px;color:#aeaeb2;text-align:center;">
-      ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" style="max-height:48px;max-width:160px;object-fit:contain;margin-bottom:8px;" /><br/>` : ''}
+      ${logoUrl
+        ? `<img src="${escapeHtml(logoUrl)}" style="max-height:48px;max-width:160px;object-fit:contain;margin-bottom:8px;" /><br/>`
+        : brokerage
+          ? `<div style="font-size:16px;font-weight:800;letter-spacing:-0.3px;color:${escapeHtml(primary)};margin-bottom:8px;">${escapeHtml(brokerage)}</div>`
+          : ''}
       Sent by <span style="font-weight:300;">oh</span><strong>ACCESS</strong> · Tip: export the full list anytime from your dashboard.
     </div>
   </div>`
@@ -146,7 +151,7 @@ async function handle(request: Request) {
   for (const oh of due ?? []) {
     const { data: agent } = await supabase
       .from('profiles')
-      .select('full_name, email, display_email, primary_color, accent_color, logo_url')
+      .select('full_name, email, display_email, brokerage, primary_color, accent_color, logo_url')
       .eq('id', oh.agent_id)
       .maybeSingle()
 
@@ -173,6 +178,7 @@ async function handle(request: Request) {
       primary: agent?.primary_color || '#1d1d1f',
       accent: agent?.accent_color || '#0071e3',
       logoUrl: agent?.logo_url || null,
+      brokerage: agent?.brokerage || null,
       visitors: (visitors ?? []) as Visitor[],
       tz: oh.timezone,
       reportUrl,

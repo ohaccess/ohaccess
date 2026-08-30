@@ -1,5 +1,6 @@
 import { escapeHtml } from './escape-html'
 import { safeUrl } from './register-helpers'
+import { accentOnPrimary } from './colors'
 
 // The post-event visitor "thanks for visiting" email — sent the morning after
 // the open house. Pure builder + timing helpers so they can be unit-tested; the
@@ -104,17 +105,22 @@ export function buildThankYouEmail(o: ThankYouEmailOpts): { subject: string; htm
       <a href="${e(feedbackUrl)}" style="display:inline-block;margin-top:12px;background:${accent};color:${o.onAccent};text-decoration:none;font-size:14px;font-weight:700;padding:9px 16px;border-radius:8px;">Share your feedback &rarr;</a>
     </div>` : ''
 
-  // Agent avatar: real headshot when set, initials circle otherwise.
+  // Agent avatar: real headshot when set, otherwise a primary-color circle
+  // with the agent's initials in the accent color.
   const headshot = safeUrl(o.headshotUrl)
   const initials = agentInitials(o.agentName)
   const avatar = headshot
     ? `<img src="${e(headshot)}" width="52" height="52" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover;display:block;">`
-    : `<div style="width:52px;height:52px;border-radius:50%;background:${accent};color:${o.onAccent};text-align:center;line-height:52px;font-weight:800;font-size:18px;">${e(initials)}</div>`
+    : `<div style="width:52px;height:52px;border-radius:50%;background:${primary};color:${accentOnPrimary(primary, accent)};text-align:center;line-height:52px;font-weight:800;font-size:18px;">${e(initials)}</div>`
 
+  // Brand block below the agent card: the logo when set, otherwise the
+  // brokerage name in the primary color.
   const agentLogo = safeUrl(o.agentLogoUrl)
   const agentLogoBlock = agentLogo
     ? `<div style="text-align:center;margin:12px 0 2px;"><img src="${e(agentLogo)}" alt="${e(o.brokerage || '')}" style="max-height:40px;max-width:60%;object-fit:contain;"></div>`
-    : ''
+    : o.brokerage
+      ? `<div style="text-align:center;margin:12px 0 2px;font-size:19px;font-weight:800;letter-spacing:-0.3px;color:${primary};">${e(o.brokerage)}</div>`
+      : ''
 
   const phoneBit = o.agentPhone
     ? `<a href="tel:${e(o.agentPhone)}" style="color:${accent};text-decoration:none;font-weight:600;">${e(o.agentPhone)}</a> &middot; `

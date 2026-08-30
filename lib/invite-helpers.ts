@@ -1,5 +1,6 @@
 import { escapeHtml } from './escape-html'
 import { safeUrl, googleCalendarUrl } from './register-helpers'
+import { accentOnPrimary } from './colors'
 
 // "Re-invite past visitors": pure helpers for deciding WHO an agent may
 // invite to an upcoming open house, and for building the invite email.
@@ -225,7 +226,7 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
     .map((w, i, a) => (i === 0 || i === a.length - 1 ? w[0] : '')).join('').toUpperCase()
   const avatar = headshot
     ? `<img src="${e(headshot)}" width="52" height="52" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover;display:block;">`
-    : `<div style="width:52px;height:52px;border-radius:50%;background:${o.accent};color:${o.onAccent};text-align:center;line-height:52px;font-weight:800;font-size:18px;">${e(initials)}</div>`
+    : `<div style="width:52px;height:52px;border-radius:50%;background:${o.primary};color:${accentOnPrimary(o.primary, o.accent)};text-align:center;line-height:52px;font-weight:800;font-size:18px;">${e(initials)}</div>`
 
   const subject = `You're invited — open house at ${o.oh.street}, ${o.oh.dateLabel}`
 

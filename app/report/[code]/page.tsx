@@ -4,7 +4,8 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { buildSellerReportStats } from '@/lib/seller-report'
 import { safeUrl } from '@/lib/register-helpers'
-import { onColor, readableOnLight } from '@/lib/colors'
+import { accentOnPrimary, onColor, readableOnLight } from '@/lib/colors'
+import { agentInitials } from '@/lib/thank-you-email'
 import ShareLink from './ShareLink'
 
 // The shareable seller report card: a PII-free summary of one open house
@@ -143,6 +144,9 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
   const stats = buildSellerReportStats(visitors ?? [], scanCount ?? 0, agent?.custom_questions)
   const agentContactEmail = agent?.display_email || agent?.email || null
   const agentHeadshot = safeUrl(agent?.headshot_url)
+  // No logo: the brokerage name (mirrored onto the profile for team members)
+  // stands in wherever the logo would appear.
+  const brandName = (agent?.brokerage || '').trim()
 
   return (
     // White at the top fading into the usual page gray — brokerage logos are
@@ -151,17 +155,22 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
     <div style={{ background: 'linear-gradient(#ffffff 0px, #ffffff 120px, #f5f5f7 300px)', backgroundColor: '#f5f5f7', minHeight: '100vh', fontFamily: FONT, color: '#1d1d1f' }}>
       <main style={{ maxWidth: 560, margin: '0 auto', padding: '28px 16px 48px' }}>
 
-        {/* Brokerage/agent logo, centered above the card on the white zone */}
-        {brandLogo && (
+        {/* Brokerage/agent logo, centered above the card on the white zone —
+            or the brokerage name in the primary color when no logo is set. */}
+        {brandLogo ? (
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={brandLogo} alt="" style={{ maxHeight: 56, maxWidth: 220, objectFit: 'contain', display: 'inline-block' }} />
           </div>
-        )}
+        ) : brandName ? (
+          <div style={{ textAlign: 'center', marginBottom: 20, fontSize: 24, fontWeight: 800, letterSpacing: -0.5, color: chartPrimary }}>
+            {brandName}
+          </div>
+        ) : null}
 
         {/* Branded header */}
         <div style={{ background: brandColor, borderRadius: 18, padding: '24px 22px', color: 'white' }}>
-          {!brandLogo && (
+          {!brandLogo && !brandName && (
             <div style={{ fontSize: 18, fontWeight: 200, letterSpacing: -0.5, marginBottom: 10 }}>
               oh<span style={{ fontWeight: 700 }}>ACCESS</span>
             </div>
@@ -325,9 +334,15 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
             {/* Same layout as the agent card in the codeword email: round
                 headshot on the left, contact details stacked beside it. */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              {agentHeadshot && (
+              {agentHeadshot ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={agentHeadshot} alt="" style={{ width: 90, height: 90, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid #d1d1d6', marginRight: 20 }} />
+              ) : (
+                // No headshot: primary-color circle with the agent's initials
+                // in the accent color.
+                <div style={{ width: 90, height: 90, borderRadius: '50%', background: brandColor, color: accentOnPrimary(brandColor, accentColor), flexShrink: 0, border: '2px solid #d1d1d6', marginRight: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 30 }}>
+                  {agentInitials(agent.full_name)}
+                </div>
               )}
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>{agent.full_name}</div>

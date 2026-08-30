@@ -76,7 +76,7 @@ export async function GET(request: Request) {
 
     const { data: agent } = await supabase
       .from('profiles')
-      .select('primary_color, accent_color, logo_url, brokerage_id')
+      .select('primary_color, accent_color, logo_url, brokerage, brokerage_id')
       .eq('id', agentId)
       .maybeSingle()
 
@@ -107,6 +107,7 @@ export async function GET(request: Request) {
     const html = buildSignHtml({
       dataUrl,
       logoUrl: brandLogo || '',
+      brokerageName: agent?.brokerage || '',
       primaryColor: primary,
       onPrimary: onColor(primary),
       accentColor: accent,

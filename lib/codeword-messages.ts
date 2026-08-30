@@ -13,6 +13,8 @@ import {
   type CodewordChannel,
 } from '@/lib/messaging-channel'
 import { codewordLinkPath } from '@/lib/codeword-link'
+import { agentInitials } from '@/lib/thank-you-email'
+import { accentOnPrimary } from '@/lib/colors'
 import { areaAbbrev, areaUnitFor } from '@/lib/regions'
 import {
   buildSmsBody,
@@ -105,6 +107,7 @@ export async function sendVisitorCodewordMessages(params: {
     state?: string | null
     headshot_url?: string | null
     primary_color?: string | null
+    accent_color?: string | null
     logo_url?: string | null
     landing_page_url?: string | null
     sponsor_id?: string | null
@@ -341,7 +344,17 @@ export async function sendVisitorCodewordMessages(params: {
     if (brokerageRow?.primary_color) brandColor = brokerageRow.primary_color
     if (brokerageRow?.logo_url) brandLogo = brokerageRow.logo_url
     const headerColor = isHexColor(brandColor) ? brandColor! : '#1d1d1f'
+    const accentColor = isHexColor(agent?.accent_color) ? agent!.accent_color! : '#0071e3'
     const logoUrl = safeUrl(brandLogo)
+
+    // Agent avatar: real headshot when set, otherwise a primary-color circle
+    // with the agent's initials in the accent color (skipped without a name).
+    const agentInitialsText = escapeHtml(agentInitials(agent?.full_name))
+    const agentAvatar = headshotUrl
+      ? `<img src="${escapeHtml(headshotUrl)}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #d1d1d6;margin-right:20px;" />`
+      : agentInitialsText
+        ? `<div style="width:90px;height:90px;border-radius:50%;background:${headerColor};color:${accentOnPrimary(headerColor, accentColor)};flex-shrink:0;border:2px solid #d1d1d6;margin-right:20px;text-align:center;line-height:90px;font-weight:800;font-size:30px;">${agentInitialsText}</div>`
+        : ''
 
     // "Sponsored by" card — rendered directly below the agent's card + logo.
     // Same escaping rules as the agent block: every sponsor-controlled field
@@ -461,7 +474,7 @@ export async function sendVisitorCodewordMessages(params: {
               <div style="font-size: 15px; font-weight: 800; color: #1d1d1f;">Want a private tour?</div>
               <div style="font-size: 12px; color: #6e6e73; line-height: 1.6; margin: 3px 0 12px;">I'm happy to show you this home &mdash; or any other &mdash; on your schedule. Call me or just reply to this email.</div>
               <div style="display: flex; align-items: center;">
-                ${headshotUrl ? `<img src="${escapeHtml(headshotUrl)}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #d1d1d6;margin-right:20px;" />` : ''}
+                ${agentAvatar}
                 <div>
                   <div style="font-size: 14px; font-weight: 700; color: #1d1d1f;">${agentName}</div>
                   <div style="font-size: 12px; color: #6e6e73;">${agentBrokerage}</div>
@@ -471,7 +484,11 @@ export async function sendVisitorCodewordMessages(params: {
                   ${agentShortUrl ? `<div><a href="${escapeHtml(agentShortUrl)}" style="font-size: 12px; color: #0071e3;">Agent information</a></div>` : ''}
                 </div>
               </div>
-              ${logoUrl ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; text-align: center;"><img src="${escapeHtml(logoUrl)}" style="max-height:80px;width:80%;object-fit:contain;" /></div>` : ''}
+              ${logoUrl
+                ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; text-align: center;"><img src="${escapeHtml(logoUrl)}" style="max-height:80px;width:80%;object-fit:contain;" /></div>`
+                : agentBrokerage
+                  ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: -0.3px; color: ${headerColor};">${agentBrokerage}</div>`
+                  : ''}
             </div>
             ${sponsorHtml}
             ${buildDisclosuresHtml(disclosureLinks)}
