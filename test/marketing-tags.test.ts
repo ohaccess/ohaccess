@@ -105,10 +105,17 @@ describe('loadMarketingTags / track*', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true })
     vi.stubGlobal('fetch', fetchMock)
     const m = await load('/login')
-    m.trackSignup('agent@example.com')
-    // Browser pixel leg carries an eventID…
+    m.trackSignup('Agent@Example.com ', 'a1b2c3d4-0000-0000-0000-000000000001')
+    // Advanced matching is set before the event: normalized email plus the
+    // user id as external_id (fbevents.js hashes both before sending).
+    expect(fbqCalls()).toContainEqual(['init', '123456789012345', {
+      em: 'agent@example.com',
+      external_id: 'a1b2c3d4-0000-0000-0000-000000000001',
+    }])
+    // Browser pixel leg carries the required currency/value pair and an eventID…
     const reg = fbqCalls().find((c) => c[1] === 'CompleteRegistration')
     expect(reg?.[0]).toBe('track')
+    expect(reg?.[2]).toEqual({ content_name: 'agent_trial_signup', status: 'complete', currency: 'USD', value: 0 })
     const eventId = (reg?.[3] as { eventID?: string } | undefined)?.eventID
     expect(eventId).toBeTruthy()
     // …and the Conversions API leg posts the SAME id, so Meta deduplicates.
@@ -117,7 +124,8 @@ describe('loadMarketingTags / track*', () => {
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
       eventName: 'CompleteRegistration',
       eventId,
-      email: 'agent@example.com',
+      email: 'Agent@Example.com ',
+      userId: 'a1b2c3d4-0000-0000-0000-000000000001',
     })
     expect(gtagCalls()).toContainEqual(['event', 'sign_up', { method: 'email' }])
     expect(gtagCalls()).toContainEqual(['event', 'conversion', { send_to: 'AW-111/SIGN' }])
