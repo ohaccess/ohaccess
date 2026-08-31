@@ -155,6 +155,18 @@ function googleAdsConversion(label: string, params: Record<string, unknown> = {}
   window.gtag?.('event', 'conversion', { send_to: `${GOOGLE_ADS_ID}/${label}`, ...params })
 }
 
+// Meta requires currency to be a bare ISO 4217 code and value to be numeric —
+// an empty string or missing pair gets the event flagged as low data quality.
+// value 0 clears the warning without inventing a lead value; if value-based
+// optimization is ever wanted, change it HERE ONLY (the CAPI relay imports
+// this same object, keeping both legs byte-identical for Meta's comparison).
+export const META_SIGNUP_CUSTOM_DATA = {
+  content_name: 'agent_trial_signup',
+  status: 'complete',
+  currency: 'USD',
+  value: 0,
+} as const
+
 // Account created (signup form submitted; email confirmation still pending).
 // Fired here rather than on the confirmation click because that click often
 // happens on another device, where the ad-click attribution cookie isn't.
@@ -162,14 +174,27 @@ function googleAdsConversion(label: string, params: Record<string, unknown> = {}
 // Meta gets the event twice — browser pixel + Conversions API relay
 // (app/api/meta-event) — sharing one eventID so Meta deduplicates. The server
 // copy survives iOS tracking prevention and ad blockers, which drop 20–40% of
-// browser pixel events.
-export function trackSignup(email?: string) {
+// browser pixel events. userId (the Supabase auth user id) becomes Meta's
+// external_id on both legs: fbevents.js SHA-256-hashes advanced-matching
+// fields in the browser, and the relay hashes the same raw value server-side,
+// so the two digests match.
+export function trackSignup(email?: string, userId?: string) {
   loadMarketingTags()
   const eventId =
     typeof crypto !== 'undefined' && 'randomUUID' in crypto
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`
-  window.fbq?.('track', 'CompleteRegistration', {}, { eventID: eventId })
+  // Re-init with advanced matching now that we know who signed up. fbevents.js
+  // treats a repeat init for the same pixel id as a userData update (it logs a
+  // console warning, which is expected) and attaches em/external_id to this
+  // and every later event.
+  if (window.fbq && (email || userId)) {
+    window.fbq('init', META_PIXEL_ID, {
+      ...(email ? { em: email.trim().toLowerCase() } : {}),
+      ...(userId ? { external_id: userId } : {}),
+    })
+  }
+  window.fbq?.('track', 'CompleteRegistration', { ...META_SIGNUP_CUSTOM_DATA }, { eventID: eventId })
   window.gtag?.('event', 'sign_up', { method: 'email' })
   googleAdsConversion(GOOGLE_ADS_SIGNUP_LABEL)
   // Fire-and-forget: tracking must never delay or break the signup flow.
@@ -183,6 +208,7 @@ export function trackSignup(email?: string) {
         eventName: 'CompleteRegistration',
         eventId,
         email,
+        userId,
         sourceUrl: window.location.href,
       }),
     }).catch(() => {})

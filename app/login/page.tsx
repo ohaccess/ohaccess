@@ -147,7 +147,7 @@ function LoginForm() {
         ? decodeURIComponent(refCookie.split('=')[1] || '')
         : null
 
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -158,7 +158,9 @@ function LoginForm() {
       if (error) {
         setError(error.message)
       } else {
-        trackSignup(email)
+        // The user id rides along as Meta's external_id and keys the
+        // send-once guard on the Conversions API leg.
+        trackSignup(email, data.user?.id)
         // Record the click-through acceptance for the legal audit trail.
         // Best-effort; if it fails we still let signup succeed (Supabase
         // has already accepted the agreement via the required checkbox).
