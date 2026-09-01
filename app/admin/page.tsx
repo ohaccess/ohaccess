@@ -1132,11 +1132,15 @@ const exportBtn: React.CSSProperties = {
 }
 
 // ---- shared table primitives ----
-const th: React.CSSProperties = { padding: '11px 14px', fontWeight: 700, color: INK, fontSize: 12, textAlign: 'left', whiteSpace: 'nowrap' }
+const th: React.CSSProperties = { padding: '11px 12px', fontWeight: 700, color: INK, fontSize: 12, textAlign: 'left', whiteSpace: 'nowrap' }
 const thR: React.CSSProperties = { ...th, textAlign: 'right' }
-const td: React.CSSProperties = { padding: '11px 14px', color: INK, fontSize: 13, verticalAlign: 'middle' }
+const td: React.CSSProperties = { padding: '11px 12px', color: INK, fontSize: 13, verticalAlign: 'middle' }
 const tdR: React.CSSProperties = { ...td, textAlign: 'right' }
 const tdSub: React.CSSProperties = { ...td, color: SUB }
+// Skinny variants for count-style columns so the agents table fits without
+// a horizontal scrollbar.
+const tdNarrow: React.CSSProperties = { ...td, padding: '11px 8px' }
+const tdRNarrow: React.CSSProperties = { ...tdR, padding: '11px 8px' }
 
 // ---- sorting ---- (hook + comparator shared with the dashboard)
 
@@ -1146,18 +1150,25 @@ function SortTh({
   state,
   onSort,
   align,
+  narrow,
 }: {
   label: string
   k: string
   state: SortState
   onSort: (k: string) => void
   align?: 'right'
+  narrow?: boolean
 }) {
   const active = state.key === k
   return (
     <th
       onClick={() => onSort(k)}
-      style={{ ...(align === 'right' ? thR : th), cursor: 'pointer', userSelect: 'none' }}
+      style={{
+        ...(align === 'right' ? thR : th),
+        ...(narrow ? { padding: '11px 8px', whiteSpace: 'normal', lineHeight: 1.15 } : {}),
+        cursor: 'pointer',
+        userSelect: 'none',
+      }}
     >
       {label}
       <span style={{ marginLeft: 4, fontSize: 10, color: active ? INK : '#c7c7cc' }}>
@@ -1246,9 +1257,9 @@ function AgentsTable({
           <SortTh label="Agent" k="name" state={state} onSort={onSort} />
           <SortTh label="Brokerage" k="brokerage" state={state} onSort={onSort} />
           <SortTh label="Plan" k="plan" state={state} onSort={onSort} />
-          <SortTh label="Trial" k="trial" state={state} onSort={onSort} />
-          <SortTh label="Open Houses" k="openHouseCount" state={state} onSort={onSort} align="right" />
-          <SortTh label="Visitors" k="visitorCount" state={state} onSort={onSort} align="right" />
+          <SortTh label="Trial" k="trial" state={state} onSort={onSort} narrow />
+          <SortTh label="Open Houses" k="openHouseCount" state={state} onSort={onSort} align="right" narrow />
+          <SortTh label="Visitors" k="visitorCount" state={state} onSort={onSort} align="right" narrow />
           <SortTh label="Last Login" k="lastLogin" state={state} onSort={onSort} />
           <SortTh label="Joined" k="joined" state={state} onSort={onSort} />
           <th style={thR}></th>
@@ -1325,11 +1336,18 @@ function AgentsTable({
                 </span>
               )}
             </td>
-            <td style={td} title="Free-trial visitor registrations used vs their cap">
+            <td
+              style={tdNarrow}
+              title={
+                a.trialLocked
+                  ? 'Trial cap reached — registration is locked until they subscribe'
+                  : 'Free-trial visitor registrations used vs their cap'
+              }
+            >
               {!a.onFreeTrial ? (
                 <span style={{ color: '#c7c7cc' }}>—</span>
               ) : a.trialLocked ? (
-                <Badge text={`Locked · ${a.trialUsed}/${a.trialLimit}`} color="#cc0000" bg="#fff0f0" />
+                <Badge text={`🔒 ${a.trialUsed}/${a.trialLimit}`} color="#cc0000" bg="#fff0f0" />
               ) : (
                 <span
                   style={{
@@ -1338,16 +1356,16 @@ function AgentsTable({
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {`${a.trialUsed} / ${a.trialLimit}`}
+                  {`${a.trialUsed}/${a.trialLimit}`}
                 </span>
               )}
             </td>
-            <td style={tdR}>{a.openHouseCount}</td>
-            <td style={tdR}>{a.visitorCount}</td>
+            <td style={tdRNarrow}>{a.openHouseCount}</td>
+            <td style={tdRNarrow}>{a.visitorCount}</td>
             <td style={tdSub}>{fmtLogin(a.last_sign_in_at)}</td>
             <td style={tdSub}>{fmtDate(a.created_at)}</td>
             <td style={{ ...tdR, whiteSpace: 'nowrap' }}>
-              <div style={{ display: 'inline-flex', gap: 8 }}>
+              <div style={{ display: 'inline-flex', gap: 6 }}>
                 {a.doubleBilling && (
                   <button
                     onClick={() => onResolveDoubleBilling(a)}
@@ -1357,7 +1375,7 @@ function AgentsTable({
                       color: 'white',
                       border: '1px solid #cc0000',
                       borderRadius: 8,
-                      padding: '6px 12px',
+                      padding: '6px 10px',
                       fontSize: 12,
                       fontWeight: 700,
                       cursor: resolvingId === a.id ? 'default' : 'pointer',
@@ -1375,7 +1393,7 @@ function AgentsTable({
                     color: '#6b3fd4',
                     border: '1px solid #ddd0f5',
                     borderRadius: 8,
-                    padding: '6px 12px',
+                    padding: '6px 10px',
                     fontSize: 12,
                     fontWeight: 700,
                     cursor: giftingId === a.id ? 'default' : 'pointer',
@@ -1392,7 +1410,7 @@ function AgentsTable({
                     color: INK,
                     border: '1px solid #d1d1d6',
                     borderRadius: 8,
-                    padding: '6px 12px',
+                    padding: '6px 10px',
                     fontSize: 12,
                     fontWeight: 700,
                     cursor: impersonatingId === a.id ? 'default' : 'pointer',
@@ -1409,7 +1427,7 @@ function AgentsTable({
                     color: '#cc0000',
                     border: '1px solid #f0c0c0',
                     borderRadius: 8,
-                    padding: '6px 12px',
+                    padding: '6px 10px',
                     fontSize: 12,
                     fontWeight: 700,
                     cursor: deletingId === a.id ? 'default' : 'pointer',
