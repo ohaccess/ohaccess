@@ -41,6 +41,11 @@ type Agent = {
   openHouseCount: number
   visitorCount: number
   doubleBilling: boolean
+  onFreeTrial: boolean
+  trialUsed: number
+  trialLimit: number
+  trialLocked: boolean
+  canceling: boolean
 }
 
 type OpenHouse = {
@@ -93,9 +98,18 @@ type Funnel = {
   abandonedScans: AbandonedScan[]
 }
 
+type Revenue = {
+  mrrCents: number
+  activeSubs: number
+  newMrrCents30d: number
+  cancelingCount: number
+  cancelingMrrCents: number
+}
+
 type Payload = {
   stats: Stats
   funnel?: Funnel
+  revenue?: Revenue | null
   agents: Agent[]
   openHouses: OpenHouse[]
   visitors: Visitor[]
@@ -126,6 +140,7 @@ const fmtDateTime = (iso: string | null) =>
       })
     : '—'
 const fmtLogin = (iso: string | null) => (iso ? fmtDateTime(iso) : 'Never')
+const fmtUsd = (cents: number) => `$${Math.round(cents / 100).toLocaleString()}`
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 
@@ -804,6 +819,24 @@ export default function AdminDashboard() {
               marginTop: 24,
             }}
           >
+            {data.revenue ? (
+              <Kpi
+                label="Monthly Revenue"
+                value={fmtUsd(data.revenue.mrrCents)}
+                sub={`${data.revenue.activeSubs} paid subscription${data.revenue.activeSubs === 1 ? '' : 's'} · +${fmtUsd(data.revenue.newMrrCents30d)}/mo added in 30 days`}
+                accent={GREEN}
+              />
+            ) : (
+              <Kpi label="Monthly Revenue" value="—" sub="Couldn't reach Stripe — try Refresh" />
+            )}
+            {data.revenue && data.revenue.cancelingCount > 0 && (
+              <Kpi
+                label="Leaving Soon"
+                value={data.revenue.cancelingCount}
+                sub={`−${fmtUsd(data.revenue.cancelingMrrCents)}/mo when they lapse`}
+                accent="#cc0000"
+              />
+            )}
             <Kpi label="Agents Signed Up" value={data.stats.totalAgents} sub={`+${data.stats.newAgentsThisWeek} this week`} />
             <Kpi label="Paying Agents" value={data.stats.payingAgents} sub={`${data.stats.freeAgents} free`} accent={GREEN} />
             {data.stats.doubleBilled > 0 && (
@@ -1003,7 +1036,7 @@ function exportCurrent(
   if (tab === 'agents') {
     downloadCSV(
       'ohaccess-agents.csv',
-      ['Name', 'Email', 'Brokerage', 'Tier', 'Role', 'Subscription', 'Billing', 'Open Houses', 'Visitors', 'Last Login', 'Joined'],
+      ['Name', 'Email', 'Brokerage', 'Tier', 'Role', 'Subscription', 'Billing', 'Trial', 'Open Houses', 'Visitors', 'Last Login', 'Joined'],
       agents.map((a) => [
         a.name,
         a.email,
@@ -1012,6 +1045,7 @@ function exportCurrent(
         a.role,
         a.subscription_status,
         a.billing_interval,
+        a.onFreeTrial ? `${a.trialUsed}/${a.trialLimit}${a.trialLocked ? ' (locked)' : ''}` : '',
         a.openHouseCount,
         a.visitorCount,
         fmtLogin(a.last_sign_in_at),
@@ -1052,12 +1086,12 @@ function exportCurrent(
   }
 }
 
-function Kpi({ label, value, sub, accent }: { label: string; value: number; sub?: string; accent?: string }) {
+function Kpi({ label, value, sub, accent }: { label: string; value: number | string; sub?: string; accent?: string }) {
   return (
     <div style={{ padding: '16px 18px', background: '#f5f5f7', borderRadius: 14 }}>
       <div style={{ fontSize: 11, color: SUB, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>{label}</div>
       <div style={{ fontSize: 30, fontWeight: 800, color: accent || INK, marginTop: 6, lineHeight: 1 }}>
-        {value.toLocaleString()}
+        {typeof value === 'number' ? value.toLocaleString() : value}
       </div>
       {sub && <div style={{ fontSize: 12, color: SUB, marginTop: 6 }}>{sub}</div>}
     </div>
@@ -1174,6 +1208,8 @@ const AGENT_ACC: Record<string, (a: Agent) => Sortable> = {
   name: (a) => a.name,
   brokerage: (a) => a.brokerage,
   plan: (a) => a.subscription_status || a.tier,
+  // Paid agents (no cap) sort below every trial account; locked accounts top.
+  trial: (a) => (a.onFreeTrial ? (a.trialLocked ? 2 : a.trialUsed / Math.max(1, a.trialLimit)) : -1),
   openHouseCount: (a) => a.openHouseCount,
   visitorCount: (a) => a.visitorCount,
   lastLogin: (a) => (a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : null),
@@ -1210,6 +1246,7 @@ function AgentsTable({
           <SortTh label="Agent" k="name" state={state} onSort={onSort} />
           <SortTh label="Brokerage" k="brokerage" state={state} onSort={onSort} />
           <SortTh label="Plan" k="plan" state={state} onSort={onSort} />
+          <SortTh label="Trial" k="trial" state={state} onSort={onSort} />
           <SortTh label="Open Houses" k="openHouseCount" state={state} onSort={onSort} align="right" />
           <SortTh label="Visitors" k="visitorCount" state={state} onSort={onSort} align="right" />
           <SortTh label="Last Login" k="lastLogin" state={state} onSort={onSort} />
@@ -1218,7 +1255,7 @@ function AgentsTable({
         </tr>
       </thead>
       <tbody>
-        {sorted.length === 0 && <EmptyRow span={8} text="No agents match." />}
+        {sorted.length === 0 && <EmptyRow span={9} text="No agents match." />}
         {sorted.map((a) => (
           <tr key={a.id} style={{ borderTop: `1px solid ${BORDER}` }}>
             <td style={td}>
@@ -1266,6 +1303,42 @@ function AgentsTable({
                   }}
                 >
                   ⚠ Double-billed
+                </span>
+              )}
+              {a.canceling && (
+                <span
+                  title="Subscription canceled — paid access continues until this date, then they drop to free."
+                  style={{
+                    display: 'inline-block',
+                    marginLeft: 6,
+                    background: '#fff3e0',
+                    color: AMBER,
+                    border: '1px solid #f0dcc0',
+                    borderRadius: 6,
+                    padding: '1px 6px',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {`⏳ ends ${fmtDate(a.current_period_end)}`}
+                </span>
+              )}
+            </td>
+            <td style={td} title="Free-trial visitor registrations used vs their cap">
+              {!a.onFreeTrial ? (
+                <span style={{ color: '#c7c7cc' }}>—</span>
+              ) : a.trialLocked ? (
+                <Badge text={`Locked · ${a.trialUsed}/${a.trialLimit}`} color="#cc0000" bg="#fff0f0" />
+              ) : (
+                <span
+                  style={{
+                    color: a.trialUsed / Math.max(1, a.trialLimit) >= 0.6 ? AMBER : SUB,
+                    fontWeight: a.trialUsed / Math.max(1, a.trialLimit) >= 0.6 ? 700 : 400,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {`${a.trialUsed} / ${a.trialLimit}`}
                 </span>
               )}
             </td>
@@ -1530,8 +1603,90 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
   const recentVisitors = data.visitors.slice(0, 8)
   const topAgents = [...data.agents].sort((a, b) => b.visitorCount - a.visitorCount).slice(0, 6)
 
+  // Paying agents whose subscription is scheduled to cancel — still active
+  // today, gone at period end. Soonest departure first.
+  const cancelingAgents = [...data.agents]
+    .filter((a) => a.canceling)
+    .sort((a, b) => (a.current_period_end || '').localeCompare(b.current_period_end || ''))
+    .slice(0, 8)
+
+  // Free-trial agents at 60%+ of their cap — the upgrade-prospect /
+  // about-to-hit-the-wall list. Locked accounts sort to the top.
+  const nearCap = [...data.agents]
+    .filter((a) => a.onFreeTrial && a.trialLimit > 0 && a.trialUsed / a.trialLimit >= 0.6)
+    .sort((a, b) => b.trialUsed / b.trialLimit - a.trialUsed / a.trialLimit)
+    .slice(0, 8)
+
+  // Stuck signups (agents arrive newest-first from the API, so these are too).
+  const neverLoggedIn = data.agents.filter((a) => !a.last_sign_in_at)
+  const noOpenHouse = data.agents.filter((a) => a.last_sign_in_at && a.openHouseCount === 0)
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, marginTop: 24 }}>
+      <Panel title="Subscriptions Ending" onMore={cancelingAgents.length > 0 ? () => setTab('agents') : undefined}>
+        {cancelingAgents.length === 0 && <Muted>No subscriptions are set to cancel.</Muted>}
+        {cancelingAgents.map((a) => (
+          <Line
+            key={a.id}
+            left={a.name}
+            sub={`${a.tier}${a.billing_interval ? ` · ${a.billing_interval === 'two_year_prepay' ? '2-year' : a.billing_interval}ly` : ''} · ${a.email}`}
+            right={`ends ${fmtDate(a.current_period_end)}`}
+          />
+        ))}
+      </Panel>
+
+      <Panel title="Near Trial Cap" onMore={nearCap.length > 0 ? () => setTab('agents') : undefined}>
+        {nearCap.length === 0 && <Muted>No free agent is close to their trial cap yet.</Muted>}
+        {nearCap.map((a) => (
+          <Line
+            key={a.id}
+            left={a.name}
+            sub={a.email}
+            right={
+              a.trialLocked ? (
+                <Badge text={`Locked · ${a.trialUsed} / ${a.trialLimit}`} color="#cc0000" bg="#fff0f0" />
+              ) : (
+                `${a.trialUsed} / ${a.trialLimit} visitors`
+              )
+            }
+          />
+        ))}
+        {nearCap.length > 0 && (
+          <div style={{ fontSize: 11, color: SUB, paddingTop: 8 }}>
+            Free agents at 60%+ of their visitor cap — the ones worth a personal upgrade nudge.
+          </div>
+        )}
+      </Panel>
+
+      <Panel title="Needs Attention" onMore={() => setTab('agents')}>
+        {neverLoggedIn.length === 0 && noOpenHouse.length === 0 && (
+          <Muted>Everyone who signed up has logged in and created an open house.</Muted>
+        )}
+        {neverLoggedIn.length > 0 && (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 700, color: AMBER, paddingTop: 4 }}>
+              {`Signed up, never logged in (${neverLoggedIn.length})`}
+            </div>
+            {neverLoggedIn.slice(0, 5).map((a) => (
+              <Line key={a.id} left={a.name} sub={a.email} right={`joined ${fmtDate(a.created_at)}`} />
+            ))}
+            <div style={{ fontSize: 11, color: SUB, padding: '4px 0 8px' }}>
+              Their welcome email may be sitting in spam — worth a personal follow-up.
+            </div>
+          </>
+        )}
+        {noOpenHouse.length > 0 && (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 700, color: SUB, paddingTop: 4 }}>
+              {`Logged in, no open house yet (${noOpenHouse.length})`}
+            </div>
+            {noOpenHouse.slice(0, 5).map((a) => (
+              <Line key={a.id} left={a.name} sub={a.email} right={`joined ${fmtDate(a.created_at)}`} />
+            ))}
+          </>
+        )}
+      </Panel>
+
       <Panel title="Newest Agents" onMore={() => setTab('agents')}>
         {recentAgents.length === 0 && <Muted>No agents yet.</Muted>}
         {recentAgents.map((a) => (
@@ -1636,7 +1791,7 @@ function Panel({ title, children, onMore }: { title: string; children: React.Rea
   )
 }
 
-function Line({ left, sub, right }: { left: string; sub: string; right: string }) {
+function Line({ left, sub, right }: { left: string; sub: string; right: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: `1px solid #f0f0f2`, gap: 12 }}>
       <div style={{ minWidth: 0 }}>
