@@ -7,9 +7,11 @@
 //     promises no advertising pixels there;
 //   - the agent dashboard, admin, and sponsor portal, which display third-party
 //     (visitor) PII that auto-collecting tags could scrape.
-// The one exception is the post-checkout purchase conversion on /dashboard,
-// where trackPurchase() lazily loads Meta + Google Ads (never GA4, whose
-// enhanced measurement records outbound mailto:/tel: link clicks).
+// The two exceptions are conversions that can only be observed on /dashboard:
+// the post-checkout purchase (trackPurchase) and the OAuth signup completion
+// (trackSignupOnce, since Google signups never pass the signup form). Both
+// lazily load Meta + Google Ads there (never GA4, whose enhanced measurement
+// records outbound mailto:/tel: link clicks).
 //
 // Everything is env-driven and inert when the IDs are unset. Browsers sending
 // the Global Privacy Control signal get no ad tags at all.
@@ -213,6 +215,49 @@ export function trackSignup(email?: string, userId?: string) {
       }),
     }).catch(() => {})
   }
+}
+
+// Signup completion for accounts that never pass through the signup form —
+// OAuth (Google) users, whose first page is the dashboard. Unlike trackSignup,
+// the Conversions API leg goes FIRST and the browser leg fires only if the
+// server actually relayed: the send-once ledger answers "duplicate" for form
+// signups that later reach the dashboard, for reloads inside the freshness
+// window, and for retries — keeping every platform at one conversion per
+// account. Requires the pixel to be configured, since that ledger is the only
+// thing preventing double counts here.
+export async function trackSignupOnce(email?: string, userId?: string, method = 'google') {
+  if (typeof window === 'undefined' || !userId || !META_PIXEL_ID || gpcOptOut()) return
+  const eventId =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`
+  try {
+    const res = await fetch('/api/meta-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventName: 'CompleteRegistration',
+        eventId,
+        email,
+        userId,
+        sourceUrl: window.location.href,
+      }),
+    })
+    const json = await res.json()
+    if (!res.ok || json.skipped) return
+  } catch {
+    return
+  }
+  loadMarketingTags()
+  if (window.fbq && (email || userId)) {
+    window.fbq('init', META_PIXEL_ID, {
+      ...(email ? { em: email.trim().toLowerCase() } : {}),
+      ...(userId ? { external_id: userId } : {}),
+    })
+  }
+  window.fbq?.('track', 'CompleteRegistration', { ...META_SIGNUP_CUSTOM_DATA }, { eventID: eventId })
+  window.gtag?.('event', 'sign_up', { method })
+  googleAdsConversion(GOOGLE_ADS_SIGNUP_LABEL)
 }
 
 // Contact / partner inquiry form submitted.

@@ -131,6 +131,32 @@ describe('loadMarketingTags / track*', () => {
     expect(gtagCalls()).toContainEqual(['event', 'conversion', { send_to: 'AW-111/SIGN' }])
   })
 
+  it('OAuth signup (trackSignupOnce): server relay first, pixel only after a fresh send', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) })
+    vi.stubGlobal('fetch', fetchMock)
+    const m = await load('/dashboard')
+    await m.trackSignupOnce('agent@example.com', 'a1b2c3d4-0000-0000-0000-000000000002')
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(body).toMatchObject({ eventName: 'CompleteRegistration', userId: 'a1b2c3d4-0000-0000-0000-000000000002' })
+    // The browser leg reuses the id the server was given, so the pair dedups.
+    const reg = fbqCalls().find((c) => c[1] === 'CompleteRegistration')
+    expect(reg?.[2]).toEqual({ content_name: 'agent_trial_signup', status: 'complete', currency: 'USD', value: 0 })
+    expect((reg?.[3] as { eventID?: string }).eventID).toBe(body.eventId)
+    expect(gtagCalls()).toContainEqual(['event', 'sign_up', { method: 'google' }])
+    expect(gtagCalls()).toContainEqual(['event', 'conversion', { send_to: 'AW-111/SIGN' }])
+  })
+
+  it('OAuth signup fires nothing when the ledger says this user was already counted', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true, skipped: 'duplicate' }) })
+    vi.stubGlobal('fetch', fetchMock)
+    const m = await load('/dashboard')
+    await m.trackSignupOnce('agent@example.com', 'a1b2c3d4-0000-0000-0000-000000000002')
+    expect(fetchMock).toHaveBeenCalledOnce()
+    // No pixel load, no browser event, no Google events — one conversion total.
+    expect(win().fbq).toBeUndefined()
+    expect(win().dataLayer).toBeUndefined()
+  })
+
   it('skips the Ads conversion when its label is unset but still sends the GA4 event', async () => {
     const m = await load('/contact')
     m.trackLead()

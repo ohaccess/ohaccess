@@ -14,9 +14,20 @@ import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { normalizeCustomAnswers } from '@/lib/custom-questions'
 import { sanitizeSmsCodeWord } from '@/lib/register-helpers'
 import { normalizeAgreementTemplates } from '@/lib/agreements'
-import { loadMarketingTags, trackPurchase } from '@/lib/marketing-tags'
+import { loadMarketingTags, trackPurchase, trackSignupOnce } from '@/lib/marketing-tags'
 import { regionFor, inferProfileCountry, normalizeCountry, countryFromLocale, countryName } from '@/lib/regions'
 import { phoneError } from '@/lib/phone'
+
+// OAuth (Google) signups never pass the signup form, so their signup
+// conversion fires on the first dashboard load instead. The freshness window
+// keeps long-standing accounts (which predate the send-once ledger) from ever
+// triggering it; inside the window the ledger makes repeats and form-signup
+// arrivals no-ops. Fire-and-forget — never blocks the dashboard.
+const reportSignupIfNew = (u: { id: string; email?: string; created_at: string; app_metadata?: { provider?: string } }) => {
+  if (Date.now() - new Date(u.created_at).getTime() < 15 * 60 * 1000) {
+    trackSignupOnce(u.email, u.id, u.app_metadata?.provider ?? 'email').catch(() => {})
+  }
+}
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
@@ -199,6 +210,7 @@ export default function Dashboard() {
       if (!refreshData.session) { window.location.href = '/login'; return }
       if (await isSponsorAccount(refreshData.session.user.id)) { window.location.href = '/sponsor/dashboard'; return }
       setUser(refreshData.session.user)
+      reportSignupIfNew(refreshData.session.user)
       await loadProfile(refreshData.session.user.id)
       await loadOpenHouses(refreshData.session.user.id)
       await loadVisitorCount(refreshData.session.user.id)
@@ -208,6 +220,7 @@ export default function Dashboard() {
     }
     if (await isSponsorAccount(session.user.id)) { window.location.href = '/sponsor/dashboard'; return }
     setUser(session.user)
+    reportSignupIfNew(session.user)
     await loadProfile(session.user.id)
     await loadOpenHouses(session.user.id)
     await loadVisitorCount(session.user.id)
