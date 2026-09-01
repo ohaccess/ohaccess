@@ -2,6 +2,9 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser, isAdmin } from '@/lib/auth'
 import { ohStatus } from '@/lib/oh-status'
+import { stripe } from '@/lib/stripe'
+import type Stripe from 'stripe'
+import { trialLimitFor, isExpiredPrepaidAccess } from '@/lib/billing-plans'
 
 type ProfileRow = {
   id: string
@@ -18,6 +21,7 @@ type ProfileRow = {
   billing_interval: string | null
   current_period_end: string | null
   bonus_visitors: number | null
+  sponsor_id: string | null
   referral_source: string | null
   created_at: string
 }
@@ -77,7 +81,7 @@ export async function GET(request: Request) {
     supabase
       .from('profiles')
       .select(
-        'id, full_name, email, phone, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, bonus_visitors, referral_source, created_at'
+        'id, full_name, email, phone, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, bonus_visitors, sponsor_id, referral_source, created_at'
       )
       .order('created_at', { ascending: false }),
     supabase
@@ -209,28 +213,62 @@ export async function GET(request: Request) {
     PAYING_STATUSES.has((p.subscription_status || '').toLowerCase()) &&
     !p.subscription_canceled_at
 
+  // Paid access, matching lib/trial-cap.ts exactly (sponsors batch-fetched
+  // instead of per-agent): a paid tier that hasn't lapsed, or coverage by a
+  // paying sponsor. Everyone else is on the free trial and subject to the cap.
+  const sponsorIds = [...new Set(profiles.map((p) => p.sponsor_id).filter(Boolean))] as string[]
+  const activeSponsorIds = new Set<string>()
+  if (sponsorIds.length > 0) {
+    const { data: sponsorRows } = await supabase
+      .from('sponsors')
+      .select('id')
+      .in('id', sponsorIds)
+      .eq('billing_status', 'active')
+    for (const s of sponsorRows || []) activeSponsorIds.add(s.id as string)
+  }
+  const hasPaidAccess = (p: ProfileRow): boolean =>
+    (['pro', 'team', 'brokerage'].includes(p.tier || 'free') && !isExpiredPrepaidAccess(p)) ||
+    (!!p.sponsor_id && activeSponsorIds.has(p.sponsor_id))
+
   // ---- Agents ----
-  const agents = profiles.map((p) => ({
-    id: p.id,
-    name: agentName.get(p.id) || 'Unknown',
-    email: p.email || '',
-    phone: p.phone || '',
-    brokerage: p.brokerage || '',
-    tier: p.tier || 'free',
-    role: p.role || 'agent',
-    subscription_status: p.subscription_status || '',
-    billing_interval: p.billing_interval || '',
-    current_period_end: p.current_period_end,
-    bonus_visitors: p.bonus_visitors || 0,
-    referral_source: p.referral_source || '',
-    // Gifted (comped) access: paid tier with no Stripe subscription behind it.
-    comped: p.billing_interval === 'comped' && !p.stripe_subscription_id,
-    created_at: p.created_at,
-    last_sign_in_at: lastSignIn.get(p.id) || null,
-    openHouseCount: openHousesByAgent.get(p.id) || 0,
-    visitorCount: visitorsByAgent.get(p.id) || 0,
-    doubleBilling: isDoubleBilled(p),
-  }))
+  const agents = profiles.map((p) => {
+    const onFreeTrial = !hasPaidAccess(p)
+    // Same count the cap enforcement uses: live visitor rows for this agent
+    // (the lockout blocks deletes, so live ≈ lifetime for capped accounts).
+    const trialUsed = visitorsByAgent.get(p.id) || 0
+    const trialLimit = trialLimitFor(p)
+    return {
+      id: p.id,
+      name: agentName.get(p.id) || 'Unknown',
+      email: p.email || '',
+      phone: p.phone || '',
+      brokerage: p.brokerage || '',
+      tier: p.tier || 'free',
+      role: p.role || 'agent',
+      subscription_status: p.subscription_status || '',
+      billing_interval: p.billing_interval || '',
+      current_period_end: p.current_period_end,
+      bonus_visitors: p.bonus_visitors || 0,
+      referral_source: p.referral_source || '',
+      // Gifted (comped) access: paid tier with no Stripe subscription behind it.
+      comped: p.billing_interval === 'comped' && !p.stripe_subscription_id,
+      created_at: p.created_at,
+      last_sign_in_at: lastSignIn.get(p.id) || null,
+      openHouseCount: openHousesByAgent.get(p.id) || 0,
+      visitorCount: trialUsed,
+      doubleBilling: isDoubleBilled(p),
+      onFreeTrial,
+      trialUsed,
+      trialLimit,
+      trialLocked: onFreeTrial && trialUsed >= trialLimit,
+      // Subscription is scheduled to cancel at period end — still paying
+      // today, gone when current_period_end passes.
+      canceling:
+        !!p.stripe_subscription_id &&
+        !!p.subscription_canceled_at &&
+        PAYING_STATUSES.has((p.subscription_status || '').toLowerCase()),
+    }
+  })
 
   // ---- Open houses ----
   // Open houses with at least one record under a preservation hold
@@ -354,9 +392,70 @@ export async function GET(request: Request) {
     abandonedScans,
   }
 
+  // ---- Revenue (live from Stripe, the billing source of truth) ----
+  // Summing real subscription items (unit_amount × quantity, normalized to
+  // per-month) means seat-quantity Brokerage subs and any future price changes
+  // are automatically right — no price table to keep in sync. Comped access
+  // and invoice-based 100+ deals are billed outside Stripe subscriptions and
+  // correctly don't count toward MRR. Null (not zero) if Stripe is unreachable.
+  let revenue: {
+    mrrCents: number
+    activeSubs: number
+    newMrrCents30d: number
+    cancelingCount: number
+    cancelingMrrCents: number
+  } | null = null
+  try {
+    const listAll = async (status: 'active' | 'trialing' | 'past_due') => {
+      const subs: Stripe.Subscription[] = []
+      let starting_after: string | undefined
+      for (;;) {
+        const page = await stripe.subscriptions.list({ status, limit: 100, starting_after })
+        subs.push(...page.data)
+        if (!page.has_more) break
+        starting_after = page.data[page.data.length - 1]?.id
+      }
+      return subs
+    }
+    const [active, trialing, pastDue] = await Promise.all([
+      listAll('active'),
+      listAll('trialing'),
+      listAll('past_due'),
+    ])
+    const subs = [...active, ...trialing, ...pastDue]
+
+    const monthlyCents = (sub: Stripe.Subscription): number => {
+      let cents = 0
+      for (const item of sub.items.data) {
+        const price = item.price
+        if (!price?.unit_amount || !price.recurring) continue
+        const n = price.recurring.interval_count || 1
+        const months = price.recurring.interval === 'year' ? 12 * n : n
+        cents += (price.unit_amount * (item.quantity ?? 1)) / months
+      }
+      return Math.round(cents)
+    }
+
+    const created30Cutoff = Math.floor((now - 30 * 24 * 60 * 60 * 1000) / 1000)
+    const canceling = subs.filter((s) => s.cancel_at_period_end)
+    revenue = {
+      mrrCents: subs.reduce((sum, s) => sum + monthlyCents(s), 0),
+      activeSubs: subs.length,
+      newMrrCents30d: subs
+        .filter((s) => s.created >= created30Cutoff)
+        .reduce((sum, s) => sum + monthlyCents(s), 0),
+      cancelingCount: canceling.length,
+      cancelingMrrCents: canceling.reduce((sum, s) => sum + monthlyCents(s), 0),
+    }
+  } catch {
+    // Stripe down or misconfigured — the dashboard still loads, the money
+    // card just says it couldn't reach Stripe.
+  }
+
   return NextResponse.json({
     stats,
     funnel,
+    revenue,
     agents,
     openHouses: openHouseRows,
     visitors: visitorRows,
