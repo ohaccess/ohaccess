@@ -27,7 +27,7 @@ export default function Terms() {
         <div style={{ marginBottom: '40px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#6e6e73', marginBottom: '8px' }}>ohACCESS Legal</div>
           <h1 style={{ fontSize: '40px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '8px' }}>Visitor Terms of Service</h1>
-          <div style={{ fontSize: '13px', color: '#6e6e73' }}>For individuals registering at an open house · Version 1.5 · Effective Date: June 1, 2026 · ohaccess.com</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73' }}>For individuals registering at an open house · Version 1.6 · Effective Date: September 2, 2026 · ohaccess.com</div>
           <div style={{ fontSize: '13px', color: '#6e6e73', marginTop: '8px' }}>If you are a real estate agent, team, or brokerage holding an ohACCESS account, see the <a href="/subscriber-terms" style={{ color: '#0071e3', textDecoration: 'underline' }}>Subscriber Terms of Service</a>.</div>
         </div>
 
@@ -62,7 +62,7 @@ export default function Terms() {
             <p>ohACCESS is, first and foremost, a safety and security tool for property owners and the real estate professionals who host open houses. An open house is an invitation to view a private home; it is not an offer of open, anonymous, or unvetted access to anyone. The primary purpose of the registration and codeword verification you complete is to confirm that each visitor has provided genuine, reachable contact information and to create a record of attendance — measures that deter anonymous or fraudulent entry and support the safety and security of the property, its occupants, and the hosting Agent.</p>
             <p style={{ marginTop: '10px' }}>ohACCESS verifies only that the phone number and/or email address you provide are valid and reachable, by delivering a codeword to them. <strong>ohACCESS does not conduct background checks, criminal-history checks, or identity verification beyond this contact-information confirmation, and does not screen, vouch for, or guarantee the safety, identity, or intentions of any visitor, Agent, or other person.</strong> Sections 1B (Discretion of Access) and 11 (Indemnity) continue to apply.</p>
             <p style={{ marginTop: '10px' }}><strong>Codewords.</strong> Any codeword issued to you is provided solely for your own attendance at the specific open house for which you registered. Codewords are personal to you, non-transferable, and may be single-use and time-limited. Sharing your codeword with, or using a codeword on behalf of, another person is prohibited, and — as stated in Section 1B — presenting a codeword does not by itself entitle you or anyone else to enter the property.</p>
-            <p style={{ marginTop: '10px' }}>The hosting Agent also uses ohACCESS to follow up with you regarding the property you visited and other real estate services, as described in Sections 2, 4, and 8, and ohACCESS may facilitate introductions to the categories of real estate–related service providers described in Section 5. These follow-up and service-provider purposes operate alongside, and are secondary to, the security purpose described above.</p>
+            <p style={{ marginTop: '10px' }}>The hosting Agent also uses ohACCESS to follow up with you regarding the property you visited and other real estate services, as described in Sections 2, 4, and 8. These follow-up purposes operate alongside, and are secondary to, the security purpose described above.</p>
           </Section>
 
           <Section title="1D. Conduct at the Property; Photography and Recording">
@@ -81,28 +81,17 @@ export default function Terms() {
           </Section>
 
           <Section title="3. Do Not Call Registry Override">
-            You acknowledge and agree that your express written consent provided through this form constitutes a valid exemption to any registration you may have on the National Do Not Call Registry, any state Do Not Call list, or any internal suppression list maintained by the Agent, their brokerage, ohACCESS, or any of ohACCESS&apos;s authorized third-party partners. This consent overrides any prior Do Not Call registration with respect to contact from these parties regarding real estate services and related products, as recognized under 47 C.F.R. § 64.1200(c)(2)(ii) and applicable FTC regulations. Your consent is also intended to constitute the prior express invitation or permission required under applicable state telemarketing laws, including the Texas Business &amp; Commerce Code (Chapters 302 and 305) and analogous statutes in other states, to the extent such consent is recognized thereunder.
+            You acknowledge and agree that your express written consent provided through this form constitutes a valid exemption to any registration you may have on the National Do Not Call Registry, any state Do Not Call list, or any internal suppression list maintained by the Agent, their brokerage, or ohACCESS. This consent overrides any prior Do Not Call registration with respect to contact from these parties regarding real estate services and related products, as recognized under 47 C.F.R. § 64.1200(c)(2)(ii) and applicable FTC regulations. Your consent is also intended to constitute the prior express invitation or permission required under applicable state telemarketing laws, including the Texas Business &amp; Commerce Code (Chapters 302 and 305) and analogous statutes in other states, to the extent such consent is recognized thereunder.
           </Section>
 
           <Section title="4. Established Business Relationship">
             By voluntarily registering for an open house hosted by the Agent, you acknowledge an established business relationship (EBR) with the Agent and their affiliated brokerage, as defined under applicable FTC and FCC regulations. This EBR supports the right to contact you regarding real estate services and related products and services for a period of up to 3 months from the date of your most recent registration or interaction, unless you validly exercise your right to opt out.
           </Section>
 
-          <Section title="5. Data Sharing with Third-Party Partners">
-            <p><strong>Current practice:</strong> ohACCESS does not currently share your registration information with the third-party business partners listed below. The consent you provide in this Section 5 is forward-looking — it permits, but does not require, ohACCESS to engage in such sharing in the future without obtaining additional consent. If and when ohACCESS begins active third-party data sharing, the categories of recipients will be those listed in this Section 5 and no others, and we will update our <a href="/privacy" style={{ color: '#0071e3', textDecoration: 'underline' }}>Privacy Policy</a> and notify subscribers as required by Section 14 of these Terms.</p>
-            <p style={{ marginTop: '10px' }}>If you select the box to share your information with our third-party business partners, you expressly consent to ohACCESS sharing your registration information — including your name, email address, phone number, purchasing timeline, and open house attendance details — with ohACCESS&apos;s authorized third-party business partners, which may include only:</p>
-            <ul style={{ paddingLeft: '24px', marginTop: '8px', marginBottom: '12px' }}>
-              <li style={{ marginBottom: '8px' }}>Mortgage lenders and loan originators</li>
-              <li style={{ marginBottom: '8px' }}>Title companies and closing attorneys</li>
-              <li style={{ marginBottom: '8px' }}>Real estate attorneys</li>
-              <li style={{ marginBottom: '8px' }}>Home inspection companies</li>
-              <li style={{ marginBottom: '8px' }}>Moving and relocation companies</li>
-              <li style={{ marginBottom: '8px' }}>Home warranty providers</li>
-              <li style={{ marginBottom: '8px' }}>Homeowner&apos;s insurance providers</li>
-              <li style={{ marginBottom: '8px' }}>Other real estate transaction service providers</li>
-            </ul>
-            <p>If such sharing begins, these third-party partners may contact you independently regarding their products and services. ohACCESS is not responsible for the communications or practices of third-party partners. Each third-party partner&apos;s contact with you is governed by their own terms of service and privacy policy.</p>
-            <p style={{ marginTop: '10px' }}><strong>You have the right to opt out of third-party data sharing at any time</strong> by emailing privacy@ohaccess.com with the subject line &quot;Opt Out of Third-Party Sharing,&quot; even before any such sharing has begun. OhACCESS will process opt-out requests within ten (10) business days for future sharing. Please allow up to sixty (60) days for any sharing opt-out request to go into effect. Data already shared with third-party partners prior to your opt-out request cannot be recalled.</p>
+          <Section title="5. What ohACCESS Does with Your Information">
+            <p>ohACCESS collects your registration information <strong>on behalf of the hosting Agent</strong>, and for no other purpose. We use it only to deliver your codeword, confirm that the contact information you provided is genuine and reachable, detect and prevent fraud and misuse of the platform, keep a record of your attendance, and provide your registration details to the hosting Agent and their affiliated brokerage for the follow-up described in Sections 2 and 4.</p>
+            <p style={{ marginTop: '10px' }}><strong>ohACCESS does not sell your information and does not share it with third-party business partners, marketers, lead buyers, or data brokers.</strong> We do not use your registration information for ohACCESS&apos;s own marketing. The only parties that receive your registration information are: (a) the hosting Agent and their affiliated brokerage; (b) at a sponsored open house, the sponsor named in the consent language at sign-in, and only for the open houses that sponsor sponsors; and (c) the service providers that process data on our behalf to operate the platform (such as SMS, email, database, and hosting providers), as listed in our <a href="/privacy" style={{ color: '#0071e3', textDecoration: 'underline' }}>Privacy Policy</a>.</p>
+            <p style={{ marginTop: '10px' }}>If our practices ever change, we will update these Terms and our <a href="/privacy" style={{ color: '#0071e3', textDecoration: 'underline' }}>Privacy Policy</a> before any new sharing begins. You may object to, or opt out of, any sharing at any time by emailing privacy@ohaccess.com.</p>
           </Section>
 
           <Section title="5A. Data Retention">
@@ -110,7 +99,7 @@ export default function Terms() {
           </Section>
 
           <Section title="5B. California Residents and Other State Privacy Rights">
-            If you are a resident of California or another U.S. state with a comprehensive consumer-privacy law, you may have additional rights regarding your personal information — including the right to know what we collect, to access, correct, or delete it, and to opt out of any &quot;sale&quot; or &quot;sharing&quot; of it. <strong>ohACCESS does not sell personal information to data brokers.</strong> These rights, and how to exercise them, are described in Section 7 of our <a href="/privacy" style={{ color: '#0071e3', textDecoration: 'underline' }}>Privacy Policy</a>. California residents may opt out of any sale or sharing by emailing privacy@ohaccess.com with the subject line &quot;California Opt Out&quot;; residents of other states may email privacy@ohaccess.com with the subject line &quot;[State] Privacy Request.&quot;
+            If you are a resident of California or another U.S. state with a comprehensive consumer-privacy law, you may have additional rights regarding your personal information — including the right to know what we collect, to access, correct, or delete it, and to opt out of any &quot;sale&quot; or &quot;sharing&quot; of it. <strong>ohACCESS does not sell personal information and does not share it with third-party business partners or data brokers.</strong> These rights, and how to exercise them, are described in Section 7 of our <a href="/privacy" style={{ color: '#0071e3', textDecoration: 'underline' }}>Privacy Policy</a>. California residents may opt out of any sale or sharing by emailing privacy@ohaccess.com with the subject line &quot;California Opt Out&quot;; residents of other states may email privacy@ohaccess.com with the subject line &quot;[State] Privacy Request.&quot;
           </Section>
 
           <Section title="6. How to Opt Out of All Communications">
@@ -120,7 +109,6 @@ export default function Terms() {
               <li style={{ marginBottom: '8px' }}><strong>Email:</strong> Click the &quot;Unsubscribe&quot; link in any email, or reply with &quot;Unsubscribe&quot; in the subject line</li>
               <li style={{ marginBottom: '8px' }}><strong>Phone:</strong> State verbally that you wish to be placed on the do-not-call list</li>
               <li style={{ marginBottom: '8px' }}><strong>Written request:</strong> Email privacy@ohaccess.com</li>
-              <li style={{ marginBottom: '8px' }}><strong>Third-party sharing opt-out:</strong> Email privacy@ohaccess.com with subject line &quot;Opt Out of Third-Party Sharing&quot;</li>
             </ul>
             <p>Opt-out requests will be processed within ten (10) business days, but please allow up to thirty (30) days for such request to go into effect. Transactional messages you request such as your codeword confirmation are not affected by marketing opt-outs.</p>
           </Section>
@@ -136,7 +124,7 @@ export default function Terms() {
           </Section>
 
           <Section title="9. Platform Role">
-            ohACCESS is a technology platform that facilitates open house registration and visitor verification on behalf of real estate agents and brokerages. ohACCESS is not a real estate broker, agent, or party to any real estate transaction. All subsequent communications you receive from the Agent are from the Agent directly, not from ohACCESS, unless explicitly stated otherwise. Communications from ohACCESS&apos;s third-party partners are the sole responsibility of those partners.
+            ohACCESS is a technology platform that facilitates open house registration and visitor verification on behalf of real estate agents and brokerages. ohACCESS is not a real estate broker, agent, or party to any real estate transaction. All subsequent communications you receive from the Agent are from the Agent directly, not from ohACCESS, unless explicitly stated otherwise. Communications from an open house sponsor named at sign-in are the sole responsibility of that sponsor and are governed by that sponsor&apos;s own terms and privacy policy.
           </Section>
 
           <Section title="9A. Open House Scheduling, Cancellation, and Force Majeure">
@@ -150,13 +138,13 @@ export default function Terms() {
           </Section>
 
           <Section title="11. Limitation of Liability">
-            <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, OHACCESS SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION DAMAGES FOR LOSS OF PROFITS, GOODWILL, DATA, OR OTHER INTANGIBLE LOSSES, ARISING FROM YOUR USE OF THE PLATFORM, YOUR ATTENDANCE AT AN OPEN HOUSE, YOUR DENIAL OF ENTRY TO ANY OPEN HOUSE, ANY COMMUNICATIONS YOU RECEIVE FROM AN AGENT OR THIRD-PARTY PARTNER, OR ANY DATA SHARING AUTHORIZED BY THESE TERMS, WHETHER BASED IN CONTRACT, TORT, NEGLIGENCE, STRICT LIABILITY, OR OTHERWISE, AND EVEN IF OHACCESS HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</p>
+            <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, OHACCESS SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION DAMAGES FOR LOSS OF PROFITS, GOODWILL, DATA, OR OTHER INTANGIBLE LOSSES, ARISING FROM YOUR USE OF THE PLATFORM, YOUR ATTENDANCE AT AN OPEN HOUSE, YOUR DENIAL OF ENTRY TO ANY OPEN HOUSE, ANY COMMUNICATIONS YOU RECEIVE FROM AN AGENT OR A SPONSOR NAMED AT SIGN-IN, OR ANY DATA SHARING AUTHORIZED BY THESE TERMS, WHETHER BASED IN CONTRACT, TORT, NEGLIGENCE, STRICT LIABILITY, OR OTHERWISE, AND EVEN IF OHACCESS HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</p>
             <p style={{ marginTop: '10px' }}>YOUR USE OF THIS PLATFORM IS AT YOUR OWN RISK. IN NO EVENT SHALL OHACCESS&apos;S TOTAL CUMULATIVE LIABILITY TO YOU EXCEED ONE HUNDRED U.S. DOLLARS ($100).</p>
             <p style={{ marginTop: '10px' }}>The limitations in this Section 11 apply notwithstanding the failure of essential purpose of any limited remedy.</p>
           </Section>
 
           <Section title="12. Indemnification">
-            YOU AGREE TO INDEMNIFY, DEFEND, AND HOLD HARMLESS OHACCESS, LLC, ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, AND THIRD-PARTY PARTNERS FROM AND AGAINST ANY AND ALL CLAIMS, DAMAGES, LOSSES, LIABILITIES, COSTS, AND EXPENSES (INCLUDING REASONABLE ATTORNEYS&apos; FEES) ARISING FROM (A) YOUR USE OF THE PLATFORM; (B) YOUR VIOLATION OF THESE TERMS; (C) YOUR PROVISION OF FALSE, INACCURATE, OR THIRD-PARTY CONTACT INFORMATION; OR (D) ANY CLAIM BY A THIRD PARTY ARISING FROM CONTACT INFORMATION YOU SUBMITTED THAT DID NOT BELONG TO YOU.
+            YOU AGREE TO INDEMNIFY, DEFEND, AND HOLD HARMLESS OHACCESS, LLC, ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS FROM AND AGAINST ANY AND ALL CLAIMS, DAMAGES, LOSSES, LIABILITIES, COSTS, AND EXPENSES (INCLUDING REASONABLE ATTORNEYS&apos; FEES) ARISING FROM (A) YOUR USE OF THE PLATFORM; (B) YOUR VIOLATION OF THESE TERMS; (C) YOUR PROVISION OF FALSE, INACCURATE, OR THIRD-PARTY CONTACT INFORMATION; OR (D) ANY CLAIM BY A THIRD PARTY ARISING FROM CONTACT INFORMATION YOU SUBMITTED THAT DID NOT BELONG TO YOU.
           </Section>
 
           <Section title="13. Governing Law, Arbitration & Class Action Waiver">
@@ -168,7 +156,7 @@ export default function Terms() {
           </Section>
 
           <Section title="14. Changes to These Terms">
-            ohACCESS reserves the right to modify these Terms at any time. When we make material changes, the updated Terms will be posted at this URL with a new effective date and version number. Continued use of the platform after the effective date constitutes acceptance of the revised Terms. We encourage you to review these Terms periodically. These Terms are <strong>Version 1.5</strong>, with an <strong>Effective Date of June 1, 2026</strong>; the version number and effective date in effect at any time are also shown at the top of this document.
+            ohACCESS reserves the right to modify these Terms at any time. When we make material changes, the updated Terms will be posted at this URL with a new effective date and version number. Continued use of the platform after the effective date constitutes acceptance of the revised Terms. We encourage you to review these Terms periodically. These Terms are <strong>Version 1.6</strong>, with an <strong>Effective Date of September 2, 2026</strong>; the version number and effective date in effect at any time are also shown at the top of this document.
           </Section>
 
           <Section title="15. Contact Information">
