@@ -694,6 +694,15 @@ export default function AdminDashboard() {
   // Phone search matches on digits so "(817) 555-1234", "817-555-1234", and
   // "8175551234" all find the same agent.
   const qDigits = q.replace(/\D/g, '')
+  // Global visitors-per-open-house average. Only open houses that have
+  // started (live or past) count — upcoming ones would all read 0 and drag
+  // the average down for no reason.
+  const heldOpenHouses = data ? data.openHouses.filter((o) => o.when !== 'future') : []
+  const avgVisitorsPerOH =
+    heldOpenHouses.length > 0
+      ? Math.round((heldOpenHouses.reduce((sum, o) => sum + o.visitorCount, 0) / heldOpenHouses.length) * 10) / 10
+      : null
+
   const filteredAgents = useMemo(() => {
     if (!data) return []
     return data.agents.filter(
@@ -849,6 +858,15 @@ export default function AdminDashboard() {
             )}
             <Kpi label="Open Houses" value={data.stats.totalOpenHouses} sub={`${data.stats.upcomingOpenHouses} live/upcoming · ${data.stats.pastOpenHouses} past`} />
             <Kpi label="Total Visitors" value={data.stats.totalVisitors} sub={`+${data.stats.visitorsThisWeek} this week`} accent={BLUE} />
+            <Kpi
+              label="Avg Visitors / Open House"
+              value={avgVisitorsPerOH === null ? '—' : avgVisitorsPerOH.toLocaleString()}
+              sub={
+                heldOpenHouses.length > 0
+                  ? `across ${heldOpenHouses.length.toLocaleString()} held open house${heldOpenHouses.length === 1 ? '' : 's'} · upcoming excluded`
+                  : 'no open houses held yet'
+              }
+            />
             <Kpi label="Verified Visitors" value={data.stats.verifiedVisitors} sub={`${data.stats.totalVisitors - data.stats.verifiedVisitors} unverified`} />
           </div>
 
