@@ -27,11 +27,11 @@ export default function Privacy() {
         <div style={{ marginBottom: '40px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#6e6e73', marginBottom: '8px' }}>ohACCESS Legal</div>
           <h1 style={{ fontSize: '40px', fontWeight: '700', color: '#1d1d1f', letterSpacing: '-1px', marginBottom: '8px' }}>Privacy Policy</h1>
-          <div style={{ fontSize: '13px', color: '#6e6e73' }}>Applies to both open house visitors and ohACCESS account holders · Version 1.4 · Effective Date: July 31, 2026 · ohaccess.com</div>
+          <div style={{ fontSize: '13px', color: '#6e6e73' }}>Applies to both open house visitors and ohACCESS account holders · Version 1.5 · Effective Date: September 2, 2026 · ohaccess.com</div>
         </div>
 
         <div style={{ background: '#fff8ec', border: '1px solid #ecd9b0', borderRadius: '12px', padding: '14px 18px', marginBottom: '32px', fontSize: '13px', lineHeight: '1.7', color: '#3a3a3c' }}>
-          <strong>Notice:</strong> Version 1.4 includes notice of collection of visitor phone number metadata and its purposes. The revisions state the purpose for collecting phone number metadata is to verify phone numbers and to detect, prevent, and assist with investigations of fraud and misuse of the services.
+          <strong>Notice:</strong> Version 1.5 removes the unused third-party business partner sharing provisions and makes explicit that ohACCESS collects visitor information solely on behalf of the open house host. Visitor information is never sold and is shared only with the hosting agent and their brokerage, any sponsor expressly named in the sign-in consent at a sponsored open house, and the service providers that operate the platform.
         </div>
 
         {/* Tab links */}
@@ -96,8 +96,7 @@ export default function Privacy() {
               <li style={{ marginBottom: '8px' }}>Verify your identity and phone number information at the open house entrance</li>
               <li style={{ marginBottom: '8px' }}>Detect and prevent the use of fraudulent phone numbers</li>
               <li style={{ marginBottom: '8px' }}>Detect, prevent, and investigate fraud, misuse, security incidents, and threats to the safety of properties, property owners, agents, and other visitors</li>
-              <li style={{ marginBottom: '8px' }}>Provide the hosting Agent with your contact information and purchasing timeline for follow-up</li>
-              <li style={{ marginBottom: '8px' }}>Share your information with authorized third-party business partners with your consent as described in Section 4</li>
+              <li style={{ marginBottom: '8px' }}>Provide the hosting Agent — and, at a sponsored open house, the sponsor named in the sign-in consent — with your contact information and purchasing timeline for follow-up</li>
               <li style={{ marginBottom: '8px' }}>Maintain records of open house attendance</li>
               <li style={{ marginBottom: '8px' }}>Improve the ohACCESS platform and user experience</li>
               <li style={{ marginBottom: '8px' }}>Comply with legal obligations and legal investigations</li>
@@ -129,9 +128,9 @@ export default function Privacy() {
           </Section>
 
           <Section title="4. Data Sharing with Third Parties">
-            <p>ohACCESS shares Visitor Data with the following categories of third parties:</p>
+            <p>ohACCESS collects Visitor Data on behalf of the hosting Agent and does not use it for any purpose of its own beyond operating the Service as described in Section 3. Visitor Data is shared only with the following:</p>
             <p style={{ marginTop: '12px' }}><strong>Hosting Agents and Brokerages:</strong> The real estate agent and their affiliated brokerage receive your full registration record including name, email, phone, purchasing timeline, and timestamp.</p>
-            <p style={{ marginTop: '12px' }}><strong>Authorized Business Partners:</strong> With your express written consent provided when you select the box to share your information with our third-party business partners, ohACCESS may share your contact information and purchasing intent data with authorized third-party business partners including mortgage lenders, title companies, real estate attorneys, home inspectors, moving companies, home warranty providers, homeowner&apos;s insurance providers, and other real estate transaction service providers. These partners may contact you independently regarding their products and services. We do not control the means and methods in which third parties contact you. While ohACCESS will process your opt-out requests for future sharing with third parties pursuant to Section 5 of the <a href="/terms" style={{ color: '#0071e3', textDecoration: 'underline' }}>Visitor Terms</a>, you should notify any third party directly if you wish to no longer be contacted by them.</p>
+            <p style={{ marginTop: '12px' }}><strong>Open House Sponsors:</strong> Some open houses are sponsored (for example, by a mortgage lender). When an open house is sponsored, the registration form&apos;s consent language names the sponsor, and by submitting the form you consent to be contacted by that named sponsor. The named sponsor receives the registration records (name, email, phone, purchasing timeline, and attendance details) of visitors who register at the open houses it sponsors — and no others. Sponsors&apos; communications and practices are their own responsibility and are governed by their own privacy policies. You may opt out of further contact from a sponsor by following the opt-out instructions in the <a href="/terms" style={{ color: '#0071e3', textDecoration: 'underline' }}>Visitor Terms</a> or by contacting the sponsor directly.</p>
             <p style={{ marginTop: '12px' }}><strong>Service Providers (Sub-processors):</strong> ohACCESS uses the following service providers who process data on our behalf. Each is bound by data protection terms substantially similar to those in this Policy:</p>
             <ul style={{ paddingLeft: '24px', marginTop: '8px', marginBottom: '12px' }}>
               <li style={{ marginBottom: '8px' }}><strong>Supabase, Inc.</strong> — Secure database storage and authentication</li>
@@ -143,7 +142,7 @@ export default function Privacy() {
             </ul>
             <p style={{ marginTop: '8px' }}>We will provide notice of any new sub-processor that materially processes personal data.</p>
             <p style={{ marginTop: '12px' }}><strong>Legal Requirements:</strong> We may disclose your information if required by law, court order, or governmental authority.</p>
-            <p style={{ marginTop: '12px' }}><strong>We do not sell your personal information to data brokers or unaffiliated third parties for their independent marketing purposes.</strong> All third-party sharing is limited to authorized business partners in the real estate transaction ecosystem as described above and consented to through the registration form.</p>
+            <p style={{ marginTop: '12px' }}><strong>We do not sell your personal information, and we do not share it with third-party business partners, marketers, lead buyers, or data brokers.</strong> Visitor Data goes only to the hosting Agent and their brokerage, any sponsor expressly named in the sign-in consent at a sponsored open house, and the service providers listed above.</p>
           </Section>
 
           <Section title="5. Data Retention">
@@ -160,7 +159,6 @@ export default function Privacy() {
               <li style={{ marginBottom: '8px' }}><strong>Correction:</strong> Request correction of inaccurate information</li>
               <li style={{ marginBottom: '8px' }}><strong>Deletion:</strong> Request deletion of your personal information</li>
               <li style={{ marginBottom: '8px' }}><strong>Portability:</strong> Request an export of your data in a structured, machine-readable format</li>
-              <li style={{ marginBottom: '8px' }}><strong>Opt-out of third-party sharing:</strong> Email privacy@ohaccess.com with subject &quot;Opt Out of Third-Party Sharing&quot;</li>
               <li style={{ marginBottom: '8px' }}><strong>Opt-out of marketing communications:</strong> See opt-out instructions in the <a href="/terms" style={{ color: '#0071e3', textDecoration: 'underline' }}>Visitor Terms of Service</a></li>
               <li style={{ marginBottom: '8px' }}><strong>Limit the use of your information</strong>: Request we only use your data as necessary to provide our service</li>
               <li style={{ marginBottom: '8px' }}><strong>Complaint:</strong> Lodge a complaint with your state&apos;s consumer protection authority</li>
@@ -170,7 +168,7 @@ export default function Privacy() {
           </Section>
 
           <Section title="7. State Privacy Rights (US)">
-            <p><strong>7.1 California (CCPA / CPRA).</strong> If you are a California resident, you have the right to know what personal information we collect, use, disclose, and &quot;sell&quot; or &quot;share&quot; (as those terms are defined under the California Consumer Privacy Act as amended by the California Privacy Rights Act); to delete your personal information; to correct inaccurate information; to limit the use of sensitive personal information; and to opt out of the sale or sharing of your personal information. ohACCESS does not sell personal information to data brokers; however, our forward-looking authorization in Section 5 of the <a href="/terms" style={{ color: '#0071e3', textDecoration: 'underline' }}>Visitor Terms</a> to share data with authorized business partners may, if activated, constitute a &quot;sale&quot; or &quot;share&quot; under California law. To opt out, email privacy@ohaccess.com with subject &quot;California Opt Out&quot; and we will respond within fifteen (15) days unless a longer period is permitted by law.</p>
+            <p><strong>7.1 California (CCPA / CPRA).</strong> If you are a California resident, you have the right to know what personal information we collect, use, disclose, and &quot;sell&quot; or &quot;share&quot; (as those terms are defined under the California Consumer Privacy Act as amended by the California Privacy Rights Act); to delete your personal information; to correct inaccurate information; to limit the use of sensitive personal information; and to opt out of the sale or sharing of your personal information. ohACCESS does not sell personal information to data brokers and does not share personal information with third-party business partners. Where you consent at sign-in to be contacted by a named open house sponsor, that disclosure to the sponsor may constitute a &quot;sale&quot; or &quot;share&quot; under California law. To opt out, email privacy@ohaccess.com with subject &quot;California Opt Out&quot; and we will respond within fifteen (15) days unless a longer period is permitted by law.</p>
             <p style={{ marginTop: '10px' }}><strong>7.2 Texas (TDPSA).</strong> If you are a Texas resident, you have rights under the Texas Data Privacy and Security Act (effective July 1, 2024), including the rights to confirm processing, access, correct, delete, port, and opt out of targeted advertising, sale, and certain profiling. To exercise these rights, email privacy@ohaccess.com with subject &quot;Texas Privacy Request.&quot;</p>
             <p style={{ marginTop: '10px' }}><strong>7.3 Other US States.</strong> Residents of Virginia (VCDPA), Colorado (CPA), Connecticut (CTDPA), Utah (UCPA), Oregon (OCPA), Montana (MCDPA), Delaware (DPDPA), Iowa (ICDPA), New Hampshire (NHDPA), New Jersey (NJDPA), Tennessee (TIPA), Indiana (ICDPA), Minnesota (MCDPA), Maryland (MODPA), Nebraska (NDPA), Kentucky (KCDPA), Rhode Island (RIDTPPA), and other states with comprehensive privacy laws may have substantially similar rights. To exercise rights under your state&apos;s law, email privacy@ohaccess.com with the subject line &quot;[State] Privacy Request.&quot; We respond within thirty (30) days (or up to forty-five (45) days where additional time is permitted by the applicable law).</p>
             <p style={{ marginTop: '10px' }}><strong>7.4 Non-Discrimination.</strong> We will not discriminate against you for exercising any privacy right.</p>
