@@ -1,16 +1,17 @@
 'use client'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Fragment, useState, useEffect, useMemo, useCallback } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type SortState, type Sortable } from '@/lib/sort'
 
 // The sponsor dashboard — a 3rd-party provider (lender, title, insurance…)
 // who co-brands agents' open houses. Deliberately mirrors the agent
-// dashboard's look and feel (same topbar, tabs, cards, and the Team-style
-// activity view), with one hard privacy boundary: the ONLY sign-ins a
-// sponsor ever sees are those stamped with their sponsor_id — visitors whose
-// consent language named this sponsor. Unlike a team lead, a sponsor never
-// controls any agent's name, logo, or colors.
+// dashboard's look and feel (same topbar, tabs, cards, and the split view:
+// open-house cards left, sign-in log sticky right), with one hard privacy
+// boundary: the ONLY sign-ins a sponsor ever sees are those stamped with
+// their sponsor_id — visitors whose consent language named this sponsor.
+// Unlike a team lead, a sponsor never controls any agent's name, logo, or
+// colors.
 
 const PRIMARY = '#1d1d1f'
 const ACCENT = '#0071e3'
@@ -138,6 +139,19 @@ export default function SponsorDashboard() {
   const [totals, setTotals] = useState<Totals>({ agents: 0, openHouses: 0, visitors: 0, verified: 0 })
   const [agentFilter, setAgentFilter] = useState<string>('all')
   const [selectedOH, setSelectedOH] = useState<OpenHouseRow | null>(null)
+
+  // Narrow = phones and small tablets: no room for the two-column split, so
+  // the sign-in log renders beneath the selected open house instead. Starts
+  // false and syncs in the effect — reading matchMedia during the first
+  // render breaks hydration (the server can't know the viewport).
+  const [isNarrow, setIsNarrow] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 900px)')
+    const apply = () => setIsNarrow(mq.matches)
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
+  }, [])
 
   // Agents tab
   const [invites, setInvites] = useState<Invite[]>([])
@@ -425,7 +439,9 @@ export default function SponsorDashboard() {
         }
       `}</style>
 
-      <div style={{ padding: '28px', maxWidth: '1080px', margin: '0 auto' }}>
+      {/* The Dashboard tab runs full width like the agent dashboard's split
+          view; the other tabs keep the original centered column. */}
+      <div style={{ padding: '28px', ...(view === 'dashboard' && !isNew ? {} : { maxWidth: '1080px', margin: '0 auto' }) }}>
 
         {/* DASHBOARD VIEW — Team-style activity, sponsored sign-ins only */}
         {view === 'dashboard' && !isNew && (
@@ -495,20 +511,25 @@ export default function SponsorDashboard() {
                   )}
                 </div>
 
-                {/* OPEN HOUSES */}
-                <div style={card}>
-                  <div style={{ ...cardHeader, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>Open houses{agentFilter !== 'all' ? ' — filtered' : ''}</span>
-                    {agentFilter !== 'all' && (
-                      <button onClick={() => { setAgentFilter('all'); setSelectedOH(null) }} style={{ background: 'none', border: '1px solid #d1d1d6', color: '#6e6e73', borderRadius: '7px', padding: '4px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Show all agents</button>
-                    )}
-                  </div>
-                  {visibleOpenHouses.length === 0 ? (
-                    <div style={{ textAlign: 'center', color: '#6e6e73', padding: '20px', fontSize: '13px' }}>No open houses yet.</div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-                      {visibleOpenHouses.map(oh => (
-                        <div key={oh.id} onClick={() => setSelectedOH(selectedOH?.id === oh.id ? null : oh)}
+                {/* OPEN HOUSES + SIGN-IN LOG — the agent dashboard's split
+                    view: open-house cards down the left, sign-in log sticky on
+                    the right, so a long list never buries the log. On narrow
+                    screens the wrappers go inert and the log renders beneath
+                    the selected card — or after the whole list when nothing is
+                    selected, keeping the all-sign-ins view on a phone. */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#1d1d1f' }}>Open houses{agentFilter !== 'all' ? ' — filtered' : ''}</div>
+                  {agentFilter !== 'all' && (
+                    <button onClick={() => { setAgentFilter('all'); setSelectedOH(null) }} style={{ background: 'none', border: '1px solid #d1d1d6', color: '#6e6e73', borderRadius: '7px', padding: '4px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Show all agents</button>
+                  )}
+                </div>
+                <div style={isNarrow ? undefined : { display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px', ...(isNarrow ? {} : { flex: '1 1 40%', minWidth: 0 }) }}>
+                    {visibleOpenHouses.length === 0 ? (
+                      <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '40px', textAlign: 'center', color: '#6e6e73', fontSize: '13px' }}>No open houses yet.</div>
+                    ) : visibleOpenHouses.map(oh => (
+                      <Fragment key={oh.id}>
+                        <div onClick={() => setSelectedOH(selectedOH?.id === oh.id ? null : oh)}
                           style={{ background: selectedOH?.id === oh.id ? '#f5f9ff' : 'white', border: `1px solid ${selectedOH?.id === oh.id ? ACCENT : '#d1d1d6'}`, borderRadius: '14px', padding: '12px 16px', cursor: 'pointer' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: oh.status === 'active' ? ACCENT : '#aeaeb2', flexShrink: 0 }} />
@@ -523,54 +544,20 @@ export default function SponsorDashboard() {
                             </div>
                           </div>
                         </div>
-                      ))}
+                        {isNarrow && selectedOH?.id === oh.id && renderSignInLog()}
+                      </Fragment>
+                    ))}
+                  </div>
+                  {!isNarrow && (
+                    /* Sticky: the log stays on screen while the card list
+                       scrolls; a taller-than-viewport log scrolls inside its
+                       own pane. */
+                    <div style={{ flex: '1 1 60%', minWidth: 0, position: 'sticky', top: '16px', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto' }}>
+                      {renderSignInLog()}
                     </div>
                   )}
                 </div>
-
-                {/* SIGN-IN LOG */}
-                <div style={card}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#1d1d1f' }}>
-                      {selectedOH ? (
-                        <>Sign-ins — {selectedOH.property_address}<span style={{ color: '#6e6e73', fontWeight: 400 }}> · {selectedOH.agent_name}</span></>
-                      ) : 'Recent sign-ins — all sponsored open houses'}
-                    </div>
-                    <button onClick={exportCSV} disabled={sortedVisitors.length === 0} style={{ background: PRIMARY, color: 'white', border: 'none', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: sortedVisitors.length === 0 ? 'not-allowed' : 'pointer', opacity: sortedVisitors.length === 0 ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
-                  </div>
-                  {sortedVisitors.length === 0 ? (
-                    <div style={{ textAlign: 'center', color: '#6e6e73', padding: '20px', fontSize: '13px' }}>
-                      No sign-ins yet. Visitors appear here after they register at a sponsored agent&apos;s open house.
-                    </div>
-                  ) : (
-                    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', minWidth: '500px' }}>
-                        <thead>
-                          <tr>
-                            {VISITOR_COLUMNS.map(col => (
-                              <SortTh key={col.key} label={col.label} k={col.key} state={visitorSort.state} onSort={visitorSort.onSort} />
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {sortedVisitors.map((v, i) => (
-                            <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
-                              <td style={td}>{v.first_name} {v.last_name}</td>
-                              <td style={td}>{v.phone}</td>
-                              <td style={td}>{v.email}</td>
-                              <td style={td}>{v.purchasing_timeline}</td>
-                              <td style={td}>{new Date(v.registered_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>
-                              <td style={td}>{v.verified ? <span style={{ color: '#30d158', fontWeight: 700 }}>✓</span> : '—'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                  <div style={{ fontSize: '11px', color: '#aeaeb2', marginTop: '10px', lineHeight: '1.5' }}>
-                    Every visitor listed here agreed, at sign-in, to be contacted by you by name (phone, text, and email).
-                  </div>
-                </div>
+                {isNarrow && !selectedOH && renderSignInLog()}
               </>
             )}
           </>
@@ -764,4 +751,56 @@ export default function SponsorDashboard() {
       )}
     </div>
   )
+
+  // The sign-in log card, rendered in two places: the sticky right pane on
+  // desktop, and beneath the selected open house (or after the list) on narrow
+  // screens. A hoisted plain function (called as renderSignInLog(), not
+  // mounted as a component) so React keeps the table's element identity
+  // stable across renders.
+  function renderSignInLog() {
+    return (
+      <div style={card}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#1d1d1f' }}>
+            {selectedOH ? (
+              <>Sign-ins — {selectedOH.property_address}<span style={{ color: '#6e6e73', fontWeight: 400 }}> · {selectedOH.agent_name}</span></>
+            ) : 'Recent sign-ins — all sponsored open houses'}
+          </div>
+          <button onClick={exportCSV} disabled={sortedVisitors.length === 0} style={{ background: PRIMARY, color: 'white', border: 'none', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: sortedVisitors.length === 0 ? 'not-allowed' : 'pointer', opacity: sortedVisitors.length === 0 ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
+        </div>
+        {sortedVisitors.length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#6e6e73', padding: '20px', fontSize: '13px' }}>
+            No sign-ins yet. Visitors appear here after they register at a sponsored agent&apos;s open house.
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', minWidth: '500px' }}>
+              <thead>
+                <tr>
+                  {VISITOR_COLUMNS.map(col => (
+                    <SortTh key={col.key} label={col.label} k={col.key} state={visitorSort.state} onSort={visitorSort.onSort} />
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sortedVisitors.map((v, i) => (
+                  <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
+                    <td style={td}>{v.first_name} {v.last_name}</td>
+                    <td style={td}>{v.phone}</td>
+                    <td style={td}>{v.email}</td>
+                    <td style={td}>{v.purchasing_timeline}</td>
+                    <td style={td}>{new Date(v.registered_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>
+                    <td style={td}>{v.verified ? <span style={{ color: '#30d158', fontWeight: 700 }}>✓</span> : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div style={{ fontSize: '11px', color: '#aeaeb2', marginTop: '10px', lineHeight: '1.5' }}>
+          Every visitor listed here agreed, at sign-in, to be contacted by you by name (phone, text, and email).
+        </div>
+      </div>
+    )
+  }
 }
