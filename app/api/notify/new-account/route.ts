@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     .update({ welcome_email_sent_at: new Date().toISOString() })
     .eq('id', user.id)
     .is('welcome_email_sent_at', null)
-    .select('email, full_name')
+    .select('email, full_name, drip_unsubscribe_token')
     .maybeSingle()
 
   if (welcomeError) {
@@ -129,10 +129,15 @@ export async function POST(request: Request) {
           html,
           // Mailbox providers favor mail that offers a way out; an unsubscribe
           // link in the client also absorbs clicks that would otherwise hit
-          // "Report spam". No token infra for agents, so route to the
-          // monitored inbox.
+          // "Report spam". The one-click target opts the agent out of drip
+          // mail (migration 050); the mailto stays as the fallback.
           headers: {
-            'List-Unsubscribe': '<mailto:support@ohaccess.com?subject=Unsubscribe>',
+            'List-Unsubscribe': welcome.drip_unsubscribe_token
+              ? `<${APP_URL}/api/unsubscribe?agent=${welcome.drip_unsubscribe_token}>, <mailto:support@ohaccess.com?subject=Unsubscribe>`
+              : '<mailto:support@ohaccess.com?subject=Unsubscribe>',
+            ...(welcome.drip_unsubscribe_token
+              ? { 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
+              : {}),
           },
         })
         welcomeSent = true
