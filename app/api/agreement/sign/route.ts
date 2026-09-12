@@ -161,7 +161,7 @@ export async function POST(request: Request) {
       cc: agentCopy.cc,
       bcc: agentCopy.bcc,
       replyTo: agent?.display_email || agent?.email || 'support@ohaccess.com',
-      subject: `Signed copy — ${streetAddress}`,
+      subject: `Signed copy: ${streetAddress}`,
       attachments: [
         {
           filename: `Signed-Agreement-${(streetAddress || '').replace(/[^\w\- ]/g, '').trim().replace(/ +/g, '-') || 'ohACCESS'}.pdf`,
@@ -181,7 +181,7 @@ export async function POST(request: Request) {
             </div>
             <ul style="font-size: 13px; color: #1d1d1f; line-height: 1.7; margin: 10px 0; padding-left: 20px;">${docList}</ul>
             <div style="background: #f5f5f7; border-radius: 10px; padding: 12px 14px; font-size: 12px; color: #6e6e73; line-height: 1.7;">
-              The attached PDF is the complete signed record — the document${snapshots.length === 1 ? '' : 's'} plus a signature certificate.
+              The attached PDF is the complete signed record: the document${snapshots.length === 1 ? '' : 's'} plus a signature certificate.
               <strong style="color: #1d1d1f;">Please keep this email: ohACCESS does not store signed documents.</strong>
               This copy went to both the signer and the host agent.
             </div>

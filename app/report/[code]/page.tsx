@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ code: str
     .maybeSingle()
   if (!oh?.property_address) return generic
 
-  const title = `Open House Report — ${oh.property_address}`
+  const title = `Open House Report: ${oh.property_address}`
   const description =
     'Verified visitor turnout and buyer timelines for this open house, powered by ohACCESS.'
   return {
@@ -73,7 +73,7 @@ function NotAvailable({ rateLimited = false }: { rateLimited?: boolean }) {
           </div>
           <div style={{ fontSize: 13, color: '#6e6e73', marginTop: 8, lineHeight: 1.5 }}>
             {rateLimited
-              ? 'This page is getting a lot of requests right now — please try again in a few minutes.'
+              ? 'This page is getting a lot of requests right now. Please try again in a few minutes.'
               : 'The link may be incorrect, or the open house it belonged to has been removed.'}
           </div>
         </div>
@@ -204,7 +204,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
           <>
             <div style={{ background: '#e8f9ee', border: '1px solid #b2f0c8', borderRadius: 12, padding: '11px 14px', marginTop: 10, fontSize: 12.5, color: '#1a7a3c', fontWeight: 600, lineHeight: 1.45 }}>
               ✓ Every visitor&apos;s phone and email were verified at sign-in with a one-time
-              code — legible names, no bad numbers, no unreadable sign-in sheets.
+              code: legible names, no bad numbers, no unreadable sign-in sheets.
             </div>
 
             {/* Timeline breakdown */}
@@ -361,7 +361,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
 
         <ShareLink
           url={`https://www.ohaccess.com/report/${code}`}
-          title={`Open House Report — ${oh.property_address}`}
+          title={`Open House Report: ${oh.property_address}`}
         />
 
         <div style={{ textAlign: 'center', marginTop: 22, fontSize: 11, color: '#aeaeb2' }}>

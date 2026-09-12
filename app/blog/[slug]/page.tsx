@@ -208,7 +208,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
         {/* CTA */}
         <div style={{ borderTop: '1px solid #ececf0', marginTop: '40px', paddingTop: '32px', textAlign: 'center' }}>
           <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '6px' }}>Ready to verify your next open house?</div>
-          <p style={{ fontSize: '15px', color: '#6e6e73', margin: '0 0 18px' }}>Start free with 25 verified check-ins — no credit card required.</p>
+          <p style={{ fontSize: '15px', color: '#6e6e73', margin: '0 0 18px' }}>Start free with 25 verified check-ins. No credit card required.</p>
           <Link href="/login?signup=true" style={{ display: 'inline-block', background: '#c9963a', color: '#1d1d1f', padding: '12px 28px', borderRadius: '10px', fontSize: '15px', fontWeight: 700, textDecoration: 'none' }}>
             Start Free
           </Link>

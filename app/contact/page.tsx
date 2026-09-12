@@ -105,8 +105,8 @@ export default function Contact() {
             {[
               { emoji: '🏢', title: 'Built for teams', body: 'Manage all your agents from one admin dashboard. See every open house and visitor log across your entire brokerage.' },
               { emoji: '🎨', title: 'Brokerage branding', body: 'Your logo on every visitor email, plus your team colors carried across every agent\'s registration page.' },
-              { emoji: '💰', title: 'Per-agent pricing', body: 'Pay only for the agents you have. Pricing scales with your team — from boutique brokerages to enterprise networks.' },
-              { emoji: '📋', title: 'CRM integration', body: 'Every sign-in flows automatically into your agents\' CRMs — Follow Up Boss, BoldTrail, Lofty, Sierra, Real Geeks, and more (or any app via Zapier) — plus one-click CSV export and brokerage-wide reporting.' },
+              { emoji: '💰', title: 'Per-agent pricing', body: 'Pay only for the agents you have. Pricing scales with your team, from boutique brokerages to enterprise networks.' },
+              { emoji: '📋', title: 'CRM integration', body: 'Every sign-in flows automatically into your agents\' CRMs: Follow Up Boss, BoldTrail, Lofty, Sierra, Real Geeks, and more (or any app via Zapier). You also get one-click CSV export and brokerage-wide reporting.' },
               { emoji: '🔒', title: 'Compliance ready', body: 'Built-in TCPA consent, DNC override language, and data sharing terms protect your brokerage from day one.' },
               { emoji: '🚀', title: 'Fast onboarding', body: 'Your entire team can be set up and running at their first open house within 24 hours of signing up.' },
             ].map(item => (
@@ -133,7 +133,7 @@ export default function Contact() {
                 </div>
               ))}
               <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '12px', lineHeight: '1.6' }}>
-                Up to 100 agents you can subscribe directly from your dashboard — every seat at a flat $11/agent/mo, add or remove agents anytime. This form is for brokerages beyond 100 agents, invoice-based billing, or anything custom (long-term discounts available).
+                Up to 100 agents you can subscribe directly from your dashboard, with every seat at a flat $11/agent/mo, add or remove agents anytime. This form is for brokerages beyond 100 agents, invoice-based billing, or anything custom (long-term discounts available).
               </div>
             </div>
           </div>

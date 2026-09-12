@@ -409,7 +409,7 @@ export async function POST(request: Request) {
         from: 'ohACCESS Leads <noreply@mail.ohaccess.com>',
         to: to.trim(),
         replyTo: isEmail(email) ? email : 'support@ohaccess.com',
-        subject: `New Lead from ohACCESS — ${firstName} ${lastName}`,
+        subject: `New Lead from ohACCESS: ${firstName} ${lastName}`,
         html: buildCrmLeadEmail({
           firstName,
           lastName,

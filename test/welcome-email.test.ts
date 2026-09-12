@@ -25,7 +25,7 @@ describe('welcomeFirstName', () => {
 describe('buildWelcomeEmail', () => {
   it('has the approved subject', () => {
     const { subject } = buildWelcomeEmail({ firstName: 'Kathryn', appUrl: APP_URL })
-    expect(subject).toBe('Welcome to ohACCESS — your first open house is 10 minutes away')
+    expect(subject).toBe('Welcome to ohACCESS. Your first open house is 10 minutes away')
   })
 
   it('greets by first name, falling back to "there"', () => {

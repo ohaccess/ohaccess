@@ -12,9 +12,9 @@ import { getHoliday, getSeason, heroImage } from '@/lib/season'
 const STEPS = [
   { n: 1, title: 'Scan', body: 'The visitor scans the QR sign at the door. No app to download, nothing to install.' },
   { n: 2, title: 'Register', body: 'A 30-second form: name, phone, email, and buying timeline.' },
-  { n: 3, title: 'Codeword', body: <>A one-time codeword lands by text <em>and</em> email — instantly. Fake contact info receives nothing.</> },
+  { n: 3, title: 'Codeword', body: <>A one-time codeword lands by text <em>and</em> email instantly. Fake contact info receives nothing.</> },
   { n: 4, title: 'Verified entry', body: 'They share the codeword with you to come in. Real contact, real person, on the record.' },
-  { n: 5, title: 'Leads land', body: 'Live log, instant alerts, CRM sync, and a post-event report — automatic.' },
+  { n: 5, title: 'Leads land', body: 'Live log, instant alerts, CRM sync, and a post-event report, all automatic.' },
 ]
 
 const LOG_ROWS = [
@@ -58,10 +58,10 @@ export default function TheRecord() {
   }, [])
   const hwLine =
     hw?.phase === 'remaining' && hw.stateName
-      ? `Two pedestal sign stands or an A-frame, shipped free. Only ${hw.remaining} left in ${hw.stateName} — going fast.`
+      ? `Two pedestal sign stands or an A-frame, shipped free. Only ${hw.remaining} left in ${hw.stateName}. Going fast.`
       : hw?.phase === 'claimed' && hw.stateName
         ? `Two pedestal sign stands or an A-frame, shipped free. ${hw.claimed} ${hw.stateName} agents have claimed theirs.`
-        : 'Two pedestal sign stands or an A-frame, shipped free — for the first 100 agents in each state.'
+        : 'Two pedestal sign stands or an A-frame, shipped free to the first 100 agents in each state.'
   // Hero photo matches the visitor's current season; swaps at the exact
   // equinox/solstice instants (see lib/season.ts). The Halloween/Christmas
   // override depends on the visitor's local calendar, which the server can't
@@ -290,9 +290,9 @@ export default function TheRecord() {
             <h1 style={{ fontSize: 'clamp(42px,6.4vw,76px)', lineHeight: .98, fontWeight: 800, letterSpacing: '-.035em', textWrap: 'balance', margin: 0 }}>
               <span style={{ display: 'inline-block', animation: 'om-rise .7s .12s both' }}>The clipboard</span> <span style={{ display: 'inline-block', animation: 'om-rise .7s .22s both' }}>has been</span> <span style={{ display: 'inline-block', color: '#c9963a', animation: 'om-rise .7s .34s both' }}>lying to you.</span>
             </h1>
-            <p style={{ fontSize: 'clamp(16px,1.6vw,19px)', lineHeight: 1.55, color: 'rgba(255,255,255,.72)', margin: '24px 0 32px', maxWidth: '44ch', animation: 'om-rise .7s .45s both' }}>Illegible names. Dead numbers. Bounced emails. <strong>ohACCESS</strong> verifies every Open House visitor’s contact info at the door with a one-time codeword — sent to a phone and email that actually work.</p>
+            <p style={{ fontSize: 'clamp(16px,1.6vw,19px)', lineHeight: 1.55, color: 'rgba(255,255,255,.72)', margin: '24px 0 32px', maxWidth: '44ch', animation: 'om-rise .7s .45s both' }}>Illegible names. Dead numbers. Bounced emails. <strong>ohACCESS</strong> verifies every Open House visitor’s contact info at the door with a one-time codeword, sent to a phone and email that actually work.</p>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap', animation: 'om-rise .7s .55s both' }}>
-              <Link href="/login?signup=true" className="rec-btn" style={{ background: '#c9963a', color: '#1d1d1f', fontWeight: 700, fontSize: '16px', padding: '15px 28px', borderRadius: '8px' }}>Start Free — 25 check-ins</Link>
+              <Link href="/login?signup=true" className="rec-btn" style={{ background: '#c9963a', color: '#1d1d1f', fontWeight: 700, fontSize: '16px', padding: '15px 28px', borderRadius: '8px' }}>Start Free · 25 check-ins</Link>
               <a href="#film" style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255,255,255,.8)', borderBottom: '1px solid rgba(255,255,255,.35)', paddingBottom: '2px' }}>Watch 90 seconds ↓</a>
             </div>
             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.45)', marginTop: '16px', animation: 'om-rise .7s .62s both' }}>No credit card. Verified leads by Sunday.</div>
@@ -316,7 +316,7 @@ export default function TheRecord() {
           <div style={{ display: 'inline-flex', gap: 0, animation: 'om-marquee 28s linear infinite' }}>
             {[0, 1].map(i => (
               <div key={i} style={{ display: 'inline-flex', gap: '48px', paddingRight: '48px', fontSize: '13px', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#1d1d1f' }}>
-                <span>An Open House is an invitation — not an open door</span><span>·</span><span>No real phone → no codeword → no entry</span><span>·</span><span>Live visitor log</span><span>·</span><span>Instant alerts</span><span>·</span><span>CRM delivery</span><span>·</span><span>Seller report card</span><span>·</span>
+                <span>An Open House is an invitation, not an open door</span><span>·</span><span>No real phone → no codeword → no entry</span><span>·</span><span>Live visitor log</span><span>·</span><span>Instant alerts</span><span>·</span><span>CRM delivery</span><span>·</span><span>Seller report card</span><span>·</span>
               </div>
             ))}
           </div>
@@ -407,7 +407,7 @@ export default function TheRecord() {
           <div>
             <div style={eyebrow}>Live log → your CRM</div>
             <h2 style={{ fontSize: 'clamp(30px,4vw,44px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, maxWidth: '18ch' }}>Your follow-up list writes itself.</h2>
-            <p style={{ fontSize: 'clamp(15px,1.5vw,17px)', lineHeight: 1.6, color: 'rgba(255,255,255,.7)', margin: '22px 0 28px', maxWidth: '46ch' }}>Every check-in appears in your live visitor log the moment the codeword is issued — name, verified phone and email, buying timeline. When the event ends, the whole list is already in your CRM. No transcribing, no Monday data entry.</p>
+            <p style={{ fontSize: 'clamp(15px,1.5vw,17px)', lineHeight: 1.6, color: 'rgba(255,255,255,.7)', margin: '22px 0 28px', maxWidth: '46ch' }}>Every check-in appears in your live visitor log the moment the codeword is issued: name, verified phone and email, buying timeline. When the event ends, the whole list is already in your CRM. No transcribing, no Monday data entry.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px', fontWeight: 600 }}>
               {['Instant alert on every new visitor', 'Hot buyers flagged: 0–3 month timelines up top', 'Automated post-event report in your inbox'].map(t => (
                 <div key={t} style={{ display: 'flex', gap: '10px', alignItems: 'baseline' }}><span style={{ color: '#30d158', fontWeight: 800 }}>✓</span><span>{t}</span></div>
@@ -454,7 +454,7 @@ export default function TheRecord() {
               <div style={{ fontSize: '16px', fontWeight: 800, color: '#1d1d1f' }}>Paper sheet</div>
               <div style={{ fontSize: '12.5px', color: '#a8a8ad', margin: '2px 0 16px' }}>The clipboard</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', lineHeight: 1.5, color: '#6e6e73' }}>
-                {['Illegible names, made-up numbers, zero verification', 'Handwriting you decode days later — or never', 'Never reaches your CRM; looks dated to sellers'].map(t => (
+                {['Illegible names, made-up numbers, zero verification', 'Handwriting you decode days later, or never', 'Never reaches your CRM; looks dated to sellers'].map(t => (
                   <div key={t} style={{ display: 'flex', gap: '9px' }}><span style={{ color: '#c0392b', fontWeight: 800 }}>✕</span><span>{t}</span></div>
                 ))}
               </div>
@@ -463,16 +463,16 @@ export default function TheRecord() {
               <div style={{ fontSize: '16px', fontWeight: 800, color: '#1d1d1f' }}>Generic form apps</div>
               <div style={{ fontSize: '12.5px', color: '#a8a8ad', margin: '2px 0 16px' }}>Digital, but unverified</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', lineHeight: 1.5, color: '#6e6e73' }}>
-                <div style={{ display: 'flex', gap: '9px' }}><span style={{ color: '#c9963a', fontWeight: 800 }}>△</span><span>Typed and legible — but never verified</span></div>
+                <div style={{ display: 'flex', gap: '9px' }}><span style={{ color: '#c9963a', fontWeight: 800 }}>△</span><span>Typed and legible, but never verified</span></div>
                 <div style={{ display: 'flex', gap: '9px' }}><span style={{ color: '#c0392b', fontWeight: 800 }}>✕</span><span>555-1234 goes in as easily as a real number</span></div>
-                <div style={{ display: 'flex', gap: '9px' }}><span style={{ color: '#c0392b', fontWeight: 800 }}>✕</span><span>Garbage in, garbage out — follow-up dies</span></div>
+                <div style={{ display: 'flex', gap: '9px' }}><span style={{ color: '#c0392b', fontWeight: 800 }}>✕</span><span>Garbage in, garbage out, and follow-up dies</span></div>
               </div>
             </div>
             <div data-reveal="1" className="rec-cmp-win" style={{ background: '#1d1d1f', borderRadius: '14px', padding: '26px 26px 28px', boxShadow: '0 16px 40px rgba(29,29,31,.25)' }}>
               <div style={{ fontSize: '16px', fontWeight: 800, color: '#c9963a' }}>ohACCESS</div>
               <div style={{ fontSize: '12.5px', color: 'rgba(255,255,255,.5)', margin: '2px 0 16px' }}>Verified at the door</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', lineHeight: 1.5, color: 'rgba(255,255,255,.9)' }}>
-                {['Codeword proves phone + email are real — before entry', 'Every visitor logged, timeline captured, delivered to your CRM', 'Seller report card proves the turnout was real'].map(t => (
+                {['Codeword proves phone + email are real before entry', 'Every visitor logged, timeline captured, delivered to your CRM', 'Seller report card proves the turnout was real'].map(t => (
                   <div key={t} style={{ display: 'flex', gap: '9px' }}><span style={{ color: '#30d158', fontWeight: 800 }}>✓</span><span>{t}</span></div>
                 ))}
               </div>
@@ -489,8 +489,8 @@ export default function TheRecord() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,260px),1fr))', gap: '16px', marginTop: '40px' }}>
               {[
                 { title: 'Deterrence at the door', body: 'Anyone entering knows their name is on the record and their phone is verified. People behave differently when they’re not anonymous.' },
-                { title: 'You’re never in the dark', body: 'Instant new-visitor alerts tell you who’s walking in — name and timeline — before you let them in.' },
-                { title: 'A record for the seller, too', body: 'A complete, verified log of who was inside the home — accountability the paper sheet never offered.' },
+                { title: 'You’re never in the dark', body: 'Instant new-visitor alerts give you the name and timeline of who’s walking in, before you let them in.' },
+                { title: 'A record for the seller, too', body: 'A complete, verified log of who was inside the home. Accountability the paper sheet never offered.' },
               ].map(c => (
                 <div key={c.title} data-reveal="1" className="rec-safety" style={{ background: '#fff', borderRadius: '14px', padding: '26px 26px 28px' }}>
                   <div style={{ fontSize: '15px', fontWeight: 800, color: '#1d1d1f' }}>{c.title}</div>
@@ -498,7 +498,7 @@ export default function TheRecord() {
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: '16px', color: '#6e6e73', marginTop: '20px' }}><strong>ohACCESS</strong> is a deterrence layer — not a substitute for your safety practices or brokerage protocols.</div>
+            <div style={{ fontSize: '16px', color: '#6e6e73', marginTop: '20px' }}><strong>ohACCESS</strong> is a deterrence layer, not a substitute for your safety practices or brokerage protocols.</div>
           </div>
         </div>
 
@@ -509,7 +509,7 @@ export default function TheRecord() {
             <h2 style={{ fontSize: 'clamp(32px,4vw,44px)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, maxWidth: '18ch' }}>The text that wins your next listing.</h2>
             <p style={{ fontSize: 'clamp(15px,1.5vw,17px)', lineHeight: 1.6, color: 'rgba(255,255,255,.7)', margin: '22px 0 28px', maxWidth: '46ch' }}>After every Open House, <strong>ohACCESS</strong> builds a report you can send the homeowner in one tap: verified turnout, buyer timelines, proof the afternoon was worth it. Sellers talk. So do their neighbors.</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px', fontWeight: 600 }}>
-              {['Verified visitor count — full transparency, no guesses', 'Buyer timelines: who’s buying in 0–3 months', 'Sharable with your seller in one tap'].map(t => (
+              {['Verified visitor count: full transparency, no guesses', 'Buyer timelines: who’s buying in 0–3 months', 'Sharable with your seller in one tap'].map(t => (
                 <div key={t} style={{ display: 'flex', gap: '10px', alignItems: 'baseline' }}><span style={{ color: '#30d158', fontWeight: 800 }}>✓</span><span>{t}</span></div>
               ))}
             </div>
@@ -636,13 +636,13 @@ export default function TheRecord() {
             <div data-reveal="1" className="rec-safety" style={{ border: '1px solid #e5e5ea', borderRadius: '14px', padding: '26px 26px 28px' }}>
               <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#c9963a' }}>Give a gift</div>
               <div style={{ fontSize: '17px', fontWeight: 800, color: '#1d1d1f', margin: '10px 0 6px' }}>Know a real estate agent?</div>
-              <div style={{ fontSize: '14px', lineHeight: 1.55, color: '#6e6e73' }}>Give them a year of <strong>ohACCESS</strong> Pro — one payment, never auto-renews. Perfect for new licensees.</div>
+              <div style={{ fontSize: '14px', lineHeight: 1.55, color: '#6e6e73' }}>Give them a year of <strong>ohACCESS</strong> Pro. One payment, never auto-renews. Perfect for new licensees.</div>
               <Link href="/gift" style={{ display: 'inline-block', marginTop: '14px', fontSize: '14px', fontWeight: 700, color: '#c9963a' }}>Give a gift →</Link>
             </div>
             <div data-reveal="1" className="rec-safety" style={{ border: '1px solid #e5e5ea', borderRadius: '14px', padding: '26px 26px 28px' }}>
               <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#c9963a' }}>Partner sponsorships</div>
               <div style={{ fontSize: '17px', fontWeight: 800, color: '#1d1d1f', margin: '10px 0 6px' }}>Lender, title, or vendor partner?</div>
-              <div style={{ fontSize: '14px', lineHeight: 1.55, color: '#6e6e73' }}>Sponsor <strong>ohACCESS</strong> for the agents you work with — your brand on every verified sign-in, and the leads land in your CRM too.</div>
+              <div style={{ fontSize: '14px', lineHeight: 1.55, color: '#6e6e73' }}>Sponsor <strong>ohACCESS</strong> for the agents you work with. Your brand goes on every verified sign-in, and the leads land in your CRM too.</div>
               <Link href="/partners" style={{ display: 'inline-block', marginTop: '14px', fontSize: '14px', fontWeight: 700, color: '#c9963a' }}>Explore sponsorships →</Link>
             </div>
           </div>

@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Only the team lead can upgrade the plan' }, { status: 403 })
     }
     if (ctx.tier !== 'team') {
-      return NextResponse.json({ error: 'Your plan is already per-seat — manage seats from the Team tab.' }, { status: 409 })
+      return NextResponse.json({ error: 'Your plan is already per-seat. Manage seats from the Team tab.' }, { status: 409 })
     }
 
     const body = await request.json().catch(() => ({}))
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     const usage = await getSeatUsage(ctx.brokerageId)
     if (seats < usage.used) {
       return NextResponse.json(
-        { error: `You're currently using ${usage.used} seats — choose at least that many.` },
+        { error: `You're currently using ${usage.used} seats, so choose at least that many.` },
         { status: 409 }
       )
     }
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       // Legacy one-time 2-year Team prepay (or a comped/admin-provisioned
       // team): there's no subscription to modify. Handled personally.
       return NextResponse.json(
-        { error: "Your prepaid Team plan can't be upgraded automatically — email support@ohaccess.com and we'll set it up for you." },
+        { error: "Your prepaid Team plan can't be upgraded automatically. Email support@ohaccess.com and we'll set it up for you." },
         { status: 409 }
       )
     }

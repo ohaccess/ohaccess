@@ -61,7 +61,7 @@ async function guard(request: Request): Promise<Guarded> {
   }
   const subId = await resolveSubId(ctx)
   if (!subId) {
-    return { ok: false, res: NextResponse.json({ error: 'Your plan is invoice-based — seats are handled by your account manager. Email support@ohaccess.com to adjust.' }, { status: 409 }) }
+    return { ok: false, res: NextResponse.json({ error: 'Your plan is invoice-based. Seats are handled by your account manager. Email support@ohaccess.com to adjust.' }, { status: 409 }) }
   }
   return { ok: true, ctx, subId }
 }
@@ -190,7 +190,7 @@ export async function POST(request: Request) {
                 <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; color: #1d1d1f; font-size: 14px; line-height: 1.6;">
                   <p>Hi ${escapeHtml((owner.full_name || '').trim() || 'there')},</p>
                   <p>Confirming your seat change: your plan went from <strong>${currentQty}</strong> to <strong>${quantity}</strong> seats.</p>
-                  <p>Per our terms, reductions don't generate refunds or credits for the current billing period — the lower rate of <strong>$${(totalCents(quantity, interval) / 100).toLocaleString('en-US')}</strong> takes effect on ${escapeHtml(nextInvoice)}.</p>
+                  <p>Per our terms, reductions don't generate refunds or credits for the current billing period. The lower rate of <strong>$${(totalCents(quantity, interval) / 100).toLocaleString('en-US')}</strong> takes effect on ${escapeHtml(nextInvoice)}.</p>
                   <p style="font-size: 13px; color: #6e6e73;">Questions? Just reply to this email.</p>
                 </div>
               </div>

@@ -46,8 +46,8 @@ export default function Privacy() {
           <Section title="1. Introduction">
             <p>ohACCESS, LLC (&quot;ohACCESS,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), a Texas limited liability company, operates ohaccess.com and provides a QR-code-based open house visitor verification platform. This Privacy Policy explains how we collect, use, share, and protect personal information from three distinct groups of people:</p>
             <ul style={{ paddingLeft: '24px', marginTop: '10px' }}>
-              <li style={{ marginBottom: '6px' }}><strong>Open House Visitors</strong> — individuals who register at an open house through an ohACCESS-powered form</li>
-              <li style={{ marginBottom: '6px' }}><strong>Subscribers</strong> — real estate agents, teams, and brokerages who hold an ohACCESS account</li>
+              <li style={{ marginBottom: '6px' }}><strong>Open House Visitors</strong>: individuals who register at an open house through an ohACCESS-powered form</li>
+              <li style={{ marginBottom: '6px' }}><strong>Subscribers</strong>: real estate agents, teams, and brokerages who hold an ohACCESS account</li>
               <li><strong>Website Visitors</strong> – individuals using our website (ohaccess.com) that are not Open House Visitors or Subscribers.</li>
             </ul>
             <p style={{ marginTop: '12px' }}>Sections that apply specifically to one group are clearly labeled. Where a section is unlabeled, it applies to both Open House Visitors and Subscribers, except for Sections 5-13 that apply to all three groups. By using ohACCESS in either capacity, you agree to the practices described here.</p>

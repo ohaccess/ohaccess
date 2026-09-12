@@ -140,7 +140,7 @@ export default function InviteModal({
               <div style={{ padding: '28px 8px', textAlign: 'center' }}>
                 <div style={{ fontSize: '14px', fontWeight: 600, color: '#1d1d1f', marginBottom: '6px' }}>No past visitors are a match right now</div>
                 <div style={{ fontSize: '12px', color: '#6e6e73', lineHeight: 1.6 }}>
-                  As people sign in at your open houses, they become invitable here — while they&rsquo;re still inside the buying timeline they gave you.
+                  As people sign in at your open houses, they become invitable here, while they&rsquo;re still inside the buying timeline they gave you.
                   {excluded ? <><br />Not included: {excluded}.</> : null}
                 </div>
               </div>

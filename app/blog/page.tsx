@@ -69,7 +69,7 @@ export default async function BlogIndex() {
 
         {posts.length === 0 ? (
           <p style={{ marginTop: '32px', fontSize: '15px', color: '#6e6e73' }}>
-            No articles yet — check back soon.
+            No articles yet. Check back soon.
           </p>
         ) : (
           <div style={{ marginTop: '24px' }}>

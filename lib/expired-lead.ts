@@ -136,7 +136,7 @@ export function buildExpiredLeadEmail(
 ): { subject: string; html: string } {
   const address = agent.propertyAddress
   const subject = address
-    ? `🏠 Buyer lead from your open house QR — ${address}`
+    ? `🏠 Buyer lead from your open house QR: ${address}`
     : '🏠 Buyer lead from your open house QR'
   const safeName = escapeHtml(lead.name)
   const safeEmail = escapeHtml(lead.email)
@@ -153,7 +153,7 @@ export function buildExpiredLeadEmail(
       </div>
       <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px;">
         <div style="font-size: 14px; color: #1d1d1f; line-height: 1.6; margin-bottom: 16px;">
-          Hi ${greetName} — a home shopper just scanned the QR code for your past open house${safeAddress ? ` at <strong>${safeAddress}</strong>` : ''}. That event link has expired, so ohACCESS collected their details for you:
+          Hi ${greetName}, a home shopper just scanned the QR code for your past open house${safeAddress ? ` at <strong>${safeAddress}</strong>` : ''}. That event link has expired, so ohACCESS collected their details for you:
         </div>
         <div style="background: #f5f5f7; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
           <div style="font-size: 11px; color: #6e6e73; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Lead Details</div>

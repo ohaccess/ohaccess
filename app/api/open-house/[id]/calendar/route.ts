@@ -25,7 +25,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Open house has no scheduled time' }, { status: 404 })
   }
 
-  const title = `Open House — ${oh.property_address || ''}`.trim()
+  const title = `Open House: ${oh.property_address || ''}`.trim()
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',

@@ -206,7 +206,7 @@ function ExpiredOpenHouse() {
           </div>
           <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6' }}>
             {agent
-              ? `There's no longer an open house at this link — but ${agentFirstName} can still help with your home search.`
+              ? `There's no longer an open house at this link, but ${agentFirstName} can still help with your home search.`
               : "But your home search doesn't have to. Leave your info and we'll connect you with a local agent who can help."}
           </div>
         </div>
@@ -569,8 +569,8 @@ function ExpiredOpenHouse() {
             <div style={{ fontSize: '18px', fontWeight: 700, color: '#1d1d1f', marginBottom: '8px' }}>Welcome!</div>
             <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: 1.6 }}>
               {agent?.full_name
-                ? <>Online sign-in isn&apos;t available for this open house. Please introduce yourself to <strong style={{ color: '#1d1d1f' }}>{agent.full_name}</strong> — they&apos;ll be happy to welcome you in.</>
-                : <>Online sign-in isn&apos;t available for this open house. Please introduce yourself to the hosting agent — they&apos;ll be happy to welcome you in.</>}
+                ? <>Online sign-in isn&apos;t available for this open house. Please introduce yourself to <strong style={{ color: '#1d1d1f' }}>{agent.full_name}</strong>. They&apos;ll be happy to welcome you in.</>
+                : <>Online sign-in isn&apos;t available for this open house. Please introduce yourself to the hosting agent. They&apos;ll be happy to welcome you in.</>}
             </div>
             {openHouse.property_address && (
               <div style={{ marginTop: '14px', fontSize: '12px', color: '#aeaeb2' }}>{openHouse.property_address}</div>

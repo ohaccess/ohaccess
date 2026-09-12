@@ -246,7 +246,7 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
       {/* ALL OPEN HOUSES */}
       <div style={card}>
         <div style={{ ...cardHeader, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span>Open houses{agentFilter !== 'all' ? ' — filtered' : ''}</span>
+          <span>Open houses{agentFilter !== 'all' ? ' · filtered' : ''}</span>
           {agentFilter !== 'all' && (
             <button onClick={() => setAgentFilter('all')} style={{ background: 'none', border: '1px solid #d1d1d6', color: '#6e6e73', borderRadius: '7px', padding: '4px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Show all agents</button>
           )}
@@ -281,7 +281,7 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
         <div style={card}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
             <div style={{ fontSize: '13px', fontWeight: 600, color: '#1d1d1f' }}>
-              Visitor log — {selectedOH.property_address}
+              Visitor log: {selectedOH.property_address}
               <span style={{ color: '#6e6e73', fontWeight: 400 }}> · {selectedOH.agent_name}</span>
             </div>
             <button onClick={exportCSV} disabled={visitors.length === 0} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: visitors.length === 0 ? 'not-allowed' : 'pointer', opacity: visitors.length === 0 ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>

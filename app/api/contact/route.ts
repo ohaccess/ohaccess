@@ -39,8 +39,8 @@ export async function POST(request: Request) {
       to: 'sales@ohaccess.com',
       replyTo: email,
       subject: isPartner
-        ? `🤝 Partner inquiry — ${brokerage}${businessType ? ` (${businessType})` : ''}`
-        : `🏢 Brokerage inquiry — ${brokerage} (${agentCount} agents)`,
+        ? `🤝 Partner inquiry: ${brokerage}${businessType ? ` (${businessType})` : ''}`
+        : `🏢 Brokerage inquiry: ${brokerage} (${agentCount} agents)`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
           <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">

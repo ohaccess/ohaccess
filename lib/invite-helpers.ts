@@ -204,7 +204,7 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
   if (o.oh.startAt) {
     const start = o.oh.startAt
     const end = o.oh.endAt || o.oh.startAt
-    const title = `Open House — ${o.oh.fullAddress}`.trim()
+    const title = `Open House: ${o.oh.fullAddress}`.trim()
     const googleUrl = googleCalendarUrl(title, start, end, o.oh.fullAddress)
     const outlookUrl = `https://outlook.live.com/calendar/0/action/compose?rru=addevent&subject=${encodeURIComponent(title)}&startdt=${encodeURIComponent(start)}&enddt=${encodeURIComponent(end)}&location=${encodeURIComponent(o.oh.fullAddress)}`
     const appleUrl = `${o.appUrl}/api/open-house/${o.oh.id}/calendar`
@@ -214,7 +214,7 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
   const listingUrl = safeUrl(o.oh.listingUrl)
   const when = [o.oh.dateLabel, o.oh.hoursLabel].filter(Boolean).map(v => e(String(v))).join(' &middot; ')
 
-  const rsvpSubject = encodeURIComponent(`I'll be at your open house — ${o.oh.street}, ${o.oh.dateLabel}`)
+  const rsvpSubject = encodeURIComponent(`I'll be at your open house: ${o.oh.street}, ${o.oh.dateLabel}`)
   const rsvpUrl = `mailto:${o.agentEmail}?subject=${rsvpSubject}`
 
   const phoneBit = o.agentPhone
@@ -228,7 +228,7 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
     ? `<img src="${e(headshot)}" width="52" height="52" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover;display:block;">`
     : `<div style="width:52px;height:52px;border-radius:50%;background:${o.primary};color:${accentOnPrimary(o.primary, o.accent)};text-align:center;line-height:52px;font-weight:800;font-size:18px;">${e(initials)}</div>`
 
-  const subject = `You're invited — open house at ${o.oh.street}, ${o.oh.dateLabel}`
+  const subject = `You're invited: open house at ${o.oh.street}, ${o.oh.dateLabel}`
 
   const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>

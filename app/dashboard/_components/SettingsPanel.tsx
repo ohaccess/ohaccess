@@ -133,7 +133,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
     // Seats are adjustable anytime afterward from the Team tab. 100+ = sales.
     let seats: number | undefined
     if (tier === 'brokerage') {
-      const raw = window.prompt('How many agents? (11–100 — you can add or remove seats anytime)', '11')
+      const raw = window.prompt('How many agents? (11–100. You can add or remove seats anytime.)', '11')
       if (raw == null) return // canceled
       seats = Number(raw)
       if (!Number.isInteger(seats) || seats < 11 || seats > 100) {
@@ -199,7 +199,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
       const json = await res.json()
       if (!res.ok) { showToast(json.error || 'Could not update subscription.', 'error'); setBusy(null); return }
       showToast(resume
-        ? 'Subscription resumed — you’re all set.'
+        ? 'Subscription resumed. You’re all set.'
         : 'Your plan is set to cancel at the end of this billing period.')
       setConfirmingCancel(false)
       await onChanged?.()
@@ -238,7 +238,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
                 {isComped(profile) ? 'Your complimentary access has ended' : 'Your 2-year plan has ended'}
               </div>
               <div style={{ fontSize: '14px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
-                Your {isComped(profile) ? 'complimentary' : 'prepaid'} access ended on {formatPlanDate(periodEnd)}. Choose a plan below to pick up right where you left off — your data is safe.
+                Your {isComped(profile) ? 'complimentary' : 'prepaid'} access ended on {formatPlanDate(periodEnd)}. Choose a plan below to pick up right where you left off. Your data is safe.
               </div>
             </div>
           )}
@@ -282,7 +282,7 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
             <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '10px', fontStyle: 'italic' }}>
               * 2-year pricing is a limited-time founding-member offer — paid upfront, renews automatically every 2 years (we&apos;ll email you before each renewal; cancel anytime). Brokerage plans over 100 agents: <a href="/contact" style={{ color: '#0071e3' }}>contact us</a>.
               {hwActive && (
-                <> † Free sign hardware (two pedestal sign stands or one A-frame, your choice at checkout) for the first 100 individual Pro 2-year subscribers in each state, by shipping address, while supplies last — one per account, US shipping only, no cash value. See <a href="/subscriber-terms" style={{ color: '#0071e3' }}>Subscriber Terms §4.9</a>.</>
+                <> † Free sign hardware (two pedestal sign stands or one A-frame, your choice at checkout) for the first 100 individual Pro 2-year subscribers in each state, by shipping address, while supplies last. One per account, US shipping only, no cash value. See <a href="/subscriber-terms" style={{ color: '#0071e3' }}>Subscriber Terms §4.9</a>.</>
               )}
             </div>
           )}
@@ -293,13 +293,13 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
         <>
           <div style={{ fontSize: '14px', color: '#1d1d1f', marginBottom: '4px' }}>
             <strong>Plan:</strong> {tier.charAt(0).toUpperCase() + tier.slice(1)}
-            {billing && ` — ${intervalLabel(billing)}`}
+            {billing && ` · ${intervalLabel(billing)}`}
           </div>
           <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '6px' }}>
             <strong>Status:</strong> {status === 'past_due'
-              ? <span style={{ color: '#cc0000' }}>Payment failed — please update your card</span>
+              ? <span style={{ color: '#cc0000' }}>Payment failed. Please update your card</span>
               : pendingCancel
-              ? <span style={{ color: '#b84800' }}>Canceling — access until {formatPlanDate(periodEnd)}</span>
+              ? <span style={{ color: '#b84800' }}>Canceling. Access until {formatPlanDate(periodEnd)}</span>
               : status === 'active' || status === 'trialing'
               ? 'Active'
               : (status || 'Unknown')}
@@ -397,7 +397,7 @@ function ReferralSection({ profile }: { profile: any }) {
   // Share buttons open the AGENT'S own mail/messages app with a pre-written
   // note — the invite comes from them personally (converts better) and never
   // touches our email domain (protects code-word deliverability).
-  const shareMessage = `I've been using ohACCESS to run verified open-house sign-ins — visitors scan a QR code and I get clean, verified leads with no paper sheet. Here's my link if you want to try it: ${link}`
+  const shareMessage = `I've been using ohACCESS to run verified open-house sign-ins. Visitors scan a QR code and I get clean, verified leads with no paper sheet. Here's my link if you want to try it: ${link}`
   const mailHref = `mailto:?subject=${encodeURIComponent('Try ohACCESS for your open houses')}&body=${encodeURIComponent(shareMessage)}`
   // `?&body=` is the cross-platform form both iOS and Android accept.
   const smsHref = `sms:?&body=${encodeURIComponent(shareMessage)}`
@@ -410,9 +410,9 @@ function ReferralSection({ profile }: { profile: any }) {
       </div>
       <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '12px' }}>
         {earnsCreditNow ? (
-          <>Share your personal link with other agents. When someone you refer becomes a paying ohACCESS subscriber, you earn <strong style={{ color: '#1d1d1f' }}>a free month of Pro</strong> — added onto your annual or 2-year plan, or a $15 credit on your next bill if you&apos;re month-to-month.</>
+          <>Share your personal link with other agents. When someone you refer becomes a paying ohACCESS subscriber, you earn <strong style={{ color: '#1d1d1f' }}>a free month of Pro</strong>, added onto your annual or 2-year plan, or a $15 credit on your next bill if you&apos;re month-to-month.</>
         ) : (
-          <>Share your personal link with other agents. When someone you refer becomes a paying ohACCESS subscriber, you earn <strong style={{ color: '#1d1d1f' }}>a free month of Pro</strong> — banked for you and applied once you&apos;re on your own Pro plan.</>
+          <>Share your personal link with other agents. When someone you refer becomes a paying ohACCESS subscriber, you earn <strong style={{ color: '#1d1d1f' }}>a free month of Pro</strong>, banked for you and applied once you&apos;re on your own Pro plan.</>
         )}
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -506,7 +506,7 @@ function SponsorshipSection({ profile, setProfile, agentId, showToast, sponsorCo
         <div>
           {sponsorCovered && (
             <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.5', marginBottom: '14px' }}>
-              ✓ <strong style={{ color: '#1d1d1f' }}>Pro — included with your sponsorship.</strong> Your sponsor covers your plan; there&apos;s nothing for you to pay.
+              ✓ <strong style={{ color: '#1d1d1f' }}>Pro, included with your sponsorship.</strong> Your sponsor covers your plan; there&apos;s nothing for you to pay.
             </div>
           )}
 
@@ -533,7 +533,7 @@ function SponsorshipSection({ profile, setProfile, agentId, showToast, sponsorCo
           </div>
 
           <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.6', marginTop: '14px' }}>
-            This card appears below yours in visitor emails, and your sign-in form names them in the consent language. Your branding — logo, colors, and name — stays fully yours.
+            This card appears below yours in visitor emails, and your sign-in form names them in the consent language. Your branding, including logo, colors, and name, stays fully yours.
           </div>
 
           <div style={{ marginTop: '14px' }}>
@@ -559,7 +559,7 @@ function SponsorshipSection({ profile, setProfile, agentId, showToast, sponsorCo
             sponsorship swaps this card for the live SubscriptionSection. */}
         <div>
           <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.5', marginBottom: '12px' }}>
-            🔒 Plans are locked while you&apos;re sponsored — end the sponsorship to choose your own plan.
+            🔒 Plans are locked while you&apos;re sponsored. End the sponsorship to choose your own plan.
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
@@ -677,12 +677,12 @@ export default function SettingsPanel({
     const { data } = await supabase.from('profiles').select('*').eq('id', agentId).single()
     setReverting(false)
     if (!data) {
-      showToast('Could not reload your saved settings — try again', 'error')
+      showToast('Could not reload your saved settings. Try again.', 'error')
       return
     }
     setProfile(data)
     setPhoneInput(splitStoredPhone(data.phone, inferProfileCountry(data)))
-    showToast('Changes discarded — nothing was saved')
+    showToast('Changes discarded. Nothing was saved.')
     onCancel()
   }
 
@@ -904,11 +904,11 @@ export default function SettingsPanel({
           <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Subscription</div>
           {teamPaymentFailed ? (
             <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.5' }}>
-              ⚠️ Your team&apos;s most recent payment didn&apos;t go through. Please contact your team/brokerage admin so your access isn&apos;t interrupted — there&apos;s nothing for you to pay directly.
+              ⚠️ Your team&apos;s most recent payment didn&apos;t go through. Please contact your team/brokerage admin so your access isn&apos;t interrupted. There&apos;s nothing for you to pay directly.
             </div>
           ) : (
             <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.5' }}>
-              ✓ You&apos;re covered under your team&apos;s plan. Billing is managed by your team lead — there&apos;s nothing for you to pay.
+              ✓ You&apos;re covered under your team&apos;s plan. Billing is managed by your team lead. There&apos;s nothing for you to pay.
             </div>
           )}
         </div>
@@ -989,7 +989,7 @@ export default function SettingsPanel({
             <div style={{ fontSize: '12px', color: profile?.display_email?.trim() ? '#6e6e73' : '#b25e00', marginTop: '4px', lineHeight: '1.4' }}>
               {profile?.display_email?.trim()
                 ? 'Where visitor replies and your copy of each sign-in are sent.'
-                : '⚠ Recommended — set this so replies and your sign-in copies go here, keeping your private login email hidden from visitors.'}
+                : '⚠ Recommended. Set this so replies and your sign-in copies go here, keeping your private login email hidden from visitors.'}
             </div>
           </div>
           <div>
@@ -1053,7 +1053,7 @@ export default function SettingsPanel({
           <div>
             <label style={labelStyle}>Agent Headshot URL</label>
             <input style={inputStyle} type="url" placeholder="https://yoursite.com/headshot.jpg" value={profile?.headshot_url || ''} onChange={e => setProfile({ ...profile, headshot_url: e.target.value })} />
-            <div style={{ fontSize: '14px', color: '#6e6e73', marginTop: '4px' }}>Paste a direct image URL (.jpg or .png) — right-click your photo online and choose &ldquo;Copy Image Address&rdquo;, or upload it to <a href="https://imgur.com" target="_blank" style={{ color: '#0071e3' }}>imgur.com</a>.</div>
+            <div style={{ fontSize: '14px', color: '#6e6e73', marginTop: '4px' }}>Paste a direct image URL (.jpg or .png). Right-click your photo online and choose &ldquo;Copy Image Address&rdquo;, or upload it to <a href="https://imgur.com" target="_blank" style={{ color: '#0071e3' }}>imgur.com</a>.</div>
             {profile?.headshot_url && (
               <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <img src={profile.headshot_url} alt="Headshot" style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #d1d1d6' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
@@ -1090,7 +1090,7 @@ export default function SettingsPanel({
                         const el = e.target as HTMLImageElement
                         el.style.display = 'none'
                         const parent = el.parentElement
-                        if (parent) parent.innerHTML = '<span style="font-size:11px;color:#cc0000;">⚠️ Image could not load — check URL</span>'
+                        if (parent) parent.innerHTML = '<span style="font-size:11px;color:#cc0000;">⚠️ Image could not load. Check the URL.</span>'
                       }}
                     />
                   </div>
@@ -1130,7 +1130,7 @@ export default function SettingsPanel({
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Send Leads to Your CRM</div>
         <div style={{ fontSize: '14px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
-          Every new visitor flows straight into your CRM as a lead — no Zapier, no setup fees. Your CRM gives each user a unique &quot;lead intake&quot; email address; paste it here and we send each sign-in there automatically. Works with Follow Up Boss, BoldTrail/kvCORE, Lofty, Sierra Interactive, Real Geeks, and most others.
+          Every new visitor flows straight into your CRM as a lead. No Zapier, no setup fees. Your CRM gives each user a unique &quot;lead intake&quot; email address; paste it here and we send each sign-in there automatically. Works with Follow Up Boss, BoldTrail/kvCORE, Lofty, Sierra Interactive, Real Geeks, and most others.
         </div>
         <label style={labelStyle}>Your CRM</label>
         <select style={inputStyle} value={profile?.crm_type || ''} onChange={e => setProfile({ ...profile, crm_type: e.target.value })}>
@@ -1150,9 +1150,9 @@ export default function SettingsPanel({
         <input style={inputStyle} type="email" placeholder="e.g. yourname@followupboss.me" value={profile?.crm_lead_email || ''} onChange={e => setProfile({ ...profile, crm_lead_email: e.target.value })} />
         <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: '#6e6e73', lineHeight: '1.7' }}>
           <strong style={{ color: '#1d1d1f' }}>Where to find your lead-intake email:</strong><br />
-          • <strong>Follow Up Boss</strong> — your <em>@followupboss.me</em> address (Admin → Overview → API Keys &amp; Lead Email, under Integrations).<br />
-          • <strong>BoldTrail / kvCORE</strong> — Lead Engine → your lead parsing email.<br />
-          • <strong>Lofty, Sierra, Real Geeks, CINC, Top Producer, Wise Agent</strong> — search your CRM&apos;s help for &quot;lead parsing&quot; or &quot;forward leads by email&quot; to get your unique address.<br />
+          • <strong>Follow Up Boss</strong>: your <em>@followupboss.me</em> address (Admin → Overview → API Keys &amp; Lead Email, under Integrations).<br />
+          • <strong>BoldTrail / kvCORE</strong>: Lead Engine → your lead parsing email.<br />
+          • <strong>Lofty, Sierra, Real Geeks, CINC, Top Producer, Wise Agent</strong>: search your CRM&apos;s help for &quot;lead parsing&quot; or &quot;forward leads by email&quot; to get your unique address.<br />
           Paste it above and click Save settings. New sign-ins appear in your CRM within seconds. (Tip: add <em>noreply@mail.ohaccess.com</em> as an allowed sender in your CRM so leads aren&apos;t filtered.)
         </div>
       </div>
@@ -1160,7 +1160,7 @@ export default function SettingsPanel({
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Advanced: CRM Integration via Zapier</div>
         <div style={{ fontSize: '14px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
-          Send every new visitor straight into your CRM — Follow Up Boss, kvCORE, a Google Sheet, and 7,000+ apps — through Zapier.
+          Send every new visitor straight into your CRM through Zapier: Follow Up Boss, kvCORE, a Google Sheet, and 7,000+ apps.
         </div>
         <label style={labelStyle}>Zapier webhook URL</label>
         <input style={inputStyle} type="url" placeholder="https://hooks.zapier.com/hooks/catch/..." value={profile?.zapier_webhook_url || ''} onChange={e => setProfile({ ...profile, zapier_webhook_url: e.target.value })} />
@@ -1169,7 +1169,7 @@ export default function SettingsPanel({
           1. In Zapier, create a Zap with the trigger <strong>&quot;Webhooks by Zapier → Catch Hook.&quot;</strong><br />
           2. Copy the custom webhook URL Zapier gives you, paste it above, and click Save settings.<br />
           3. In Zapier, add your CRM as the action (e.g. <strong>Follow Up Boss → Create Lead</strong>) and map the fields we send: first/last name, email, phone, timeline, property address, and a link to the visitor.<br />
-          4. Turn the Zap on — new visitors now flow into your CRM automatically.
+          4. Turn the Zap on. New visitors now flow into your CRM automatically.
           <div style={{ marginTop: '8px', fontStyle: 'italic' }}>Note: Zapier&apos;s &quot;Catch Hook&quot; trigger requires a paid Zapier plan.</div>
         </div>
       </div>
@@ -1181,7 +1181,7 @@ export default function SettingsPanel({
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Your Own Questions</div>
         <div style={{ fontSize: '14px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
-          Ask visitors something of your own, on top of the standard fields. Every custom question is optional for the visitor — nothing you add here can stop someone from getting their codeword.
+          Ask visitors something of your own, on top of the standard fields. Every custom question is optional for the visitor. Nothing you add here can stop someone from getting their codeword.
         </div>
 
         <label style={labelStyle}>On the sign-in form &mdash; 1 question</label>
@@ -1214,7 +1214,7 @@ export default function SettingsPanel({
 
         <div style={{ marginTop: '14px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: '#6e6e73', lineHeight: '1.7' }}>
           Answers show up on each visitor&apos;s record, in your CSV export, and in the lead sent to your CRM.<br /><br />
-          <strong style={{ color: '#1d1d1f' }}>Two things worth knowing:</strong> your questions appear in the language you write them, even for a visitor who switches the form to Spanish or another language. And editing or deleting a question later never changes answers you&apos;ve already collected — those keep the wording they were asked under.
+          <strong style={{ color: '#1d1d1f' }}>Two things worth knowing:</strong> your questions appear in the language you write them, even for a visitor who switches the form to Spanish or another language. And editing or deleting a question later never changes answers you&apos;ve already collected. Those keep the wording they were asked under.
         </div>
       </div>
 
@@ -1224,7 +1224,7 @@ export default function SettingsPanel({
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Disclosures &amp; Notices</div>
         <div style={{ fontSize: '14px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
-          Add a link to any disclosure or notice you want every visitor to receive — an agency disclosure, an Information About Brokerage Services form, a Consumer Information Statement. Each one appears on the visitor&apos;s confirmation screen and in their codeword email.
+          Add a link to any disclosure or notice you want every visitor to receive: an agency disclosure, an Information About Brokerage Services form, a Consumer Information Statement. Each one appears on the visitor&apos;s confirmation screen and in their codeword email.
         </div>
         {disclosureRows.map((row, i) => (
           <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '8px' }}>
@@ -1261,7 +1261,7 @@ export default function SettingsPanel({
           </button>
         )}
         <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: '#6e6e73', lineHeight: '1.7' }}>
-          These are documents <strong style={{ color: '#1d1d1f' }}>you</strong> supply. ohACCESS delivers them and records that they were sent — we don&apos;t determine what your state or broker requires. Links must start with <em>https://</em> and should point somewhere permanent (your brokerage&apos;s site or your state commission&apos;s form page), since visitors may open them later.
+          These are documents <strong style={{ color: '#1d1d1f' }}>you</strong> supply. ohACCESS delivers them and records that they were sent. We don&apos;t determine what your state or broker requires. Links must start with <em>https://</em> and should point somewhere permanent (your brokerage&apos;s site or your state commission&apos;s form page), since visitors may open them later.
           {isTeamMember && (
             <><br /><br /><strong style={{ color: '#1d1d1f' }}>Note:</strong> if your brokerage has set its own disclosures, those are sent instead of yours.</>
           )}
@@ -1275,7 +1275,7 @@ export default function SettingsPanel({
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agreements Signed Before Entry</div>
         <div style={{ fontSize: '14px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
-          For open houses that need a <strong style={{ color: '#1d1d1f' }}>signature</strong> before the tour — a touring agreement when you host another brokerage&apos;s listing, a buyer-rep one-pager, anything your broker requires signed rather than just delivered. Upload the blank PDF once here, then flip on &ldquo;Require a signed agreement&rdquo; when you set up an open house. Visitors e-sign on their phone right after check-in; the signed PDF is emailed to you and to them, and <strong style={{ color: '#1d1d1f' }}>ohACCESS never stores signed documents</strong>.
+          For open houses that need a <strong style={{ color: '#1d1d1f' }}>signature</strong> before the tour: a touring agreement when you host another brokerage&apos;s listing, a buyer-rep one-pager, anything your broker requires signed rather than just delivered. Upload the blank PDF once here, then flip on &ldquo;Require a signed agreement&rdquo; when you set up an open house. Visitors e-sign on their phone right after check-in; the signed PDF is emailed to you and to them, and <strong style={{ color: '#1d1d1f' }}>ohACCESS never stores signed documents</strong>.
         </div>
 
         {agreementTemplates.map(tpl => (
@@ -1339,7 +1339,7 @@ export default function SettingsPanel({
         )}
 
         <div style={{ marginTop: '12px', background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', fontSize: '14px', color: '#6e6e73', lineHeight: '1.7' }}>
-          These are documents <strong style={{ color: '#1d1d1f' }}>you</strong> supply — your brokerage form, your state association&apos;s touring agreement, or one your broker approves. ohACCESS collects the signature and delivers the copies; we don&apos;t determine what your situation requires or provide legal forms. Uploads save immediately (no need to hit Save settings). Deleting a document here simply removes the signing step from any open house that was using it — past signed copies live in email, untouched.
+          These are documents <strong style={{ color: '#1d1d1f' }}>you</strong> supply: your brokerage form, your state association&apos;s touring agreement, or one your broker approves. ohACCESS collects the signature and delivers the copies; we don&apos;t determine what your situation requires or provide legal forms. Uploads save immediately (no need to hit Save settings). Deleting a document here simply removes the signing step from any open house that was using it. Past signed copies live in email, untouched.
         </div>
       </div>
 

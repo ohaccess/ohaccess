@@ -56,7 +56,7 @@ export default function Resources() {
             🏡 How ohACCESS works
           </h2>
           <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '24px' }}>
-            From the paper sign-in sheet you know too well to clean, verified leads — here&apos;s the whole story.
+            From the paper sign-in sheet you know too well to clean, verified leads. Here&apos;s the whole story.
           </div>
 
           <div className="howto-row">
@@ -78,7 +78,7 @@ export default function Resources() {
             <div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Verified check-in, right on their phone</div>
               <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
-                ohACCESS replaces your paper sheet with a QR-code digital check-in. Visitors scan the sign outside before they enter and complete a quick, verified registration — name, email, phone, and buying timeline — all clean, accurate, and captured instantly. A unique codeword is texted to their phone on the spot, and you get a text with their details. They share the codeword with you at the door. <strong style={{ color: '#1d1d1f' }}>Bad phone or email = no codeword = no entry.</strong>
+                ohACCESS replaces your paper sheet with a QR-code digital check-in. Visitors scan the sign outside before they enter and complete a quick, verified registration: name, email, phone, and buying timeline, all clean, accurate, and captured instantly. A unique codeword is texted to their phone on the spot, and you get a text with their details. They share the codeword with you at the door. <strong style={{ color: '#1d1d1f' }}>Bad phone or email = no codeword = no entry.</strong>
               </div>
             </div>
           </div>
@@ -90,7 +90,7 @@ export default function Resources() {
             <div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Your leads, organized in real time</div>
               <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
-                While you&apos;re greeting buyers and doing what you do best, ohACCESS is quietly building your contact list. Every visitor is timestamped and organized in a clean dashboard. And it gets better — ohACCESS connects to your existing CRM, so leads flow straight in. No data entry. No copy-paste.
+                While you&apos;re greeting buyers and doing what you do best, ohACCESS is quietly building your contact list. Every visitor is timestamped and organized in a clean dashboard. And it gets better. ohACCESS connects to your existing CRM, so leads flow straight in. No data entry. No copy-paste.
               </div>
             </div>
           </div>
@@ -100,9 +100,9 @@ export default function Resources() {
               <img src="/resources/deterrence.jpg" alt="A hooded figure reconsidering at the ohACCESS verification sign outside an open house" />
             </div>
             <div>
-              <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Deterrence and accountability — built in</div>
+              <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Deterrence and accountability, built in</div>
               <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.7' }}>
-                Open houses invite strangers into someone&apos;s home. That&apos;s the reality. ohACCESS creates a verified digital record of every person who enters — a simple but powerful gate that tells every visitor upfront this is a verified environment. Bad actors like the path of least resistance, and the codeword system is often enough to make them walk away entirely. It protects you, your seller, and the property — with zero extra effort on your part.
+                Open houses invite strangers into someone&apos;s home. That&apos;s the reality. ohACCESS creates a verified digital record of every person who enters. It is a simple but powerful gate that tells every visitor upfront this is a verified environment. Bad actors like the path of least resistance, and the codeword system is often enough to make them walk away entirely. It protects you, your seller, and the property, with zero extra effort on your part.
               </div>
             </div>
           </div>
@@ -114,10 +114,10 @@ export default function Resources() {
             <div>
               <div style={{ fontSize: '17px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Getting started is simple</div>
               <div style={{ fontSize: '14px', color: '#48484a', lineHeight: '1.9' }}>
-                ✅ Create a free account — it takes about 2 minutes<br />
+                ✅ Create a free account (about 2 minutes)<br />
                 ✅ Set up your open house and print your branded QR sign (built in)<br />
                 ✅ Your visitors check in digitally before entering<br />
-                ✅ You leave with clean, verified lead data — no deciphering required
+                ✅ You leave with clean, verified lead data, no deciphering required
               </div>
             </div>
           </div>
@@ -202,14 +202,14 @@ export default function Resources() {
             🪧 Open house essentials
           </h2>
           <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
-            Our favorite sign stands and displays for showing your QR welcome sign on the approach to the entrance — placed where visitors can&apos;t miss it — and guiding them in from the street.
+            Our favorite sign stands and displays for showing your QR welcome sign on the approach to the entrance, placed where visitors can&apos;t miss it, and guiding them in from the street.
           </div>
 
           <div className="resources-grid">
             {[
               { emoji: '🪧', name: 'A-Frame Sidewalk Sign', body: 'Double-sided sidewalk sign to guide visitors from the street to your door. Slide in a poster with your QR code.', url: 'https://amzn.to/4v48sQg' },
-              { emoji: '🏷️', name: 'Pedestal Sign Holder', body: 'Weighted floor stand for an 8.5×11" sign — ideal for your QR welcome sign right at the entrance. Adjustable height, portrait or landscape.', url: 'https://amzn.to/4vgxnAr' },
-              { emoji: '🖼️', name: 'Poster Easel Stand', body: 'Lightweight, collapsible tripod easel — a simple, budget-friendly way to prop up a foam-board welcome sign indoors — ideal in condominium/apartment situations.', url: 'https://amzn.to/4eNmLnH' },
+              { emoji: '🏷️', name: 'Pedestal Sign Holder', body: 'Weighted floor stand for an 8.5×11" sign. Ideal for your QR welcome sign right at the entrance. Adjustable height, portrait or landscape.', url: 'https://amzn.to/4vgxnAr' },
+              { emoji: '🖼️', name: 'Poster Easel Stand', body: 'Lightweight, collapsible tripod easel. A simple, budget-friendly way to prop up a foam-board welcome sign indoors, and ideal in condominium or apartment situations.', url: 'https://amzn.to/4eNmLnH' },
               // Hidden until there are more items to keep the grid rows even. To restore, uncomment:
               // { emoji: '✨', name: 'Gold Sign Easel', body: 'Elegant adjustable gold easel for a premium welcome sign at higher-end listings. Holds signs, posters, and framed displays.', url: 'https://amzn.to/4xZoSw4' },
             ].map(item => (
@@ -226,7 +226,7 @@ export default function Resources() {
           </div>
 
           <div style={{ fontSize: '12px', color: '#aeaeb2', marginTop: '16px', lineHeight: '1.6' }}>
-            As an Amazon Associate, ohACCESS earns from qualifying purchases. These are affiliate links — they cost you nothing extra and help support ohACCESS.
+            As an Amazon Associate, ohACCESS earns from qualifying purchases. These are affiliate links. They cost you nothing extra and help support ohACCESS.
           </div>
         </div>
 
@@ -242,9 +242,9 @@ export default function Resources() {
             {[
               { emoji: '🪧', title: 'Use a pedestal, easel, or A-frame sign', body: 'Prominently display the QR code with instructions on a pedestal sign holder, easel, or A-frame poster well before the entrance.' },
               { emoji: '🔗', title: 'Add your listing URL', body: 'Include a link to the full listing so visitors can review details before and after the open house.' },
-              { emoji: '🏷️', title: 'Choose a memorable codeword', body: 'Pick a codeword related to the property — like ACREAGE or LAKEHOUSE. Easier for visitors to remember.' },
+              { emoji: '🏷️', title: 'Choose a memorable codeword', body: 'Pick a codeword related to the property, like ACREAGE or LAKEHOUSE. Easier for visitors to remember.' },
               { emoji: '👤', title: 'Add your landing page URL', body: 'Add your bio page, website, or Instagram in Settings so every visitor email includes a link to your profile.' },
-              { emoji: '🔔', title: 'Watch for agent alerts', body: 'You receive an instant SMS when a visitor registers — so you know who\'s coming before they reach the door. Tap the link in the alert to verify the visitor and save private notes.' },
+              { emoji: '🔔', title: 'Watch for agent alerts', body: 'You receive an instant SMS when a visitor registers, so you know who\'s coming before they reach the door. Tap the link in the alert to verify the visitor and save private notes.' },
               { emoji: '📊', title: 'Export after every open house', body: 'Export your visitor log to CSV immediately after and import into your CRM while leads are fresh. Better yet, connect your CRM under Settings → "Send leads to your CRM" and every sign-in flows there automatically.' },
             ].map(tip => (
               <div key={tip.title} style={{ background: 'white', borderRadius: '14px', border: '1px solid #d1d1d6', padding: '16px' }}>

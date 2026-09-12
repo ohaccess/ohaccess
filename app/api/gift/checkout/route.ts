@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
     if (recipientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
       return NextResponse.json(
-        { error: "That recipient email doesn't look right — fix it or leave it blank to deliver the gift yourself." },
+        { error: "That recipient email doesn't look right. Fix it or leave it blank to deliver the gift yourself." },
         { status: 400 }
       )
     }
@@ -56,9 +56,9 @@ export async function POST(request: Request) {
             currency: annual.currency ?? 'usd',
             unit_amount: annual.unit_amount,
             product_data: {
-              name: 'ohACCESS Pro — 1-Year Gift',
+              name: 'ohACCESS Pro: 1-Year Gift',
               description:
-                'One year of ohACCESS Pro for a real estate agent. One-time payment — never auto-renews.',
+                'One year of ohACCESS Pro for a real estate agent. One-time payment, never auto-renews.',
             },
           },
         },

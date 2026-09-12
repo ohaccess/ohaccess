@@ -67,7 +67,7 @@ export async function GET(request: Request) {
   <div style="max-width:420px;text-align:center;">
     <div style="font-size:28px;font-weight:200;letter-spacing:-0.5px;">oh<span style="font-weight:700;">ACCESS</span></div>
     <div style="font-size:16px;font-weight:700;margin-top:20px;">This sign link isn't available</div>
-    <div style="font-size:14px;color:#6e6e73;margin-top:8px;line-height:1.6;">The open house it points to may have been removed. You can print a sign anytime from your dashboard — open your open house card and tap "QR Code".</div>
+    <div style="font-size:14px;color:#6e6e73;margin-top:8px;line-height:1.6;">The open house it points to may have been removed. You can print a sign anytime from your dashboard. Open your open house card and tap "QR Code".</div>
     <a href="https://www.ohaccess.com/dashboard" style="display:inline-block;margin-top:20px;background:#1d1d1f;color:#ffffff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:14px;font-weight:600;">Go to dashboard</a>
   </div>
 </body>

@@ -35,14 +35,14 @@ export async function POST(request: Request) {
     const ip = getClientIp(request)
     const limit = await checkRateLimit(`ip:${ip}`, 'gift-claim', 20, 3600)
     if (!limit.allowed) {
-      return NextResponse.json({ error: 'Too many attempts — try again later' }, { status: 429 })
+      return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 })
     }
 
     const body = await request.json().catch(() => ({}))
     const code = normalizeGiftCode(body?.code)
     if (!code) {
       return NextResponse.json(
-        { error: "That doesn't look like a gift code — it should read like GIFT-XXXX-XXXX." },
+        { error: "That doesn't look like a gift code. It should read like GIFT-XXXX-XXXX." },
         { status: 400 }
       )
     }
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
         .single()
       if (createError || !created) {
         console.error('Gift claim: profile create failed', createError)
-        return NextResponse.json({ error: 'Could not set up your account — try again' }, { status: 500 })
+        return NextResponse.json({ error: 'Could not set up your account. Try again.' }, { status: 500 })
       }
       profile = created
     }
@@ -180,7 +180,7 @@ export async function POST(request: Request) {
         .eq('id', gift.id)
         .eq('claimed_by', user.id)
       console.error('Gift claim: apply failed, code released', applyError)
-      return NextResponse.json({ error: 'Something went wrong applying your gift — please try again' }, { status: 500 })
+      return NextResponse.json({ error: 'Something went wrong applying your gift. Please try again.' }, { status: 500 })
     }
   } catch (error) {
     console.error('Gift claim error:', error)

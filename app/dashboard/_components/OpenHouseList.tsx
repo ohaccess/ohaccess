@@ -114,18 +114,18 @@ const COLUMN_HELP: Record<string, ReactNode> = {
         A regular carrier cell line. Texts reach it, so this is the number to follow up on.
       </HelpLine>
       <HelpLine term="☎ Home phone">
-        A house or office line — a landline, or home phone service from a cable company. It
+        A house or office line: a landline, or home phone service from a cable company. It
         can&apos;t receive text messages, so their codeword only reached them by email. Follow up with
         a phone call or an email.
       </HelpLine>
       <HelpLine term="⚠ VoIP">
         An internet phone number (Google Voice, TextNow, and similar) instead of a regular carrier
-        mobile line. Plenty of people use them for real — but they&apos;re free and quick to create
+        mobile line. Plenty of people use them for real, but they&apos;re free and quick to create
         anonymously, so it&apos;s a reasonable prompt to ask for photo ID at the door.
       </HelpLine>
       <HelpLine term="⚠ undelivered">
         The carrier rejected the codeword text. Usually a mistyped number, a landline, or a
-        disconnected line — so this visitor never got their codeword by text.
+        disconnected line, so this visitor never got their codeword by text.
       </HelpLine>
       <HelpLine term="🚫 Opted out">
         This number replied STOP to a text. By law they can&apos;t be texted again unless they reply
@@ -137,7 +137,7 @@ const COLUMN_HELP: Record<string, ReactNode> = {
     <>
       <div style={{ fontWeight: 700 }}>Email flags</div>
       <HelpLine term="⚠ bounced">
-        The codeword email couldn&apos;t be delivered — the address doesn&apos;t exist, was mistyped,
+        The codeword email couldn&apos;t be delivered: the address doesn&apos;t exist, was mistyped,
         or the mailbox is full or blocking us. It also appears if they marked the email as spam.
         Treat the address as bad and get a better one before you follow up.
       </HelpLine>
@@ -149,13 +149,13 @@ const COLUMN_HELP: Record<string, ReactNode> = {
       <HelpLine term="What it means">
         Your own confirmation that you actually met this person at the door. The codeword proves the
         phone or email they gave you is real; verifying is you confirming the person in front of you
-        is the one who registered. Only you can set it — visitors can&apos;t.
+        is the one who registered. Only you can set it. Visitors can&apos;t.
       </HelpLine>
       <HelpLine term="When">
         As they walk in, right after they show you their codeword (and ID, if you ask for one).
       </HelpLine>
       <HelpLine term="How">
-        Tap <strong>Verify</strong>{' '}on their row — or open the visitor and tap &ldquo;Mark as verified
+        Tap <strong>Verify</strong>{' '}on their row, or open the visitor and tap &ldquo;Mark as verified
         at door.&rdquo; Tap again to undo.
       </HelpLine>
     </>
@@ -274,7 +274,7 @@ function TrialBanner({ agentId, supabase, accentColor, trialLimit }: { agentId: 
         <div style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f' }}>
           {isExpired
             ? '⚠️ Your free trial has ended'
-            : `✓ Free trial — ${remaining} of ${trialLimit} visitor registrations remaining`
+            : `✓ Free trial: ${remaining} of ${trialLimit} visitor registrations remaining`
           }
         </div>
         <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>
@@ -431,7 +431,7 @@ export default function OpenHouseList({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f' }}>Your open houses</div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button onClick={() => { if (guardLocked()) return; openPermanentQr() }} title="One QR code that always points to your next open house — print it once, reuse it forever" style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <button onClick={() => { if (guardLocked()) return; openPermanentQr() }} title="One QR code that always points to your next open house. Print it once, reuse it forever." style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             📌 My QR code
           </button>
           <button onClick={() => { if (guardLocked()) return; setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -501,7 +501,7 @@ export default function OpenHouseList({
                 {ohState(oh) !== 'ended' && (
                   <button onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openInvites(oh) }} title="Email the past visitors who are still in their buying window a personal invite to this open house" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>💌 Invite</button>
                 )}
-                <button onClick={(e) => { e.stopPropagation(); startCopy(oh) }} title="Start a new open house with these same details — just pick the new date and times" style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⧉ Duplicate</button>
+                <button onClick={(e) => { e.stopPropagation(); startCopy(oh) }} title="Start a new open house with these same details. Just pick the new date and times." style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⧉ Duplicate</button>
                 <button onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
                 {/* Delete is locked too (and server-enforced): deleting an
                     open house cascades its visitors, which would pull the
@@ -581,9 +581,9 @@ export default function OpenHouseList({
     return (
         <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
-            <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Visitor log — {selectedOH.property_address}</div>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Visitor log: {selectedOH.property_address}</div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => { if (guardLocked()) return; openSellerReport(selectedOH.id) }} title="A shareable results page for your seller — visitor counts and buyer timelines, no visitor contact info" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>📊 Seller report</button>
+              <button onClick={() => { if (guardLocked()) return; openSellerReport(selectedOH.id) }} title="A shareable results page for your seller: visitor counts and buyer timelines, no visitor contact info" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>📊 Seller report</button>
               <button onClick={exportCSV} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
             </div>
           </div>
@@ -612,7 +612,7 @@ export default function OpenHouseList({
                   {sortedVisitors.map((v, i) => (
                     <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
-                        <Tip width={220} body={<><strong>{langMeta(v.lang).label}</strong><div style={{ color: '#6e6e73', marginTop: '2px' }}>The language this visitor signed in with — the one to greet and follow up in.</div></>}>
+                        <Tip width={220} body={<><strong>{langMeta(v.lang).label}</strong><div style={{ color: '#6e6e73', marginTop: '2px' }}>The language this visitor signed in with: the one to greet and follow up in.</div></>}>
                           <span style={{ cursor: 'help' }}>{langMeta(v.lang).flag}</span>
                         </Tip>
                       </td>
@@ -626,11 +626,11 @@ export default function OpenHouseList({
                           </Tip>
                         )}
                         {selectedOH?.require_agreement && (v.agreement_signed
-                          ? <span title="Signed the required agreement — copies were emailed to you both" style={signedBadgeStyle}>✍ Signed</span>
-                          : <span title="Hasn't signed the required agreement — ask before letting them tour" style={unsignedBadgeStyle}>✍ Not signed</span>)}
+                          ? <span title="Signed the required agreement. Copies were emailed to you both." style={signedBadgeStyle}>✍ Signed</span>
+                          : <span title="Hasn't signed the required agreement. Ask before letting them tour." style={unsignedBadgeStyle}>✍ Not signed</span>)}
                       </td>
-                      <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}{v.sms_opted_out ? <span title="This number replied STOP — do not contact" style={optedOutBadgeStyle}>🚫 Opted out</span> : deliveryFlag(v.sms_status) ? <span title={v.codeword_channel === 'whatsapp' ? 'WhatsApp message could not be delivered to this number' : 'Text could not be delivered to this number'} style={deliveryBadgeStyle}>⚠ undelivered</span> : v.codeword_channel === 'whatsapp' ? <span title="Codeword was sent by WhatsApp, not SMS" style={whatsAppBadgeStyle}>WhatsApp</span> : null}<PhoneLineChip lineType={v.phone_line_type} /></td>
-                      <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.email}{deliveryFlag(v.email_status) && <span title="Email bounced — this address may be invalid" style={deliveryBadgeStyle}>⚠ bounced</span>}</td>
+                      <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}{v.sms_opted_out ? <span title="This number replied STOP. Do not contact." style={optedOutBadgeStyle}>🚫 Opted out</span> : deliveryFlag(v.sms_status) ? <span title={v.codeword_channel === 'whatsapp' ? 'WhatsApp message could not be delivered to this number' : 'Text could not be delivered to this number'} style={deliveryBadgeStyle}>⚠ undelivered</span> : v.codeword_channel === 'whatsapp' ? <span title="Codeword was sent by WhatsApp, not SMS" style={whatsAppBadgeStyle}>WhatsApp</span> : null}<PhoneLineChip lineType={v.phone_line_type} /></td>
+                      <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.email}{deliveryFlag(v.email_status) && <span title="Email bounced. This address may be invalid." style={deliveryBadgeStyle}>⚠ bounced</span>}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{new Date(v.registered_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>

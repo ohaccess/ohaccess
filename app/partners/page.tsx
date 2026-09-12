@@ -91,7 +91,7 @@ export default function Partners() {
             Put your brand on every open house
           </h1>
           <p style={{ fontSize: '16px', color: '#6e6e73', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>
-            For mortgage lenders, title companies, inspectors, insurance agents, and other real estate partners: sponsor ohACCESS for your agent partners, put your branding on every verified open-house sign-in, and see the leads it captures — all from one dashboard.
+            For mortgage lenders, title companies, inspectors, insurance agents, and other real estate partners: sponsor ohACCESS for your agent partners, put your branding on every verified open-house sign-in, and see the leads it captures, all from one dashboard.
           </p>
         </div>
 
@@ -104,10 +104,10 @@ export default function Partners() {
             </h2>
 
             {[
-              { emoji: '🎨', title: 'Your brand on every sign-in', body: 'Your logo and colors appear on every verified visitor email your agents send — you control all of it from your Team dashboard.' },
+              { emoji: '🎨', title: 'Your brand on every sign-in', body: 'Your logo and colors appear on every verified visitor email your agents send. You control all of it from your Team dashboard.' },
               { emoji: '🤝', title: 'Sponsor your agent partners', body: 'Pay for one Team plan and share ohACCESS with up to 10 of your agent partners. You own the account; they run their open houses.' },
-              { emoji: '📊', title: 'Leads delivered to your CRM', body: 'Set one Team CRM lead email and every verified sign-in from your agents’ open houses is forwarded straight into your CRM — automatically, no exports. Plus a shared dashboard and CSV export whenever you want it. Real buyers and sellers, captured at the door.' },
-              { emoji: '🔁', title: 'Stay top of mind', body: 'Show up in front of motivated buyers and sellers at the exact moment they’re touring homes — and strengthen your agent relationships.' },
+              { emoji: '📊', title: 'Leads delivered to your CRM', body: 'Set one Team CRM lead email and every verified sign-in from your agents’ open houses is forwarded straight into your CRM, automatically, with no exports. Plus a shared dashboard and CSV export whenever you want it. Real buyers and sellers, captured at the door.' },
+              { emoji: '🔁', title: 'Stay top of mind', body: 'Show up in front of motivated buyers and sellers at the exact moment they’re touring homes, and strengthen your agent relationships.' },
               { emoji: '🛡️', title: 'Built for RESPA-conscious co-marketing', body: 'You pay for the platform and control your own branding while your agents run their events. As with any co-marketing arrangement, confirm your specific setup with your own compliance counsel.' },
               { emoji: '🚀', title: 'Live within 24 hours', body: 'Set up your team, add your branding, and be running at your agents’ first open house within a day of signing up.' },
             ].map(item => (
@@ -124,7 +124,7 @@ export default function Partners() {
             <div style={{ background: '#f5f5f7', borderRadius: '16px', padding: '20px', marginTop: '8px' }}>
               <h2 style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 14px' }}>How it works</h2>
               {[
-                { n: '1', t: 'Subscribe to a Team plan', d: '$120/mo, $1,200 annually, or $1,920 for two years paid upfront (renews every 2 years) — up to 10 agent partners. More than 10? Per-seat pricing at $11/agent/mo, up to 100 agents. Add your logo and brand colors.' },
+                { n: '1', t: 'Subscribe to a Team plan', d: '$120/mo, $1,200 annually, or $1,920 for two years paid upfront (renews every 2 years), for up to 10 agent partners. More than 10? Per-seat pricing at $11/agent/mo, up to 100 agents. Add your logo and brand colors.' },
                 { n: '2', t: 'Invite your agent partners', d: 'They join your team and start running verified open houses.' },
                 { n: '3', t: 'Your brand + your leads', d: 'Every sign-in goes out under your branding and lands in your dashboard.' },
               ].map((s, i) => (
@@ -244,7 +244,7 @@ export default function Partners() {
             ) : (
               <div style={{ background: 'white', borderRadius: '22px', border: '1px solid #d1d1d6', padding: '48px 32px', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>🤝</div>
-                <div style={{ fontSize: '22px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Thanks — we&apos;ll be in touch!</div>
+                <div style={{ fontSize: '22px', fontWeight: '700', color: '#1d1d1f', marginBottom: '8px' }}>Thanks! We&apos;ll be in touch.</div>
                 <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '24px' }}>
                   We&apos;ll reach out within one business day to get your partner team set up.
                 </div>
