@@ -45,6 +45,7 @@ function buildReportHtml(args: {
   const { agentName, address, primary, accent, logoUrl, brokerage, visitors, tz, reportUrl } = args
   const verified = visitors.filter(v => v.verified).length
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
+  const feedbackMailto = `mailto:support@ohaccess.com?subject=${encodeURIComponent(`ohACCESS feedback: ${address}`)}`
 
   // Group by timeline, preserving the priority order then "Other".
   const groups: { label: string; rows: Visitor[] }[] = []
@@ -108,6 +109,17 @@ function buildReportHtml(args: {
       </div>
       <a href="${escapeHtml(reportUrl)}" style="display:inline-block;margin-top:10px;background:${escapeHtml(primary)};color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:8px;">View &amp; share the seller report</a>
     </div>` : ''}
+    <!-- Agent feedback ask. Shown on every report (zero-visitor events
+         included). Replies already route to support@ via replyTo; the
+         mailto button covers clients that bury the reply action. -->
+    <div style="margin-top:16px;border:1px solid #e5e5ea;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:14px;font-weight:700;color:#1d1d1f;">💬 How did ohACCESS work for you today?</div>
+      <div style="font-size:13px;color:#6e6e73;margin-top:4px;line-height:1.5;">
+        What worked, what got in the way, or what you wish it did. Just hit reply.
+        A real person reads every note, and your feedback shapes what we build next.
+      </div>
+      <a href="${escapeHtml(feedbackMailto)}" style="display:inline-block;margin-top:10px;background:#ffffff;color:#1d1d1f;border:1px solid #d2d2d7;text-decoration:none;font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px;">Share feedback</a>
+    </div>
     <div style="margin-top:24px;padding-top:14px;border-top:1px solid #e5e5ea;font-size:11px;color:#aeaeb2;text-align:center;">
       ${logoUrl
         ? `<img src="${escapeHtml(logoUrl)}" style="max-height:48px;max-width:160px;object-fit:contain;margin-bottom:8px;" /><br/>`
