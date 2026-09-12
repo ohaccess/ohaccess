@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { escapeHtml } from '@/lib/escape-html'
 import { generateCode, isHexColor, safeUrl } from '@/lib/register-helpers'
-import { isExpiredPrepaidAccess } from '@/lib/billing-plans'
+import { isComped, isExpiredPrepaidAccess } from '@/lib/billing-plans'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,6 +14,28 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ohaccess.com'
 // How far ahead of start_at the reminder goes out. With an hourly cron this
 // lands the email 23–24h before the doors open — enough time to print a sign.
 const REMINDER_LEAD_MS = 24 * 60 * 60_000
+
+const INSTAGRAM_URL = 'https://www.instagram.com/ohaccess'
+
+// The sign-photo offer (tag us on Instagram, get a free month) goes only to
+// agents paying for their own Pro subscription. Team and partner-plan accounts
+// (owners and members alike) don't see it, nor do free trials, admin comps, or
+// lapsed prepaid access.
+function qualifiesForSignPhotoOffer(agent: {
+  tier?: string | null
+  brokerage_id?: string | null
+  billing_interval?: string | null
+  stripe_subscription_id?: string | null
+  current_period_end?: string | null
+} | null | undefined): boolean {
+  return (
+    !!agent &&
+    agent.tier === 'pro' &&
+    !agent.brokerage_id &&
+    !isComped(agent) &&
+    !isExpiredPrepaidAccess(agent)
+  )
+}
 
 function fmtDay(iso: string, tz: string | null): string {
   try {
@@ -96,12 +118,13 @@ function buildReminderHtml(args: {
   smsSample: string
   emailCodeWord: string
   referralUrl: string | null
+  showSignPhotoOffer: boolean
 }): string {
   const e = escapeHtml
   const {
     agentName, address, streetAddress, dayLine, timeLine, primary, accent,
     logoUrl, brokerage, ohQrUrl, ohSignUrl, universalQrUrl, universalSignUrl,
-    smsSample, emailCodeWord, referralUrl,
+    smsSample, emailCodeWord, referralUrl, showSignPhotoOffer,
   } = args
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 
@@ -126,6 +149,33 @@ function buildReminderHtml(args: {
         houses and put their card in front of every verified visitor. They'll thank you for the introduction.
       </div>
     </div>`
+
+  // Deliberately breaks the grey-card rhythm of the rest of the email (gradient
+  // frame, badge, bigger headline) so it reads as an offer, not one more
+  // checklist item.
+  const signPhotoOfferHtml = showSignPhotoOffer ? `
+    <div style="margin-top:16px;border-radius:16px;padding:2px;background:#d6409f;background-image:linear-gradient(135deg,#f9a03f 0%,#d6409f 55%,#7c3aed 100%);">
+      <div style="background:#fffdfb;border-radius:14px;padding:18px 18px 16px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#ffffff;background:#d6409f;border-radius:999px;padding:4px 11px;display:inline-block;">
+          📸 Free month on us
+        </div>
+        <div style="font-size:19px;font-weight:800;letter-spacing:-0.3px;color:#1d1d1f;margin-top:10px;">
+          Post your sign, get a free month.
+        </div>
+        <div style="font-size:14px;line-height:1.7;color:#1d1d1f;margin-top:8px;">
+          Snap a photo of your ohACCESS sign in front of the open house, post it on Instagram,
+          and tag <a href="${INSTAGRAM_URL}" style="color:#d6409f;font-weight:700;text-decoration:none;">@ohaccess</a> so we see it.
+        </div>
+        <div style="font-size:14px;line-height:1.7;color:#1d1d1f;margin-top:10px;background:#ffffff;border:1px solid #f3d7e8;border-radius:10px;padding:12px 14px;">
+          <strong>What you get:</strong> we add <strong>a free month</strong> to your ohACCESS
+          subscription. Nothing to fill out — we spot the tag and credit your account.
+        </div>
+        <div style="font-size:12px;color:#6e6e73;line-height:1.6;margin-top:10px;">
+          Post publicly so the tag reaches us. One free month per calendar month.
+          If we miss your post, reply to this email with the link.
+        </div>
+      </div>
+    </div>` : ''
 
   const referralHtml = referralUrl ? `
     <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
@@ -184,6 +234,8 @@ function buildReminderHtml(args: {
         If it's out by the curb, people breeze right past it.
       </div>
     </div>
+
+    ${signPhotoOfferHtml}
 
     <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
       ${sectionTitle('At the door')}
@@ -346,6 +398,7 @@ async function handle(request: Request) {
       smsSample,
       emailCodeWord,
       referralUrl,
+      showSignPhotoOffer: qualifiesForSignPhotoOffer(agent),
     })
 
     try {
