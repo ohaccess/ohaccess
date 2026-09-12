@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     }
     if (pageCount < 1 || pageCount > MAX_AGREEMENT_TEMPLATE_PAGES) {
       return NextResponse.json(
-        { error: `Keep it short — up to ${MAX_AGREEMENT_TEMPLATE_PAGES} pages (this one has ${pageCount}). Visitors sign on their phones at the door.` },
+        { error: `Keep it short: up to ${MAX_AGREEMENT_TEMPLATE_PAGES} pages (this one has ${pageCount}). Visitors sign on their phones at the door.` },
         { status: 400 }
       )
     }

@@ -61,10 +61,10 @@ function ClaimForm() {
       if (res.ok && json.success) {
         setClaimed(json)
       } else {
-        setError(json.error || 'Could not claim this gift — please try again.')
+        setError(json.error || 'Could not claim this gift. Please try again.')
       }
     } catch {
-      setError('Could not claim this gift — please try again.')
+      setError('Could not claim this gift. Please try again.')
     }
     setLoading(false)
   }
@@ -125,7 +125,7 @@ function ClaimForm() {
                 Claim your gift
               </h1>
               <p style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.6', margin: 0 }}>
-                Someone gave you a year of ohACCESS Pro — verified open-house sign-ins with unlimited
+                Someone gave you a year of ohACCESS Pro: verified open-house sign-ins with unlimited
                 registrations and instant lead alerts.
               </p>
             </div>
@@ -160,7 +160,7 @@ function ClaimForm() {
               ) : signedIn === false ? (
                 <div>
                   <p style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6', textAlign: 'center', marginTop: 0, marginBottom: '14px' }}>
-                    Sign in — or create your free account — and we&apos;ll bring you right back here to apply it.
+                    Sign in, or create your free account, and we&apos;ll bring you right back here to apply it.
                   </p>
                   <Link href={loginHref} style={{ display: 'block', textAlign: 'center', background: '#1d1d1f', color: 'white', padding: '13px', borderRadius: '10px', fontSize: '14px', fontWeight: 700, textDecoration: 'none', marginBottom: '10px' }}>
                     Sign in to claim

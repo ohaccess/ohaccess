@@ -168,7 +168,7 @@ function buildReminderHtml(args: {
         </div>
         <div style="font-size:14px;line-height:1.7;color:#1d1d1f;margin-top:10px;background:#ffffff;border:1px solid #f3d7e8;border-radius:10px;padding:12px 14px;">
           <strong>What you get:</strong> we add <strong>a free month</strong> to your ohACCESS
-          subscription. Nothing to fill out — we spot the tag and credit your account.
+          subscription. Nothing to fill out. We spot the tag and credit your account.
         </div>
         <div style="font-size:12px;color:#6e6e73;line-height:1.6;margin-top:10px;">
           Post publicly so the tag reaches us. One free month per calendar month.
@@ -182,7 +182,7 @@ function buildReminderHtml(args: {
       ${sectionTitle('Save on your subscription')}
       <div style="font-size:14px;color:#1d1d1f;line-height:1.6;">
         Know an agent who'd want this at their open houses? When someone you refer becomes a paying
-        subscriber, you earn <strong>a free month of Pro</strong> — added onto your annual or 2-year plan,
+        subscriber, you earn <strong>a free month of Pro</strong>, added onto your annual or 2-year plan,
         or a $15 credit on your next bill if you're month-to-month.
       </div>
       <div style="font-size:14px;margin-top:8px;">Your personal link:
@@ -208,14 +208,14 @@ function buildReminderHtml(args: {
       <div style="font-size:15px;font-weight:700;">${e(dayLine)}</div>
       <div style="font-size:14px;color:#6e6e73;margin-top:2px;">${e(timeLine)}</div>
       <div style="font-size:14px;margin-top:6px;">
-        <a href="${e(mapsUrl)}" style="color:${e(accent)};font-weight:600;">📍 ${e(address)} — open in Google Maps</a>
+        <a href="${e(mapsUrl)}" style="color:${e(accent)};font-weight:600;">📍 Open ${e(address)} in Google Maps</a>
       </div>
     </div>
 
     <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
       ${sectionTitle('Bring your sign')}
       <div style="font-size:14px;line-height:1.7;">
-        Pack your ohACCESS sign with the QR code — either code works:
+        Pack your ohACCESS sign with the QR code. Either code works:
         <div style="margin-top:6px;">
           <strong>This open house's QR:</strong>
           <a href="${e(ohSignUrl)}" style="color:${e(accent)};font-weight:600;">🖨 Print branded sign</a>
@@ -225,11 +225,11 @@ function buildReminderHtml(args: {
           <a href="${e(universalSignUrl)}" style="color:${e(accent)};font-weight:600;">🖨 Print branded sign</a>
           <span style="color:#aeaeb2;">·</span>
           <a href="${e(universalQrUrl)}" style="color:${e(accent)};font-weight:600;">download QR only (PNG)</a>
-          <span style="color:#6e6e73;">(never goes stale — it always points to your next open house)</span>` : ''}
+          <span style="color:#6e6e73;">(never goes stale, since it always points to your next open house)</span>` : ''}
         </div>
       </div>
       <div style="font-size:13px;color:#6e6e73;line-height:1.6;margin-top:10px;">
-        <strong style="color:#1d1d1f;">Placement tip:</strong> put the sign closer to the front door than the street —
+        <strong style="color:#1d1d1f;">Placement tip:</strong> put the sign closer to the front door than the street,
         somewhere on the walkway visitors can't miss, with enough room to stop and scan comfortably.
         If it's out by the curb, people breeze right past it.
       </div>
@@ -240,20 +240,20 @@ function buildReminderHtml(args: {
     <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
       ${sectionTitle('At the door')}
       <div style="font-size:14px;line-height:1.7;">
-        ohACCESS works best when <strong>everyone</strong> scans — it's the security layer between the
+        ohACCESS works best when <strong>everyone</strong> scans. It's the security layer between the
         street and your seller's home. Greet visitors outside, before they reach the door, and kindly
         insist each one signs in and shares their codeword first. A script that works:
       </div>
       <div style="border-left:3px solid ${e(accent)};padding:8px 12px;margin-top:10px;font-size:14px;line-height:1.7;color:#1d1d1f;font-style:italic;">
-        "Hi, welcome! Before we head inside — the sellers have asked that every guest sign in first.
+        "Hi, welcome! Before we head inside, the sellers have asked that every guest sign in first.
         Just scan the sign right here and it'll send you today's codeword. Tell me the word and
-        you're in — takes about 20 seconds, and then the whole home is yours to explore."
+        you're in. It takes about 20 seconds, and then the whole home is yours to explore."
       </div>
       <div style="font-size:13px;color:#6e6e73;margin-top:8px;">If someone hesitates:</div>
       <div style="border-left:3px solid ${e(accent)};padding:8px 12px;margin-top:6px;font-size:14px;line-height:1.7;color:#1d1d1f;font-style:italic;">
-        "I completely understand. It's the one thing the sellers asked of me — everyone signs in
+        "I completely understand. It's the one thing the sellers asked of me. Everyone signs in
         before stepping inside, myself included, so they always know who's been in their home.
-        Your info comes straight to me for feedback and follow-up — it's never sold."
+        Your info comes straight to me for feedback and follow-up, and it's never sold."
       </div>
     </div>
 
@@ -273,7 +273,7 @@ function buildReminderHtml(args: {
         <div style="font-size:12px;color:#6e6e73;margin-top:8px;">…plus the property details and your contact card.</div>
       </div>
       <div style="font-size:13px;line-height:1.6;margin-top:10px;color:#1d1d1f;">
-        Visitors share the codeword — that's your confirmation their contact info is real and they're checked in.
+        Visitors share the codeword. That's your confirmation their contact info is real and they're checked in.
       </div>
     </div>
 
@@ -408,7 +408,7 @@ async function handle(request: Request) {
         from: 'ohACCESS <hello@mail.ohaccess.com>',
         to,
         replyTo: 'support@ohaccess.com',
-        subject: `Reminder: your open house at ${oh.property_address || 'your listing'} — ${dayLine}`,
+        subject: `Reminder: your open house at ${oh.property_address || 'your listing'}, ${dayLine}`,
         html,
       })
       await supabase.from('open_houses').update({ reminder_sent_at: new Date().toISOString() }).eq('id', oh.id)

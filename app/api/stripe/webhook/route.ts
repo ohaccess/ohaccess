@@ -223,9 +223,9 @@ async function handleGiftPurchase(session: Stripe.Checkout.Session) {
           <p>Thank you! Your gift of <strong>1 year of ohACCESS Pro</strong> for ${recipientLabel} is paid and ready.</p>
           ${codeBlock}
           ${recipientEmail
-            ? `<p>We've also emailed the gift directly to <strong>${escapeHtml(recipientEmail)}</strong> — the copy above is yours in case you'd like to deliver it personally too.</p>`
-            : `<p>Deliver it however you like: forward this email, text the claim link, or write the gift code inside a card. Whoever uses the code gets the year — so share it only with your agent.</p>`}
-          <p style="font-size: 13px; color: #6e6e73;">This was a one-time payment — nothing renews and your card will never be charged again. Questions? Just reply to this email.</p>
+            ? `<p>We've also emailed the gift directly to <strong>${escapeHtml(recipientEmail)}</strong>. The copy above is yours in case you'd like to deliver it personally too.</p>`
+            : `<p>Deliver it however you like: forward this email, text the claim link, or write the gift code inside a card. Whoever uses the code gets the year, so share it only with your agent.</p>`}
+          <p style="font-size: 13px; color: #6e6e73;">This was a one-time payment. Nothing renews and your card will never be charged again. Questions? Just reply to this email.</p>
         `),
       })
     } catch (e) {
@@ -243,10 +243,10 @@ async function handleGiftPurchase(session: Stripe.Checkout.Session) {
         subject: `${giverName || 'Someone'} gave you a year of ohACCESS Pro 🎁`,
         html: emailShell(`
           <p>Hi${recipientName ? ` ${escapeHtml(recipientName.split(' ')[0])}` : ''},</p>
-          <p><strong>${escapeHtml(giverName || 'Someone who believes in you')}</strong> just gave you <strong>1 year of ohACCESS Pro</strong> — verified open-house sign-ins with unlimited visitor registrations, instant SMS lead alerts, and more.</p>
+          <p><strong>${escapeHtml(giverName || 'Someone who believes in you')}</strong> just gave you <strong>1 year of ohACCESS Pro</strong>: verified open-house sign-ins with unlimited visitor registrations, instant SMS lead alerts, and more.</p>
           ${noteHtml}
           ${codeBlock}
-          <p style="font-size: 13px; color: #6e6e73;">New to ohACCESS? The claim link walks you through creating your free account first — the gift year applies the moment you're in. Questions? Just reply to this email.</p>
+          <p style="font-size: 13px; color: #6e6e73;">New to ohACCESS? The claim link walks you through creating your free account first. The gift year applies the moment you're in. Questions? Just reply to this email.</p>
         `),
       })
     } catch (e) {
@@ -643,7 +643,7 @@ async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
           <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; color: #1d1d1f; font-size: 14px; line-height: 1.6;">
             <p>Hi ${name},</p>
             <p>A quick heads-up: your ohACCESS ${escapeHtml(termLabel)} plan renews on <strong>${escapeHtml(renewDate)}</strong>, and your card on file will be charged <strong>${escapeHtml(amount)}</strong>.</p>
-            <p>No action is needed if you'd like to continue — everything keeps working without interruption.</p>
+            <p>No action is needed if you'd like to continue. Everything keeps working without interruption.</p>
             <p style="text-align: center; margin: 24px 0;">
               <a href="${manageUrl}" style="background: #1d1d1f; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700;">Manage subscription</a>
             </p>

@@ -53,7 +53,7 @@ function UnsubscribeInner() {
               {isAgent ? (
                 <>
                   You won&rsquo;t receive tips or reminder emails from ohACCESS anymore.<br />
-                  Emails about your own open houses — reminders and reports — are unaffected.
+                  Emails about your own open houses (reminders and reports) are unaffected.
                 </>
               ) : (
                 <>
@@ -78,7 +78,7 @@ function UnsubscribeInner() {
               {isAgent ? (
                 <>
                   You&rsquo;ll no longer get occasional tips, reminders, or offers from ohACCESS.
-                  Emails about your own open houses — reminders and reports — will keep working.
+                  Emails about your own open houses (reminders and reports) will keep working.
                 </>
               ) : (
                 <>

@@ -264,7 +264,7 @@ export default function SponsorDashboard() {
   const saveProfile = async () => {
     if (!user) return
     if (!sponsor?.full_name?.trim()) {
-      showToast('Please enter your name — it appears on your sponsor card.', 'error')
+      showToast('Please enter your name. It appears on your sponsor card.', 'error')
       return
     }
     setSaving(true)
@@ -448,7 +448,7 @@ export default function SponsorDashboard() {
           <>
             <div style={{ fontSize: '24px', fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Sponsorship activity</div>
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>
-              Sign-ins across the agents you sponsor. You only see visitors whose sign-in consent named you — nothing from before a sponsorship began.
+              Sign-ins across the agents you sponsor. You only see visitors whose sign-in consent named you. Nothing from before a sponsorship began.
             </div>
 
             {activityLoading ? (
@@ -475,7 +475,7 @@ export default function SponsorDashboard() {
                   <div style={cardHeader}>By agent</div>
                   {agents.length === 0 ? (
                     <div style={{ textAlign: 'center', color: '#6e6e73', padding: '20px', fontSize: '13px' }}>
-                      No agents yet — invite the agents you work with from the Agents tab.
+                      No agents yet. Invite the agents you work with from the Agents tab.
                     </div>
                   ) : (
                     <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any }}>
@@ -518,7 +518,7 @@ export default function SponsorDashboard() {
                     the selected card — or after the whole list when nothing is
                     selected, keeping the all-sign-ins view on a phone. */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
-                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#1d1d1f' }}>Open houses{agentFilter !== 'all' ? ' — filtered' : ''}</div>
+                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#1d1d1f' }}>Open houses{agentFilter !== 'all' ? ' · filtered' : ''}</div>
                   {agentFilter !== 'all' && (
                     <button onClick={() => { setAgentFilter('all'); setSelectedOH(null) }} style={{ background: 'none', border: '1px solid #d1d1d6', color: '#6e6e73', borderRadius: '7px', padding: '4px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Show all agents</button>
                   )}
@@ -568,7 +568,7 @@ export default function SponsorDashboard() {
           <>
             <div style={{ fontSize: '24px', fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Agents you sponsor</div>
             <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>
-              Invite an agent by the email they use for ohACCESS. Nothing appears on their open houses until they accept — and they keep full control of their own name, logo, and colors.
+              Invite an agent by the email they use for ohACCESS. Nothing appears on their open houses until they accept, and they keep full control of their own name, logo, and colors.
             </div>
 
             <div style={card}>
@@ -614,7 +614,7 @@ export default function SponsorDashboard() {
             <div style={card}>
               <div style={cardHeader}>Active sponsorships</div>
               {agents.length === 0 ? (
-                <div style={{ fontSize: '13px', color: '#aeaeb2', padding: '14px 0 4px' }}>No agents yet — invites you send will show up here once accepted.</div>
+                <div style={{ fontSize: '13px', color: '#aeaeb2', padding: '14px 0 4px' }}>No agents yet. Invites you send will show up here once accepted.</div>
               ) : (
                 <div style={{ marginTop: '12px' }}>
                   {agents.map(a => (
@@ -649,14 +649,14 @@ export default function SponsorDashboard() {
               <>
                 <div style={{ fontSize: '24px', fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Welcome! Set up your sponsor card.</div>
                 <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>
-                  Fill in your card and save it — then invite the agents you work with. Once an agent accepts,
+                  Fill in your card and save it, then invite the agents you work with. Once an agent accepts,
                   your card appears below theirs in every email their open-house visitors receive.
                 </div>
               </>
             ) : (
               <>
                 <div style={{ fontSize: '24px', fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Settings</div>
-                <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>Your sponsor card — shown to open-house visitors in the &ldquo;Sponsored by&rdquo; section of their email.</div>
+                <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>Your sponsor card: shown to open-house visitors in the &ldquo;Sponsored by&rdquo; section of their email.</div>
               </>
             )}
 
@@ -722,8 +722,8 @@ export default function SponsorDashboard() {
                     onClick={async () => {
                       if (!user) return
                       const { data } = await supabase.from('sponsors').select('*').eq('owner_id', user.id).maybeSingle()
-                      if (data) { setSponsor(data); showToast('Changes discarded — nothing was saved'); setView('dashboard') }
-                      else showToast('Could not reload your saved profile — try again', 'error')
+                      if (data) { setSponsor(data); showToast('Changes discarded. Nothing was saved.'); setView('dashboard') }
+                      else showToast('Could not reload your saved profile. Try again.', 'error')
                     }}
                     disabled={saving}
                     style={{ flex: '0 0 auto', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '10px', padding: '13px 22px', fontSize: '15px', fontWeight: '600', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
@@ -763,8 +763,8 @@ export default function SponsorDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
           <div style={{ fontSize: '13px', fontWeight: 600, color: '#1d1d1f' }}>
             {selectedOH ? (
-              <>Sign-ins — {selectedOH.property_address}<span style={{ color: '#6e6e73', fontWeight: 400 }}> · {selectedOH.agent_name}</span></>
-            ) : 'Recent sign-ins — all sponsored open houses'}
+              <>Sign-ins: {selectedOH.property_address}<span style={{ color: '#6e6e73', fontWeight: 400 }}> · {selectedOH.agent_name}</span></>
+            ) : 'Recent sign-ins: all sponsored open houses'}
           </div>
           <button onClick={exportCSV} disabled={sortedVisitors.length === 0} style={{ background: PRIMARY, color: 'white', border: 'none', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: sortedVisitors.length === 0 ? 'not-allowed' : 'pointer', opacity: sortedVisitors.length === 0 ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
         </div>

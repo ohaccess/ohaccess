@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     .gt('expires_at', new Date().toISOString())
   if ((agentCount ?? 0) + (pendingCount ?? 0) >= seatLimit) {
     return NextResponse.json(
-      { error: `Your sponsorship covers up to ${seatLimit} agents. Remove an agent or revoke a pending invite first — or contact support@ohaccess.com to add seats.` },
+      { error: `Your sponsorship covers up to ${seatLimit} agents. Remove an agent or revoke a pending invite first, or contact support@ohaccess.com to add seats.` },
       { status: 409 }
     )
   }
@@ -167,7 +167,7 @@ export async function POST(request: Request) {
             </a>
             <p style="font-size: 12px; color: #aeaeb2; margin-top: 24px; line-height: 1.6;">
               This invitation expires in ${INVITE_TTL_DAYS} days.<br/>
-              If you weren't expecting this, you can safely ignore this email — nothing changes
+              If you weren't expecting this, you can safely ignore this email. Nothing changes
               on your account unless you accept.
             </p>
           </div>

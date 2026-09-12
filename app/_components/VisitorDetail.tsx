@@ -136,8 +136,8 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
         <div style={{ fontSize: '20px', fontWeight: 700, color: '#1d1d1f' }}>
           {`${visitor.first_name || ''} ${visitor.last_name || ''}`.trim() || 'Visitor'}
           {requireAgreement && (visitor.agreement_signed
-            ? <span title="Signed the required agreement — copies were emailed to you both" style={signedBadge}>✍ Signed</span>
-            : <span title="Hasn't signed the required agreement — ask before letting them tour" style={unsignedBadge}>✍ Not signed</span>)}
+            ? <span title="Signed the required agreement. Copies were emailed to you both." style={signedBadge}>✍ Signed</span>
+            : <span title="Hasn't signed the required agreement. Ask before letting them tour." style={unsignedBadge}>✍ Not signed</span>)}
         </div>
         {visitor.purchasing_timeline && (
           <span style={{ background: tl.bg, color: tl.color, padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>{visitor.purchasing_timeline}</span>
@@ -191,7 +191,7 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
         <textarea
           value={notes}
           onChange={e => setNotes(e.target.value)}
-          placeholder="e.g. Pre-approved, wants 3BR, serious buyer — following up Monday."
+          placeholder="e.g. Pre-approved, wants 3BR, serious buyer. Following up Monday."
           rows={4}
           // 16px is the threshold below which iOS Safari auto-zooms the page
           // when a field is focused (same rule as the sign-in form's inputs).
@@ -233,7 +233,7 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
               <div style={{ fontSize: '13px', color: '#1d1d1f', lineHeight: 1.5, marginBottom: '10px' }}>
                 Permanently delete <strong>{`${visitor.first_name || ''} ${visitor.last_name || ''}`.trim() || 'this visitor'}</strong> and all their information? This can&apos;t be undone.
               </div>
-              {deleteError && <div style={{ fontSize: '13px', color: '#cc0000', fontWeight: 600, marginBottom: '10px' }}>Couldn&apos;t delete — please try again.</div>}
+              {deleteError && <div style={{ fontSize: '13px', color: '#cc0000', fontWeight: 600, marginBottom: '10px' }}>Couldn&apos;t delete. Please try again.</div>}
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button
                   onClick={() => setConfirmingDelete(false)}

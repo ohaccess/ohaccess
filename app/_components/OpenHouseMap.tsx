@@ -149,8 +149,8 @@ function addLocateControl(g: any, map: any, onError: (msg: string) => void) {
         btn.style.opacity = '1'
         onError(
           err.code === err.PERMISSION_DENIED
-            ? 'Location is blocked — allow location access in your browser to use the locate button.'
-            : "Couldn't get your location — please try again."
+            ? 'Location is blocked. Allow location access in your browser to use the locate button.'
+            : "Couldn't get your location. Please try again."
         )
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
@@ -167,7 +167,7 @@ function infoWindowHtml(pin: Pin, withAgentButton: boolean): string {
   // open house has structured times (legacy rows without them keep the
   // plain icon).
   const calIcon = pin.startAt
-    ? `<a href="${e(googleCalendarUrl(`Open House — ${pin.address}`.trim(), pin.startAt, pin.endAt || pin.startAt, pin.address))}" target="_blank" rel="noopener" title="Add to Google Calendar" style="text-decoration: none;">📅</a>`
+    ? `<a href="${e(googleCalendarUrl(`Open House: ${pin.address}`.trim(), pin.startAt, pin.endAt || pin.startAt, pin.address))}" target="_blank" rel="noopener" title="Add to Google Calendar" style="text-decoration: none;">📅</a>`
     : '📅'
   // Same fact line the visitor email's upcoming-open-houses section uses.
   const facts = [
@@ -261,7 +261,7 @@ export default function OpenHouseMap({
     new g.maps.Geocoder().geocode({ address: query, region: 'us' }, (results: any, gstatus: string) => {
       const geom = gstatus === 'OK' ? results?.[0]?.geometry : null
       if (!geom) {
-        setNotice(`Couldn't find “${query}” — try a city name or zip code.`)
+        setNotice(`Couldn't find “${query}”. Try a city name or zip code.`)
         return
       }
       setNotice('')

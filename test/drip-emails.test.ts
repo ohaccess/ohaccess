@@ -51,7 +51,7 @@ describe('every drip email', () => {
 describe('buildFinishSetupEmail', () => {
   it('links to login and the settings video', () => {
     const { subject, html } = buildFinishSetupEmail(base)
-    expect(subject).toBe('Your ohACCESS account is ready — pick up where you left off')
+    expect(subject).toBe('Your ohACCESS account is ready. Pick up where you left off')
     expect(html).toContain(`${APP_URL}/login`)
     expect(html).toContain(WELCOME_VIDEO_SETTINGS)
     expect(html).toContain('25 visitor sign-ins are free')

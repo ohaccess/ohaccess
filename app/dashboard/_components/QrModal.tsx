@@ -91,7 +91,7 @@ export default function QrModal({
               try {
                 const file = new File([data.blob], `ohaccess-qr.png`, { type: 'image/png' })
                 await navigator.share({
-                  title: `ohACCESS QR — ${data.oh.street_address || data.oh.property_address}`,
+                  title: `ohACCESS QR: ${data.oh.street_address || data.oh.property_address}`,
                   text: `Scan to register for the open house at ${data.oh.property_address}`,
                   files: [file]
                 })
@@ -114,7 +114,7 @@ export default function QrModal({
               for (const part of dtf.formatToParts(new Date(iso))) p[part.type] = part.value
               return `${p.year}${p.month}${p.day}T${p.hour}${p.minute}${p.second}`
             }
-            const title = encodeURIComponent(`Open House — ${data.oh.property_address || ''}`)
+            const title = encodeURIComponent(`Open House: ${data.oh.property_address || ''}`)
             const loc = encodeURIComponent(data.oh.property_address || '')
             // Anchor the event to the PROPERTY's timezone (ctz) so it reads at
             // the scheduled local time no matter where it's added from.

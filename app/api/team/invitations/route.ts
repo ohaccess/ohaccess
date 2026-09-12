@@ -66,8 +66,8 @@ export async function POST(request: Request) {
   if (usage.used >= usage.limit) {
     const grow =
       ctx.tier === 'brokerage'
-        ? ' — or add seats from the Team tab.'
-        : ' — or upgrade to per-seat pricing from the Team tab to grow past 10.'
+        ? ', or add seats from the Team tab.'
+        : ', or upgrade to per-seat pricing from the Team tab to grow past 10.'
     return NextResponse.json(
       { error: `Your team is full (${usage.limit} seats). Remove a member or a pending invite first${grow}` },
       { status: 409 }
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
               You're invited to join ${teamName}
             </div>
             <p style="font-size: 14px; color: #6e6e73; line-height: 1.6; margin-bottom: 24px;">
-              Your team lead has invited you to ohACCESS — verified open-house sign-ins for real estate agents.
+              Your team lead has invited you to ohACCESS: verified open-house sign-ins for real estate agents.
               Click below to set up your account and start verifying visitors.
             </p>
             <a href="${escapeHtml(acceptUrl)}" style="display: inline-block; background: #c9963a; color: #1d1d1f; padding: 14px 32px; border-radius: 10px; font-size: 15px; font-weight: 700; text-decoration: none;">

@@ -209,13 +209,13 @@ export default function NewOpenHouseForm({
           <span style={{ fontSize: '11px', color: '#6e6e73' }}><span style={{ color: '#ff3b30' }}>*</span> required field</span>
         </div>
         <div style={{ fontSize: '13px', color: '#6e6e73', margin: '12px 0 16px', lineHeight: '1.5' }}>
-          Each visitor gets two codes — one by text, one by email. At the door, ask for the <strong>text code</strong> first (a real phone is hard to fake); accept the email code only if their text didn&apos;t arrive.
+          Each visitor gets two codes: one by text, one by email. At the door, ask for the <strong>text code</strong> first (a real phone is hard to fake); accept the email code only if their text didn&apos;t arrive.
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
           {/* Text (SMS) code — primary */}
           <div style={{ flex: '1 1 240px', minWidth: 0 }}>
-            <label style={labelStyle}>📱 Text code (SMS) — primary <span style={{ color: '#ff3b30' }}>*</span></label>
+            <label style={labelStyle}>📱 Text code (SMS), primary <span style={{ color: '#ff3b30' }}>*</span></label>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. LOVELY" maxLength={SMS_CODE_WORD_MAX_LENGTH} value={form.code_word} onChange={e => setForm({ ...form, code_word: sanitizeSmsCodeWord(e.target.value) })} />
@@ -227,13 +227,13 @@ export default function NewOpenHouseForm({
             {/* Why this field is restricted and the email one isn't — see
                 sanitizeSmsCodeWord() in lib/register-helpers.ts. */}
             <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '6px', lineHeight: '1.45' }}>
-              Letters and numbers only, up to {SMS_CODE_WORD_MAX_LENGTH} characters ({form.code_word.length}/{SMS_CODE_WORD_MAX_LENGTH}). A text message only fits 160 characters before the carrier splits it in two, and a single emoji or accented letter cuts that limit to 70 — so a short, plain code keeps every visitor&apos;s text arriving as one message.
+              Letters and numbers only, up to {SMS_CODE_WORD_MAX_LENGTH} characters ({form.code_word.length}/{SMS_CODE_WORD_MAX_LENGTH}). A text message only fits 160 characters before the carrier splits it in two, and a single emoji or accented letter cuts that limit to 70, so a short, plain code keeps every visitor&apos;s text arriving as one message.
             </div>
           </div>
 
           {/* Email code — fallback */}
           <div style={{ flex: '1 1 240px', minWidth: 0 }}>
-            <label style={labelStyle}>✉️ Email code — fallback <span style={{ color: '#ff3b30' }}>*</span></label>
+            <label style={labelStyle}>✉️ Email code, fallback <span style={{ color: '#ff3b30' }}>*</span></label>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <input style={{ ...inputStyle, fontWeight: '700', letterSpacing: '2px', fontSize: '15px' }} type="text" placeholder="e.g. TUDOR" value={form.code_word_email} onChange={e => setForm({ ...form, code_word_email: e.target.value.toUpperCase() })} />
@@ -243,7 +243,7 @@ export default function NewOpenHouseForm({
               </button>
             </div>
             <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '6px', lineHeight: '1.45' }}>
-              Anything you like here — emoji, punctuation, any length. Email has no character limit, so only the text code needs to stay short.
+              Anything you like here: emoji, punctuation, any length. Email has no character limit, so only the text code needs to stay short.
             </div>
           </div>
         </div>
@@ -257,7 +257,7 @@ export default function NewOpenHouseForm({
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Signed Agreement Before Entry</div>
         <div style={{ fontSize: '13px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.5' }}>
-          Hosting another brokerage&apos;s listing, or need a touring agreement or disclosure signed before visitors walk through? Turn this on and each visitor reviews and e-signs right after check-in — a signed PDF is emailed to you and to them, and ohACCESS keeps nothing.
+          Hosting another brokerage&apos;s listing, or need a touring agreement or disclosure signed before visitors walk through? Turn this on and each visitor reviews and e-signs right after check-in. A signed PDF is emailed to you and to them, and ohACCESS keeps nothing.
         </div>
 
         <div
@@ -275,7 +275,7 @@ export default function NewOpenHouseForm({
         {form.require_agreement && (
           agreementTemplates.length === 0 ? (
             <div style={{ marginTop: '12px', background: '#fff8e6', border: '1px solid #f0d896', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#8a6100', lineHeight: '1.6' }}>
-              You haven&apos;t uploaded any documents yet. Add your brokerage&apos;s touring agreement (a one-page PDF) in Settings first — then come back and pick it here.{' '}
+              You haven&apos;t uploaded any documents yet. Add your brokerage&apos;s touring agreement (a one-page PDF) in Settings first, then come back and pick it here.{' '}
               <button onClick={() => setView('settings')} style={{ background: 'none', border: 'none', color: '#8a6100', fontWeight: '700', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 Go to Settings →
               </button>

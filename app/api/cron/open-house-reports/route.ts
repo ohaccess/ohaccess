@@ -96,7 +96,7 @@ function buildReportHtml(args: {
         <div style="font-size:11px;color:#6e6e73;text-transform:uppercase;letter-spacing:0.5px;">Verified at door</div>
       </div>
     </div>
-    <div style="font-size:14px;color:#1d1d1f;margin-top:20px;">Hi ${escapeHtml(agentName)}, here are your verified leads, organized by buying timeline — reach out while it's fresh.</div>
+    <div style="font-size:14px;color:#1d1d1f;margin-top:20px;">Hi ${escapeHtml(agentName)}, here are your verified leads, organized by buying timeline. Reach out while it's fresh.</div>
     ${visitors.length === 0
       ? '<div style="margin-top:18px;font-size:13px;color:#6e6e73;">No visitors registered at this open house.</div>'
       : groupHtml}
@@ -104,7 +104,7 @@ function buildReportHtml(args: {
     <div style="margin-top:24px;background:#f5f5f7;border-radius:12px;padding:16px 18px;">
       <div style="font-size:14px;font-weight:700;color:#1d1d1f;">📊 Share your results with the seller</div>
       <div style="font-size:13px;color:#6e6e73;margin-top:4px;line-height:1.5;">
-        A polished report card of this open house — visitor count and buyer timelines only,
+        A polished report card of this open house: visitor count and buyer timelines only,
         never your leads' contact info. Sellers love seeing the turnout.
       </div>
       <a href="${escapeHtml(reportUrl)}" style="display:inline-block;margin-top:10px;background:${escapeHtml(primary)};color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:8px;">View &amp; share the seller report</a>
@@ -203,7 +203,7 @@ async function handle(request: Request) {
         // Replies reach a monitored inbox instead of bouncing off the send-only
         // noreply subdomain.
         replyTo: 'support@ohaccess.com',
-        subject: `Open house report — ${oh.property_address || 'your open house'} (${(visitors ?? []).length} registered)`,
+        subject: `Open house report: ${oh.property_address || 'your open house'} (${(visitors ?? []).length} registered)`,
         html,
       })
       await supabase.from('open_houses').update({ report_sent_at: new Date().toISOString() }).eq('id', oh.id)

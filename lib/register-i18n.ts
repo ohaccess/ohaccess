@@ -176,7 +176,7 @@ const en: RegisterStrings = {
   agreeSuffixSponsored: ", and consent to be contacted by the host agent and today's sponsor, {sponsor}, via phone, text, and email about this and other properties.",
   englishGoverns: '',
   narTitle: 'Prefer not to register?',
-  narBody: "You're welcome to schedule a private showing of this — or any — listed property with the buyer's agent of your choice. Under NAR rules effective August 17, 2024, you'll need a written buyer representation agreement with that agent before they can show you the home; most agents can prepare one on the spot. ohACCESS registration is required only to attend today's open house.",
+  narBody: "You're welcome to schedule a private showing of this, or any, listed property with the buyer's agent of your choice. Under NAR rules effective August 17, 2024, you'll need a written buyer representation agreement with that agent before they can show you the home; most agents can prepare one on the spot. ohACCESS registration is required only to attend today's open house.",
   thankYou: 'Thank you!',
   sentBody1: 'Your codeword was sent to your phone, with a backup codeword sent to your email.',
   sentBody2: 'At the door, share your codeword with the host to be granted access.',

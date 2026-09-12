@@ -192,7 +192,7 @@ export default function Dashboard() {
     if (v === 'settings' || v === 'new' || v === 'dashboard' || v === 'team' || v === 'activity') setView(v)
     const checkout = params.get('checkout')
     if (checkout === 'success') {
-      showToast('Subscription activated — welcome aboard!')
+      showToast('Subscription activated. Welcome aboard!')
       reportPurchase(params.get('session_id'))
     } else if (checkout === 'cancel') {
       showToast('Checkout canceled. You can upgrade anytime from settings.', 'error')
@@ -533,7 +533,7 @@ export default function Dashboard() {
       }
       try { await navigator.clipboard.writeText(json.url) } catch {}
       window.open(json.url, '_blank', 'noopener')
-      showToast('Report link copied — text or email it to your seller!')
+      showToast('Report link copied. Text or email it to your seller!')
     } catch {
       showToast('Could not load the seller report link.', 'error')
     }
@@ -1164,7 +1164,7 @@ export default function Dashboard() {
             <div style={{ flex: 1, minWidth: '220px' }}>
               <div style={{ fontSize: '14px', fontWeight: '700', color: '#cc0000' }}>⚠️ Your free trial has ended</div>
               <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
-                You&apos;ve used all {trialLimit} free visitor registrations. Creating open houses, QR codes, editing, and CSV export are paused. Choose a plan to turn everything back on — your data is safe.
+                You&apos;ve used all {trialLimit} free visitor registrations. Creating open houses, QR codes, editing, and CSV export are paused. Choose a plan to turn everything back on. Your data is safe.
               </div>
             </div>
             <button onClick={() => setView('settings')} style={{ background: '#1d1d1f', color: 'white', border: 'none', padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
@@ -1184,7 +1184,7 @@ export default function Dashboard() {
               <div>
                 <div style={{ fontSize: '14px', fontWeight: '700', color: '#0040a0' }}>Add your public contact email</div>
                 <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
-                  Set a <strong>Display Email</strong> so visitor replies and your copy of each sign-in reach the inbox you choose — and your private login email stays private. Until then we fall back to your login email.
+                  Set a <strong>Display Email</strong> so visitor replies and your copy of each sign-in reach the inbox you choose, and your private login email stays private. Until then we fall back to your login email.
                 </div>
               </div>
             </div>

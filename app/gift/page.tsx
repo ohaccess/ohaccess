@@ -54,9 +54,9 @@ function GiftForm() {
         window.location.href = json.url
         return
       }
-      setError(json.error || 'Could not start checkout — please try again.')
+      setError(json.error || 'Could not start checkout. Please try again.')
     } catch {
-      setError('Could not start checkout — please try again.')
+      setError('Could not start checkout. Please try again.')
     }
     setLoading(false)
   }
@@ -81,7 +81,7 @@ function GiftForm() {
               Your gift is on its way!
             </div>
             <p style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '8px' }}>
-              Check your email — we&apos;ve sent you the claim link and gift code. If you added your agent&apos;s
+              Check your email. We&apos;ve sent you the claim link and gift code. If you added your agent&apos;s
               email, their gift-wrapped copy is already in their inbox too.
             </p>
             <p style={{ fontSize: '12px', color: '#aeaeb2', marginBottom: '24px' }}>
@@ -99,18 +99,18 @@ function GiftForm() {
                 Give a year of ohACCESS Pro
               </h1>
               <p style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.6', margin: 0 }}>
-                Know a real estate agent? Give them 12 months of verified open-house sign-ins —
-                unlimited registrations, instant lead alerts, the works.
+                Know a real estate agent? Give them 12 months of verified open-house sign-ins.
+                Unlimited registrations, instant lead alerts, the works.
               </p>
               <div style={{ marginTop: '14px', fontSize: '30px', fontWeight: 700, color: '#1d1d1f', letterSpacing: '-1px' }}>
                 $150
-                <span style={{ fontSize: '13px', fontWeight: 400, color: '#6e6e73' }}> one-time — never auto-renews</span>
+                <span style={{ fontSize: '13px', fontWeight: 400, color: '#6e6e73' }}> one-time, never auto-renews</span>
               </div>
             </div>
 
             {status === 'cancel' && (
               <div style={{ background: '#fff8e6', border: '1px solid #f0dfae', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: '#8a6d1a', textAlign: 'center' }}>
-                Checkout canceled — no charge was made. Pick up where you left off below.
+                Checkout canceled. No charge was made. Pick up where you left off below.
               </div>
             )}
 
@@ -124,12 +124,12 @@ function GiftForm() {
                 <input style={inputStyle} type="text" placeholder="Skylar Whitton" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} maxLength={80} />
               </div>
               <div style={{ marginBottom: '14px' }}>
-                <label style={labelStyle}>Agent&apos;s email <span style={{ fontWeight: 400 }}>(optional — we&apos;ll email them the gift; leave blank to deliver it yourself)</span></label>
+                <label style={labelStyle}>Agent&apos;s email <span style={{ fontWeight: 400 }}>(optional: we&apos;ll email them the gift, or leave blank to deliver it yourself)</span></label>
                 <input style={inputStyle} type="email" placeholder="skylar@example.com" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} maxLength={200} />
               </div>
               <div style={{ marginBottom: '18px' }}>
                 <label style={labelStyle}>Gift note <span style={{ fontWeight: 400 }}>(optional)</span></label>
-                <textarea style={{ ...inputStyle, minHeight: '70px', resize: 'vertical' }} placeholder="Congrats on getting your license — go get 'em!" value={note} onChange={(e) => setNote(e.target.value)} maxLength={400} />
+                <textarea style={{ ...inputStyle, minHeight: '70px', resize: 'vertical' }} placeholder="Congrats on getting your license. Go get 'em!" value={note} onChange={(e) => setNote(e.target.value)} maxLength={400} />
               </div>
 
               {error && (
@@ -148,7 +148,7 @@ function GiftForm() {
             </form>
 
             <p style={{ fontSize: '12px', color: '#aeaeb2', lineHeight: '1.6', textAlign: 'center', marginTop: '16px', marginBottom: 0 }}>
-              After payment you&apos;ll get a claim link and gift code by email — forward it, text it, or tuck it in
+              After payment you&apos;ll get a claim link and gift code by email. Forward it, text it, or tuck it in
               a card. If they already subscribe, the gift adds 12 months on top.
             </p>
             <p style={{ fontSize: '12px', color: '#aeaeb2', textAlign: 'center', marginTop: '10px', marginBottom: 0 }}>

@@ -249,7 +249,7 @@ export function buildUpcomingOpenHousesHtml(houses: UpcomingOpenHouse[], appUrl:
     if (oh.start_at) {
       const start = oh.start_at
       const end = oh.end_at || oh.start_at
-      const title = `Open House — ${address}`.trim()
+      const title = `Open House: ${address}`.trim()
       const googleUrl = googleCalendarUrl(title, start, end, address)
       const outlookUrl = `https://outlook.live.com/calendar/0/action/compose?rru=addevent&subject=${encodeURIComponent(title)}&startdt=${encodeURIComponent(start)}&enddt=${encodeURIComponent(end)}&location=${encodeURIComponent(address)}`
       const appleUrl = `${appUrl}/api/open-house/${oh.id}/calendar`
@@ -428,17 +428,17 @@ export function phoneLineKind(lineType: string | null | undefined): PhoneLineKin
 export const PHONE_LINE_CHIPS: Record<PhoneLineKind, { label: string; tip: string; tone: 'plain' | 'warn' }> = {
   mobile: {
     label: '📱 Mobile',
-    tip: 'A carrier mobile line — text messages reach this number.',
+    tip: 'A carrier mobile line. Text messages reach this number.',
     tone: 'plain',
   },
   home: {
     label: '☎ Home phone',
-    tip: "A home or office line (a landline, or cable-company phone service). It can't receive text messages — follow up by phone call or email.",
+    tip: "A home or office line (a landline, or cable-company phone service). It can't receive text messages, so follow up by phone call or email.",
     tone: 'plain',
   },
   virtual: {
     label: '⚠ VoIP',
-    tip: 'Internet/VoIP number (TextNow, Google Voice, …), not a carrier mobile line. Many are legitimate — consider extra ID verification.',
+    tip: 'Internet/VoIP number (TextNow, Google Voice, …), not a carrier mobile line. Many are legitimate, but consider extra ID verification.',
     tone: 'warn',
   },
 }

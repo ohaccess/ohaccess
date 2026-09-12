@@ -5,7 +5,7 @@ import Footer from '../_components/Footer'
 export const metadata: Metadata = {
   title: 'Open House Sign-In FAQ',
   description:
-    'Answers to common questions about verified open house sign-in — how QR-code check-in works, capturing leads at an open house, CRM sync, pricing, and visitor privacy.',
+    'Answers to common questions about verified open house sign-in: how QR-code check-in works, capturing leads at an open house, CRM sync, pricing, and visitor privacy.',
 }
 
 // Server-rendered so the Q&A is in the initial HTML (SEO) and the FAQPage
@@ -14,11 +14,11 @@ export const metadata: Metadata = {
 const FAQS: { q: string; a: string }[] = [
   {
     q: 'What is a verified open house sign-in?',
-    a: 'A verified open house sign-in confirms a visitor’s contact information is real at the moment they register. With ohACCESS, guests scan a QR code, complete a quick digital form, and receive a one-time codeword by text and email. Sharing that codeword with the host proves the phone number and email are genuine — replacing the illegible names, bad numbers, and dead email addresses common on paper sign-in sheets.',
+    a: 'A verified open house sign-in confirms a visitor’s contact information is real at the moment they register. With ohACCESS, guests scan a QR code, complete a quick digital form, and receive a one-time codeword by text and email. Sharing that codeword with the host proves the phone number and email are genuine. It replaces the illegible names, bad numbers, and dead email addresses common on paper sign-in sheets.',
   },
   {
     q: 'How do real estate agents capture leads at an open house?',
-    a: 'Instead of a paper sign-in sheet, agents use a QR-code digital check-in. Every visitor’s name, verified phone, email, and buying timeline flow into a live dashboard and straight into the agent’s CRM — no transcribing, no lost leads.',
+    a: 'Instead of a paper sign-in sheet, agents use a QR-code digital check-in. Every visitor’s name, verified phone, email, and buying timeline flow into a live dashboard and straight into the agent’s CRM. No transcribing, no lost leads.',
   },
   {
     q: 'Do open house visitors need to download an app?',
@@ -26,7 +26,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Is ohACCESS better than a paper open house sign-in sheet?',
-    a: 'Paper sheets are unreadable, unverified, and easy to fake. ohACCESS captures clean, verified contact information, creates a record of everyone who entered the home, and delivers leads to your CRM automatically — protecting both the agent and the seller.',
+    a: 'Paper sheets are unreadable, unverified, and easy to fake. ohACCESS captures clean, verified contact information, creates a record of everyone who entered the home, and delivers leads to your CRM automatically, protecting both the agent and the seller.',
   },
   {
     q: 'How does the QR code open house registration work?',
@@ -34,7 +34,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Can I send open house leads to my CRM?',
-    a: 'Yes. ohACCESS delivers every verified lead to your CRM automatically — including Follow Up Boss, with others supported via email parsing or Zapier — free on every plan.',
+    a: 'Yes. ohACCESS delivers every verified lead to your CRM automatically, including Follow Up Boss, with others supported via email parsing or Zapier. Free on every plan.',
   },
   {
     q: 'How much does ohACCESS cost?',
@@ -97,7 +97,7 @@ export default function FAQ() {
         {/* CTA */}
         <div style={{ borderTop: '1px solid #ececf0', marginTop: '8px', paddingTop: '32px', textAlign: 'center' }}>
           <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '6px' }}>Ready to verify your next open house?</div>
-          <p style={{ fontSize: '15px', color: '#6e6e73', margin: '0 0 18px' }}>Start free with 25 verified check-ins — no credit card required.</p>
+          <p style={{ fontSize: '15px', color: '#6e6e73', margin: '0 0 18px' }}>Start free with 25 verified check-ins. No credit card required.</p>
           <Link href="/login?signup=true" style={{ display: 'inline-block', background: '#c9963a', color: '#1d1d1f', padding: '12px 28px', borderRadius: '10px', fontSize: '15px', fontWeight: 700, textDecoration: 'none' }}>
             Start Free
           </Link>

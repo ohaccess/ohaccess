@@ -118,7 +118,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved, onCancel 
     }
     if (seatTarget < seats.used) {
       setSeatPreview(null)
-      setPreviewErr(`You're using ${seats.used} seats — remove members or invites first.`)
+      setPreviewErr(`You're using ${seats.used} seats. Remove members or invites first.`)
       return
     }
     setPreviewErr('')
@@ -152,7 +152,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved, onCancel 
       body: JSON.stringify({ seats: upgradeSeats }),
     })
     const json = await res.json()
-    if (res.ok) { showToast(`Upgraded — your plan is now ${json.seats} seats`); await load(); await onSaved?.() }
+    if (res.ok) { showToast(`Upgraded. Your plan is now ${json.seats} seats`); await load(); await onSaved?.() }
     else showToast(json.error || 'Could not upgrade', 'error')
     setBusy(null)
   }
@@ -221,7 +221,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved, onCancel 
       <div style={card}>
         <div style={cardHeader}>Agents</div>
         <div style={{ fontSize: '12px', color: seatsFull ? '#cc0000' : '#6e6e73', marginBottom: '16px' }}>
-          {seats.used} of {seats.limit} seats used{seatsFull ? ' — your team is full' : ''}
+          {seats.used} of {seats.limit} seats used{seatsFull ? '. Your team is full' : ''}
         </div>
 
         {/* PER-SEAT SEAT MANAGEMENT — brokerage plans funded by a Stripe
@@ -247,7 +247,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved, onCancel 
                 <button type="button" onClick={applySeats} disabled={busy !== null}
                   style={{ ...btn('#1d1d1f'), padding: '8px 16px', opacity: busy ? 0.6 : 1 }}>
                   {busy === 'seats' ? 'Updating…' : seatTarget > seats.limit
-                    ? `Confirm — pay ${usd(seatPreview.amountDueNowCents)} today`
+                    ? `Confirm: pay ${usd(seatPreview.amountDueNowCents)} today`
                     : 'Confirm reduction'}
                 </button>
               )}
@@ -257,7 +257,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved, onCancel 
                 {seatTarget > seats.limit ? (
                   <>You&apos;ll be charged <strong>{usd(seatPreview.amountDueNowCents)} now</strong> (prorated for the rest of your term). New total: <strong>{usd(seatPreview.newTotalCents)}{termSuffix(seatPreview.interval)}</strong> at {usd(seatPreview.perSeatCents)}/seat.</>
                 ) : (
-                  <>No charge today and no refund for the current period — your new rate of <strong>{usd(seatPreview.newTotalCents)}{termSuffix(seatPreview.interval)}</strong> starts on your next invoice.</>
+                  <>No charge today and no refund for the current period. Your new rate of <strong>{usd(seatPreview.newTotalCents)}{termSuffix(seatPreview.interval)}</strong> starts on your next invoice.</>
                 )}
               </div>
             )}
@@ -282,7 +282,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved, onCancel 
           <div style={{ background: '#fff9e0', border: '1px solid #ffe066', borderRadius: '12px', padding: '14px 16px', marginBottom: '18px' }}>
             <div style={{ fontSize: '13px', fontWeight: 700, color: '#1d1d1f', marginBottom: '4px' }}>Need more than 10 agents?</div>
             <div style={{ fontSize: '12px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '12px' }}>
-              Switch to per-seat pricing at <strong>{monthlySeatUsd}/agent/mo</strong> — every seat billed at that rate ({MIN_BROKERAGE_SEATS} agents = <strong>{usd(MIN_BROKERAGE_SEATS * BROKERAGE_SEAT_CENTS.month)}/mo</strong>), on your current billing schedule. You&apos;ll be charged the prorated difference today, and you can add seats anytime after (up to {MAX_BROKERAGE_SEATS}).
+              Switch to per-seat pricing at <strong>{monthlySeatUsd}/agent/mo</strong>, with every seat billed at that rate ({MIN_BROKERAGE_SEATS} agents = <strong>{usd(MIN_BROKERAGE_SEATS * BROKERAGE_SEAT_CENTS.month)}/mo</strong>), on your current billing schedule. You&apos;ll be charged the prorated difference today, and you can add seats anytime after (up to {MAX_BROKERAGE_SEATS}).
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <input
@@ -371,7 +371,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved, onCancel 
                 const el = e.target as HTMLImageElement
                 el.style.display = 'none'
                 const parent = el.parentElement
-                if (parent) parent.innerHTML = '<span style="font-size:11px;color:#cc0000;">⚠️ Image could not load — check the URL</span>'
+                if (parent) parent.innerHTML = '<span style="font-size:11px;color:#cc0000;">⚠️ Image could not load. Check the URL.</span>'
               }}
             />
           </div>
@@ -401,7 +401,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved, onCancel 
             <input type="checkbox" checked={crmForward} onChange={e => setCrmForward(e.target.checked)} style={{ width: '18px', height: '18px', marginTop: '1px', cursor: 'pointer', flexShrink: 0 }} />
             <span style={{ fontSize: '13px', color: '#1d1d1f', lineHeight: '1.5' }}>
               Send every sign-in from my team&apos;s open houses to this CRM too
-              <span style={{ display: 'block', fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>Each agent still gets leads in their own CRM — this adds a copy to the team CRM above.</span>
+              <span style={{ display: 'block', fontSize: '12px', color: '#6e6e73', marginTop: '2px' }}>Each agent still gets leads in their own CRM. This adds a copy to the team CRM above.</span>
             </span>
           </label>
         </div>
@@ -410,7 +410,7 @@ export default function TeamAdminPanel({ supabase, showToast, onSaved, onCancel 
           {/* Cancel = re-read the saved team settings; load() puts every form
               field (name, logo, colors, CRM) back to what the server holds. */}
           <button
-            onClick={async () => { setBusy('cancel'); await load(); setBusy(null); showToast('Changes discarded — nothing was saved'); onCancel?.() }}
+            onClick={async () => { setBusy('cancel'); await load(); setBusy(null); showToast('Changes discarded. Nothing was saved.'); onCancel?.() }}
             disabled={busy !== null}
             style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: 600, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >

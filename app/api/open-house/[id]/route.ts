@@ -55,7 +55,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   // here, not just in the dashboard's disabled buttons.
   if (await agentTrialLocked(supabase, user.id)) {
     return NextResponse.json(
-      { error: 'Your free trial is used up — subscribe to keep managing your open houses.' },
+      { error: 'Your free trial is used up. Subscribe to keep managing your open houses.' },
       { status: 403 }
     )
   }
