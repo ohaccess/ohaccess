@@ -694,10 +694,18 @@ export default function AdminDashboard() {
   // Phone search matches on digits so "(817) 555-1234", "817-555-1234", and
   // "8175551234" all find the same agent.
   const qDigits = q.replace(/\D/g, '')
-  // Global visitors-per-open-house average. Only open houses that have
-  // started (live or past) count — upcoming ones would all read 0 and drag
-  // the average down for no reason.
-  const heldOpenHouses = data ? data.openHouses.filter((o) => o.when !== 'future') : []
+  // Global visitors-per-open-house average over a rolling 90 days. Only open
+  // houses that have started (live or past) count — upcoming ones would all
+  // read 0 and drag the average down for no reason. "Held" date is start_at,
+  // falling back to open_house_date, then created_at for old rows.
+  const avgWindowStart = Date.now() - 90 * 24 * 60 * 60 * 1000
+  const heldOpenHouses = data
+    ? data.openHouses.filter((o) => {
+        if (o.when === 'future') return false
+        const held = Date.parse(o.start_at || o.open_house_date || o.created_at)
+        return Number.isNaN(held) || held >= avgWindowStart
+      })
+    : []
   const avgVisitorsPerOH =
     heldOpenHouses.length > 0
       ? Math.round((heldOpenHouses.reduce((sum, o) => sum + o.visitorCount, 0) / heldOpenHouses.length) * 10) / 10
@@ -863,8 +871,8 @@ export default function AdminDashboard() {
               value={avgVisitorsPerOH === null ? '—' : avgVisitorsPerOH.toLocaleString()}
               sub={
                 heldOpenHouses.length > 0
-                  ? `across ${heldOpenHouses.length.toLocaleString()} held open house${heldOpenHouses.length === 1 ? '' : 's'} · upcoming excluded`
-                  : 'no open houses held yet'
+                  ? `last 90 days · across ${heldOpenHouses.length.toLocaleString()} held open house${heldOpenHouses.length === 1 ? '' : 's'}`
+                  : 'no open houses held in the last 90 days'
               }
             />
             <Kpi label="Verified Visitors" value={data.stats.verifiedVisitors} sub={`${data.stats.totalVisitors - data.stats.verifiedVisitors} unverified`} />
