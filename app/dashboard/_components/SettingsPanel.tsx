@@ -1184,7 +1184,7 @@ export default function SettingsPanel({
           Ask visitors something of your own, on top of the standard fields. Every custom question is optional for the visitor. Nothing you add here can stop someone from getting their codeword.
         </div>
 
-        <label style={labelStyle}>On the sign-in form &mdash; 1 question</label>
+        <label style={labelStyle}>On the sign-in form &middot; 1 question</label>
         <div style={{ fontSize: '14px', color: '#6e6e73', margin: '2px 0 10px', lineHeight: '1.6' }}>
           Asked before they get their codeword, so keep it short.
         </div>
@@ -1198,7 +1198,7 @@ export default function SettingsPanel({
           </button>
         )}
 
-        <label style={{ ...labelStyle, marginTop: '20px' }}>After the tour &mdash; up to 2 questions</label>
+        <label style={{ ...labelStyle, marginTop: '20px' }}>After the tour &middot; up to 2 questions</label>
         <div style={{ fontSize: '14px', color: '#6e6e73', margin: '2px 0 10px', lineHeight: '1.6' }}>
           Asked on the confirmation screen, alongside the standard rating and price questions.
         </div>

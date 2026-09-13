@@ -5,6 +5,7 @@ import TeamAdminPanel from './_components/TeamAdminPanel'
 import TeamActivityPanel from './_components/TeamActivityPanel'
 import QrModal from './_components/QrModal'
 import InviteModal from './_components/InviteModal'
+import ThankYouPreviewModal from './_components/ThankYouPreviewModal'
 import OpenHouseList from './_components/OpenHouseList'
 import NewOpenHouseForm from './_components/NewOpenHouseForm'
 import SettingsPanel from './_components/SettingsPanel'
@@ -53,6 +54,7 @@ export default function Dashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [qrModal, setQrModal] = useState<any>(null)
   const [inviteModal, setInviteModal] = useState<any>(null)
+  const [thankYouPreview, setThankYouPreview] = useState<any>(null)
   const [visitorModal, setVisitorModal] = useState<any>(null)
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -1228,6 +1230,7 @@ export default function Dashboard() {
             openPermanentQr={openPermanentQr}
             openSellerReport={openSellerReport}
             openInvites={(oh: any) => setInviteModal(oh)}
+            openThankYouPreview={(oh: any) => setThankYouPreview(oh)}
             setDeleteConfirm={setDeleteConfirm}
             setVisitorModal={setVisitorModal}
             showToast={showToast}
@@ -1312,6 +1315,23 @@ export default function Dashboard() {
           oh={inviteModal}
           onClose={() => setInviteModal(null)}
           showToast={showToast}
+          authHeaders={authHeaders}
+          accentColor={accentColor}
+          onAccent={onAccent}
+          accentBtnBorder={accentBtnBorder}
+        />
+      )}
+
+      {/* VISITOR FOLLOW-UP EMAIL PREVIEW MODAL */}
+      {thankYouPreview && (
+        <ThankYouPreviewModal
+          oh={thankYouPreview}
+          onClose={() => setThankYouPreview(null)}
+          onSchedule={() => {
+            setThankYouPreview(null)
+            if (guardLocked()) return
+            setEditingOH(null); resetForm(); setView('new')
+          }}
           authHeaders={authHeaders}
           accentColor={accentColor}
           onAccent={onAccent}
