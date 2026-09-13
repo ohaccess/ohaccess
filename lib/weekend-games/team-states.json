@@ -1,0 +1,4108 @@
+{
+ "football/nfl": {
+  "1": {
+   "s": "GA",
+   "n": "Atlanta Falcons"
+  },
+  "2": {
+   "s": "NY",
+   "n": "Buffalo Bills"
+  },
+  "3": {
+   "s": "IL",
+   "n": "Chicago Bears"
+  },
+  "4": {
+   "s": "OH",
+   "n": "Cincinnati Bengals"
+  },
+  "5": {
+   "s": "OH",
+   "n": "Cleveland Browns"
+  },
+  "6": {
+   "s": "TX",
+   "n": "Dallas Cowboys"
+  },
+  "7": {
+   "s": "CO",
+   "n": "Denver Broncos"
+  },
+  "8": {
+   "s": "MI",
+   "n": "Detroit Lions"
+  },
+  "9": {
+   "s": "WI",
+   "n": "Green Bay Packers"
+  },
+  "10": {
+   "s": "TN",
+   "n": "Tennessee Titans"
+  },
+  "11": {
+   "s": "IN",
+   "n": "Indianapolis Colts"
+  },
+  "12": {
+   "s": "MO",
+   "n": "Kansas City Chiefs"
+  },
+  "13": {
+   "s": "NV",
+   "n": "Las Vegas Raiders"
+  },
+  "14": {
+   "s": "CA",
+   "n": "Los Angeles Rams"
+  },
+  "15": {
+   "s": "FL",
+   "n": "Miami Dolphins"
+  },
+  "16": {
+   "s": "MN",
+   "n": "Minnesota Vikings"
+  },
+  "17": {
+   "s": "MA",
+   "n": "New England Patriots"
+  },
+  "18": {
+   "s": "LA",
+   "n": "New Orleans Saints"
+  },
+  "19": {
+   "s": "NJ",
+   "n": "New York Giants"
+  },
+  "20": {
+   "s": "NJ",
+   "n": "New York Jets"
+  },
+  "21": {
+   "s": "PA",
+   "n": "Philadelphia Eagles"
+  },
+  "22": {
+   "s": "AZ",
+   "n": "Arizona Cardinals"
+  },
+  "23": {
+   "s": "PA",
+   "n": "Pittsburgh Steelers"
+  },
+  "24": {
+   "s": "CA",
+   "n": "Los Angeles Chargers"
+  },
+  "25": {
+   "s": "CA",
+   "n": "San Francisco 49ers"
+  },
+  "26": {
+   "s": "WA",
+   "n": "Seattle Seahawks"
+  },
+  "27": {
+   "s": "FL",
+   "n": "Tampa Bay Buccaneers"
+  },
+  "28": {
+   "s": "MD",
+   "n": "Washington Commanders"
+  },
+  "29": {
+   "s": "NC",
+   "n": "Carolina Panthers"
+  },
+  "30": {
+   "s": "FL",
+   "n": "Jacksonville Jaguars"
+  },
+  "33": {
+   "s": "MD",
+   "n": "Baltimore Ravens"
+  },
+  "34": {
+   "s": "TX",
+   "n": "Houston Texans"
+  }
+ },
+ "football/college-football": {
+  "2": {
+   "s": "AL",
+   "n": "Auburn Tigers"
+  },
+  "5": {
+   "s": "AL",
+   "n": "UAB Blazers"
+  },
+  "6": {
+   "s": "AL",
+   "n": "South Alabama Jaguars"
+  },
+  "8": {
+   "s": "AR",
+   "n": "Arkansas Razorbacks"
+  },
+  "9": {
+   "s": "AZ",
+   "n": "Arizona State Sun Devils"
+  },
+  "12": {
+   "s": "AZ",
+   "n": "Arizona Wildcats"
+  },
+  "16": {
+   "s": "CA",
+   "n": "Sacramento State Hornets"
+  },
+  "21": {
+   "s": "CA",
+   "n": "San Diego State Aztecs"
+  },
+  "23": {
+   "s": "CA",
+   "n": "San José State Spartans"
+  },
+  "24": {
+   "s": "CA",
+   "n": "Stanford Cardinal"
+  },
+  "25": {
+   "s": "CA",
+   "n": "California Golden Bears"
+  },
+  "26": {
+   "s": "CA",
+   "n": "UCLA Bruins"
+  },
+  "30": {
+   "s": "CA",
+   "n": "USC Trojans"
+  },
+  "36": {
+   "s": "CO",
+   "n": "Colorado State Rams"
+  },
+  "38": {
+   "s": "CO",
+   "n": "Colorado Buffaloes"
+  },
+  "41": {
+   "s": "CT",
+   "n": "UConn Huskies"
+  },
+  "48": {
+   "s": "DE",
+   "n": "Delaware Blue Hens"
+  },
+  "52": {
+   "s": "FL",
+   "n": "Florida State Seminoles"
+  },
+  "55": {
+   "s": "AL",
+   "n": "Jacksonville State Gamecocks"
+  },
+  "57": {
+   "s": "FL",
+   "n": "Florida Gators"
+  },
+  "58": {
+   "s": "FL",
+   "n": "South Florida Bulls"
+  },
+  "59": {
+   "s": "GA",
+   "n": "Georgia Tech Yellow Jackets"
+  },
+  "61": {
+   "s": "GA",
+   "n": "Georgia Bulldogs"
+  },
+  "62": {
+   "s": "HI",
+   "n": "Hawai'i Rainbow Warriors"
+  },
+  "66": {
+   "s": "IA",
+   "n": "Iowa State Cyclones"
+  },
+  "68": {
+   "s": "ID",
+   "n": "Boise State Broncos"
+  },
+  "77": {
+   "s": "IL",
+   "n": "Northwestern Wildcats"
+  },
+  "84": {
+   "s": "IN",
+   "n": "Indiana Hoosiers"
+  },
+  "87": {
+   "s": "IN",
+   "n": "Notre Dame Fighting Irish"
+  },
+  "96": {
+   "s": "KY",
+   "n": "Kentucky Wildcats"
+  },
+  "97": {
+   "s": "KY",
+   "n": "Louisville Cardinals"
+  },
+  "98": {
+   "s": "KY",
+   "n": "Western Kentucky Hilltoppers"
+  },
+  "99": {
+   "s": "LA",
+   "n": "LSU Tigers"
+  },
+  "103": {
+   "s": "MA",
+   "n": "Boston College Eagles"
+  },
+  "113": {
+   "s": "MA",
+   "n": "Massachusetts Minutemen"
+  },
+  "120": {
+   "s": "MD",
+   "n": "Maryland Terrapins"
+  },
+  "127": {
+   "s": "MI",
+   "n": "Michigan State Spartans"
+  },
+  "130": {
+   "s": "MI",
+   "n": "Michigan Wolverines"
+  },
+  "135": {
+   "s": "MN",
+   "n": "Minnesota Golden Gophers"
+  },
+  "142": {
+   "s": "MO",
+   "n": "Missouri Tigers"
+  },
+  "145": {
+   "s": "MS",
+   "n": "Ole Miss Rebels"
+  },
+  "150": {
+   "s": "NC",
+   "n": "Duke Blue Devils"
+  },
+  "151": {
+   "s": "NC",
+   "n": "East Carolina Pirates"
+  },
+  "152": {
+   "s": "NC",
+   "n": "NC State Wolfpack"
+  },
+  "153": {
+   "s": "NC",
+   "n": "North Carolina Tar Heels"
+  },
+  "154": {
+   "s": "NC",
+   "n": "Wake Forest Demon Deacons"
+  },
+  "158": {
+   "s": "NE",
+   "n": "Nebraska Cornhuskers"
+  },
+  "164": {
+   "s": "NJ",
+   "n": "Rutgers Scarlet Knights"
+  },
+  "166": {
+   "s": "NM",
+   "n": "New Mexico State Aggies"
+  },
+  "167": {
+   "s": "NM",
+   "n": "New Mexico Lobos"
+  },
+  "183": {
+   "s": "NY",
+   "n": "Syracuse Orange"
+  },
+  "189": {
+   "s": "OH",
+   "n": "Bowling Green Falcons"
+  },
+  "193": {
+   "s": "OH",
+   "n": "Miami (OH) RedHawks"
+  },
+  "194": {
+   "s": "OH",
+   "n": "Ohio State Buckeyes"
+  },
+  "195": {
+   "s": "OH",
+   "n": "Ohio Bobcats"
+  },
+  "197": {
+   "s": "OK",
+   "n": "Oklahoma State Cowboys"
+  },
+  "201": {
+   "s": "OK",
+   "n": "Oklahoma Sooners"
+  },
+  "202": {
+   "s": "OK",
+   "n": "Tulsa Golden Hurricane"
+  },
+  "204": {
+   "s": "OR",
+   "n": "Oregon State Beavers"
+  },
+  "213": {
+   "s": "PA",
+   "n": "Penn State Nittany Lions"
+  },
+  "218": {
+   "s": "PA",
+   "n": "Temple Owls"
+  },
+  "221": {
+   "s": "PA",
+   "n": "Pittsburgh Panthers"
+  },
+  "228": {
+   "s": "SC",
+   "n": "Clemson Tigers"
+  },
+  "235": {
+   "s": "TN",
+   "n": "Memphis Tigers"
+  },
+  "238": {
+   "s": "TN",
+   "n": "Vanderbilt Commodores"
+  },
+  "239": {
+   "s": "TX",
+   "n": "Baylor Bears"
+  },
+  "242": {
+   "s": "TX",
+   "n": "Rice Owls"
+  },
+  "245": {
+   "s": "TX",
+   "n": "Texas A&M Aggies"
+  },
+  "248": {
+   "s": "TX",
+   "n": "Houston Cougars"
+  },
+  "249": {
+   "s": "TX",
+   "n": "North Texas Mean Green"
+  },
+  "251": {
+   "s": "TX",
+   "n": "Texas Longhorns"
+  },
+  "252": {
+   "s": "UT",
+   "n": "BYU Cougars"
+  },
+  "254": {
+   "s": "UT",
+   "n": "Utah Utes"
+  },
+  "256": {
+   "s": "VA",
+   "n": "James Madison Dukes"
+  },
+  "258": {
+   "s": "VA",
+   "n": "Virginia Cavaliers"
+  },
+  "259": {
+   "s": "VA",
+   "n": "Virginia Tech Hokies"
+  },
+  "264": {
+   "s": "WA",
+   "n": "Washington Huskies"
+  },
+  "265": {
+   "s": "WA",
+   "n": "Washington State Cougars"
+  },
+  "275": {
+   "s": "WI",
+   "n": "Wisconsin Badgers"
+  },
+  "276": {
+   "s": "WV",
+   "n": "Marshall Thundering Herd"
+  },
+  "277": {
+   "s": "WV",
+   "n": "West Virginia Mountaineers"
+  },
+  "278": {
+   "s": "CA",
+   "n": "Fresno State Bulldogs"
+  },
+  "290": {
+   "s": "GA",
+   "n": "Georgia Southern Eagles"
+  },
+  "295": {
+   "s": "VA",
+   "n": "Old Dominion Monarchs"
+  },
+  "309": {
+   "s": "LA",
+   "n": "Louisiana Ragin' Cajuns"
+  },
+  "324": {
+   "s": "SC",
+   "n": "Coastal Carolina Chanticleers"
+  },
+  "326": {
+   "s": "TX",
+   "n": "Texas State Bobcats"
+  },
+  "328": {
+   "s": "UT",
+   "n": "Utah State Aggies"
+  },
+  "333": {
+   "s": "AL",
+   "n": "Alabama Crimson Tide"
+  },
+  "338": {
+   "s": "GA",
+   "n": "Kennesaw State Owls"
+  },
+  "344": {
+   "s": "MS",
+   "n": "Mississippi State Bulldogs"
+  },
+  "349": {
+   "s": "NY",
+   "n": "Army Black Knights"
+  },
+  "356": {
+   "s": "IL",
+   "n": "Illinois Fighting Illini"
+  },
+  "2005": {
+   "s": "CO",
+   "n": "Air Force Falcons"
+  },
+  "2006": {
+   "s": "OH",
+   "n": "Akron Zips"
+  },
+  "2026": {
+   "s": "NC",
+   "n": "App State Mountaineers"
+  },
+  "2032": {
+   "s": "AR",
+   "n": "Arkansas State Red Wolves"
+  },
+  "2050": {
+   "s": "IN",
+   "n": "Ball State Cardinals"
+  },
+  "2084": {
+   "s": "NY",
+   "n": "Buffalo Bulls"
+  },
+  "2116": {
+   "s": "FL",
+   "n": "UCF Knights"
+  },
+  "2117": {
+   "s": "MI",
+   "n": "Central Michigan Chippewas"
+  },
+  "2132": {
+   "s": "OH",
+   "n": "Cincinnati Bearcats"
+  },
+  "2199": {
+   "s": "MI",
+   "n": "Eastern Michigan Eagles"
+  },
+  "2226": {
+   "s": "FL",
+   "n": "Florida Atlantic Owls"
+  },
+  "2229": {
+   "s": "FL",
+   "n": "Florida International Panthers"
+  },
+  "2247": {
+   "s": "GA",
+   "n": "Georgia State Panthers"
+  },
+  "2294": {
+   "s": "IA",
+   "n": "Iowa Hawkeyes"
+  },
+  "2305": {
+   "s": "KS",
+   "n": "Kansas Jayhawks"
+  },
+  "2306": {
+   "s": "KS",
+   "n": "Kansas State Wildcats"
+  },
+  "2309": {
+   "s": "OH",
+   "n": "Kent State Golden Flashes"
+  },
+  "2335": {
+   "s": "VA",
+   "n": "Liberty Flames"
+  },
+  "2348": {
+   "s": "LA",
+   "n": "Louisiana Tech Bulldogs"
+  },
+  "2390": {
+   "s": "FL",
+   "n": "Miami Hurricanes"
+  },
+  "2393": {
+   "s": "TN",
+   "n": "Middle Tennessee Blue Raiders"
+  },
+  "2426": {
+   "s": "MD",
+   "n": "Navy Midshipmen"
+  },
+  "2429": {
+   "s": "NC",
+   "n": "Charlotte 49ers"
+  },
+  "2433": {
+   "s": "LA",
+   "n": "UL Monroe Warhawks"
+  },
+  "2439": {
+   "s": "NV",
+   "n": "UNLV Rebels"
+  },
+  "2440": {
+   "s": "NV",
+   "n": "Nevada Wolf Pack"
+  },
+  "2449": {
+   "s": "ND",
+   "n": "North Dakota State Bison"
+  },
+  "2459": {
+   "s": "IL",
+   "n": "Northern Illinois Huskies"
+  },
+  "2483": {
+   "s": "OR",
+   "n": "Oregon Ducks"
+  },
+  "2509": {
+   "s": "IN",
+   "n": "Purdue Boilermakers"
+  },
+  "2534": {
+   "s": "TX",
+   "n": "Sam Houston Bearkats"
+  },
+  "2567": {
+   "s": "TX",
+   "n": "SMU Mustangs"
+  },
+  "2572": {
+   "s": "MS",
+   "n": "Southern Miss Golden Eagles"
+  },
+  "2579": {
+   "s": "SC",
+   "n": "South Carolina Gamecocks"
+  },
+  "2623": {
+   "s": "MO",
+   "n": "Missouri State Bears"
+  },
+  "2628": {
+   "s": "TX",
+   "n": "TCU Horned Frogs"
+  },
+  "2633": {
+   "s": "TN",
+   "n": "Tennessee Volunteers"
+  },
+  "2636": {
+   "s": "TX",
+   "n": "UTSA Roadrunners"
+  },
+  "2638": {
+   "s": "TX",
+   "n": "UTEP Miners"
+  },
+  "2641": {
+   "s": "TX",
+   "n": "Texas Tech Red Raiders"
+  },
+  "2649": {
+   "s": "OH",
+   "n": "Toledo Rockets"
+  },
+  "2653": {
+   "s": "AL",
+   "n": "Troy Trojans"
+  },
+  "2655": {
+   "s": "LA",
+   "n": "Tulane Green Wave"
+  },
+  "2711": {
+   "s": "MI",
+   "n": "Western Michigan Broncos"
+  },
+  "2751": {
+   "s": "WY",
+   "n": "Wyoming Cowboys"
+  }
+ },
+ "baseball/mlb": {
+  "1": {
+   "s": "MD",
+   "n": "Baltimore Orioles"
+  },
+  "2": {
+   "s": "MA",
+   "n": "Boston Red Sox"
+  },
+  "3": {
+   "s": "CA",
+   "n": "Los Angeles Angels"
+  },
+  "4": {
+   "s": "IL",
+   "n": "Chicago White Sox"
+  },
+  "5": {
+   "s": "OH",
+   "n": "Cleveland Guardians"
+  },
+  "6": {
+   "s": "MI",
+   "n": "Detroit Tigers"
+  },
+  "7": {
+   "s": "MO",
+   "n": "Kansas City Royals"
+  },
+  "8": {
+   "s": "WI",
+   "n": "Milwaukee Brewers"
+  },
+  "9": {
+   "s": "MN",
+   "n": "Minnesota Twins"
+  },
+  "10": {
+   "s": "NY",
+   "n": "New York Yankees"
+  },
+  "11": {
+   "s": "CA",
+   "n": "Athletics"
+  },
+  "12": {
+   "s": "WA",
+   "n": "Seattle Mariners"
+  },
+  "13": {
+   "s": "TX",
+   "n": "Texas Rangers"
+  },
+  "15": {
+   "s": "GA",
+   "n": "Atlanta Braves"
+  },
+  "16": {
+   "s": "IL",
+   "n": "Chicago Cubs"
+  },
+  "17": {
+   "s": "OH",
+   "n": "Cincinnati Reds"
+  },
+  "18": {
+   "s": "TX",
+   "n": "Houston Astros"
+  },
+  "19": {
+   "s": "CA",
+   "n": "Los Angeles Dodgers"
+  },
+  "20": {
+   "s": "DC",
+   "n": "Washington Nationals"
+  },
+  "21": {
+   "s": "NY",
+   "n": "New York Mets"
+  },
+  "22": {
+   "s": "PA",
+   "n": "Philadelphia Phillies"
+  },
+  "23": {
+   "s": "PA",
+   "n": "Pittsburgh Pirates"
+  },
+  "24": {
+   "s": "MO",
+   "n": "St. Louis Cardinals"
+  },
+  "25": {
+   "s": "CA",
+   "n": "San Diego Padres"
+  },
+  "26": {
+   "s": "CA",
+   "n": "San Francisco Giants"
+  },
+  "27": {
+   "s": "CO",
+   "n": "Colorado Rockies"
+  },
+  "28": {
+   "s": "FL",
+   "n": "Miami Marlins"
+  },
+  "29": {
+   "s": "AZ",
+   "n": "Arizona Diamondbacks"
+  },
+  "30": {
+   "s": "FL",
+   "n": "Tampa Bay Rays"
+  }
+ },
+ "basketball/nba": {
+  "1": {
+   "s": "GA",
+   "n": "Atlanta Hawks"
+  },
+  "2": {
+   "s": "MA",
+   "n": "Boston Celtics"
+  },
+  "3": {
+   "s": "LA",
+   "n": "New Orleans Pelicans"
+  },
+  "4": {
+   "s": "IL",
+   "n": "Chicago Bulls"
+  },
+  "5": {
+   "s": "OH",
+   "n": "Cleveland Cavaliers"
+  },
+  "6": {
+   "s": "TX",
+   "n": "Dallas Mavericks"
+  },
+  "7": {
+   "s": "CO",
+   "n": "Denver Nuggets"
+  },
+  "8": {
+   "s": "MI",
+   "n": "Detroit Pistons"
+  },
+  "9": {
+   "s": "CA",
+   "n": "Golden State Warriors"
+  },
+  "10": {
+   "s": "TX",
+   "n": "Houston Rockets"
+  },
+  "11": {
+   "s": "IN",
+   "n": "Indiana Pacers"
+  },
+  "12": {
+   "s": "CA",
+   "n": "LA Clippers"
+  },
+  "13": {
+   "s": "CA",
+   "n": "Los Angeles Lakers"
+  },
+  "14": {
+   "s": "FL",
+   "n": "Miami Heat"
+  },
+  "15": {
+   "s": "WI",
+   "n": "Milwaukee Bucks"
+  },
+  "16": {
+   "s": "MN",
+   "n": "Minnesota Timberwolves"
+  },
+  "17": {
+   "s": "NY",
+   "n": "Brooklyn Nets"
+  },
+  "18": {
+   "s": "NY",
+   "n": "New York Knicks"
+  },
+  "19": {
+   "s": "FL",
+   "n": "Orlando Magic"
+  },
+  "20": {
+   "s": "PA",
+   "n": "Philadelphia 76ers"
+  },
+  "21": {
+   "s": "AZ",
+   "n": "Phoenix Suns"
+  },
+  "22": {
+   "s": "OR",
+   "n": "Portland Trail Blazers"
+  },
+  "23": {
+   "s": "CA",
+   "n": "Sacramento Kings"
+  },
+  "24": {
+   "s": "TX",
+   "n": "San Antonio Spurs"
+  },
+  "25": {
+   "s": "OK",
+   "n": "Oklahoma City Thunder"
+  },
+  "26": {
+   "s": "UT",
+   "n": "Utah Jazz"
+  },
+  "27": {
+   "s": "DC",
+   "n": "Washington Wizards"
+  },
+  "29": {
+   "s": "TN",
+   "n": "Memphis Grizzlies"
+  },
+  "30": {
+   "s": "NC",
+   "n": "Charlotte Hornets"
+  }
+ },
+ "hockey/nhl": {
+  "1": {
+   "s": "MA",
+   "n": "Boston Bruins"
+  },
+  "2": {
+   "s": "NY",
+   "n": "Buffalo Sabres"
+  },
+  "4": {
+   "s": "IL",
+   "n": "Chicago Blackhawks"
+  },
+  "5": {
+   "s": "MI",
+   "n": "Detroit Red Wings"
+  },
+  "7": {
+   "s": "NC",
+   "n": "Carolina Hurricanes"
+  },
+  "8": {
+   "s": "CA",
+   "n": "Los Angeles Kings"
+  },
+  "9": {
+   "s": "TX",
+   "n": "Dallas Stars"
+  },
+  "11": {
+   "s": "NJ",
+   "n": "New Jersey Devils"
+  },
+  "12": {
+   "s": "NY",
+   "n": "New York Islanders"
+  },
+  "13": {
+   "s": "NY",
+   "n": "New York Rangers"
+  },
+  "15": {
+   "s": "PA",
+   "n": "Philadelphia Flyers"
+  },
+  "16": {
+   "s": "PA",
+   "n": "Pittsburgh Penguins"
+  },
+  "17": {
+   "s": "CO",
+   "n": "Colorado Avalanche"
+  },
+  "18": {
+   "s": "CA",
+   "n": "San Jose Sharks"
+  },
+  "19": {
+   "s": "MO",
+   "n": "St. Louis Blues"
+  },
+  "20": {
+   "s": "FL",
+   "n": "Tampa Bay Lightning"
+  },
+  "23": {
+   "s": "DC",
+   "n": "Washington Capitals"
+  },
+  "25": {
+   "s": "CA",
+   "n": "Anaheim Ducks"
+  },
+  "26": {
+   "s": "FL",
+   "n": "Florida Panthers"
+  },
+  "27": {
+   "s": "TN",
+   "n": "Nashville Predators"
+  },
+  "29": {
+   "s": "OH",
+   "n": "Columbus Blue Jackets"
+  },
+  "30": {
+   "s": "MN",
+   "n": "Minnesota Wild"
+  },
+  "37": {
+   "s": "NV",
+   "n": "Vegas Golden Knights"
+  },
+  "124292": {
+   "s": "WA",
+   "n": "Seattle Kraken"
+  },
+  "129764": {
+   "s": "UT",
+   "n": "Utah Mammoth"
+  }
+ },
+ "basketball/wnba": {
+  "3": {
+   "s": "TX",
+   "n": "Dallas Wings"
+  },
+  "5": {
+   "s": "IN",
+   "n": "Indiana Fever"
+  },
+  "6": {
+   "s": "CA",
+   "n": "Los Angeles Sparks"
+  },
+  "8": {
+   "s": "MN",
+   "n": "Minnesota Lynx"
+  },
+  "9": {
+   "s": "NY",
+   "n": "New York Liberty"
+  },
+  "11": {
+   "s": "AZ",
+   "n": "Phoenix Mercury"
+  },
+  "14": {
+   "s": "WA",
+   "n": "Seattle Storm"
+  },
+  "16": {
+   "s": "DC",
+   "n": "Washington Mystics"
+  },
+  "17": {
+   "s": "NV",
+   "n": "Las Vegas Aces"
+  },
+  "18": {
+   "s": "CT",
+   "n": "Connecticut Sun"
+  },
+  "19": {
+   "s": "IL",
+   "n": "Chicago Sky"
+  },
+  "20": {
+   "s": "GA",
+   "n": "Atlanta Dream"
+  },
+  "129689": {
+   "s": "CA",
+   "n": "Golden State Valkyries"
+  },
+  "132052": {
+   "s": "OR",
+   "n": "Portland Fire"
+  }
+ },
+ "soccer/usa.1": {
+  "182": {
+   "s": "IL",
+   "n": "Chicago Fire FC"
+  },
+  "183": {
+   "s": "OH",
+   "n": "Columbus Crew"
+  },
+  "184": {
+   "s": "CO",
+   "n": "Colorado Rapids"
+  },
+  "185": {
+   "s": "TX",
+   "n": "FC Dallas"
+  },
+  "186": {
+   "s": "KS",
+   "n": "Sporting Kansas City"
+  },
+  "187": {
+   "s": "CA",
+   "n": "LA Galaxy"
+  },
+  "189": {
+   "s": "MA",
+   "n": "New England Revolution"
+  },
+  "190": {
+   "s": "NJ",
+   "n": "Red Bull New York"
+  },
+  "191": {
+   "s": "CA",
+   "n": "San Jose Earthquakes"
+  },
+  "193": {
+   "s": "DC",
+   "n": "D.C. United"
+  },
+  "4771": {
+   "s": "UT",
+   "n": "Real Salt Lake"
+  },
+  "6077": {
+   "s": "TX",
+   "n": "Houston Dynamo FC"
+  },
+  "9723": {
+   "s": "OR",
+   "n": "Portland Timbers"
+  },
+  "9726": {
+   "s": "WA",
+   "n": "Seattle Sounders FC"
+  },
+  "10739": {
+   "s": "PA",
+   "n": "Philadelphia Union"
+  },
+  "12011": {
+   "s": "FL",
+   "n": "Orlando City SC"
+  },
+  "17362": {
+   "s": "MN",
+   "n": "Minnesota United FC"
+  },
+  "17606": {
+   "s": "NY",
+   "n": "New York City FC"
+  },
+  "18267": {
+   "s": "OH",
+   "n": "FC Cincinnati"
+  },
+  "18418": {
+   "s": "GA",
+   "n": "Atlanta United FC"
+  },
+  "18966": {
+   "s": "CA",
+   "n": "LAFC"
+  },
+  "18986": {
+   "s": "TN",
+   "n": "Nashville SC"
+  },
+  "20232": {
+   "s": "FL",
+   "n": "Inter Miami CF"
+  },
+  "20906": {
+   "s": "TX",
+   "n": "Austin FC"
+  },
+  "21300": {
+   "s": "NC",
+   "n": "Charlotte FC"
+  },
+  "21812": {
+   "s": "MO",
+   "n": "St. Louis CITY SC"
+  },
+  "22529": {
+   "s": "CA",
+   "n": "San Diego FC"
+  }
+ },
+ "basketball/mens-college-basketball": {
+  "2": {
+   "s": "AL",
+   "n": "Auburn Tigers"
+  },
+  "5": {
+   "s": "AL",
+   "n": "UAB Blazers"
+  },
+  "6": {
+   "s": "AL",
+   "n": "South Alabama Jaguars"
+  },
+  "8": {
+   "s": "AR",
+   "n": "Arkansas Razorbacks"
+  },
+  "9": {
+   "s": "AZ",
+   "n": "Arizona State Sun Devils"
+  },
+  "12": {
+   "s": "AZ",
+   "n": "Arizona Wildcats"
+  },
+  "13": {
+   "s": "CA",
+   "n": "Cal Poly Mustangs"
+  },
+  "16": {
+   "s": "CA",
+   "n": "Sacramento State Hornets"
+  },
+  "21": {
+   "s": "CA",
+   "n": "San Diego State Aztecs"
+  },
+  "23": {
+   "s": "CA",
+   "n": "San José State Spartans"
+  },
+  "24": {
+   "s": "CA",
+   "n": "Stanford Cardinal"
+  },
+  "25": {
+   "s": "CA",
+   "n": "California Golden Bears"
+  },
+  "26": {
+   "s": "CA",
+   "n": "UCLA Bruins"
+  },
+  "27": {
+   "s": "CA",
+   "n": "UC Riverside Highlanders"
+  },
+  "28": {
+   "s": "CA",
+   "n": "UC San Diego Tritons"
+  },
+  "30": {
+   "s": "CA",
+   "n": "USC Trojans"
+  },
+  "36": {
+   "s": "CO",
+   "n": "Colorado State Rams"
+  },
+  "38": {
+   "s": "CO",
+   "n": "Colorado Buffaloes"
+  },
+  "41": {
+   "s": "CT",
+   "n": "UConn Huskies"
+  },
+  "43": {
+   "s": "CT",
+   "n": "Yale Bulldogs"
+  },
+  "44": {
+   "s": "DC",
+   "n": "American University Eagles"
+  },
+  "45": {
+   "s": "DC",
+   "n": "George Washington Revolutionaries"
+  },
+  "46": {
+   "s": "DC",
+   "n": "Georgetown Hoyas"
+  },
+  "47": {
+   "s": "DC",
+   "n": "Howard Bison"
+  },
+  "48": {
+   "s": "DE",
+   "n": "Delaware Blue Hens"
+  },
+  "50": {
+   "s": "FL",
+   "n": "Florida A&M Rattlers"
+  },
+  "52": {
+   "s": "FL",
+   "n": "Florida State Seminoles"
+  },
+  "55": {
+   "s": "AL",
+   "n": "Jacksonville State Gamecocks"
+  },
+  "56": {
+   "s": "FL",
+   "n": "Stetson Hatters"
+  },
+  "57": {
+   "s": "FL",
+   "n": "Florida Gators"
+  },
+  "58": {
+   "s": "FL",
+   "n": "South Florida Bulls"
+  },
+  "59": {
+   "s": "GA",
+   "n": "Georgia Tech Yellow Jackets"
+  },
+  "61": {
+   "s": "GA",
+   "n": "Georgia Bulldogs"
+  },
+  "62": {
+   "s": "HI",
+   "n": "Hawai'i Rainbow Warriors"
+  },
+  "66": {
+   "s": "IA",
+   "n": "Iowa State Cyclones"
+  },
+  "68": {
+   "s": "ID",
+   "n": "Boise State Broncos"
+  },
+  "70": {
+   "s": "ID",
+   "n": "Idaho Vandals"
+  },
+  "71": {
+   "s": "IL",
+   "n": "Bradley Braves"
+  },
+  "77": {
+   "s": "IL",
+   "n": "Northwestern Wildcats"
+  },
+  "79": {
+   "s": "IL",
+   "n": "Southern Illinois Salukis"
+  },
+  "82": {
+   "s": "IL",
+   "n": "UIC Flames"
+  },
+  "84": {
+   "s": "IN",
+   "n": "Indiana Hoosiers"
+  },
+  "85": {
+   "s": "IN",
+   "n": "IU Indianapolis Jaguars"
+  },
+  "87": {
+   "s": "IN",
+   "n": "Notre Dame Fighting Irish"
+  },
+  "88": {
+   "s": "IN",
+   "n": "Southern Indiana Screaming Eagles"
+  },
+  "91": {
+   "s": "KY",
+   "n": "Bellarmine Knights"
+  },
+  "93": {
+   "s": "KY",
+   "n": "Murray State Racers"
+  },
+  "94": {
+   "s": "KY",
+   "n": "Northern Kentucky Norse"
+  },
+  "96": {
+   "s": "KY",
+   "n": "Kentucky Wildcats"
+  },
+  "97": {
+   "s": "KY",
+   "n": "Louisville Cardinals"
+  },
+  "98": {
+   "s": "KY",
+   "n": "Western Kentucky Hilltoppers"
+  },
+  "99": {
+   "s": "LA",
+   "n": "LSU Tigers"
+  },
+  "103": {
+   "s": "MA",
+   "n": "Boston College Eagles"
+  },
+  "104": {
+   "s": "MA",
+   "n": "Boston University Terriers"
+  },
+  "107": {
+   "s": "MA",
+   "n": "Holy Cross Crusaders"
+  },
+  "108": {
+   "s": "MA",
+   "n": "Harvard Crimson"
+  },
+  "111": {
+   "s": "MA",
+   "n": "Northeastern Huskies"
+  },
+  "113": {
+   "s": "MA",
+   "n": "Massachusetts Minutemen"
+  },
+  "116": {
+   "s": "MD",
+   "n": "Mount St. Mary's Mountaineers"
+  },
+  "119": {
+   "s": "MD",
+   "n": "Towson Tigers"
+  },
+  "120": {
+   "s": "MD",
+   "n": "Maryland Terrapins"
+  },
+  "127": {
+   "s": "MI",
+   "n": "Michigan State Spartans"
+  },
+  "130": {
+   "s": "MI",
+   "n": "Michigan Wolverines"
+  },
+  "135": {
+   "s": "MN",
+   "n": "Minnesota Golden Gophers"
+  },
+  "139": {
+   "s": "MO",
+   "n": "Saint Louis Billikens"
+  },
+  "140": {
+   "s": "MO",
+   "n": "Kansas City Roos"
+  },
+  "142": {
+   "s": "MO",
+   "n": "Missouri Tigers"
+  },
+  "145": {
+   "s": "MS",
+   "n": "Ole Miss Rebels"
+  },
+  "147": {
+   "s": "MT",
+   "n": "Montana State Bobcats"
+  },
+  "149": {
+   "s": "MT",
+   "n": "Montana Grizzlies"
+  },
+  "150": {
+   "s": "NC",
+   "n": "Duke Blue Devils"
+  },
+  "151": {
+   "s": "NC",
+   "n": "East Carolina Pirates"
+  },
+  "152": {
+   "s": "NC",
+   "n": "NC State Wolfpack"
+  },
+  "153": {
+   "s": "NC",
+   "n": "North Carolina Tar Heels"
+  },
+  "154": {
+   "s": "NC",
+   "n": "Wake Forest Demon Deacons"
+  },
+  "155": {
+   "s": "ND",
+   "n": "North Dakota Fighting Hawks"
+  },
+  "156": {
+   "s": "NE",
+   "n": "Creighton Bluejays"
+  },
+  "158": {
+   "s": "NE",
+   "n": "Nebraska Cornhuskers"
+  },
+  "159": {
+   "s": "NH",
+   "n": "Dartmouth Big Green"
+  },
+  "160": {
+   "s": "NH",
+   "n": "New Hampshire Wildcats"
+  },
+  "161": {
+   "s": "NJ",
+   "n": "Fairleigh Dickinson Knights"
+  },
+  "163": {
+   "s": "NJ",
+   "n": "Princeton Tigers"
+  },
+  "164": {
+   "s": "NJ",
+   "n": "Rutgers Scarlet Knights"
+  },
+  "166": {
+   "s": "NM",
+   "n": "New Mexico State Aggies"
+  },
+  "167": {
+   "s": "NM",
+   "n": "New Mexico Lobos"
+  },
+  "171": {
+   "s": "NY",
+   "n": "Columbia Lions"
+  },
+  "172": {
+   "s": "NY",
+   "n": "Cornell Big Red"
+  },
+  "179": {
+   "s": "NY",
+   "n": "St. Bonaventure Bonnies"
+  },
+  "183": {
+   "s": "NY",
+   "n": "Syracuse Orange"
+  },
+  "189": {
+   "s": "OH",
+   "n": "Bowling Green Falcons"
+  },
+  "193": {
+   "s": "OH",
+   "n": "Miami (OH) RedHawks"
+  },
+  "194": {
+   "s": "OH",
+   "n": "Ohio State Buckeyes"
+  },
+  "195": {
+   "s": "OH",
+   "n": "Ohio Bobcats"
+  },
+  "197": {
+   "s": "OK",
+   "n": "Oklahoma State Cowboys"
+  },
+  "198": {
+   "s": "OK",
+   "n": "Oral Roberts Golden Eagles"
+  },
+  "201": {
+   "s": "OK",
+   "n": "Oklahoma Sooners"
+  },
+  "202": {
+   "s": "OK",
+   "n": "Tulsa Golden Hurricane"
+  },
+  "204": {
+   "s": "OR",
+   "n": "Oregon State Beavers"
+  },
+  "213": {
+   "s": "PA",
+   "n": "Penn State Nittany Lions"
+  },
+  "218": {
+   "s": "PA",
+   "n": "Temple Owls"
+  },
+  "219": {
+   "s": "PA",
+   "n": "Pennsylvania Quakers"
+  },
+  "221": {
+   "s": "PA",
+   "n": "Pittsburgh Panthers"
+  },
+  "222": {
+   "s": "PA",
+   "n": "Villanova Wildcats"
+  },
+  "225": {
+   "s": "RI",
+   "n": "Brown Bears"
+  },
+  "227": {
+   "s": "RI",
+   "n": "Rhode Island Rams"
+  },
+  "228": {
+   "s": "SC",
+   "n": "Clemson Tigers"
+  },
+  "231": {
+   "s": "SC",
+   "n": "Furman Paladins"
+  },
+  "232": {
+   "s": "SC",
+   "n": "Charleston Cougars"
+  },
+  "233": {
+   "s": "SD",
+   "n": "South Dakota Coyotes"
+  },
+  "235": {
+   "s": "TN",
+   "n": "Memphis Tigers"
+  },
+  "236": {
+   "s": "TN",
+   "n": "Chattanooga Mocs"
+  },
+  "238": {
+   "s": "TN",
+   "n": "Vanderbilt Commodores"
+  },
+  "239": {
+   "s": "TX",
+   "n": "Baylor Bears"
+  },
+  "242": {
+   "s": "TX",
+   "n": "Rice Owls"
+  },
+  "245": {
+   "s": "TX",
+   "n": "Texas A&M Aggies"
+  },
+  "248": {
+   "s": "TX",
+   "n": "Houston Cougars"
+  },
+  "249": {
+   "s": "TX",
+   "n": "North Texas Mean Green"
+  },
+  "250": {
+   "s": "TX",
+   "n": "UT Arlington Mavericks"
+  },
+  "251": {
+   "s": "TX",
+   "n": "Texas Longhorns"
+  },
+  "252": {
+   "s": "UT",
+   "n": "BYU Cougars"
+  },
+  "253": {
+   "s": "UT",
+   "n": "Southern Utah Thunderbirds"
+  },
+  "254": {
+   "s": "UT",
+   "n": "Utah Utes"
+  },
+  "256": {
+   "s": "VA",
+   "n": "James Madison Dukes"
+  },
+  "257": {
+   "s": "VA",
+   "n": "Richmond Spiders"
+  },
+  "258": {
+   "s": "VA",
+   "n": "Virginia Cavaliers"
+  },
+  "259": {
+   "s": "VA",
+   "n": "Virginia Tech Hokies"
+  },
+  "261": {
+   "s": "VT",
+   "n": "Vermont Catamounts"
+  },
+  "264": {
+   "s": "WA",
+   "n": "Washington Huskies"
+  },
+  "265": {
+   "s": "WA",
+   "n": "Washington State Cougars"
+  },
+  "269": {
+   "s": "WI",
+   "n": "Marquette Golden Eagles"
+  },
+  "270": {
+   "s": "WI",
+   "n": "Milwaukee Panthers"
+  },
+  "275": {
+   "s": "WI",
+   "n": "Wisconsin Badgers"
+  },
+  "276": {
+   "s": "WV",
+   "n": "Marshall Thundering Herd"
+  },
+  "277": {
+   "s": "WV",
+   "n": "West Virginia Mountaineers"
+  },
+  "278": {
+   "s": "CA",
+   "n": "Fresno State Bulldogs"
+  },
+  "279": {
+   "s": "CA",
+   "n": "Pacific Tigers"
+  },
+  "282": {
+   "s": "IN",
+   "n": "Indiana State Sycamores"
+  },
+  "284": {
+   "s": "MA",
+   "n": "Stonehill Skyhawks"
+  },
+  "288": {
+   "s": "TN",
+   "n": "Lipscomb Bisons"
+  },
+  "290": {
+   "s": "GA",
+   "n": "Georgia Southern Eagles"
+  },
+  "292": {
+   "s": "TX",
+   "n": "UT Rio Grande Valley Vaqueros"
+  },
+  "294": {
+   "s": "FL",
+   "n": "Jacksonville Dolphins"
+  },
+  "295": {
+   "s": "VA",
+   "n": "Old Dominion Monarchs"
+  },
+  "299": {
+   "s": "CA",
+   "n": "Long Beach State Beach"
+  },
+  "300": {
+   "s": "CA",
+   "n": "UC Irvine Anteaters"
+  },
+  "301": {
+   "s": "CA",
+   "n": "San Diego Toreros"
+  },
+  "302": {
+   "s": "CA",
+   "n": "UC Davis Aggies"
+  },
+  "304": {
+   "s": "ID",
+   "n": "Idaho State Bengals"
+  },
+  "305": {
+   "s": "IL",
+   "n": "DePaul Blue Demons"
+  },
+  "309": {
+   "s": "LA",
+   "n": "Louisiana Ragin' Cajuns"
+  },
+  "311": {
+   "s": "ME",
+   "n": "Maine Black Bears"
+  },
+  "314": {
+   "s": "NY",
+   "n": "Iona Gaels"
+  },
+  "315": {
+   "s": "NY",
+   "n": "Niagara Purple Eagles"
+  },
+  "322": {
+   "s": "PA",
+   "n": "Lafayette Leopards"
+  },
+  "324": {
+   "s": "SC",
+   "n": "Coastal Carolina Chanticleers"
+  },
+  "325": {
+   "s": "OH",
+   "n": "Cleveland State Vikings"
+  },
+  "326": {
+   "s": "TX",
+   "n": "Texas State Bobcats"
+  },
+  "328": {
+   "s": "UT",
+   "n": "Utah State Aggies"
+  },
+  "331": {
+   "s": "WA",
+   "n": "Eastern Washington Eagles"
+  },
+  "333": {
+   "s": "AL",
+   "n": "Alabama Crimson Tide"
+  },
+  "338": {
+   "s": "GA",
+   "n": "Kennesaw State Owls"
+  },
+  "339": {
+   "s": "IN",
+   "n": "Evansville Purple Aces"
+  },
+  "344": {
+   "s": "MS",
+   "n": "Mississippi State Bulldogs"
+  },
+  "349": {
+   "s": "NY",
+   "n": "Army Black Knights"
+  },
+  "350": {
+   "s": "NC",
+   "n": "UNC Wilmington Seahawks"
+  },
+  "356": {
+   "s": "IL",
+   "n": "Illinois Fighting Illini"
+  },
+  "357": {
+   "s": "TX",
+   "n": "Texas A&M-Corpus Christi Islanders"
+  },
+  "399": {
+   "s": "NY",
+   "n": "UAlbany Great Danes"
+  },
+  "526": {
+   "s": "FL",
+   "n": "Florida Gulf Coast Eagles"
+  },
+  "2000": {
+   "s": "TX",
+   "n": "Abilene Christian Wildcats"
+  },
+  "2005": {
+   "s": "CO",
+   "n": "Air Force Falcons"
+  },
+  "2006": {
+   "s": "OH",
+   "n": "Akron Zips"
+  },
+  "2010": {
+   "s": "AL",
+   "n": "Alabama A&M Bulldogs"
+  },
+  "2011": {
+   "s": "AL",
+   "n": "Alabama State Hornets"
+  },
+  "2016": {
+   "s": "MS",
+   "n": "Alcorn State Braves"
+  },
+  "2026": {
+   "s": "NC",
+   "n": "App State Mountaineers"
+  },
+  "2029": {
+   "s": "AR",
+   "n": "Arkansas-Pine Bluff Golden Lions"
+  },
+  "2031": {
+   "s": "AR",
+   "n": "Little Rock Trojans"
+  },
+  "2032": {
+   "s": "AR",
+   "n": "Arkansas State Red Wolves"
+  },
+  "2046": {
+   "s": "TN",
+   "n": "Austin Peay Governors"
+  },
+  "2050": {
+   "s": "IN",
+   "n": "Ball State Cardinals"
+  },
+  "2057": {
+   "s": "TN",
+   "n": "Belmont Bruins"
+  },
+  "2065": {
+   "s": "FL",
+   "n": "Bethune-Cookman Wildcats"
+  },
+  "2066": {
+   "s": "NY",
+   "n": "Binghamton Bearcats"
+  },
+  "2083": {
+   "s": "PA",
+   "n": "Bucknell Bison"
+  },
+  "2084": {
+   "s": "NY",
+   "n": "Buffalo Bulls"
+  },
+  "2086": {
+   "s": "IN",
+   "n": "Butler Bulldogs"
+  },
+  "2097": {
+   "s": "NC",
+   "n": "Campbell Fighting Camels"
+  },
+  "2099": {
+   "s": "NY",
+   "n": "Canisius Golden Griffins"
+  },
+  "2110": {
+   "s": "AR",
+   "n": "Central Arkansas Bears"
+  },
+  "2115": {
+   "s": "CT",
+   "n": "Central Connecticut Blue Devils"
+  },
+  "2116": {
+   "s": "FL",
+   "n": "UCF Knights"
+  },
+  "2117": {
+   "s": "MI",
+   "n": "Central Michigan Chippewas"
+  },
+  "2127": {
+   "s": "SC",
+   "n": "Charleston Southern Buccaneers"
+  },
+  "2130": {
+   "s": "IL",
+   "n": "Chicago State Cougars"
+  },
+  "2132": {
+   "s": "OH",
+   "n": "Cincinnati Bearcats"
+  },
+  "2142": {
+   "s": "NY",
+   "n": "Colgate Raiders"
+  },
+  "2154": {
+   "s": "MD",
+   "n": "Coppin State Eagles"
+  },
+  "2166": {
+   "s": "NC",
+   "n": "Davidson Wildcats"
+  },
+  "2168": {
+   "s": "OH",
+   "n": "Dayton Flyers"
+  },
+  "2169": {
+   "s": "DE",
+   "n": "Delaware State Hornets"
+  },
+  "2172": {
+   "s": "CO",
+   "n": "Denver Pioneers"
+  },
+  "2174": {
+   "s": "MI",
+   "n": "Detroit Mercy Titans"
+  },
+  "2181": {
+   "s": "IA",
+   "n": "Drake Bulldogs"
+  },
+  "2182": {
+   "s": "PA",
+   "n": "Drexel Dragons"
+  },
+  "2184": {
+   "s": "PA",
+   "n": "Duquesne Dukes"
+  },
+  "2193": {
+   "s": "TN",
+   "n": "East Tennessee State Buccaneers"
+  },
+  "2197": {
+   "s": "IL",
+   "n": "Eastern Illinois Panthers"
+  },
+  "2198": {
+   "s": "KY",
+   "n": "Eastern Kentucky Colonels"
+  },
+  "2199": {
+   "s": "MI",
+   "n": "Eastern Michigan Eagles"
+  },
+  "2210": {
+   "s": "NC",
+   "n": "Elon Phoenix"
+  },
+  "2217": {
+   "s": "CT",
+   "n": "Fairfield Stags"
+  },
+  "2226": {
+   "s": "FL",
+   "n": "Florida Atlantic Owls"
+  },
+  "2229": {
+   "s": "FL",
+   "n": "Florida International Panthers"
+  },
+  "2230": {
+   "s": "NY",
+   "n": "Fordham Rams"
+  },
+  "2239": {
+   "s": "CA",
+   "n": "Cal State Fullerton Titans"
+  },
+  "2241": {
+   "s": "NC",
+   "n": "Gardner-Webb Runnin' Bulldogs"
+  },
+  "2244": {
+   "s": "VA",
+   "n": "George Mason Patriots"
+  },
+  "2247": {
+   "s": "GA",
+   "n": "Georgia State Panthers"
+  },
+  "2250": {
+   "s": "WA",
+   "n": "Gonzaga Bulldogs"
+  },
+  "2253": {
+   "s": "AZ",
+   "n": "Grand Canyon Lopes"
+  },
+  "2261": {
+   "s": "VA",
+   "n": "Hampton Pirates"
+  },
+  "2272": {
+   "s": "NC",
+   "n": "High Point Panthers"
+  },
+  "2275": {
+   "s": "NY",
+   "n": "Hofstra Pride"
+  },
+  "2277": {
+   "s": "TX",
+   "n": "Houston Christian Huskies"
+  },
+  "2287": {
+   "s": "IL",
+   "n": "Illinois State Redbirds"
+  },
+  "2294": {
+   "s": "IA",
+   "n": "Iowa Hawkeyes"
+  },
+  "2296": {
+   "s": "MS",
+   "n": "Jackson State Tigers"
+  },
+  "2305": {
+   "s": "KS",
+   "n": "Kansas Jayhawks"
+  },
+  "2306": {
+   "s": "KS",
+   "n": "Kansas State Wildcats"
+  },
+  "2309": {
+   "s": "OH",
+   "n": "Kent State Golden Flashes"
+  },
+  "2320": {
+   "s": "TX",
+   "n": "Lamar Cardinals"
+  },
+  "2325": {
+   "s": "PA",
+   "n": "La Salle Explorers"
+  },
+  "2329": {
+   "s": "PA",
+   "n": "Lehigh Mountain Hawks"
+  },
+  "2330": {
+   "s": "NY",
+   "n": "Le Moyne Dolphins"
+  },
+  "2335": {
+   "s": "VA",
+   "n": "Liberty Flames"
+  },
+  "2344": {
+   "s": "VA",
+   "n": "Longwood Lancers"
+  },
+  "2348": {
+   "s": "LA",
+   "n": "Louisiana Tech Bulldogs"
+  },
+  "2349": {
+   "s": "MA",
+   "n": "UMass Lowell River Hawks"
+  },
+  "2350": {
+   "s": "IL",
+   "n": "Loyola Chicago Ramblers"
+  },
+  "2351": {
+   "s": "CA",
+   "n": "Loyola Marymount Lions"
+  },
+  "2352": {
+   "s": "MD",
+   "n": "Loyola Maryland Greyhounds"
+  },
+  "2363": {
+   "s": "NY",
+   "n": "Manhattan Jaspers"
+  },
+  "2368": {
+   "s": "NY",
+   "n": "Marist Red Foxes"
+  },
+  "2377": {
+   "s": "LA",
+   "n": "McNeese Cowboys"
+  },
+  "2378": {
+   "s": "MD",
+   "n": "UMBC Retrievers"
+  },
+  "2379": {
+   "s": "MD",
+   "n": "Maryland Eastern Shore Hawks"
+  },
+  "2382": {
+   "s": "GA",
+   "n": "Mercer Bears"
+  },
+  "2385": {
+   "s": "PA",
+   "n": "Mercyhurst Lakers"
+  },
+  "2390": {
+   "s": "FL",
+   "n": "Miami Hurricanes"
+  },
+  "2393": {
+   "s": "TN",
+   "n": "Middle Tennessee Blue Raiders"
+  },
+  "2400": {
+   "s": "MS",
+   "n": "Mississippi Valley State Delta Devils"
+  },
+  "2405": {
+   "s": "NJ",
+   "n": "Monmouth Hawks"
+  },
+  "2413": {
+   "s": "KY",
+   "n": "Morehead State Eagles"
+  },
+  "2415": {
+   "s": "MD",
+   "n": "Morgan State Bears"
+  },
+  "2426": {
+   "s": "MD",
+   "n": "Navy Midshipmen"
+  },
+  "2427": {
+   "s": "NC",
+   "n": "UNC Asheville Bulldogs"
+  },
+  "2428": {
+   "s": "NC",
+   "n": "North Carolina Central Eagles"
+  },
+  "2429": {
+   "s": "NC",
+   "n": "Charlotte 49ers"
+  },
+  "2430": {
+   "s": "NC",
+   "n": "UNC Greensboro Spartans"
+  },
+  "2433": {
+   "s": "LA",
+   "n": "UL Monroe Warhawks"
+  },
+  "2437": {
+   "s": "NE",
+   "n": "Omaha Mavericks"
+  },
+  "2439": {
+   "s": "NV",
+   "n": "UNLV Rebels"
+  },
+  "2440": {
+   "s": "NV",
+   "n": "Nevada Wolf Pack"
+  },
+  "2441": {
+   "s": "CT",
+   "n": "New Haven Chargers"
+  },
+  "2443": {
+   "s": "LA",
+   "n": "LSU New Orleans Privateers"
+  },
+  "2447": {
+   "s": "LA",
+   "n": "Nicholls Colonels"
+  },
+  "2448": {
+   "s": "NC",
+   "n": "North Carolina A&T Aggies"
+  },
+  "2449": {
+   "s": "ND",
+   "n": "North Dakota State Bison"
+  },
+  "2450": {
+   "s": "VA",
+   "n": "Norfolk State Spartans"
+  },
+  "2453": {
+   "s": "AL",
+   "n": "North Alabama Lions"
+  },
+  "2454": {
+   "s": "FL",
+   "n": "North Florida Ospreys"
+  },
+  "2458": {
+   "s": "CO",
+   "n": "Northern Colorado Bears"
+  },
+  "2459": {
+   "s": "IL",
+   "n": "Northern Illinois Huskies"
+  },
+  "2460": {
+   "s": "IA",
+   "n": "Northern Iowa Panthers"
+  },
+  "2463": {
+   "s": "CA",
+   "n": "Cal State Northridge Matadors"
+  },
+  "2464": {
+   "s": "AZ",
+   "n": "Northern Arizona Lumberjacks"
+  },
+  "2466": {
+   "s": "LA",
+   "n": "Northwestern State Demons"
+  },
+  "2473": {
+   "s": "MI",
+   "n": "Oakland Golden Grizzlies"
+  },
+  "2483": {
+   "s": "OR",
+   "n": "Oregon Ducks"
+  },
+  "2492": {
+   "s": "CA",
+   "n": "Pepperdine Waves"
+  },
+  "2501": {
+   "s": "OR",
+   "n": "Portland Pilots"
+  },
+  "2502": {
+   "s": "OR",
+   "n": "Portland State Vikings"
+  },
+  "2504": {
+   "s": "TX",
+   "n": "Prairie View A&M Panthers"
+  },
+  "2506": {
+   "s": "SC",
+   "n": "Presbyterian Blue Hose"
+  },
+  "2507": {
+   "s": "RI",
+   "n": "Providence Friars"
+  },
+  "2509": {
+   "s": "IN",
+   "n": "Purdue Boilermakers"
+  },
+  "2511": {
+   "s": "NC",
+   "n": "Queens University Royals"
+  },
+  "2514": {
+   "s": "CT",
+   "n": "Quinnipiac Bobcats"
+  },
+  "2515": {
+   "s": "VA",
+   "n": "Radford Highlanders"
+  },
+  "2520": {
+   "s": "NJ",
+   "n": "Rider Broncs"
+  },
+  "2523": {
+   "s": "PA",
+   "n": "Robert Morris Colonials"
+  },
+  "2529": {
+   "s": "CT",
+   "n": "Sacred Heart Pioneers"
+  },
+  "2534": {
+   "s": "TX",
+   "n": "Sam Houston Bearkats"
+  },
+  "2535": {
+   "s": "AL",
+   "n": "Samford Bulldogs"
+  },
+  "2539": {
+   "s": "CA",
+   "n": "San Francisco Dons"
+  },
+  "2540": {
+   "s": "CA",
+   "n": "UC Santa Barbara Gauchos"
+  },
+  "2541": {
+   "s": "CA",
+   "n": "Santa Clara Broncos"
+  },
+  "2545": {
+   "s": "LA",
+   "n": "SE Louisiana Lions"
+  },
+  "2546": {
+   "s": "MO",
+   "n": "Southeast Missouri State Redhawks"
+  },
+  "2547": {
+   "s": "WA",
+   "n": "Seattle U Redhawks"
+  },
+  "2550": {
+   "s": "NJ",
+   "n": "Seton Hall Pirates"
+  },
+  "2561": {
+   "s": "NY",
+   "n": "Siena Saints"
+  },
+  "2565": {
+   "s": "IL",
+   "n": "SIU Edwardsville Cougars"
+  },
+  "2567": {
+   "s": "TX",
+   "n": "SMU Mustangs"
+  },
+  "2569": {
+   "s": "SC",
+   "n": "South Carolina State Bulldogs"
+  },
+  "2571": {
+   "s": "SD",
+   "n": "South Dakota State Jackrabbits"
+  },
+  "2572": {
+   "s": "MS",
+   "n": "Southern Miss Golden Eagles"
+  },
+  "2579": {
+   "s": "SC",
+   "n": "South Carolina Gamecocks"
+  },
+  "2582": {
+   "s": "LA",
+   "n": "Southern Jaguars"
+  },
+  "2598": {
+   "s": "PA",
+   "n": "Saint Francis Red Wolves"
+  },
+  "2599": {
+   "s": "NY",
+   "n": "St. John's Red Storm"
+  },
+  "2603": {
+   "s": "PA",
+   "n": "Saint Joseph's Hawks"
+  },
+  "2608": {
+   "s": "CA",
+   "n": "Saint Mary's Gaels"
+  },
+  "2612": {
+   "s": "NJ",
+   "n": "Saint Peter's Peacocks"
+  },
+  "2617": {
+   "s": "TX",
+   "n": "Stephen F. Austin Lumberjacks"
+  },
+  "2619": {
+   "s": "NY",
+   "n": "Stony Brook Seawolves"
+  },
+  "2623": {
+   "s": "MO",
+   "n": "Missouri State Bears"
+  },
+  "2627": {
+   "s": "TX",
+   "n": "Tarleton State Texans"
+  },
+  "2628": {
+   "s": "TX",
+   "n": "TCU Horned Frogs"
+  },
+  "2630": {
+   "s": "TN",
+   "n": "UT Martin Skyhawks"
+  },
+  "2633": {
+   "s": "TN",
+   "n": "Tennessee Volunteers"
+  },
+  "2634": {
+   "s": "TN",
+   "n": "Tennessee State Tigers"
+  },
+  "2635": {
+   "s": "TN",
+   "n": "Tennessee Tech Golden Eagles"
+  },
+  "2636": {
+   "s": "TX",
+   "n": "UTSA Roadrunners"
+  },
+  "2638": {
+   "s": "TX",
+   "n": "UTEP Miners"
+  },
+  "2640": {
+   "s": "TX",
+   "n": "Texas Southern Tigers"
+  },
+  "2641": {
+   "s": "TX",
+   "n": "Texas Tech Red Raiders"
+  },
+  "2643": {
+   "s": "SC",
+   "n": "The Citadel Bulldogs"
+  },
+  "2649": {
+   "s": "OH",
+   "n": "Toledo Rockets"
+  },
+  "2653": {
+   "s": "AL",
+   "n": "Troy Trojans"
+  },
+  "2655": {
+   "s": "LA",
+   "n": "Tulane Green Wave"
+  },
+  "2670": {
+   "s": "VA",
+   "n": "VCU Rams"
+  },
+  "2674": {
+   "s": "IN",
+   "n": "Valparaiso Beacons"
+  },
+  "2678": {
+   "s": "VA",
+   "n": "VMI Keydets"
+  },
+  "2681": {
+   "s": "NY",
+   "n": "Wagner Seahawks"
+  },
+  "2692": {
+   "s": "UT",
+   "n": "Weber State Wildcats"
+  },
+  "2698": {
+   "s": "GA",
+   "n": "West Georgia Wolves"
+  },
+  "2710": {
+   "s": "IL",
+   "n": "Western Illinois Leathernecks"
+  },
+  "2711": {
+   "s": "MI",
+   "n": "Western Michigan Broncos"
+  },
+  "2717": {
+   "s": "NC",
+   "n": "Western Carolina Catamounts"
+  },
+  "2724": {
+   "s": "KS",
+   "n": "Wichita State Shockers"
+  },
+  "2729": {
+   "s": "VA",
+   "n": "William & Mary Tribe"
+  },
+  "2737": {
+   "s": "SC",
+   "n": "Winthrop Eagles"
+  },
+  "2739": {
+   "s": "WI",
+   "n": "Green Bay Phoenix"
+  },
+  "2747": {
+   "s": "SC",
+   "n": "Wofford Terriers"
+  },
+  "2750": {
+   "s": "OH",
+   "n": "Wright State Raiders"
+  },
+  "2751": {
+   "s": "WY",
+   "n": "Wyoming Cowboys"
+  },
+  "2752": {
+   "s": "OH",
+   "n": "Xavier Musketeers"
+  },
+  "2754": {
+   "s": "OH",
+   "n": "Youngstown State Penguins"
+  },
+  "2755": {
+   "s": "LA",
+   "n": "Grambling Tigers"
+  },
+  "2771": {
+   "s": "MA",
+   "n": "Merrimack Warriors"
+  },
+  "2803": {
+   "s": "RI",
+   "n": "Bryant Bulldogs"
+  },
+  "2815": {
+   "s": "MO",
+   "n": "Lindenwood Lions"
+  },
+  "2837": {
+   "s": "TX",
+   "n": "East Texas A&M Lions"
+  },
+  "2856": {
+   "s": "CA",
+   "n": "California Baptist Lancers"
+  },
+  "2870": {
+   "s": "IN",
+   "n": "Purdue Fort Wayne Mastodons"
+  },
+  "2885": {
+   "s": "NJ",
+   "n": "NJIT Highlanders"
+  },
+  "2900": {
+   "s": "MN",
+   "n": "St. Thomas Tommies"
+  },
+  "2908": {
+   "s": "SC",
+   "n": "South Carolina Upstate Spartans"
+  },
+  "2916": {
+   "s": "TX",
+   "n": "Incarnate Word Cardinals"
+  },
+  "2934": {
+   "s": "CA",
+   "n": "Cal State Bakersfield Roadrunners"
+  },
+  "3084": {
+   "s": "UT",
+   "n": "Utah Valley Wolverines"
+  },
+  "3101": {
+   "s": "UT",
+   "n": "Utah Tech Trailblazers"
+  },
+  "112358": {
+   "s": "NY",
+   "n": "Long Island University Sharks"
+  }
+ },
+ "basketball/womens-college-basketball": {
+  "2": {
+   "s": "AL",
+   "n": "Auburn Tigers"
+  },
+  "5": {
+   "s": "AL",
+   "n": "UAB Blazers"
+  },
+  "6": {
+   "s": "AL",
+   "n": "South Alabama Jaguars"
+  },
+  "8": {
+   "s": "AR",
+   "n": "Arkansas Razorbacks"
+  },
+  "9": {
+   "s": "AZ",
+   "n": "Arizona State Sun Devils"
+  },
+  "12": {
+   "s": "AZ",
+   "n": "Arizona Wildcats"
+  },
+  "13": {
+   "s": "CA",
+   "n": "Cal Poly Mustangs"
+  },
+  "16": {
+   "s": "CA",
+   "n": "Sacramento State Hornets"
+  },
+  "21": {
+   "s": "CA",
+   "n": "San Diego State Aztecs"
+  },
+  "23": {
+   "s": "CA",
+   "n": "San José State Spartans"
+  },
+  "24": {
+   "s": "CA",
+   "n": "Stanford Cardinal"
+  },
+  "25": {
+   "s": "CA",
+   "n": "California Golden Bears"
+  },
+  "26": {
+   "s": "CA",
+   "n": "UCLA Bruins"
+  },
+  "27": {
+   "s": "CA",
+   "n": "UC Riverside Highlanders"
+  },
+  "28": {
+   "s": "CA",
+   "n": "UC San Diego Tritons"
+  },
+  "30": {
+   "s": "CA",
+   "n": "USC Trojans"
+  },
+  "36": {
+   "s": "CO",
+   "n": "Colorado State Rams"
+  },
+  "38": {
+   "s": "CO",
+   "n": "Colorado Buffaloes"
+  },
+  "41": {
+   "s": "CT",
+   "n": "UConn Huskies"
+  },
+  "43": {
+   "s": "CT",
+   "n": "Yale Bulldogs"
+  },
+  "44": {
+   "s": "DC",
+   "n": "American University Eagles"
+  },
+  "45": {
+   "s": "DC",
+   "n": "George Washington Revolutionaries"
+  },
+  "46": {
+   "s": "DC",
+   "n": "Georgetown Hoyas"
+  },
+  "47": {
+   "s": "DC",
+   "n": "Howard Bison"
+  },
+  "48": {
+   "s": "DE",
+   "n": "Delaware Blue Hens"
+  },
+  "50": {
+   "s": "FL",
+   "n": "Florida A&M Rattlers"
+  },
+  "52": {
+   "s": "FL",
+   "n": "Florida State Seminoles"
+  },
+  "55": {
+   "s": "AL",
+   "n": "Jacksonville State Gamecocks"
+  },
+  "56": {
+   "s": "FL",
+   "n": "Stetson Hatters"
+  },
+  "57": {
+   "s": "FL",
+   "n": "Florida Gators"
+  },
+  "58": {
+   "s": "FL",
+   "n": "South Florida Bulls"
+  },
+  "59": {
+   "s": "GA",
+   "n": "Georgia Tech Yellow Jackets"
+  },
+  "61": {
+   "s": "GA",
+   "n": "Georgia Lady Bulldogs"
+  },
+  "62": {
+   "s": "HI",
+   "n": "Hawai'i Rainbow Warriors"
+  },
+  "66": {
+   "s": "IA",
+   "n": "Iowa State Cyclones"
+  },
+  "68": {
+   "s": "ID",
+   "n": "Boise State Broncos"
+  },
+  "70": {
+   "s": "ID",
+   "n": "Idaho Vandals"
+  },
+  "71": {
+   "s": "IL",
+   "n": "Bradley Braves"
+  },
+  "77": {
+   "s": "IL",
+   "n": "Northwestern Wildcats"
+  },
+  "79": {
+   "s": "IL",
+   "n": "Southern Illinois Salukis"
+  },
+  "82": {
+   "s": "IL",
+   "n": "UIC Flames"
+  },
+  "84": {
+   "s": "IN",
+   "n": "Indiana Hoosiers"
+  },
+  "85": {
+   "s": "IN",
+   "n": "IU Indianapolis Jaguars"
+  },
+  "87": {
+   "s": "IN",
+   "n": "Notre Dame Fighting Irish"
+  },
+  "88": {
+   "s": "IN",
+   "n": "Southern Indiana Screaming Eagles"
+  },
+  "91": {
+   "s": "KY",
+   "n": "Bellarmine Knights"
+  },
+  "93": {
+   "s": "KY",
+   "n": "Murray State Racers"
+  },
+  "94": {
+   "s": "KY",
+   "n": "Northern Kentucky Norse"
+  },
+  "96": {
+   "s": "KY",
+   "n": "Kentucky Wildcats"
+  },
+  "97": {
+   "s": "KY",
+   "n": "Louisville Cardinals"
+  },
+  "98": {
+   "s": "KY",
+   "n": "Western Kentucky Lady Toppers"
+  },
+  "99": {
+   "s": "LA",
+   "n": "LSU Tigers"
+  },
+  "103": {
+   "s": "MA",
+   "n": "Boston College Eagles"
+  },
+  "104": {
+   "s": "MA",
+   "n": "Boston University Terriers"
+  },
+  "107": {
+   "s": "MA",
+   "n": "Holy Cross Crusaders"
+  },
+  "108": {
+   "s": "MA",
+   "n": "Harvard Crimson"
+  },
+  "111": {
+   "s": "MA",
+   "n": "Northeastern Huskies"
+  },
+  "113": {
+   "s": "MA",
+   "n": "Massachusetts Minutewomen"
+  },
+  "116": {
+   "s": "MD",
+   "n": "Mount St. Mary's Mountaineers"
+  },
+  "119": {
+   "s": "MD",
+   "n": "Towson Tigers"
+  },
+  "120": {
+   "s": "MD",
+   "n": "Maryland Terrapins"
+  },
+  "127": {
+   "s": "MI",
+   "n": "Michigan State Spartans"
+  },
+  "130": {
+   "s": "MI",
+   "n": "Michigan Wolverines"
+  },
+  "135": {
+   "s": "MN",
+   "n": "Minnesota Golden Gophers"
+  },
+  "139": {
+   "s": "MO",
+   "n": "Saint Louis Billikens"
+  },
+  "140": {
+   "s": "MO",
+   "n": "Kansas City Roos"
+  },
+  "142": {
+   "s": "MO",
+   "n": "Missouri Tigers"
+  },
+  "145": {
+   "s": "MS",
+   "n": "Ole Miss Rebels"
+  },
+  "147": {
+   "s": "MT",
+   "n": "Montana State Bobcats"
+  },
+  "149": {
+   "s": "MT",
+   "n": "Montana Lady Griz"
+  },
+  "150": {
+   "s": "NC",
+   "n": "Duke Blue Devils"
+  },
+  "151": {
+   "s": "NC",
+   "n": "East Carolina Pirates"
+  },
+  "152": {
+   "s": "NC",
+   "n": "NC State Wolfpack"
+  },
+  "153": {
+   "s": "NC",
+   "n": "North Carolina Tar Heels"
+  },
+  "154": {
+   "s": "NC",
+   "n": "Wake Forest Demon Deacons"
+  },
+  "155": {
+   "s": "ND",
+   "n": "North Dakota Fighting Hawks"
+  },
+  "156": {
+   "s": "NE",
+   "n": "Creighton Bluejays"
+  },
+  "158": {
+   "s": "NE",
+   "n": "Nebraska Cornhuskers"
+  },
+  "159": {
+   "s": "NH",
+   "n": "Dartmouth Big Green"
+  },
+  "160": {
+   "s": "NH",
+   "n": "New Hampshire Wildcats"
+  },
+  "161": {
+   "s": "NJ",
+   "n": "Fairleigh Dickinson Knights"
+  },
+  "163": {
+   "s": "NJ",
+   "n": "Princeton Tigers"
+  },
+  "164": {
+   "s": "NJ",
+   "n": "Rutgers Scarlet Knights"
+  },
+  "166": {
+   "s": "NM",
+   "n": "New Mexico State Aggies"
+  },
+  "167": {
+   "s": "NM",
+   "n": "New Mexico Lobos"
+  },
+  "171": {
+   "s": "NY",
+   "n": "Columbia Lions"
+  },
+  "172": {
+   "s": "NY",
+   "n": "Cornell Big Red"
+  },
+  "179": {
+   "s": "NY",
+   "n": "St. Bonaventure Bonnies"
+  },
+  "183": {
+   "s": "NY",
+   "n": "Syracuse Orange"
+  },
+  "189": {
+   "s": "OH",
+   "n": "Bowling Green Falcons"
+  },
+  "193": {
+   "s": "OH",
+   "n": "Miami (OH) RedHawks"
+  },
+  "194": {
+   "s": "OH",
+   "n": "Ohio State Buckeyes"
+  },
+  "195": {
+   "s": "OH",
+   "n": "Ohio Bobcats"
+  },
+  "197": {
+   "s": "OK",
+   "n": "Oklahoma State Cowgirls"
+  },
+  "198": {
+   "s": "OK",
+   "n": "Oral Roberts Golden Eagles"
+  },
+  "201": {
+   "s": "OK",
+   "n": "Oklahoma Sooners"
+  },
+  "202": {
+   "s": "OK",
+   "n": "Tulsa Golden Hurricane"
+  },
+  "204": {
+   "s": "OR",
+   "n": "Oregon State Beavers"
+  },
+  "213": {
+   "s": "PA",
+   "n": "Penn State Lady Lions"
+  },
+  "218": {
+   "s": "PA",
+   "n": "Temple Owls"
+  },
+  "219": {
+   "s": "PA",
+   "n": "Pennsylvania Quakers"
+  },
+  "221": {
+   "s": "PA",
+   "n": "Pittsburgh Panthers"
+  },
+  "222": {
+   "s": "PA",
+   "n": "Villanova Wildcats"
+  },
+  "225": {
+   "s": "RI",
+   "n": "Brown Bears"
+  },
+  "227": {
+   "s": "RI",
+   "n": "Rhode Island Rams"
+  },
+  "228": {
+   "s": "SC",
+   "n": "Clemson Tigers"
+  },
+  "231": {
+   "s": "SC",
+   "n": "Furman Paladins"
+  },
+  "232": {
+   "s": "SC",
+   "n": "Charleston Cougars"
+  },
+  "233": {
+   "s": "SD",
+   "n": "South Dakota Coyotes"
+  },
+  "235": {
+   "s": "TN",
+   "n": "Memphis Tigers"
+  },
+  "236": {
+   "s": "TN",
+   "n": "Chattanooga Mocs"
+  },
+  "238": {
+   "s": "TN",
+   "n": "Vanderbilt Commodores"
+  },
+  "239": {
+   "s": "TX",
+   "n": "Baylor Bears"
+  },
+  "242": {
+   "s": "TX",
+   "n": "Rice Owls"
+  },
+  "245": {
+   "s": "TX",
+   "n": "Texas A&M Aggies"
+  },
+  "248": {
+   "s": "TX",
+   "n": "Houston Cougars"
+  },
+  "249": {
+   "s": "TX",
+   "n": "North Texas Mean Green"
+  },
+  "250": {
+   "s": "TX",
+   "n": "UT Arlington Mavericks"
+  },
+  "251": {
+   "s": "TX",
+   "n": "Texas Longhorns"
+  },
+  "252": {
+   "s": "UT",
+   "n": "BYU Cougars"
+  },
+  "253": {
+   "s": "UT",
+   "n": "Southern Utah Thunderbirds"
+  },
+  "254": {
+   "s": "UT",
+   "n": "Utah Utes"
+  },
+  "256": {
+   "s": "VA",
+   "n": "James Madison Dukes"
+  },
+  "257": {
+   "s": "VA",
+   "n": "Richmond Spiders"
+  },
+  "258": {
+   "s": "VA",
+   "n": "Virginia Cavaliers"
+  },
+  "259": {
+   "s": "VA",
+   "n": "Virginia Tech Hokies"
+  },
+  "261": {
+   "s": "VT",
+   "n": "Vermont Catamounts"
+  },
+  "264": {
+   "s": "WA",
+   "n": "Washington Huskies"
+  },
+  "265": {
+   "s": "WA",
+   "n": "Washington State Cougars"
+  },
+  "269": {
+   "s": "WI",
+   "n": "Marquette Golden Eagles"
+  },
+  "270": {
+   "s": "WI",
+   "n": "Milwaukee Panthers"
+  },
+  "275": {
+   "s": "WI",
+   "n": "Wisconsin Badgers"
+  },
+  "276": {
+   "s": "WV",
+   "n": "Marshall Thundering Herd"
+  },
+  "277": {
+   "s": "WV",
+   "n": "West Virginia Mountaineers"
+  },
+  "278": {
+   "s": "CA",
+   "n": "Fresno State Bulldogs"
+  },
+  "279": {
+   "s": "CA",
+   "n": "Pacific Tigers"
+  },
+  "282": {
+   "s": "IN",
+   "n": "Indiana State Sycamores"
+  },
+  "284": {
+   "s": "MA",
+   "n": "Stonehill Skyhawks"
+  },
+  "288": {
+   "s": "TN",
+   "n": "Lipscomb Bisons"
+  },
+  "290": {
+   "s": "GA",
+   "n": "Georgia Southern Eagles"
+  },
+  "292": {
+   "s": "TX",
+   "n": "UT Rio Grande Valley Vaqueros"
+  },
+  "294": {
+   "s": "FL",
+   "n": "Jacksonville Dolphins"
+  },
+  "295": {
+   "s": "VA",
+   "n": "Old Dominion Monarchs"
+  },
+  "299": {
+   "s": "CA",
+   "n": "Long Beach State Beach"
+  },
+  "300": {
+   "s": "CA",
+   "n": "UC Irvine Anteaters"
+  },
+  "301": {
+   "s": "CA",
+   "n": "San Diego Toreros"
+  },
+  "302": {
+   "s": "CA",
+   "n": "UC Davis Aggies"
+  },
+  "304": {
+   "s": "ID",
+   "n": "Idaho State Bengals"
+  },
+  "305": {
+   "s": "IL",
+   "n": "DePaul Blue Demons"
+  },
+  "309": {
+   "s": "LA",
+   "n": "Louisiana Ragin' Cajuns"
+  },
+  "311": {
+   "s": "ME",
+   "n": "Maine Black Bears"
+  },
+  "314": {
+   "s": "NY",
+   "n": "Iona Gaels"
+  },
+  "315": {
+   "s": "NY",
+   "n": "Niagara Purple Eagles"
+  },
+  "322": {
+   "s": "PA",
+   "n": "Lafayette Leopards"
+  },
+  "324": {
+   "s": "SC",
+   "n": "Coastal Carolina Chanticleers"
+  },
+  "325": {
+   "s": "OH",
+   "n": "Cleveland State Vikings"
+  },
+  "326": {
+   "s": "TX",
+   "n": "Texas State Bobcats"
+  },
+  "328": {
+   "s": "UT",
+   "n": "Utah State Aggies"
+  },
+  "331": {
+   "s": "WA",
+   "n": "Eastern Washington Eagles"
+  },
+  "333": {
+   "s": "AL",
+   "n": "Alabama Crimson Tide"
+  },
+  "338": {
+   "s": "GA",
+   "n": "Kennesaw State Owls"
+  },
+  "339": {
+   "s": "IN",
+   "n": "Evansville Purple Aces"
+  },
+  "344": {
+   "s": "MS",
+   "n": "Mississippi State Bulldogs"
+  },
+  "349": {
+   "s": "NY",
+   "n": "Army Black Knights"
+  },
+  "350": {
+   "s": "NC",
+   "n": "UNC Wilmington Seahawks"
+  },
+  "356": {
+   "s": "IL",
+   "n": "Illinois Fighting Illini"
+  },
+  "357": {
+   "s": "TX",
+   "n": "Texas A&M-Corpus Christi Islanders"
+  },
+  "399": {
+   "s": "NY",
+   "n": "UAlbany Great Danes"
+  },
+  "526": {
+   "s": "FL",
+   "n": "Florida Gulf Coast Eagles"
+  },
+  "2000": {
+   "s": "TX",
+   "n": "Abilene Christian Wildcats"
+  },
+  "2005": {
+   "s": "CO",
+   "n": "Air Force Falcons"
+  },
+  "2006": {
+   "s": "OH",
+   "n": "Akron Zips"
+  },
+  "2010": {
+   "s": "AL",
+   "n": "Alabama A&M Bulldogs"
+  },
+  "2011": {
+   "s": "AL",
+   "n": "Alabama State Lady Hornets"
+  },
+  "2016": {
+   "s": "MS",
+   "n": "Alcorn State Lady Braves"
+  },
+  "2026": {
+   "s": "NC",
+   "n": "App State Mountaineers"
+  },
+  "2029": {
+   "s": "AR",
+   "n": "Arkansas-Pine Bluff Golden Lions"
+  },
+  "2031": {
+   "s": "AR",
+   "n": "Little Rock Trojans"
+  },
+  "2032": {
+   "s": "AR",
+   "n": "Arkansas State Red Wolves"
+  },
+  "2046": {
+   "s": "TN",
+   "n": "Austin Peay Governors"
+  },
+  "2050": {
+   "s": "IN",
+   "n": "Ball State Cardinals"
+  },
+  "2057": {
+   "s": "TN",
+   "n": "Belmont Bruins"
+  },
+  "2065": {
+   "s": "FL",
+   "n": "Bethune-Cookman Wildcats"
+  },
+  "2066": {
+   "s": "NY",
+   "n": "Binghamton Bearcats"
+  },
+  "2083": {
+   "s": "PA",
+   "n": "Bucknell Bison"
+  },
+  "2084": {
+   "s": "NY",
+   "n": "Buffalo Bulls"
+  },
+  "2086": {
+   "s": "IN",
+   "n": "Butler Bulldogs"
+  },
+  "2097": {
+   "s": "NC",
+   "n": "Campbell Fighting Camels"
+  },
+  "2099": {
+   "s": "NY",
+   "n": "Canisius Golden Griffins"
+  },
+  "2110": {
+   "s": "AR",
+   "n": "Central Arkansas Bears"
+  },
+  "2115": {
+   "s": "CT",
+   "n": "Central Connecticut Blue Devils"
+  },
+  "2116": {
+   "s": "FL",
+   "n": "UCF Knights"
+  },
+  "2117": {
+   "s": "MI",
+   "n": "Central Michigan Chippewas"
+  },
+  "2127": {
+   "s": "SC",
+   "n": "Charleston Southern Buccaneers"
+  },
+  "2130": {
+   "s": "IL",
+   "n": "Chicago State Cougars"
+  },
+  "2132": {
+   "s": "OH",
+   "n": "Cincinnati Bearcats"
+  },
+  "2142": {
+   "s": "NY",
+   "n": "Colgate Raiders"
+  },
+  "2154": {
+   "s": "MD",
+   "n": "Coppin State Eagles"
+  },
+  "2166": {
+   "s": "NC",
+   "n": "Davidson Wildcats"
+  },
+  "2168": {
+   "s": "OH",
+   "n": "Dayton Flyers"
+  },
+  "2169": {
+   "s": "DE",
+   "n": "Delaware State Hornets"
+  },
+  "2172": {
+   "s": "CO",
+   "n": "Denver Pioneers"
+  },
+  "2174": {
+   "s": "MI",
+   "n": "Detroit Mercy Titans"
+  },
+  "2181": {
+   "s": "IA",
+   "n": "Drake Bulldogs"
+  },
+  "2182": {
+   "s": "PA",
+   "n": "Drexel Dragons"
+  },
+  "2184": {
+   "s": "PA",
+   "n": "Duquesne Dukes"
+  },
+  "2193": {
+   "s": "TN",
+   "n": "East Tennessee State Bucs"
+  },
+  "2197": {
+   "s": "IL",
+   "n": "Eastern Illinois Panthers"
+  },
+  "2198": {
+   "s": "KY",
+   "n": "Eastern Kentucky Colonels"
+  },
+  "2199": {
+   "s": "MI",
+   "n": "Eastern Michigan Eagles"
+  },
+  "2210": {
+   "s": "NC",
+   "n": "Elon Phoenix"
+  },
+  "2217": {
+   "s": "CT",
+   "n": "Fairfield Stags"
+  },
+  "2226": {
+   "s": "FL",
+   "n": "Florida Atlantic Owls"
+  },
+  "2229": {
+   "s": "FL",
+   "n": "Florida International Panthers"
+  },
+  "2230": {
+   "s": "NY",
+   "n": "Fordham Rams"
+  },
+  "2239": {
+   "s": "CA",
+   "n": "Cal State Fullerton Titans"
+  },
+  "2241": {
+   "s": "NC",
+   "n": "Gardner-Webb Runnin' Bulldogs"
+  },
+  "2244": {
+   "s": "VA",
+   "n": "George Mason Patriots"
+  },
+  "2247": {
+   "s": "GA",
+   "n": "Georgia State Panthers"
+  },
+  "2250": {
+   "s": "WA",
+   "n": "Gonzaga Bulldogs"
+  },
+  "2253": {
+   "s": "AZ",
+   "n": "Grand Canyon Lopes"
+  },
+  "2261": {
+   "s": "VA",
+   "n": "Hampton Lady Pirates"
+  },
+  "2272": {
+   "s": "NC",
+   "n": "High Point Panthers"
+  },
+  "2275": {
+   "s": "NY",
+   "n": "Hofstra Pride"
+  },
+  "2277": {
+   "s": "TX",
+   "n": "Houston Christian Huskies"
+  },
+  "2287": {
+   "s": "IL",
+   "n": "Illinois State Redbirds"
+  },
+  "2294": {
+   "s": "IA",
+   "n": "Iowa Hawkeyes"
+  },
+  "2296": {
+   "s": "MS",
+   "n": "Jackson State Lady Tigers"
+  },
+  "2305": {
+   "s": "KS",
+   "n": "Kansas Jayhawks"
+  },
+  "2306": {
+   "s": "KS",
+   "n": "Kansas State Wildcats"
+  },
+  "2309": {
+   "s": "OH",
+   "n": "Kent State Golden Flashes"
+  },
+  "2320": {
+   "s": "TX",
+   "n": "Lamar Cardinals"
+  },
+  "2325": {
+   "s": "PA",
+   "n": "La Salle Explorers"
+  },
+  "2329": {
+   "s": "PA",
+   "n": "Lehigh Mountain Hawks"
+  },
+  "2330": {
+   "s": "NY",
+   "n": "Le Moyne Dolphins"
+  },
+  "2335": {
+   "s": "VA",
+   "n": "Liberty Flames"
+  },
+  "2344": {
+   "s": "VA",
+   "n": "Longwood Lancers"
+  },
+  "2348": {
+   "s": "LA",
+   "n": "Louisiana Tech Lady Techsters"
+  },
+  "2349": {
+   "s": "MA",
+   "n": "UMass Lowell River Hawks"
+  },
+  "2350": {
+   "s": "IL",
+   "n": "Loyola Chicago Ramblers"
+  },
+  "2351": {
+   "s": "CA",
+   "n": "Loyola Marymount Lions"
+  },
+  "2352": {
+   "s": "MD",
+   "n": "Loyola Maryland Greyhounds"
+  },
+  "2363": {
+   "s": "NY",
+   "n": "Manhattan Jaspers"
+  },
+  "2368": {
+   "s": "NY",
+   "n": "Marist Red Foxes"
+  },
+  "2377": {
+   "s": "LA",
+   "n": "McNeese Cowgirls"
+  },
+  "2378": {
+   "s": "MD",
+   "n": "UMBC Retrievers"
+  },
+  "2379": {
+   "s": "MD",
+   "n": "Maryland Eastern Shore Hawks"
+  },
+  "2382": {
+   "s": "GA",
+   "n": "Mercer Bears"
+  },
+  "2385": {
+   "s": "PA",
+   "n": "Mercyhurst Lakers"
+  },
+  "2390": {
+   "s": "FL",
+   "n": "Miami Hurricanes"
+  },
+  "2393": {
+   "s": "TN",
+   "n": "Middle Tennessee Blue Raiders"
+  },
+  "2400": {
+   "s": "MS",
+   "n": "Mississippi Valley State Devilettes"
+  },
+  "2405": {
+   "s": "NJ",
+   "n": "Monmouth Hawks"
+  },
+  "2413": {
+   "s": "KY",
+   "n": "Morehead State Eagles"
+  },
+  "2415": {
+   "s": "MD",
+   "n": "Morgan State Lady Bears"
+  },
+  "2426": {
+   "s": "MD",
+   "n": "Navy Midshipmen"
+  },
+  "2427": {
+   "s": "NC",
+   "n": "UNC Asheville Bulldogs"
+  },
+  "2428": {
+   "s": "NC",
+   "n": "North Carolina Central Eagles"
+  },
+  "2429": {
+   "s": "NC",
+   "n": "Charlotte 49ers"
+  },
+  "2430": {
+   "s": "NC",
+   "n": "UNC Greensboro Spartans"
+  },
+  "2433": {
+   "s": "LA",
+   "n": "UL Monroe Warhawks"
+  },
+  "2437": {
+   "s": "NE",
+   "n": "Omaha Mavericks"
+  },
+  "2439": {
+   "s": "NV",
+   "n": "UNLV Lady Rebels"
+  },
+  "2440": {
+   "s": "NV",
+   "n": "Nevada Wolf Pack"
+  },
+  "2441": {
+   "s": "CT",
+   "n": "New Haven Chargers"
+  },
+  "2443": {
+   "s": "LA",
+   "n": "LSU New Orleans Privateers"
+  },
+  "2447": {
+   "s": "LA",
+   "n": "Nicholls Colonels"
+  },
+  "2448": {
+   "s": "NC",
+   "n": "North Carolina A&T Aggies"
+  },
+  "2449": {
+   "s": "ND",
+   "n": "North Dakota State Bison"
+  },
+  "2450": {
+   "s": "VA",
+   "n": "Norfolk State Spartans"
+  },
+  "2453": {
+   "s": "AL",
+   "n": "North Alabama Lions"
+  },
+  "2454": {
+   "s": "FL",
+   "n": "North Florida Ospreys"
+  },
+  "2458": {
+   "s": "CO",
+   "n": "Northern Colorado Bears"
+  },
+  "2459": {
+   "s": "IL",
+   "n": "Northern Illinois Huskies"
+  },
+  "2460": {
+   "s": "IA",
+   "n": "Northern Iowa Panthers"
+  },
+  "2463": {
+   "s": "CA",
+   "n": "Cal State Northridge Matadors"
+  },
+  "2464": {
+   "s": "AZ",
+   "n": "Northern Arizona Lumberjacks"
+  },
+  "2466": {
+   "s": "LA",
+   "n": "Northwestern State Lady Demons"
+  },
+  "2473": {
+   "s": "MI",
+   "n": "Oakland Golden Grizzlies"
+  },
+  "2483": {
+   "s": "OR",
+   "n": "Oregon Ducks"
+  },
+  "2492": {
+   "s": "CA",
+   "n": "Pepperdine Waves"
+  },
+  "2501": {
+   "s": "OR",
+   "n": "Portland Pilots"
+  },
+  "2502": {
+   "s": "OR",
+   "n": "Portland State Vikings"
+  },
+  "2504": {
+   "s": "TX",
+   "n": "Prairie View A&M Lady Panthers"
+  },
+  "2506": {
+   "s": "SC",
+   "n": "Presbyterian Blue Hose"
+  },
+  "2507": {
+   "s": "RI",
+   "n": "Providence Friars"
+  },
+  "2509": {
+   "s": "IN",
+   "n": "Purdue Boilermakers"
+  },
+  "2511": {
+   "s": "NC",
+   "n": "Queens University Royals"
+  },
+  "2514": {
+   "s": "CT",
+   "n": "Quinnipiac Bobcats"
+  },
+  "2515": {
+   "s": "VA",
+   "n": "Radford Highlanders"
+  },
+  "2520": {
+   "s": "NJ",
+   "n": "Rider Broncs"
+  },
+  "2523": {
+   "s": "PA",
+   "n": "Robert Morris Colonials"
+  },
+  "2529": {
+   "s": "CT",
+   "n": "Sacred Heart Pioneers"
+  },
+  "2534": {
+   "s": "TX",
+   "n": "Sam Houston Bearkats"
+  },
+  "2535": {
+   "s": "AL",
+   "n": "Samford Bulldogs"
+  },
+  "2539": {
+   "s": "CA",
+   "n": "San Francisco Dons"
+  },
+  "2540": {
+   "s": "CA",
+   "n": "UC Santa Barbara Gauchos"
+  },
+  "2541": {
+   "s": "CA",
+   "n": "Santa Clara Broncos"
+  },
+  "2545": {
+   "s": "LA",
+   "n": "SE Louisiana Lady Lions"
+  },
+  "2546": {
+   "s": "MO",
+   "n": "Southeast Missouri State Redhawks"
+  },
+  "2547": {
+   "s": "WA",
+   "n": "Seattle U Redhawks"
+  },
+  "2550": {
+   "s": "NJ",
+   "n": "Seton Hall Pirates"
+  },
+  "2561": {
+   "s": "NY",
+   "n": "Siena Saints"
+  },
+  "2565": {
+   "s": "IL",
+   "n": "SIU Edwardsville Cougars"
+  },
+  "2567": {
+   "s": "TX",
+   "n": "SMU Mustangs"
+  },
+  "2569": {
+   "s": "SC",
+   "n": "South Carolina State Lady Bulldogs"
+  },
+  "2571": {
+   "s": "SD",
+   "n": "South Dakota State Jackrabbits"
+  },
+  "2572": {
+   "s": "MS",
+   "n": "Southern Miss Lady Eagles"
+  },
+  "2579": {
+   "s": "SC",
+   "n": "South Carolina Gamecocks"
+  },
+  "2582": {
+   "s": "LA",
+   "n": "Southern Jaguars"
+  },
+  "2598": {
+   "s": "PA",
+   "n": "Saint Francis Red Wolves"
+  },
+  "2599": {
+   "s": "NY",
+   "n": "St. John's Red Storm"
+  },
+  "2603": {
+   "s": "PA",
+   "n": "Saint Joseph's Hawks"
+  },
+  "2608": {
+   "s": "CA",
+   "n": "Saint Mary's Gaels"
+  },
+  "2612": {
+   "s": "NJ",
+   "n": "Saint Peter's Peacocks"
+  },
+  "2617": {
+   "s": "TX",
+   "n": "Stephen F. Austin Ladyjacks"
+  },
+  "2619": {
+   "s": "NY",
+   "n": "Stony Brook Seawolves"
+  },
+  "2623": {
+   "s": "MO",
+   "n": "Missouri State Lady Bears"
+  },
+  "2627": {
+   "s": "TX",
+   "n": "Tarleton State Texans"
+  },
+  "2628": {
+   "s": "TX",
+   "n": "TCU Horned Frogs"
+  },
+  "2630": {
+   "s": "TN",
+   "n": "UT Martin Skyhawks"
+  },
+  "2633": {
+   "s": "TN",
+   "n": "Tennessee Lady Volunteers"
+  },
+  "2634": {
+   "s": "TN",
+   "n": "Tennessee State Lady Tigers"
+  },
+  "2635": {
+   "s": "TN",
+   "n": "Tennessee Tech Golden Eagles"
+  },
+  "2636": {
+   "s": "TX",
+   "n": "UTSA Roadrunners"
+  },
+  "2638": {
+   "s": "TX",
+   "n": "UTEP Miners"
+  },
+  "2640": {
+   "s": "TX",
+   "n": "Texas Southern Tigers"
+  },
+  "2641": {
+   "s": "TX",
+   "n": "Texas Tech Lady Raiders"
+  },
+  "2649": {
+   "s": "OH",
+   "n": "Toledo Rockets"
+  },
+  "2653": {
+   "s": "AL",
+   "n": "Troy Trojans"
+  },
+  "2655": {
+   "s": "LA",
+   "n": "Tulane Green Wave"
+  },
+  "2670": {
+   "s": "VA",
+   "n": "VCU Rams"
+  },
+  "2674": {
+   "s": "IN",
+   "n": "Valparaiso Beacons"
+  },
+  "2681": {
+   "s": "NY",
+   "n": "Wagner Seahawks"
+  },
+  "2692": {
+   "s": "UT",
+   "n": "Weber State Wildcats"
+  },
+  "2698": {
+   "s": "GA",
+   "n": "West Georgia Wolves"
+  },
+  "2710": {
+   "s": "IL",
+   "n": "Western Illinois Leathernecks"
+  },
+  "2711": {
+   "s": "MI",
+   "n": "Western Michigan Broncos"
+  },
+  "2717": {
+   "s": "NC",
+   "n": "Western Carolina Catamounts"
+  },
+  "2724": {
+   "s": "KS",
+   "n": "Wichita State Shockers"
+  },
+  "2729": {
+   "s": "VA",
+   "n": "William & Mary Tribe"
+  },
+  "2737": {
+   "s": "SC",
+   "n": "Winthrop Eagles"
+  },
+  "2739": {
+   "s": "WI",
+   "n": "Green Bay Phoenix"
+  },
+  "2747": {
+   "s": "SC",
+   "n": "Wofford Terriers"
+  },
+  "2750": {
+   "s": "OH",
+   "n": "Wright State Raiders"
+  },
+  "2751": {
+   "s": "WY",
+   "n": "Wyoming Cowgirls"
+  },
+  "2752": {
+   "s": "OH",
+   "n": "Xavier Musketeers"
+  },
+  "2754": {
+   "s": "OH",
+   "n": "Youngstown State Penguins"
+  },
+  "2755": {
+   "s": "LA",
+   "n": "Grambling Lady Tigers"
+  },
+  "2771": {
+   "s": "MA",
+   "n": "Merrimack Warriors"
+  },
+  "2803": {
+   "s": "RI",
+   "n": "Bryant Bulldogs"
+  },
+  "2815": {
+   "s": "MO",
+   "n": "Lindenwood Lions"
+  },
+  "2837": {
+   "s": "TX",
+   "n": "East Texas A&M Lions"
+  },
+  "2856": {
+   "s": "CA",
+   "n": "California Baptist Lancers"
+  },
+  "2870": {
+   "s": "IN",
+   "n": "Purdue Fort Wayne Mastodons"
+  },
+  "2885": {
+   "s": "NJ",
+   "n": "NJIT Highlanders"
+  },
+  "2900": {
+   "s": "MN",
+   "n": "St. Thomas Tommies"
+  },
+  "2908": {
+   "s": "SC",
+   "n": "South Carolina Upstate Spartans"
+  },
+  "2916": {
+   "s": "TX",
+   "n": "Incarnate Word Cardinals"
+  },
+  "2934": {
+   "s": "CA",
+   "n": "Cal State Bakersfield Roadrunners"
+  },
+  "3084": {
+   "s": "UT",
+   "n": "Utah Valley Wolverines"
+  },
+  "3101": {
+   "s": "UT",
+   "n": "Utah Tech Trailblazers"
+  },
+  "112358": {
+   "s": "NY",
+   "n": "Long Island University Sharks"
+  }
+ }
+}
