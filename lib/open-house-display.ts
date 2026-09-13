@@ -4,6 +4,7 @@ import { normalizeCustomQuestions, questionsForSurface } from '@/lib/custom-ques
 import { inferProfileCountry, normalizeCountry } from '@/lib/regions'
 import { whatsAppConfigured, whatsAppFirstCountries } from '@/lib/messaging-channel'
 import { registrationClosed } from '@/lib/trial-cap'
+import { signInEnded } from '@/lib/signin-window'
 
 // The shape handed to the register page — safe display fields only.
 export type OpenHouseDisplay = NonNullable<Awaited<ReturnType<typeof getOpenHouseDisplay>>>
@@ -57,6 +58,12 @@ export async function getOpenHouseDisplay(
     // Skips rows under a preservation hold (migration 041).
     await supabase.from('qr_scans').delete().lt('created_at', cutoff).eq('legal_hold', false)
   }
+
+  // Sign-in closed: more than 6 hours past the scheduled end (lib/signin-
+  // window). Treated like a missing open house, so the register page shows
+  // the expired card (agent contact + lead form) instead of the form. Checked
+  // after the scan log so late scans still leave their trail.
+  if (signInEnded(oh.end_at, Date.now())) return null
 
   const { data: agent } = await supabase
     .from('profiles')
