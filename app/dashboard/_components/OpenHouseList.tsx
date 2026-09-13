@@ -334,7 +334,7 @@ export default function OpenHouseList({
   openPermanentQr,
   openSellerReport,
   openInvites,
-  openThankYouPreview,
+  openVisitorEmails,
   setDeleteConfirm,
   setVisitorModal,
   showToast,
@@ -372,7 +372,7 @@ export default function OpenHouseList({
   openPermanentQr: () => Promise<void>
   openSellerReport: (ohId: string) => Promise<void>
   openInvites: (oh: any) => void
-  openThankYouPreview: (oh: any) => void
+  openVisitorEmails: (oh: any) => void
   setDeleteConfirm: (id: string | null) => void
   setVisitorModal: (v: any) => void
   showToast: (message: string, type?: 'success' | 'error') => void
@@ -503,7 +503,7 @@ export default function OpenHouseList({
                 {ohState(oh) !== 'ended' && (
                   <button onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openInvites(oh) }} title="Email the past visitors who are still in their buying window a personal invite to this open house" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>💌 Invite</button>
                 )}
-                <button onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openThankYouPreview(oh) }} title="See the follow-up email ohACCESS sends your visitors the morning after, with the After Tour questions and your upcoming open houses" style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✉️ Visitor email</button>
+                <button onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openVisitorEmails(oh) }} title="See the emails your visitors get: the codeword at sign-in, the thank-you the next morning, and invites to your future open houses" style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✉️ Visitor emails</button>
                 <button onClick={(e) => { e.stopPropagation(); startCopy(oh) }} title="Start a new open house with these same details. Just pick the new date and times." style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⧉ Duplicate</button>
                 <button onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
                 {/* Delete is locked too (and server-enforced): deleting an
