@@ -273,7 +273,7 @@ function TrialBanner({ agentId, supabase, accentColor, trialLimit }: { agentId: 
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f' }}>
           {isExpired
-            ? '⚠️ Your free trial has ended'
+            ? '⚠️ Your free trial has ended. We hope you have enjoyed using ohACCESS. If you think it could be better email support@ohaccess.com.'
             : `✓ Free trial: ${remaining} of ${trialLimit} visitor registrations remaining`
           }
         </div>

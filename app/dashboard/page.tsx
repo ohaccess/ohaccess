@@ -1182,7 +1182,7 @@ export default function Dashboard() {
         {locked && (
           <div style={{ background: '#fff0f0', border: '1px solid #ffcccc', borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: '220px' }}>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: '#cc0000' }}>⚠️ Your free trial has ended</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: '#cc0000' }}>⚠️ Your free trial has ended. We hope you have enjoyed using ohACCESS. If you think it could be better email support@ohaccess.com.</div>
               <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
                 You&apos;ve used all {trialLimit} free visitor registrations. Creating open houses, QR codes, editing, and CSV export are paused. Choose a plan to turn everything back on. Your data is safe.
               </div>
