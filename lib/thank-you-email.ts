@@ -1,6 +1,6 @@
 import { escapeHtml } from './escape-html'
 import { safeUrl, type UpcomingOpenHouse } from './register-helpers'
-import { buildAgentCardHtml, buildSponsorCardHtml, type SponsorCard } from './email-cards'
+import { accentOnPrimary } from './colors'
 
 // The post-event visitor "thanks for visiting" email — sent the morning after
 // the open house. Pure builder + timing helpers so they can be unit-tested; the
@@ -71,10 +71,22 @@ export function exampleUpcomingOpenHouses(
   ]
 }
 
-// Moved to the shared email cards; re-exported for existing imports.
-export { agentInitials } from './email-cards'
+// Initials for the fallback avatar when the agent has no headshot photo.
+export function agentInitials(name: string | null | undefined): string {
+  const words = String(name || '').trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return ''
+  const first = words[0][0] || ''
+  const last = words.length > 1 ? words[words.length - 1][0] || '' : ''
+  return (first + last).toUpperCase()
+}
 
-export type ThankYouSponsorCard = SponsorCard
+export type ThankYouSponsorCard = {
+  name: string
+  company: string | null
+  email: string | null
+  phone: string | null
+  logoUrl: string | null
+}
 
 export type ThankYouEmailOpts = {
   appUrl: string
@@ -93,9 +105,6 @@ export type ThankYouEmailOpts = {
   agentLogoUrl: string | null
   agentPhone: string | null
   agentEmail: string     // where replies go (agent's public/display email)
-  agentLicenseNumber: string | null
-  agentLicenseState: string | null
-  agentInfoUrl: string | null // "Agent information" link
   listingUrl: string | null
   facts: string | null   // "$625,000 · 4 bd · 3 ba · 2,450 sqft"
   feedbackUrl: string | null // /feedback/<token> — null once feedback is in
@@ -130,18 +139,41 @@ export function buildThankYouEmail(o: ThankYouEmailOpts): { subject: string; htm
       <a href="${e(feedbackUrl)}" style="display:inline-block;margin-top:12px;background:${accent};color:${o.onAccent};text-decoration:none;font-size:14px;font-weight:700;padding:9px 16px;border-radius:8px;">Share your feedback &rarr;</a>
     </div>` : ''
 
-  // Agent card + logo, and the sponsor card + logo (only when the visit was
-  // sponsored): the shared builders every visitor email uses, so they match.
-  const agentCardHtml = buildAgentCardHtml({
-    name: o.agentName, brokerage: o.brokerage, email: o.agentEmail, phone: o.agentPhone,
-    licenseNumber: o.agentLicenseNumber, licenseState: o.agentLicenseState,
-    headshotUrl: o.headshotUrl, logoUrl: o.agentLogoUrl, infoUrl: o.agentInfoUrl,
-  }, {
-    primary, accent,
-    heading: 'Want to see it again, or tour more homes?',
-    blurb: "Just reply to this email or give me a call. I'm happy to set up a private showing whenever works for you.",
-  })
-  const sponsorHtml = o.sponsor ? buildSponsorCardHtml(o.sponsor) : ''
+  // Agent avatar: real headshot when set, otherwise a primary-color circle
+  // with the agent's initials in the accent color.
+  const headshot = safeUrl(o.headshotUrl)
+  const initials = agentInitials(o.agentName)
+  const avatar = headshot
+    ? `<img src="${e(headshot)}" width="52" height="52" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover;display:block;">`
+    : `<div style="width:52px;height:52px;border-radius:50%;background:${primary};color:${accentOnPrimary(primary, accent)};text-align:center;line-height:52px;font-weight:800;font-size:18px;">${e(initials)}</div>`
+
+  // Brand block below the agent card: the logo when set, otherwise the
+  // brokerage name in the primary color.
+  const agentLogo = safeUrl(o.agentLogoUrl)
+  const agentLogoBlock = agentLogo
+    ? `<div style="text-align:center;margin:12px 0 2px;"><img src="${e(agentLogo)}" alt="${e(o.brokerage || '')}" style="max-height:40px;max-width:60%;object-fit:contain;"></div>`
+    : o.brokerage
+      ? `<div style="text-align:center;margin:12px 0 2px;font-size:19px;font-weight:800;letter-spacing:-0.3px;color:${primary};">${e(o.brokerage)}</div>`
+      : ''
+
+  const phoneBit = o.agentPhone
+    ? `<a href="tel:${e(o.agentPhone)}" style="color:${accent};text-decoration:none;font-weight:600;">${e(o.agentPhone)}</a> &middot; `
+    : ''
+
+  // Sponsor card + logo below — only when the visit was sponsored.
+  const sp = o.sponsor
+  const sponsorLogo = sp ? safeUrl(sp.logoUrl) : ''
+  const sponsorContact = sp
+    ? [sp.company ? e(sp.company) : '', sp.phone ? e(sp.phone) : '', sp.email ? e(sp.email) : ''].filter(Boolean).join(' &middot; ')
+    : ''
+  const sponsorSection = sp ? `
+    <div style="background:#fdfaf3;border:1px solid #ead9ad;border-radius:12px;padding:16px 18px;margin:18px 0;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8a6a1f;text-transform:uppercase;margin-bottom:6px;">Sponsored by</div>
+      <div style="font-size:15px;font-weight:700;color:#1d1d1f;">${e(sp.name)}</div>
+      ${sponsorContact ? `<div style="font-size:13px;color:#6e6e73;">${sponsorContact}</div>` : ''}
+      <div style="font-size:11px;color:#8e8e93;margin-top:8px;line-height:1.5;">You are not required to use ${e(sp.company || sp.name)} for any service. You are free to shop around.</div>
+    </div>
+    ${sponsorLogo ? `<div style="text-align:center;margin:2px 0 4px;"><img src="${e(sponsorLogo)}" alt="${e(sp.company || sp.name)}" style="max-height:34px;max-width:60%;object-fit:contain;"></div>` : ''}` : ''
 
   const subject = `Thanks for visiting ${o.street}`
 
@@ -161,10 +193,26 @@ export function buildThankYouEmail(o: ThankYouEmailOpts): { subject: string; htm
           ${listingSection}
           ${feedbackSection}
 
-          ${agentCardHtml}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7f9;border-radius:12px;margin-top:18px;">
+            <tr>
+              <td colspan="2" style="padding:16px 16px 0;">
+                <div style="font-size:17px;font-weight:800;color:#1d1d1f;">Want to see it again, or tour more homes?</div>
+                <div style="font-size:14px;color:#444;line-height:1.6;margin-top:4px;">Just reply to this email or give me a call. I'm happy to set up a private showing whenever works for you.</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0 16px 16px;width:66px;vertical-align:middle;">${avatar}</td>
+              <td style="padding:10px 16px 16px 12px;vertical-align:middle;">
+                <div style="font-size:15px;font-weight:700;color:#1d1d1f;">${e(o.agentName)}</div>
+                ${o.brokerage ? `<div style="font-size:13px;color:#6e6e73;">${e(o.brokerage)}</div>` : ''}
+                <div style="font-size:13px;margin-top:3px;">${phoneBit}<a href="mailto:${e(o.agentEmail)}" style="color:${accent};text-decoration:none;">${e(o.agentEmail)}</a></div>
+              </td>
+            </tr>
+          </table>
+          ${agentLogoBlock}
 
           ${o.upcomingHtml}
-          ${sponsorHtml}
+          ${sponsorSection}
 
           <div style="border-top:1px solid #ececf0;margin-top:24px;padding-top:14px;font-size:11px;color:#9a9aa0;line-height:1.5;text-align:center;">
             You're receiving this because you signed in at ${e(o.agentName)}'s open house at ${e(o.fullAddress)} on ${e(o.dateLabel)}.<br>

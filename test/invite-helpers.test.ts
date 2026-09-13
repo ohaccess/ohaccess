@@ -173,10 +173,6 @@ describe('buildInviteEmail', () => {
     agentName: 'Jane Rivera',
     brokerage: 'Reflect Real Estate',
     headshotUrl: null,
-    agentLogoUrl: null,
-    agentLicenseNumber: null,
-    agentLicenseState: null,
-    agentInfoUrl: null,
     agentPhone: '(555) 010-2030',
     agentEmail: 'jane@reflectre.com',
     oh: {

@@ -105,15 +105,9 @@ export async function buildVisitorEmailPreviews(ohId: string, agentId: string): 
   let visitSponsor: ThankYouSponsorCard | null = null
   if (visitor?.sponsor_id) {
     const { data: s } = await supabase.from('sponsors')
-      .select('full_name, company, display_email, phone, license_number, headshot_url, logo_url, landing_page_url')
+      .select('full_name, company, display_email, phone, logo_url')
       .eq('id', visitor.sponsor_id).maybeSingle()
-    if (s?.full_name) {
-      visitSponsor = {
-        name: s.full_name, company: s.company, email: s.display_email, phone: s.phone,
-        licenseNumber: s.license_number, headshotUrl: s.headshot_url, logoUrl: s.logo_url,
-        infoUrl: isHttpUrl(s.landing_page_url) ? s.landing_page_url : null,
-      }
-    }
+    if (s?.full_name) visitSponsor = { name: s.full_name, company: s.company, email: s.display_email, phone: s.phone, logoUrl: s.logo_url }
   }
   const thankYou = buildThankYouEmail({
     appUrl: APP_URL,
@@ -126,9 +120,6 @@ export async function buildVisitorEmailPreviews(ohId: string, agentId: string): 
     headshotUrl: agent.headshot_url, agentLogoUrl: logoUrl,
     agentPhone: agent.phone,
     agentEmail,
-    agentLicenseNumber: agent.license_number,
-    agentLicenseState: agent.state,
-    agentInfoUrl: isHttpUrl(agent.landing_page_url) ? agent.landing_page_url : null,
     listingUrl: oh.listing_url,
     facts: listingFacts(oh),
     // Placeholder: a real visitor's feedback link would let the agent answer
@@ -196,10 +187,6 @@ export async function buildVisitorEmailPreviews(ohId: string, agentId: string): 
     agentName: agent.full_name || 'your agent',
     brokerage: agent.brokerage || null,
     headshotUrl: agent.headshot_url || null,
-    agentLogoUrl: logoUrl,
-    agentLicenseNumber: agent.license_number || null,
-    agentLicenseState: agent.state || null,
-    agentInfoUrl: isHttpUrl(agent.landing_page_url) ? agent.landing_page_url : null,
     agentPhone: agent.phone || null,
     agentEmail,
     oh: {

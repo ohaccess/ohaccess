@@ -1,6 +1,6 @@
 import { escapeHtml } from './escape-html'
 import { safeUrl, googleCalendarUrl } from './register-helpers'
-import { buildAgentCardHtml } from './email-cards'
+import { accentOnPrimary } from './colors'
 
 // "Re-invite past visitors": pure helpers for deciding WHO an agent may
 // invite to an upcoming open house, and for building the invite email.
@@ -172,10 +172,6 @@ export type InviteEmailOpts = {
   headshotUrl: string | null
   agentPhone: string | null
   agentEmail: string          // where replies (and the "I'm coming!" button) go
-  agentLogoUrl: string | null // brokerage-over-agent logo
-  agentLicenseNumber: string | null
-  agentLicenseState: string | null
-  agentInfoUrl: string | null // "Agent information" link
   oh: {
     id: string
     fullAddress: string       // "123 Oak St, Palo Alto, CA 94301"
@@ -221,12 +217,16 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
   const rsvpSubject = encodeURIComponent(`I'll be at your open house: ${o.oh.street}, ${o.oh.dateLabel}`)
   const rsvpUrl = `mailto:${o.agentEmail}?subject=${rsvpSubject}`
 
-  // Same agent card + logo as the codeword and thank-you emails.
-  const agentCardHtml = buildAgentCardHtml({
-    name: o.agentName, brokerage: o.brokerage, email: o.agentEmail, phone: o.agentPhone,
-    licenseNumber: o.agentLicenseNumber, licenseState: o.agentLicenseState,
-    headshotUrl: o.headshotUrl, logoUrl: o.agentLogoUrl, infoUrl: o.agentInfoUrl,
-  }, { primary: o.primary, accent: o.accent })
+  const phoneBit = o.agentPhone
+    ? `<a href="tel:${e(o.agentPhone)}" style="color:${o.accent};text-decoration:none;font-weight:600;">${e(o.agentPhone)}</a> &middot; `
+    : ''
+
+  const headshot = safeUrl(o.headshotUrl)
+  const initials = String(o.agentName || '').trim().split(/\s+/).filter(Boolean)
+    .map((w, i, a) => (i === 0 || i === a.length - 1 ? w[0] : '')).join('').toUpperCase()
+  const avatar = headshot
+    ? `<img src="${e(headshot)}" width="52" height="52" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover;display:block;">`
+    : `<div style="width:52px;height:52px;border-radius:50%;background:${o.primary};color:${accentOnPrimary(o.primary, o.accent)};text-align:center;line-height:52px;font-weight:800;font-size:18px;">${e(initials)}</div>`
 
   const subject = `You're invited: open house at ${o.oh.street}, ${o.oh.dateLabel}`
 
@@ -256,7 +256,16 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
             <a href="${e(rsvpUrl)}" style="display:inline-block;background:${o.accent};color:${o.onAccent};text-decoration:none;font-size:15px;font-weight:700;padding:11px 22px;border-radius:10px;">Let ${e(o.agentName.split(' ')[0] || o.agentName)} know you&rsquo;re coming &rarr;</a>
           </div>
 
-          ${agentCardHtml}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7f9;border-radius:12px;">
+            <tr>
+              <td style="padding:14px 0 14px 16px;width:66px;vertical-align:middle;">${avatar}</td>
+              <td style="padding:14px 16px 14px 12px;vertical-align:middle;">
+                <div style="font-size:15px;font-weight:700;color:#1d1d1f;">${e(o.agentName)}</div>
+                ${o.brokerage ? `<div style="font-size:13px;color:#6e6e73;">${e(o.brokerage)}</div>` : ''}
+                <div style="font-size:13px;margin-top:3px;">${phoneBit}<a href="mailto:${e(o.agentEmail)}" style="color:${o.accent};text-decoration:none;">${e(o.agentEmail)}</a></div>
+              </td>
+            </tr>
+          </table>
 
           <div style="border-top:1px solid #ececf0;margin-top:24px;padding-top:14px;font-size:11px;color:#9a9aa0;line-height:1.5;text-align:center;">
             You&rsquo;re receiving this because you signed in at one of ${e(o.agentName)}&rsquo;s open houses and agreed to hear about other properties.<br>

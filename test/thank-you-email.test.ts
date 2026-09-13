@@ -44,7 +44,6 @@ const baseOpts: ThankYouEmailOpts = {
   fullAddress: '4124 Cory Lee Court, Arlington, TX', dateLabel: 'Jul 24, 2026',
   agentName: 'Kathryn Chen', brokerage: 'Reflect Real Estate',
   headshotUrl: null, agentLogoUrl: null, agentPhone: '(817) 555-0142', agentEmail: 'kathryn@reflectre.com',
-  agentLicenseNumber: null, agentLicenseState: null, agentInfoUrl: null,
   listingUrl: null, facts: null, feedbackUrl: null, upcomingHtml: '', sponsor: null,
 }
 
@@ -78,18 +77,13 @@ describe('buildThankYouEmail', () => {
       listingUrl: 'https://example.com/listing',
       facts: '$625,000 · 4 bd · 3 ba',
       upcomingHtml: '<div>Upcoming Open Houses</div>',
-      sponsor: {
-        name: 'Mark Alvarez', company: 'Summit Home Loans', email: null, phone: '(817) 555-0199',
-        licenseNumber: null, headshotUrl: 'https://example.com/mark.jpg', logoUrl: null, infoUrl: 'https://ohaccess.com/r/sp1',
-      },
+      sponsor: { name: 'Mark Alvarez', company: 'Summit Home Loans', email: null, phone: '(817) 555-0199', logoUrl: null },
     })
     expect(html).toContain('View the listing')
     expect(html).toContain('The home you visited')
     expect(html).toContain('Upcoming Open Houses')
     expect(html).toContain('Sponsored by')
     expect(html).toContain('free to shop around')
-    expect(html).toContain('https://example.com/mark.jpg')
-    expect(html).toContain('Sponsor information')
   })
 
   it('escapes visitor/agent-controlled values', () => {

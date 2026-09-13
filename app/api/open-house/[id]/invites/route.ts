@@ -4,8 +4,7 @@ import { Resend } from 'resend'
 import { randomUUID } from 'crypto'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
-import { isHexColor, safeUrl, isEmail, isHttpUrl } from '@/lib/register-helpers'
-import { createShortUrl } from '@/lib/short-urls'
+import { isHexColor, safeUrl, isEmail } from '@/lib/register-helpers'
 import { onColor } from '@/lib/colors'
 import {
   computeInviteAudience,
@@ -199,12 +198,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     // visitor-facing email.
     const { data: agent } = await supabase
       .from('profiles')
-      .select('id, full_name, email, display_email, phone, brokerage, brokerage_id, primary_color, accent_color, logo_url, headshot_url, license_number, state, landing_page_url')
+      .select('id, full_name, email, display_email, phone, brokerage, brokerage_id, primary_color, accent_color, logo_url, headshot_url')
       .eq('id', user.id)
       .maybeSingle()
-    let brokerageRow: { primary_color: string | null; accent_color: string | null; logo_url: string | null } | null = null
+    let brokerageRow: { primary_color: string | null; accent_color: string | null } | null = null
     if (agent?.brokerage_id) {
-      const { data } = await supabase.from('brokerages').select('primary_color, accent_color, logo_url').eq('id', agent.brokerage_id).maybeSingle()
+      const { data } = await supabase.from('brokerages').select('primary_color, accent_color').eq('id', agent.brokerage_id).maybeSingle()
       brokerageRow = data
     }
     const primaryRaw = brokerageRow?.primary_color || agent?.primary_color
@@ -213,11 +212,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const accent = accentRaw && isHexColor(accentRaw) ? accentRaw : '#0071e3'
     const agentName = agent?.full_name || 'your agent'
     const agentEmail = agent?.display_email || agent?.email || 'support@ohaccess.com'
-    const agentLogoUrl = safeUrl(brokerageRow?.logo_url || agent?.logo_url) || null
-    // One tracked "Agent information" link for the whole batch.
-    const agentInfoUrl = agent && isHttpUrl(agent.landing_page_url)
-      ? await createShortUrl(agent.landing_page_url, user.id, oh.id, 'agent')
-      : null
 
     const street = oh.street_address || oh.property_address || 'the property'
     const fullAddress = oh.property_address || street
@@ -255,10 +249,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         agentName,
         brokerage: agent?.brokerage || null,
         headshotUrl: agent?.headshot_url || null,
-        agentLogoUrl,
-        agentLicenseNumber: agent?.license_number || null,
-        agentLicenseState: agent?.state || null,
-        agentInfoUrl,
         agentPhone: agent?.phone || null,
         agentEmail,
         oh: {
