@@ -5,7 +5,7 @@ import TeamAdminPanel from './_components/TeamAdminPanel'
 import TeamActivityPanel from './_components/TeamActivityPanel'
 import QrModal from './_components/QrModal'
 import InviteModal from './_components/InviteModal'
-import ThankYouPreviewModal from './_components/ThankYouPreviewModal'
+import VisitorEmailsModal from './_components/VisitorEmailsModal'
 import OpenHouseList from './_components/OpenHouseList'
 import NewOpenHouseForm from './_components/NewOpenHouseForm'
 import SettingsPanel from './_components/SettingsPanel'
@@ -54,7 +54,7 @@ export default function Dashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [qrModal, setQrModal] = useState<any>(null)
   const [inviteModal, setInviteModal] = useState<any>(null)
-  const [thankYouPreview, setThankYouPreview] = useState<any>(null)
+  const [visitorEmails, setVisitorEmails] = useState<any>(null)
   const [visitorModal, setVisitorModal] = useState<any>(null)
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -1230,7 +1230,7 @@ export default function Dashboard() {
             openPermanentQr={openPermanentQr}
             openSellerReport={openSellerReport}
             openInvites={(oh: any) => setInviteModal(oh)}
-            openThankYouPreview={(oh: any) => setThankYouPreview(oh)}
+            openVisitorEmails={(oh: any) => setVisitorEmails(oh)}
             setDeleteConfirm={setDeleteConfirm}
             setVisitorModal={setVisitorModal}
             showToast={showToast}
@@ -1322,13 +1322,13 @@ export default function Dashboard() {
         />
       )}
 
-      {/* VISITOR FOLLOW-UP EMAIL PREVIEW MODAL */}
-      {thankYouPreview && (
-        <ThankYouPreviewModal
-          oh={thankYouPreview}
-          onClose={() => setThankYouPreview(null)}
+      {/* VISITOR EMAILS PREVIEW MODAL (codeword / thank-you / invite tabs) */}
+      {visitorEmails && (
+        <VisitorEmailsModal
+          oh={visitorEmails}
+          onClose={() => setVisitorEmails(null)}
           onSchedule={() => {
-            setThankYouPreview(null)
+            setVisitorEmails(null)
             if (guardLocked()) return
             setEditingOH(null); resetForm(); setView('new')
           }}
