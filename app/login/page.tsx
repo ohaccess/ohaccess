@@ -16,6 +16,12 @@ function LoginForm() {
   const [confirmed, setConfirmed] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
+  // "Send a new confirmation link": opened by signing in to an unconfirmed
+  // account, the "Didn't get your confirmation email?" link, or
+  // /login?resend=true (the day-2 finish-setup email links there).
+  const [showResend, setShowResend] = useState(() => searchParams.get('resend') === 'true')
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const [resendError, setResendError] = useState('')
 
   // Read pricing-CTA params: plan=pro|team|brokerage & interval=month|year|two_year_prepay.
   // Brokerage is per-seat: a seats param rides along (validated server-side, 11–100).
@@ -39,6 +45,22 @@ function LoginForm() {
     p.startsWith('/') && !p.startsWith('//') &&
     [...p].every((ch) => { const c = ch.charCodeAt(0); return c >= 0x20 && c !== 0x5c })
   const safeNext = nextParam && isSafeNext(nextParam) ? nextParam : null
+
+  // Where the confirmation link lands. Preserves plan/interval through the
+  // email-confirmation roundtrip so checkout can resume after the user clicks
+  // the confirm link and signs in, and the post-login destination (e.g. a
+  // gift-claim link) the same way.
+  const confirmRedirectUrl = () => {
+    const confirmUrl = new URL('https://ohaccess.com/login')
+    confirmUrl.searchParams.set('confirmed', 'true')
+    if (hasCheckoutIntent) {
+      confirmUrl.searchParams.set('plan', planParam!)
+      confirmUrl.searchParams.set('interval', intervalParam!)
+      if (planParam === 'brokerage' && seatsParam) confirmUrl.searchParams.set('seats', seatsParam)
+    }
+    if (safeNext) confirmUrl.searchParams.set('next', safeNext)
+    return confirmUrl.toString()
+  }
 
   // After login succeeds, either start Stripe Checkout (if user came from a pricing CTA)
   // or send them to the dashboard as usual.
@@ -81,6 +103,63 @@ function LoginForm() {
     }
   }
 
+  // The confirmation message is worded the same whether or not the address
+  // has an unconfirmed account, so the form can't be used to probe emails.
+  const resendConfirmation = async () => {
+    const address = email.trim()
+    setResendError('')
+    if (!address) {
+      setResendError('Enter the email address you signed up with first.')
+      return
+    }
+    setResendStatus('sending')
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: address,
+      options: { emailRedirectTo: confirmRedirectUrl() },
+    })
+    if (error) {
+      setResendStatus('idle')
+      setResendError(
+        /second|rate limit|too many/i.test(error.message)
+          ? 'A link was sent a moment ago. Give it a minute, then try again.'
+          : error.message
+      )
+      return
+    }
+    setResendStatus('sent')
+  }
+
+  const resendPanel = (emailKnown: boolean) => (
+    <div style={{ background: '#f5f5f7', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px', color: '#1d1d1f', lineHeight: '1.5', textAlign: 'left' }}>
+      {resendStatus === 'sent' ? (
+        <div>
+          ✅ Sent. If <strong>{email.trim()}</strong> still needs confirming, a fresh link is on its way. Check your spam folder too.
+        </div>
+      ) : (
+        <>
+          <div style={{ fontWeight: '600', marginBottom: '4px' }}>Need a new confirmation link?</div>
+          <div style={{ color: '#6e6e73', marginBottom: '10px' }}>
+            {emailKnown
+              ? <>We&apos;ll send another one to <strong>{email.trim()}</strong>.</>
+              : 'Type the email address you signed up with above, then tap the button.'}
+          </div>
+          <button
+            type="button"
+            onClick={resendConfirmation}
+            disabled={resendStatus === 'sending'}
+            style={{ background: 'white', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '8px', padding: '8px 14px', fontSize: '13px', fontWeight: '600', cursor: resendStatus === 'sending' ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: resendStatus === 'sending' ? 0.7 : 1 }}
+          >
+            {resendStatus === 'sending' ? 'Sending...' : 'Send a new confirmation link'}
+          </button>
+          {resendError && (
+            <div style={{ color: '#cc0000', marginTop: '8px' }}>{resendError}</div>
+          )}
+        </>
+      )}
+    </div>
+  )
+
   useEffect(() => {
     if (searchParams.get('signup') === 'true') setIsLogin(false)
     if (searchParams.get('confirmed') === 'true') setConfirmed(true)
@@ -116,27 +195,21 @@ function LoginForm() {
     if (isLogin) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
-        setError(error.message)
+        if (/not confirmed/i.test(error.message)) {
+          setError('Please confirm your email address before signing in. Check your inbox for the confirmation link.')
+          setShowResend(true)
+        } else {
+          setError(error.message)
+        }
       } else if (data.user && !data.user.email_confirmed_at) {
         setError('Please confirm your email address before signing in. Check your inbox for the confirmation link.')
+        setShowResend(true)
         await supabase.auth.signOut()
       } else {
         await proceedAfterAuth()
         return
       }
     } else {
-      // Preserve plan/interval through email-confirmation roundtrip so checkout
-      // can resume after the user clicks the confirm link and signs in.
-      const confirmUrl = new URL('https://ohaccess.com/login')
-      confirmUrl.searchParams.set('confirmed', 'true')
-      if (hasCheckoutIntent) {
-        confirmUrl.searchParams.set('plan', planParam!)
-        confirmUrl.searchParams.set('interval', intervalParam!)
-        if (planParam === 'brokerage' && seatsParam) confirmUrl.searchParams.set('seats', seatsParam)
-      }
-      // Preserve the post-login destination (e.g. a gift-claim link) through
-      // the confirmation roundtrip, same as plan/interval above.
-      if (safeNext) confirmUrl.searchParams.set('next', safeNext)
       // Pull the referral source from the cookie set by RefCapture (if any)
       // and stash it on the auth user. This survives the email-confirmation
       // hop even when the confirm link opens in a different browser.
@@ -151,7 +224,7 @@ function LoginForm() {
         email,
         password,
         options: {
-          emailRedirectTo: confirmUrl.toString(),
+          emailRedirectTo: confirmRedirectUrl(),
           data: referralSource ? { referral_source: referralSource } : undefined,
         }
       })
@@ -227,6 +300,7 @@ function LoginForm() {
             <p style={{ fontSize: '12px', color: '#aeaeb2' }}>
               Didn&apos;t receive it? Check your spam folder.
             </p>
+            <div style={{ marginTop: '16px' }}>{resendPanel(true)}</div>
             <button
               onClick={() => { setMessage(''); setIsLogin(true) }}
               style={{ marginTop: '20px', background: 'none', border: 'none', color: '#0071e3', fontSize: '13px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
@@ -323,6 +397,8 @@ function LoginForm() {
                 </div>
               )}
 
+              {isLogin && showResend && resendPanel(false)}
+
               <button
                 type="submit"
                 disabled={loading}
@@ -370,6 +446,15 @@ function LoginForm() {
                 <a href="/reset-password" style={{ color: '#aeaeb2', fontSize: '12px', textDecoration: 'none' }}>
                   Forgot your password?
                 </a>
+                {!showResend && (
+                  <button
+                    type="button"
+                    onClick={() => { setShowResend(true); setResendStatus('idle'); setResendError('') }}
+                    style={{ display: 'block', margin: '8px auto 0', background: 'none', border: 'none', padding: 0, color: '#aeaeb2', fontSize: '12px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  >
+                    Didn&apos;t get your confirmation email?
+                  </button>
+                )}
                 <div style={{ marginTop: '8px', fontSize: '12px', color: '#aeaeb2' }}>
                   Need to change your login email? Contact{' '}
                   <a href="mailto:support@ohaccess.com" style={{ color: '#6e6e73', textDecoration: 'none' }}>support@ohaccess.com</a>
