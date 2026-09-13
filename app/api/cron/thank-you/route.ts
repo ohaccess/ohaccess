@@ -1,7 +1,8 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { isEmail, buildUpcomingOpenHousesHtml } from '@/lib/register-helpers'
+import { isEmail, isHttpUrl, buildUpcomingOpenHousesHtml } from '@/lib/register-helpers'
+import { createShortUrl } from '@/lib/short-urls'
 import { buildThankYouEmail, thankYouSendState, type ThankYouSponsorCard } from '@/lib/thank-you-email'
 import { resolveEmailBranding, listingFacts, loadUpcomingOpenHouses } from '@/lib/thank-you-data'
 
@@ -64,7 +65,7 @@ async function handle(request: Request) {
   }
   if (agentIds.length) {
     const { data } = await supabase.from('profiles')
-      .select('id, full_name, email, display_email, phone, brokerage, brokerage_id, primary_color, accent_color, logo_url, headshot_url')
+      .select('id, full_name, email, display_email, phone, brokerage, brokerage_id, primary_color, accent_color, logo_url, headshot_url, license_number, state, landing_page_url')
       .in('id', agentIds)
     for (const a of data ?? []) agentMap.set(a.id, a)
   }
@@ -77,9 +78,19 @@ async function handle(request: Request) {
   }
   if (sponsorIds.length) {
     const { data } = await supabase.from('sponsors')
-      .select('id, full_name, company, display_email, phone, logo_url')
+      .select('id, full_name, company, display_email, phone, license_number, headshot_url, logo_url, landing_page_url')
       .in('id', sponsorIds)
     for (const s of data ?? []) sponsorMap.set(s.id, s)
+  }
+
+  // Tracked short links for the "Agent information" / "Sponsor information"
+  // links (same kinds as the codeword email), one per open house + page per run.
+  const shortLinks = new Map<string, Promise<string | null>>()
+  const shortLink = (url: string | null | undefined, agentId: string, ohId: string, kind: 'agent' | 'sponsor') => {
+    if (!isHttpUrl(url)) return Promise.resolve(null)
+    const key = `${kind}|${ohId}|${url}`
+    if (!shortLinks.has(key)) shortLinks.set(key, createShortUrl(url, agentId, ohId, kind))
+    return shortLinks.get(key)!
   }
 
   let processed = 0
@@ -107,7 +118,11 @@ async function handle(request: Request) {
     if (v.sponsor_id) {
       const s = sponsorMap.get(v.sponsor_id) as Record<string, string | null> | undefined
       if (s?.full_name) {
-        sponsor = { name: s.full_name, company: s.company, email: s.display_email, phone: s.phone, logoUrl: s.logo_url }
+        sponsor = {
+          name: s.full_name, company: s.company, email: s.display_email, phone: s.phone,
+          licenseNumber: s.license_number, headshotUrl: s.headshot_url, logoUrl: s.logo_url,
+          infoUrl: await shortLink(s.landing_page_url, v.agent_id, v.open_house_id, 'sponsor'),
+        }
       }
     }
 
@@ -121,6 +136,9 @@ async function handle(request: Request) {
       headshotUrl: agent.headshot_url, agentLogoUrl: logoUrl,
       agentPhone: agent.phone,
       agentEmail: agent.display_email || agent.email || 'support@ohaccess.com',
+      agentLicenseNumber: agent.license_number,
+      agentLicenseState: agent.state,
+      agentInfoUrl: await shortLink(agent.landing_page_url, v.agent_id, v.open_house_id, 'agent'),
       listingUrl: oh.listing_url,
       facts: listingFacts(oh),
       // The after-tour questions, for the visitors who never scrolled back to

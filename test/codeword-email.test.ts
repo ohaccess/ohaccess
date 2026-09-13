@@ -43,4 +43,15 @@ describe('buildCodewordEmail', () => {
     const { html } = buildCodewordEmail({ ...base, sponsor: { id: 's1', full_name: 'Pat Lender', company: 'Acme Mortgage', display_email: null, phone: null, license_number: null, headshot_url: null, logo_url: null, landing_page_url: null } })
     expect(html).toContain("today's sponsor, Pat Lender (Acme Mortgage)")
   })
+  it('shows the sponsor headshot, information link and logo', () => {
+    const { html } = buildCodewordEmail({
+      ...base,
+      sponsor: { id: 's1', full_name: 'Pat Lender', company: 'Acme Mortgage', display_email: null, phone: null, license_number: null, headshot_url: 'https://example.com/pat.jpg', logo_url: 'https://example.com/acme.png', landing_page_url: 'https://acme.example' },
+      sponsorShortUrl: 'https://ohaccess.com/r/sp1',
+    })
+    expect(html).toContain('https://example.com/pat.jpg')
+    expect(html).toContain('https://example.com/acme.png')
+    expect(html).toContain('href="https://ohaccess.com/r/sp1"')
+    expect(html).toContain('Sponsor information')
+  })
 })
