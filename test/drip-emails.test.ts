@@ -53,6 +53,7 @@ describe('buildFinishSetupEmail', () => {
     const { subject, html } = buildFinishSetupEmail(base)
     expect(subject).toBe('Your ohACCESS account is ready. Pick up where you left off')
     expect(html).toContain(`${APP_URL}/login`)
+    expect(html).toContain(`${APP_URL}/login?resend=true`)
     expect(html).toContain(WELCOME_VIDEO_SETTINGS)
     expect(html).toContain('25 visitor sign-ins are free')
   })
@@ -76,11 +77,12 @@ describe('buildReferralEmail', () => {
 })
 
 describe('buildHardwareOfferEmail', () => {
-  it('pitches the 2-year offer with the terms link', () => {
+  it('pitches the 2-year offer, links straight to checkout, and links the terms', () => {
     const { html } = buildHardwareOfferEmail(base)
     expect(html).toContain('first 100 agents in your state')
     expect(html).toContain('$240')
-    expect(html).toContain(`${APP_URL}/dashboard?view=settings`)
+    expect(html).toContain(`${APP_URL}/login?plan=pro&amp;interval=two_year_prepay`)
+    expect(html).toContain('Lock in 2-year Pro + free signs')
     expect(html).toContain(`${APP_URL}/subscriber-terms`)
   })
 })

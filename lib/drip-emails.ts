@@ -101,7 +101,9 @@ export function buildFinishSetupEmail(o: {
     </div>
     <div style="font-size:14px;line-height:1.7;margin-top:16px;">
       Your first <strong>25 visitor sign-ins are free</strong>. No credit card needed. And if the
-      confirmation email never reached you, just reply to this one and I'll get you sorted.
+      confirmation email never reached you,
+      <a href="${escapeHtml(`${o.appUrl}/login?resend=true`)}" style="color:${GOLD};font-weight:600;">get a fresh confirmation link here</a>,
+      or just reply and I'll sort it out.
     </div>`
 
   return {
@@ -205,7 +207,9 @@ export function buildHardwareOfferEmail(o: {
   unsubscribeUrl: string
 }): BuiltEmail {
   const e = escapeHtml
-  const settingsUrl = `${o.appUrl}/dashboard?view=settings`
+  // Straight to 2-year Pro checkout (where the hardware choice and shipping
+  // address are collected). Signed-in agents skip the login form entirely.
+  const checkoutUrl = `${o.appUrl}/login?plan=pro&interval=two_year_prepay`
   const bodyHtml = `
     <div style="font-size:14px;line-height:1.7;margin-top:12px;">
       A heads-up before it's gone: our founding-member offer is still open in most states.
@@ -219,10 +223,10 @@ export function buildHardwareOfferEmail(o: {
     </div>
     <div style="font-size:14px;line-height:1.7;margin-top:16px;">
       The 2-year plan is <strong>$240</strong>. That works out to $10/month, our lowest rate,
-      with unlimited visitor sign-ins the whole way. Pick your hardware right inside checkout:
-      choose your plan under Settings and the shipping form appears automatically.
+      with unlimited visitor sign-ins the whole way. The button below goes straight to checkout,
+      where you pick two pedestal stands or an A-frame and enter your shipping address.
     </div>
-    ${ctaButton('See plans in my dashboard', settingsUrl)}
+    ${ctaButton('Lock in 2-year Pro + free signs', checkoutUrl)}
     <div style="font-size:12px;color:#aeaeb2;margin-top:16px;line-height:1.6;">
       One claim per account, while your state's allotment lasts.
       <a href="${e(`${o.appUrl}/subscriber-terms`)}" style="color:#aeaeb2;">Offer terms</a>.
