@@ -1272,7 +1272,7 @@ export default function SettingsPanel({
           (touring agreement, buyer-rep one-pager, disclosure). Turned on per
           open house in the New Open House form. Signed copies are emailed to
           both parties and never stored; only the blank template lives here. */}
-      <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+      <div id="agreements-signed-before-entry" style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px', scrollMarginTop: '80px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Agreements Signed Before Entry</div>
         <div style={{ fontSize: '14px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
           For open houses that need a <strong style={{ color: '#1d1d1f' }}>signature</strong> before the tour: a touring agreement when you host another brokerage&apos;s listing, a buyer-rep one-pager, anything your broker requires signed rather than just delivered. Upload the blank PDF once here, then flip on &ldquo;Require a signed agreement&rdquo; when you set up an open house. Visitors e-sign on their phone right after check-in; the signed PDF is emailed to you and to them, and <strong style={{ color: '#1d1d1f' }}>ohACCESS never stores signed documents</strong>.

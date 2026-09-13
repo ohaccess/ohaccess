@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import Link from 'next/link'
+import Captcha, { captchaEnabled, CAPTCHA_WAIT_MESSAGE } from '@/app/_components/Captcha'
 
 // Sign-in / sign-up for SPONSORS — 3rd-party providers (lenders, title,
 // insurance…) who co-brand agents' open houses. Mirrors /login but lands on
@@ -15,6 +16,9 @@ export default function SponsorLoginPage() {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
+  // Bot check (app/_components/Captcha): token for the next auth call.
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>()
+  const [captchaReset, setCaptchaReset] = useState(0)
 
   // Already signed in? Straight to the sponsor dashboard.
   useEffect(() => {
@@ -37,8 +41,10 @@ export default function SponsorLoginPage() {
 
     setLoading(true)
 
+    if (captchaEnabled && !captchaToken) { setError(CAPTCHA_WAIT_MESSAGE); setLoading(false); return }
     if (isLogin) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken } })
+      setCaptchaReset(n => n + 1)
       if (error) {
         setError(error.message)
       } else if (data.user && !data.user.email_confirmed_at) {
@@ -58,8 +64,9 @@ export default function SponsorLoginPage() {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: confirmUrl.toString() },
+        options: { emailRedirectTo: confirmUrl.toString(), captchaToken },
       })
+      setCaptchaReset(n => n + 1)
       if (error) {
         setError(error.message)
       } else {
@@ -219,6 +226,8 @@ export default function SponsorLoginPage() {
                   {error}
                 </div>
               )}
+
+              <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
 
               <button
                 type="submit"

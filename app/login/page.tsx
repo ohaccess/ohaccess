@@ -4,6 +4,7 @@ import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { trackSignup } from '@/lib/marketing-tags'
+import Captcha, { captchaEnabled, CAPTCHA_WAIT_MESSAGE } from '@/app/_components/Captcha'
 
 function LoginForm() {
   const searchParams = useSearchParams()
@@ -22,6 +23,9 @@ function LoginForm() {
   const [showResend, setShowResend] = useState(() => searchParams.get('resend') === 'true')
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
   const [resendError, setResendError] = useState('')
+  // Bot check (app/_components/Captcha): token for the next auth call.
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>()
+  const [captchaReset, setCaptchaReset] = useState(0)
 
   // Read pricing-CTA params: plan=pro|team|brokerage & interval=month|year|two_year_prepay.
   // Brokerage is per-seat: a seats param rides along (validated server-side, 11–100).
@@ -70,7 +74,11 @@ function LoginForm() {
       return
     }
     if (!hasCheckoutIntent) {
-      window.location.href = '/dashboard'
+      // First sign-in after clicking the confirmation link: start in Settings
+      // so the agent sets up the profile visitors see before anything else.
+      window.location.href = searchParams.get('confirmed') === 'true'
+        ? '/dashboard?view=settings&welcome=1'
+        : '/dashboard'
       return
     }
     const { data: { session } } = await supabase.auth.getSession()
@@ -113,11 +121,13 @@ function LoginForm() {
       return
     }
     setResendStatus('sending')
+    if (captchaEnabled && !captchaToken) { setResendStatus('idle'); setResendError(CAPTCHA_WAIT_MESSAGE); return }
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: address,
-      options: { emailRedirectTo: confirmRedirectUrl() },
+      options: { emailRedirectTo: confirmRedirectUrl(), captchaToken },
     })
+    setCaptchaReset(n => n + 1)
     if (error) {
       setResendStatus('idle')
       setResendError(
@@ -192,8 +202,10 @@ function LoginForm() {
 
     setLoading(true)
 
+    if (captchaEnabled && !captchaToken) { setError(CAPTCHA_WAIT_MESSAGE); setLoading(false); return }
     if (isLogin) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken } })
+      setCaptchaReset(n => n + 1)
       if (error) {
         if (/not confirmed/i.test(error.message)) {
           setError('Please confirm your email address before signing in. Check your inbox for the confirmation link.')
@@ -226,8 +238,10 @@ function LoginForm() {
         options: {
           emailRedirectTo: confirmRedirectUrl(),
           data: referralSource ? { referral_source: referralSource } : undefined,
+          captchaToken,
         }
       })
+      setCaptchaReset(n => n + 1)
       if (error) {
         setError(error.message)
       } else {
@@ -285,6 +299,10 @@ function LoginForm() {
             ✅ Email confirmed! You can now sign in.
           </div>
         )}
+
+        {/* Bot check: invisible unless Cloudflare needs a click. Outside the
+            form so the resend panel on the check-your-email screen has it too. */}
+        <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
 
         {/* Signup confirmation sent */}
         {message === 'confirmed' ? (
