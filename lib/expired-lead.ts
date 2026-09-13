@@ -4,17 +4,21 @@ import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { isEmail } from '@/lib/register-helpers'
 import { escapeHtml } from '@/lib/escape-html'
 import { inferProfileCountry } from '@/lib/regions'
+import { signInEnded } from '@/lib/signin-window'
 
 // Expired-link referral loop: when a visitor scans the QR for an open house
-// that no longer exists, the register page falls back to a lead-capture card.
+// that no longer exists, or one whose online sign-in has closed (more than
+// 6 hours past its end, lib/signin-window), the register page falls back to
+// a lead-capture card.
 // Whose lead it becomes depends on the hosting agent's standing:
 //   - agent still on trial (under the visitor cap) or on a paid plan
 //     → the page shows the agent's contact info and the lead is emailed to them
 //   - agent lapsed (over the trial cap, not paying)
 //     → the lead goes to ohACCESS instead (the pre-existing behavior)
-// The agent is recovered from open_house_archive, which keeps agent_id after
-// an agent-side delete. Admin hard-deletes and pre-archive deletions leave no
-// row, so those links fall back to the ohACCESS path.
+// The agent comes from the live open house when it has ended, otherwise from
+// open_house_archive, which keeps agent_id after an agent-side delete. Admin
+// hard-deletes and pre-archive deletions leave no row, so those links fall
+// back to the ohACCESS path.
 
 // The public contact card shown to the visitor. Display fields only — no ids,
 // no billing state.
@@ -56,21 +60,35 @@ export function agentInGoodStanding(
 // open_houses.id is a uuid; anything else can't match the archive either.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-// Recover the deleted open house's agent and return their contact card —
-// but ONLY when they're in good standing. Lapsed, unknown, or account-deleted
-// agents return null and the caller falls back to the ohACCESS lead path.
+// Recover the ended or deleted open house's agent and return their contact
+// card — but ONLY when they're in good standing. Lapsed, unknown, or
+// account-deleted agents return null and the caller falls back to the
+// ohACCESS lead path. A live open house still taking sign-ins also returns
+// null: its link shows the real form, never this card.
 export async function resolveExpiredAgent(
   openHouseId: string
 ): Promise<ExpiredAgentContact | null> {
   if (!UUID_RE.test(openHouseId)) return null
 
-  const { data: archived } = await supabase
-    .from('open_house_archive')
-    .select('agent_id, property_address')
-    .eq('open_house_id', openHouseId)
-    .order('deleted_at', { ascending: false })
-    .limit(1)
+  let archived: { agent_id: string | null; property_address: string | null } | null = null
+  const { data: live } = await supabase
+    .from('open_houses')
+    .select('agent_id, property_address, end_at')
+    .eq('id', openHouseId)
     .maybeSingle()
+  if (live) {
+    if (!signInEnded(live.end_at, Date.now())) return null
+    archived = live
+  } else {
+    const { data } = await supabase
+      .from('open_house_archive')
+      .select('agent_id, property_address')
+      .eq('open_house_id', openHouseId)
+      .order('deleted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    archived = data
+  }
   if (!archived?.agent_id) return null
 
   // select('*'): `country` (migration 048) may not exist yet on a database

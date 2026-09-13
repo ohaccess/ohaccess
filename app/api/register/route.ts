@@ -18,6 +18,7 @@ import {
 } from '@/lib/register-helpers'
 import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { capCrossingVisitor, graceAllowsRegistration } from '@/lib/trial-cap'
+import { signInEnded } from '@/lib/signin-window'
 import {
   normalizeCustomQuestions,
   questionsForSurface,
@@ -114,6 +115,15 @@ export async function POST(request: Request) {
 
     if (ohError || !openHouse) {
       return NextResponse.json({ error: 'Open house not found' }, { status: 404 })
+    }
+
+    // Online sign-in closes 6 hours after the scheduled end (lib/signin-window).
+    // The register page already shows the expired card by then; this is the
+    // enforcement behind it, before any visitor row or message is created.
+    if (signInEnded(openHouse.end_at, Date.now())) {
+      return NextResponse.json({
+        error: 'This open house has ended, so online sign-in is closed. Please contact the hosting agent.'
+      }, { status: 403 })
     }
 
     const agent = openHouse.profiles

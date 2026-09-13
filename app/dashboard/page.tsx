@@ -6,6 +6,7 @@ import TeamActivityPanel from './_components/TeamActivityPanel'
 import QrModal from './_components/QrModal'
 import InviteModal from './_components/InviteModal'
 import VisitorEmailsModal from './_components/VisitorEmailsModal'
+import { rescheduleResetsReminder } from '@/lib/signin-window'
 import OpenHouseList from './_components/OpenHouseList'
 import NewOpenHouseForm from './_components/NewOpenHouseForm'
 import SettingsPanel from './_components/SettingsPanel'
@@ -846,6 +847,9 @@ export default function Dashboard() {
       agreement_template_ids: form.agreement_template_ids.length > 0 ? form.agreement_template_ids : null,
     }
     if (timesChanged) update.report_sent_at = null
+    // Moving an open house to a new day (e.g. reusing a past one) re-arms its
+    // day-before reminder; a same-day time tweak doesn't send a second one.
+    if (timesChanged && rescheduleResetsReminder(editingOH.start_at, startAt)) update.reminder_sent_at = null
     const { error } = await supabase.from('open_houses').update(update).eq('id', editingOH.id)
     if (error) { showToast('Error updating: ' + error.message); return }
     setEditingOH(null)
