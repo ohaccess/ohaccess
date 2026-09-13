@@ -5,7 +5,7 @@ import { isEmail } from '@/lib/register-helpers'
 import { isExpiredPrepaidAccess } from '@/lib/billing-plans'
 import { HARDWARE_OFFER_ACTIVE } from '@/lib/hardware-offer'
 import { welcomeFirstName } from '@/lib/welcome-email'
-import { decideDripEmail, type DripAgentState, type DripEmailKey } from '@/lib/drip'
+import { decideDripEmail, DRIP_EMAIL_KEYS, type DripAgentState, type DripEmailKey } from '@/lib/drip'
 import {
   buildFinishSetupEmail,
   buildFirstOpenHouseEmail,
@@ -185,6 +185,9 @@ async function handle(request: Request) {
 
   const sentByAgent = new Map<string, Partial<Record<DripEmailKey, string>>>()
   for (const row of log) {
+    // agent_email_log also holds the weekly weekend-games emails; only the
+    // lifecycle sequence counts toward drip spacing and history.
+    if (!(DRIP_EMAIL_KEYS as readonly string[]).includes(row.email_key)) continue
     const sent = sentByAgent.get(row.agent_id) ?? {}
     sent[row.email_key as DripEmailKey] = row.sent_at
     sentByAgent.set(row.agent_id, sent)

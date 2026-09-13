@@ -11,9 +11,9 @@ import { WELCOME_VIDEO_SETTINGS, WELCOME_VIDEO_OPEN_HOUSE } from './welcome-emai
 // headers). Opting out stops these emails only — reminders, reports and
 // billing mail are unaffected, and the footer says so.
 
-const GOLD = '#c9963a'
+export const GOLD = '#c9963a'
 
-type BuiltEmail = { subject: string; html: string }
+export type BuiltEmail = { subject: string; html: string }
 
 type ShellOpts = {
   preheader: string
@@ -22,9 +22,11 @@ type ShellOpts = {
   greeting: string
   bodyHtml: string
   unsubscribeUrl: string
+  // Plain text shown at the start of the footer (e.g. where data came from).
+  footerNote?: string
 }
 
-function greetingFor(firstName: string | null | undefined): string {
+export function greetingFor(firstName: string | null | undefined): string {
   return firstName?.trim() ? `Hi ${escapeHtml(firstName.trim())},` : 'Hi there,'
 }
 
@@ -35,14 +37,14 @@ function watchLink(label: string, url: string): string {
       </div>`
 }
 
-function ctaButton(label: string, url: string): string {
+export function ctaButton(label: string, url: string): string {
   return `
     <div style="margin-top:20px;">
       <a href="${escapeHtml(url)}" style="display:inline-block;background:#1d1d1f;color:white;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:600;text-decoration:none;">${escapeHtml(label)}</a>
     </div>`
 }
 
-function shell(o: ShellOpts): string {
+export function shell(o: ShellOpts): string {
   const e = escapeHtml
   return `
   <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1d1d1f;">
@@ -67,7 +69,7 @@ function shell(o: ShellOpts): string {
     </div>
 
     <div style="font-size:12px;color:#aeaeb2;margin-top:24px;border-top:1px solid #e5e5ea;padding-top:12px;line-height:1.6;">
-      You're receiving occasional tips because you have an ohACCESS account.
+      ${o.footerNote ? `${e(o.footerNote)} ` : ''}You're receiving occasional tips because you have an ohACCESS account.
       <a href="${e(o.unsubscribeUrl)}" style="color:#aeaeb2;">Unsubscribe</a> from these anytime.
       Emails about your own open houses (reminders, reports) are unaffected.
     </div>
