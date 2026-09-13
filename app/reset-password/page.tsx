@@ -2,21 +2,28 @@
 import { useState } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import Link from 'next/link'
+import Captcha, { captchaEnabled, CAPTCHA_WAIT_MESSAGE } from '@/app/_components/Captcha'
 
 export default function ResetPassword() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  // Bot check (app/_components/Captcha): token for the next auth call.
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>()
+  const [captchaReset, setCaptchaReset] = useState(0)
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
+    if (captchaEnabled && !captchaToken) { setError(CAPTCHA_WAIT_MESSAGE); setLoading(false); return }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`
+      redirectTo: `${window.location.origin}/update-password`,
+      captchaToken,
     })
+    setCaptchaReset(n => n + 1)
 
     if (error) {
       setError(error.message)
@@ -83,6 +90,8 @@ export default function ResetPassword() {
                   {error}
                 </div>
               )}
+
+              <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
 
               <button
                 type="submit"

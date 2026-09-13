@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import Captcha, { captchaEnabled, CAPTCHA_WAIT_MESSAGE } from '@/app/_components/Captcha'
 
 // An agent lands here from a sponsor's invitation email. Accepting is the
 // agent's explicit, on-record approval: from then on the sponsor's card
@@ -31,6 +32,9 @@ function SponsorInviteForm() {
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  // Bot check (app/_components/Captcha): token for the next auth call.
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>()
+  const [captchaReset, setCaptchaReset] = useState(0)
   const [checkEmail, setCheckEmail] = useState(false)
   const [accepted, setAccepted] = useState(false)
 
@@ -77,13 +81,16 @@ function SponsorInviteForm() {
       setError('Please agree to the Subscriber Terms of Service and Privacy Policy to continue.')
       return
     }
+    if (captchaEnabled && !captchaToken) { setError(CAPTCHA_WAIT_MESSAGE); setLoading(false); return }
     setLoading(true)
 
     if (mode === 'signin') {
       const { data, error: signInErr } = await supabase.auth.signInWithPassword({
         email: invite.email,
         password,
+        options: { captchaToken },
       })
+      setCaptchaReset(n => n + 1)
       if (signInErr) {
         setError(signInErr.message)
       } else if (data.user && !data.user.email_confirmed_at) {
@@ -105,8 +112,9 @@ function SponsorInviteForm() {
     const { error: signUpErr } = await supabase.auth.signUp({
       email: invite.email,
       password,
-      options: { emailRedirectTo: confirmUrl.toString() },
+      options: { emailRedirectTo: confirmUrl.toString(), captchaToken },
     })
+    setCaptchaReset(n => n + 1)
     if (signUpErr) {
       setError(signUpErr.message)
     } else {
@@ -238,6 +246,8 @@ function SponsorInviteForm() {
         {error && (
           <div style={{ background: '#fff0f0', color: '#cc0000', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', lineHeight: '1.5' }}>{error}</div>
         )}
+
+        <Captcha onToken={setCaptchaToken} resetSignal={captchaReset} />
 
         <button type="submit" disabled={loading} style={{ width: '100%', background: '#1d1d1f', color: 'white', border: 'none', borderRadius: '10px', padding: '13px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", opacity: loading ? 0.7 : 1 }}>
           {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in & accept →' : 'Create account & accept →'}

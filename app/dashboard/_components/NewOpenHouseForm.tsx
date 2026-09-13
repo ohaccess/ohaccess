@@ -84,6 +84,12 @@ export default function NewOpenHouseForm({
     setForm({ ...form, agreement_template_ids: next })
   }
 
+  const agreementToggleDisabled = agreementTemplates.length === 0 && !form.require_agreement
+  const goToAgreementSettings = () => {
+    setView('settings')
+    setTimeout(() => document.getElementById('agreements-signed-before-entry')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+  }
+
   return (
     <>
       <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>{editingOH ? 'Edit open house' : 'New open house'}</div>
@@ -260,9 +266,16 @@ export default function NewOpenHouseForm({
           Hosting another brokerage&apos;s listing, or need a touring agreement or disclosure signed before visitors walk through? Turn this on and each visitor reviews and e-signs right after check-in. A signed PDF is emailed to you and to them, and ohACCESS keeps nothing.
         </div>
 
+        {/* Disabled until a document is uploaded in Settings: turning it on
+            with nothing to sign would silently skip the step for visitors.
+            An open house that already has it on (its documents since deleted)
+            can still turn it off. */}
         <div
-          onClick={() => setForm({ ...form, require_agreement: !form.require_agreement })}
-          style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', background: form.require_agreement ? '#f0f0f0' : '#f5f5f7', border: form.require_agreement ? `1px solid ${primaryColor}` : '1px solid #d1d1d6', borderRadius: '10px', padding: '11px 13px', cursor: 'pointer' }}
+          role="checkbox"
+          aria-checked={!!form.require_agreement}
+          aria-disabled={agreementToggleDisabled}
+          onClick={() => { if (!agreementToggleDisabled) setForm({ ...form, require_agreement: !form.require_agreement }) }}
+          style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', background: form.require_agreement ? '#f0f0f0' : '#f5f5f7', border: form.require_agreement ? `1px solid ${primaryColor}` : '1px solid #d1d1d6', borderRadius: '10px', padding: '11px 13px', cursor: agreementToggleDisabled ? 'not-allowed' : 'pointer', opacity: agreementToggleDisabled ? 0.5 : 1 }}
         >
           <div style={{ width: '17px', height: '17px', borderRadius: '5px', border: form.require_agreement ? 'none' : '1.5px solid #d1d1d6', background: form.require_agreement ? primaryColor : 'white', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: onPrimary, fontSize: '12px', fontWeight: '700', marginTop: '1px' }}>
             {form.require_agreement ? '✓' : ''}
@@ -272,15 +285,25 @@ export default function NewOpenHouseForm({
           </div>
         </div>
 
-        {form.require_agreement && (
-          agreementTemplates.length === 0 ? (
-            <div style={{ marginTop: '12px', background: '#fff8e6', border: '1px solid #f0d896', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: '#8a6100', lineHeight: '1.6' }}>
-              You haven&apos;t uploaded any documents yet. Add your brokerage&apos;s touring agreement (a one-page PDF) in Settings first, then come back and pick it here.{' '}
-              <button onClick={() => setView('settings')} style={{ background: 'none', border: 'none', color: '#8a6100', fontWeight: '700', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                Go to Settings →
-              </button>
+        {agreementTemplates.length === 0 && (
+          <div style={{ marginTop: '12px', background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '10px', padding: '14px 16px', fontSize: '13px', color: '#1d1d1f', lineHeight: '1.6' }}>
+            <div style={{ fontWeight: '700', marginBottom: '6px' }}>
+              {form.require_agreement ? '⚠ No documents uploaded, so visitors won’t be asked to sign anything.' : 'Upload your agreement first. Here’s how:'}
             </div>
-          ) : (
+            <ol style={{ margin: '0 0 10px', paddingLeft: '20px', color: '#3a3a3c', listStyle: 'decimal' }}>
+              <li>Go to <strong>Settings</strong> and scroll to <strong>Agreements Signed Before Entry</strong>.</li>
+              <li>Type the name visitors will see (for example, &ldquo;Touring Agreement&rdquo;).</li>
+              <li>Click <strong>Choose PDF</strong>, pick your blank form (up to 5 pages), then click <strong>Upload document</strong>.</li>
+              <li>Come back to this open house and tick this box.</li>
+            </ol>
+            <button onClick={goToAgreementSettings} style={{ padding: '8px 14px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              Go to Settings →
+            </button>
+          </div>
+        )}
+
+        {form.require_agreement && agreementTemplates.length > 0 && (
+          (
             <>
               <div style={{ ...labelStyle, marginTop: '14px' }}>Documents visitors must sign (up to {MAX_OPEN_HOUSE_AGREEMENT_DOCS})</div>
               {agreementTemplates.map(tpl => {

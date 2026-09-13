@@ -9,6 +9,8 @@ import VisitorEmailsModal from './_components/VisitorEmailsModal'
 import { rescheduleResetsReminder } from '@/lib/signin-window'
 import OpenHouseList from './_components/OpenHouseList'
 import NewOpenHouseForm from './_components/NewOpenHouseForm'
+import AgentVerificationCard from './_components/AgentVerificationCard'
+import { needsAgentVerification } from '@/lib/agent-verification'
 import SettingsPanel from './_components/SettingsPanel'
 import VisitorDetail from '@/app/_components/VisitorDetail'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
@@ -42,6 +44,8 @@ export default function Dashboard() {
   const [ohStats, setOhStats] = useState<Record<string, any> | null>(null)
   const [selectedOH, setSelectedOH] = useState<any>(null)
   const [view, setView] = useState<'dashboard' | 'new' | 'settings' | 'team' | 'activity'>('dashboard')
+  // First visit after confirming their email (login sends ?welcome=1).
+  const [showWelcome, setShowWelcome] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showCal, setShowCal] = useState(false)
   const [calDate, setCalDate] = useState(new Date())
@@ -193,6 +197,7 @@ export default function Dashboard() {
     const params = new URLSearchParams(window.location.search)
     const v = params.get('view')
     if (v === 'settings' || v === 'new' || v === 'dashboard' || v === 'team' || v === 'activity') setView(v)
+    if (params.get('welcome') === '1') setShowWelcome(true)
     const checkout = params.get('checkout')
     if (checkout === 'success') {
       showToast('Subscription activated. Welcome aboard!')
@@ -691,7 +696,16 @@ export default function Dashboard() {
       agreement_template_ids: form.agreement_template_ids.length > 0 ? form.agreement_template_ids : null,
       status: 'active'
     }).select()
-    if (error) { showToast('Error saving: ' + error.message); return }
+    if (error) {
+      // Migration 051's trigger: the account isn't verified yet.
+      if (/AGENT_NOT_VERIFIED/.test(error.message)) {
+        showToast('Please verify your account before publishing an open house.', 'error')
+        await loadProfile(user.id)
+        return
+      }
+      showToast('Error saving: ' + error.message)
+      return
+    }
     if (data) {
       await loadOpenHouses(user.id)
       setView('dashboard')
@@ -1242,7 +1256,24 @@ export default function Dashboard() {
         )}
 
         {/* NEW / EDIT OPEN HOUSE VIEW */}
-        {view === 'new' && (
+        {view === 'new' && !editingOH && needsAgentVerification(profile) && (
+          <AgentVerificationCard
+            profile={profile}
+            agentCountry={agentCountry}
+            authHeaders={authHeaders}
+            onVerified={patch => {
+              setProfile({ ...profile, ...patch })
+              showToast('You’re verified! Now set up your open house.')
+            }}
+            onCancel={() => setView('dashboard')}
+            primaryColor={primaryColor}
+            onPrimary={onPrimary}
+            primaryBtnBorder={primaryBtnBorder}
+            inputStyle={inputStyle}
+            labelStyle={labelStyle}
+          />
+        )}
+        {view === 'new' && (editingOH || !needsAgentVerification(profile)) && (
           <NewOpenHouseForm
             editingOH={editingOH}
             locked={locked}
@@ -1275,6 +1306,18 @@ export default function Dashboard() {
         )}
 
         {/* SETTINGS VIEW */}
+        {view === 'settings' && showWelcome && (
+          <div style={{ background: '#eef4ff', border: '1px solid #cfe0ff', borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            <span style={{ fontSize: '18px', lineHeight: '1.3' }}>👋</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: '#0040a0' }}>Welcome to ohACCESS! Let&apos;s set up your profile first.</div>
+              <div style={{ fontSize: '12px', color: '#3a3a3c', marginTop: '4px', lineHeight: '1.6' }}>
+                Add your name, photo, logo, and contact details below. Visitors see them on your sign-in page and in every email they get from you. When you&apos;re done, click <strong>Save settings</strong> at the bottom, then create your first open house.
+              </div>
+            </div>
+            <button onClick={() => setShowWelcome(false)} aria-label="Dismiss" style={{ background: 'none', border: 'none', color: '#6e6e73', fontSize: '16px', cursor: 'pointer', padding: '0 4px' }}>✕</button>
+          </div>
+        )}
         {view === 'settings' && (
           <SettingsPanel
             profile={profile}
