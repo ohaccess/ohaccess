@@ -1,9 +1,7 @@
 import { escapeHtml } from './escape-html'
-import { normalizePhone } from './phone'
-import { agentInitials } from './thank-you-email'
-import { accentOnPrimary } from './colors'
+import { buildAgentCardHtml, buildSponsorCardHtml } from './email-cards'
 import { areaAbbrev, areaUnitFor } from './regions'
-import { safeUrl, isHexColor, buildDisclosuresHtml, type DisclosureLink } from './register-helpers'
+import { isHexColor, buildDisclosuresHtml, type DisclosureLink } from './register-helpers'
 
 // The visitor's branded codeword email, as a pure builder. Sent at sign-in by
 // lib/codeword-messages; also rendered (never sent) by the dashboard's
@@ -75,21 +73,6 @@ export function buildCodewordEmail(o: CodewordEmailOpts): { subject: string; htm
     ? (sponsor.company ? `${sponsor.full_name} (${sponsor.company})` : sponsor.full_name)
     : null
 
-  const agentName = escapeHtml(agent?.full_name || 'Your Agent')
-  const agentBrokerage = escapeHtml(agent?.brokerage || '')
-  const agentDisplayEmail = escapeHtml(agent?.display_email || '')
-  const agentPhone = escapeHtml(agent?.phone || '')
-  // Dialable form for the tel: link; null if the number can't be normalized.
-  const agentPhoneTel = normalizePhone(agent?.phone)
-  // Licence line, gated on the number: the state only ever rides along with
-  // a licence number, never on its own.
-  const agentLicenseNumber = (agent?.license_number || '').trim()
-  const agentLicenseState = (agent?.state || '').trim()
-  const agentLicense = agentLicenseNumber
-    ? escapeHtml(agentLicenseState ? `${agentLicenseNumber} · ${agentLicenseState}` : agentLicenseNumber)
-    : ''
-  const headshotUrl = safeUrl(agent?.headshot_url)
-
   // Team/brokerage members inherit their team's branding (logo + header
   // color) instead of their individual settings, so every agent's emails
   // look consistent. Falls back to the agent's own branding when they
@@ -100,50 +83,37 @@ export function buildCodewordEmail(o: CodewordEmailOpts): { subject: string; htm
   if (brokerageRow?.logo_url) brandLogo = brokerageRow.logo_url
   const headerColor = isHexColor(brandColor) ? brandColor! : '#1d1d1f'
   const accentColor = isHexColor(agent?.accent_color) ? agent!.accent_color! : '#0071e3'
-  const logoUrl = safeUrl(brandLogo)
 
-  // Agent avatar: real headshot when set, otherwise a primary-color circle
-  // with the agent's initials in the accent color (skipped without a name).
-  const agentInitialsText = escapeHtml(agentInitials(agent?.full_name))
-  const agentAvatar = headshotUrl
-    ? `<img src="${escapeHtml(headshotUrl)}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #d1d1d6;margin-right:20px;" />`
-    : agentInitialsText
-      ? `<div style="width:90px;height:90px;border-radius:50%;background:${headerColor};color:${accentOnPrimary(headerColor, accentColor)};flex-shrink:0;border:2px solid #d1d1d6;margin-right:20px;text-align:center;line-height:90px;font-weight:800;font-size:30px;">${agentInitialsText}</div>`
-      : ''
-
-  // "Sponsored by" card — rendered directly below the agent's card + logo.
-  // Same escaping rules as the agent block: every sponsor-controlled field
-  // goes through escapeHtml/safeUrl before touching the HTML.
-  let sponsorHtml = ''
-  if (sponsor) {
-    const sponsorName = escapeHtml(sponsor.full_name || '')
-    const sponsorCompany = escapeHtml(sponsor.company || '')
-    const sponsorEmail = escapeHtml(sponsor.display_email || '')
-    const sponsorPhone = escapeHtml(sponsor.phone || '')
-    const sponsorPhoneTel = normalizePhone(sponsor.phone)
-    const sponsorLicense = escapeHtml(sponsor.license_number || '')
-    const sponsorHeadshot = safeUrl(sponsor.headshot_url)
-    const sponsorLogo = safeUrl(sponsor.logo_url)
-    sponsorHtml = `
-            <div style="background: #fdfaf3; border: 1px solid #ead9ad; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
-              <div style="font-size: 10px; font-weight: 700; color: #8a6a1f; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Sponsored by</div>
-              <div style="display: flex; align-items: center;">
-                ${sponsorHeadshot ? `<img src="${escapeHtml(sponsorHeadshot)}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #ead9ad;margin-right:16px;" />` : ''}
-                <div>
-                  <div style="font-size: 14px; font-weight: 700; color: #1d1d1f;">${sponsorName}</div>
-                  ${sponsorCompany ? `<div style="font-size: 12px; color: #6e6e73;">${sponsorCompany}</div>` : ''}
-                  ${sponsorEmail ? `<div style="font-size: 12px; color: #0071e3;">${sponsorEmail}</div>` : ''}
-                  ${sponsorPhone ? `<div style="font-size: 12px;">${sponsorPhoneTel ? `<a href="tel:${escapeHtml(sponsorPhoneTel)}" style="color: #0071e3; text-decoration: none;">${sponsorPhone}</a>` : `<span style="color: #6e6e73;">${sponsorPhone}</span>`}</div>` : ''}
-                  ${sponsorLicense ? `<div style="font-size: 11px; color: #6e6e73;">${sponsorLicense}</div>` : ''}
-                  ${sponsorShortUrl ? `<div><a href="${escapeHtml(sponsorShortUrl)}" style="font-size: 12px; color: #0071e3;">Sponsor information</a></div>` : ''}
-                </div>
-              </div>
-              ${sponsorLogo ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #ead9ad; text-align: center;"><img src="${escapeHtml(sponsorLogo)}" style="max-height:60px;width:70%;object-fit:contain;" /></div>` : ''}
-              <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ead9ad; font-size: 10px; color: #8a6a1f; line-height: 1.5; text-align: center;">
-                You are not required to use ${sponsorCompany || sponsorName} for any service. You are free to shop around.
-              </div>
-            </div>`
-  }
+  // Agent card + logo, then the "Sponsored by" card + logo: the shared
+  // builders every visitor email uses (lib/email-cards), so they match.
+  const agentCardHtml = buildAgentCardHtml({
+    name: agent?.full_name || 'Your Agent',
+    brokerage: agent?.brokerage || null,
+    email: agent?.display_email || null,
+    phone: agent?.phone || null,
+    licenseNumber: agent?.license_number || null,
+    licenseState: agent?.state || null,
+    headshotUrl: agent?.headshot_url || null,
+    logoUrl: brandLogo || null,
+    infoUrl: agentShortUrl,
+  }, {
+    primary: headerColor,
+    accent: accentColor,
+    heading: 'Want a private tour?',
+    blurb: "I'm happy to show you this home, or any other, on your schedule. Call me or just reply to this email.",
+  })
+  const sponsorHtml = sponsor
+    ? buildSponsorCardHtml({
+        name: sponsor.full_name || '',
+        company: sponsor.company,
+        email: sponsor.display_email,
+        phone: sponsor.phone,
+        licenseNumber: sponsor.license_number,
+        headshotUrl: sponsor.headshot_url,
+        logoUrl: sponsor.logo_url,
+        infoUrl: sponsorShortUrl,
+      })
+    : ''
 
   const subject = `Your ohACCESS codeword: ${emailCodeWord}`
 
@@ -168,26 +138,7 @@ export function buildCodewordEmail(o: CodewordEmailOpts): { subject: string; htm
               💰 ${escapeHtml(openHouse.listing_price || '—')}<br/>
               ${listingShortUrl ? `📝 <a href="${escapeHtml(listingShortUrl)}" style="color: #0071e3; font-weight: 600; font-size: 13px;">Full listing details </a>` : ''}
             </div>
-            <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
-              <div style="font-size: 15px; font-weight: 800; color: #1d1d1f;">Want a private tour?</div>
-              <div style="font-size: 12px; color: #6e6e73; line-height: 1.6; margin: 3px 0 12px;">I'm happy to show you this home, or any other, on your schedule. Call me or just reply to this email.</div>
-              <div style="display: flex; align-items: center;">
-                ${agentAvatar}
-                <div>
-                  <div style="font-size: 14px; font-weight: 700; color: #1d1d1f;">${agentName}</div>
-                  <div style="font-size: 12px; color: #6e6e73;">${agentBrokerage}</div>
-                  ${agentDisplayEmail ? `<div style="font-size: 12px; color: #0071e3;">${agentDisplayEmail}</div>` : ''}
-                  ${agentPhone ? `<div style="font-size: 12px;">${agentPhoneTel ? `<a href="tel:${escapeHtml(agentPhoneTel)}" style="color: #0071e3; text-decoration: none;">${agentPhone}</a>` : `<span style="color: #6e6e73;">${agentPhone}</span>`}</div>` : ''}
-                  ${agentLicense ? `<div style="font-size: 11px; color: #6e6e73;">${agentLicense}</div>` : ''}
-                  ${agentShortUrl ? `<div><a href="${escapeHtml(agentShortUrl)}" style="font-size: 12px; color: #0071e3;">Agent information</a></div>` : ''}
-                </div>
-              </div>
-              ${logoUrl
-                ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; text-align: center;"><img src="${escapeHtml(logoUrl)}" style="max-height:80px;width:80%;object-fit:contain;" /></div>`
-                : agentBrokerage
-                  ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e5ea; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: -0.3px; color: ${headerColor};">${agentBrokerage}</div>`
-                  : ''}
-            </div>
+            ${agentCardHtml}
             ${sponsorHtml}
             ${buildDisclosuresHtml(o.disclosureLinks)}
             ${o.upcomingHtml}
