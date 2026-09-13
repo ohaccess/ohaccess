@@ -472,7 +472,7 @@ export async function sendVisitorCodewordMessages(params: {
             </div>
             <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
               <div style="font-size: 15px; font-weight: 800; color: #1d1d1f;">Want a private tour?</div>
-              <div style="font-size: 12px; color: #6e6e73; line-height: 1.6; margin: 3px 0 12px;">I'm happy to show you this home &mdash; or any other &mdash; on your schedule. Call me or just reply to this email.</div>
+              <div style="font-size: 12px; color: #6e6e73; line-height: 1.6; margin: 3px 0 12px;">I'm happy to show you this home, or any other, on your schedule. Call me or just reply to this email.</div>
               <div style="display: flex; align-items: center;">
                 ${agentAvatar}
                 <div>

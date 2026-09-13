@@ -1,5 +1,5 @@
 import { escapeHtml } from './escape-html'
-import { safeUrl } from './register-helpers'
+import { safeUrl, type UpcomingOpenHouse } from './register-helpers'
 import { accentOnPrimary } from './colors'
 
 // The post-event visitor "thanks for visiting" email — sent the morning after
@@ -35,6 +35,40 @@ function localParts(d: Date, tz: string): { year: number; month: number; day: nu
   let hour = get('hour')
   if (hour === 24) hour = 0 // some engines emit '24' for local midnight
   return { year: get('year'), month: get('month'), day: get('day'), hour }
+}
+
+// Two made-up open houses for the dashboard preview of this email, shown when
+// the agent has nothing scheduled, so they can see what their visitors would
+// get if they did. Next weekend (Saturday + Sunday, at least 2 days out), in
+// the same city as the open house being previewed. Never sent to anyone.
+const EXAMPLE_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const EXAMPLE_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+export function exampleUpcomingOpenHouses(
+  oh: { city?: string | null; state?: string | null; listing_price?: string | null; bedrooms?: string | null; bathrooms?: string | null },
+  now: Date
+): UpcomingOpenHouse[] {
+  const sat = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 2))
+  while (sat.getUTCDay() !== 6) sat.setUTCDate(sat.getUTCDate() + 1)
+  const sun = new Date(sat.getTime() + 86_400_000)
+  const label = (d: Date) => `${EXAMPLE_DAYS[d.getUTCDay()]}, ${EXAMPLE_MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`
+  const at = (d: Date, hourUtc: number) => new Date(d.getTime() + hourUtc * 3_600_000).toISOString()
+  const place = [oh.city, oh.state].map(s => (s || '').trim()).filter(Boolean).join(', ')
+  const address = (street: string) => (place ? `${street}, ${place}` : street)
+  return [
+    {
+      id: 'example-1', property_address: address('123 Example Lane'), city: oh.city || null,
+      open_house_date: label(sat), open_house_hours: '1:00 PM – 4:00 PM',
+      listing_price: oh.listing_price || null, bedrooms: oh.bedrooms || '3', bathrooms: oh.bathrooms || '2',
+      start_at: at(sat, 18), end_at: at(sat, 21),
+    },
+    {
+      id: 'example-2', property_address: address('456 Sample Court'), city: oh.city || null,
+      open_house_date: label(sun), open_house_hours: '12:00 PM – 2:00 PM',
+      listing_price: null, bedrooms: '4', bathrooms: '3',
+      start_at: at(sun, 17), end_at: at(sun, 19),
+    },
+  ]
 }
 
 // Initials for the fallback avatar when the agent has no headshot photo.
@@ -101,7 +135,7 @@ export function buildThankYouEmail(o: ThankYouEmailOpts): { subject: string; htm
   const feedbackSection = feedbackUrl ? `
     <div style="background:#f6f7f9;border-radius:12px;padding:16px 18px;margin:18px 0;">
       <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:${accent};text-transform:uppercase;margin-bottom:6px;">How was the home?</div>
-      <div style="font-size:14px;color:#444;line-height:1.6;">Your quick impressions help the seller &mdash; it takes about 30 seconds.</div>
+      <div style="font-size:14px;color:#444;line-height:1.6;">Your quick impressions help the seller. It takes about 30 seconds.</div>
       <a href="${e(feedbackUrl)}" style="display:inline-block;margin-top:12px;background:${accent};color:${o.onAccent};text-decoration:none;font-size:14px;font-weight:700;padding:9px 16px;border-radius:8px;">Share your feedback &rarr;</a>
     </div>` : ''
 
@@ -154,7 +188,7 @@ export function buildThankYouEmail(o: ThankYouEmailOpts): { subject: string; htm
         </td></tr>
         <tr><td style="padding:28px 26px;">
           <div style="font-size:22px;font-weight:800;color:#1d1d1f;">Thanks for stopping by.</div>
-          <div style="font-size:15px;color:#444;line-height:1.6;margin-top:10px;">Hi ${e(o.visitorFirst)}, thanks for visiting the open house at <strong>${street}</strong>${cityBit} yesterday &mdash; it was great to have you.</div>
+          <div style="font-size:15px;color:#444;line-height:1.6;margin-top:10px;">Hi ${e(o.visitorFirst)}, thanks for visiting the open house at <strong>${street}</strong>${cityBit} yesterday. It was great to have you.</div>
 
           ${listingSection}
           ${feedbackSection}
@@ -162,8 +196,8 @@ export function buildThankYouEmail(o: ThankYouEmailOpts): { subject: string; htm
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f7f9;border-radius:12px;margin-top:18px;">
             <tr>
               <td colspan="2" style="padding:16px 16px 0;">
-                <div style="font-size:17px;font-weight:800;color:#1d1d1f;">Want to see it again &mdash; or tour more homes?</div>
-                <div style="font-size:14px;color:#444;line-height:1.6;margin-top:4px;">Just reply to this email or give me a call &mdash; I'm happy to set up a private showing whenever works for you.</div>
+                <div style="font-size:17px;font-weight:800;color:#1d1d1f;">Want to see it again, or tour more homes?</div>
+                <div style="font-size:14px;color:#444;line-height:1.6;margin-top:4px;">Just reply to this email or give me a call. I'm happy to set up a private showing whenever works for you.</div>
               </td>
             </tr>
             <tr>

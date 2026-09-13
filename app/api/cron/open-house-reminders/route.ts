@@ -140,12 +140,12 @@ function buildReminderHtml(args: {
         Verified sign-ins work best when everyone around you expects them. Two conversations worth having:
       </div>
       <div style="font-size:14px;line-height:1.7;margin-top:8px;">
-        <strong>Your team &amp; broker</strong> &mdash; ohACCESS has team accounts with shared branding,
+        <strong>Your team &amp; broker</strong>: ohACCESS has team accounts with shared branding,
         so every open house across your office gets the same secure sign-in. Worth a mention at your
         next office meeting.
       </div>
       <div style="font-size:14px;line-height:1.7;margin-top:8px;">
-        <strong>Your referral partners</strong> &mdash; lenders and title reps can sponsor your open
+        <strong>Your referral partners</strong>: lenders and title reps can sponsor your open
         houses and put their card in front of every verified visitor. They'll thank you for the introduction.
       </div>
     </div>`

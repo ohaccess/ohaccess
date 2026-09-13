@@ -196,8 +196,8 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.oh.fullAddress)}`
 
   const opener = o.pastStreet
-    ? `Hi ${e(o.visitorFirst)}, it&rsquo;s ${e(o.agentName)} &mdash; we met at my open house at <strong>${e(o.pastStreet)}</strong>. I&rsquo;m hosting another one and thought you might like to take a look.`
-    : `Hi ${e(o.visitorFirst)}, it&rsquo;s ${e(o.agentName)}. Thanks again for visiting one of my open houses &mdash; I&rsquo;m hosting another one and thought you might like to take a look.`
+    ? `Hi ${e(o.visitorFirst)}, it&rsquo;s ${e(o.agentName)}. We met at my open house at <strong>${e(o.pastStreet)}</strong>. I&rsquo;m hosting another one and thought you might like to take a look.`
+    : `Hi ${e(o.visitorFirst)}, it&rsquo;s ${e(o.agentName)}. Thanks again for visiting one of my open houses. I&rsquo;m hosting another one and thought you might like to take a look.`
 
   // Calendar links need concrete times; without start_at the line is dropped.
   let calendarLine = ''
@@ -269,7 +269,7 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
 
           <div style="border-top:1px solid #ececf0;margin-top:24px;padding-top:14px;font-size:11px;color:#9a9aa0;line-height:1.5;text-align:center;">
             You&rsquo;re receiving this because you signed in at one of ${e(o.agentName)}&rsquo;s open houses and agreed to hear about other properties.<br>
-            <a href="${e(o.unsubscribeUrl)}" style="color:#9a9aa0;">Unsubscribe</a> &mdash; one click, and you won&rsquo;t get open-house invites again.<br>
+            <a href="${e(o.unsubscribeUrl)}" style="color:#9a9aa0;">Unsubscribe</a>: one click, and you won&rsquo;t get open-house invites again.<br>
             Powered by <span style="font-weight:300;">oh</span><b style="font-weight:700;">ACCESS</b>.com &middot; Patent Pending
           </div>
         </td></tr>

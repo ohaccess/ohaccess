@@ -1,10 +1,9 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { isHexColor, safeUrl, isEmail, buildUpcomingOpenHousesHtml, type UpcomingOpenHouse } from '@/lib/register-helpers'
-import { onColor } from '@/lib/colors'
-import { formatArea } from '@/lib/regions'
+import { isEmail, buildUpcomingOpenHousesHtml } from '@/lib/register-helpers'
 import { buildThankYouEmail, thankYouSendState, type ThankYouSponsorCard } from '@/lib/thank-you-email'
+import { resolveEmailBranding, listingFacts, loadUpcomingOpenHouses } from '@/lib/thank-you-data'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -95,27 +94,14 @@ async function handle(request: Request) {
     // Next-morning timing, anchored to the visitor's local visit date.
     if (thankYouSendState(v.registered_at, oh.timezone, now) !== 'send') continue
 
-    // Brokerage-over-agent branding, matching every other email (team settings
-    // mirror colors onto member profiles; brokerage row is the extra guard).
     const brokerage = agent.brokerage_id ? brokerageMap.get(agent.brokerage_id) as Record<string, string | null> | undefined : undefined
-    const primaryRaw = brokerage?.primary_color || agent.primary_color
-    const accentRaw = agent.accent_color || brokerage?.accent_color
-    const primary = primaryRaw && isHexColor(primaryRaw) ? primaryRaw : '#1d1d1f'
-    const accent = accentRaw && isHexColor(accentRaw) ? accentRaw : '#0071e3'
-    const logoUrl = safeUrl(brokerage?.logo_url || agent.logo_url) || null
+    const { primary, accent, onPrimary, onAccent, logoUrl } = resolveEmailBranding(agent, brokerage)
 
     const street = oh.street_address || oh.property_address || 'the open house'
     const fullAddress = oh.property_address || street
     const dateLabel = fmtDate(v.registered_at, oh.timezone)
 
-    const facts = [
-      oh.listing_price ? String(oh.listing_price) : '',
-      oh.bedrooms ? `${oh.bedrooms} bd` : '',
-      oh.bathrooms ? `${oh.bathrooms} ba` : '',
-      formatArea(oh.square_footage, oh.country),
-    ].filter(Boolean).join(' · ')
-
-    const upcomingHtml = await buildUpcoming(agent, oh, v.open_house_id)
+    const upcomingHtml = buildUpcomingOpenHousesHtml(await loadUpcomingOpenHouses(supabase, agent, oh, v.open_house_id), APP_URL)
 
     let sponsor: ThankYouSponsorCard | null = null
     if (v.sponsor_id) {
@@ -127,7 +113,7 @@ async function handle(request: Request) {
 
     const { subject, html } = buildThankYouEmail({
       appUrl: APP_URL,
-      primary, accent, onPrimary: onColor(primary), onAccent: onColor(accent),
+      primary, accent, onPrimary, onAccent,
       visitorFirst: v.first_name || 'there',
       street, city: oh.city, fullAddress, dateLabel,
       agentName: agent.full_name || 'your agent',
@@ -136,7 +122,7 @@ async function handle(request: Request) {
       agentPhone: agent.phone,
       agentEmail: agent.display_email || agent.email || 'support@ohaccess.com',
       listingUrl: oh.listing_url,
-      facts: facts || null,
+      facts: listingFacts(oh),
       // The after-tour questions, for the visitors who never scrolled back to
       // them on the success screen. Dropped once they've answered (there or
       // via an earlier email).
@@ -176,43 +162,6 @@ function fmtDate(iso: string, tz: string | null): string {
     })
   } catch {
     return new Date(iso).toLocaleDateString('en-US')
-  }
-}
-
-// The agent's (and their team's) upcoming open houses in the same state, next
-// 10 days, soonest first — same scope/query as the visitor code email. Best
-// effort: a lookup failure just drops the section.
-async function buildUpcoming(
-  agent: Record<string, string | null>,
-  oh: Record<string, string | null>,
-  currentOhId: string
-): Promise<string> {
-  try {
-    let agentIds: string[] = [agent.id as string]
-    if (agent.brokerage_id) {
-      const { data: teammates } = await supabase.from('profiles').select('id').eq('brokerage_id', agent.brokerage_id)
-      if (teammates && teammates.length) {
-        agentIds = teammates.map(t => t.id)
-        if (!agentIds.includes(agent.id as string)) agentIds.push(agent.id as string)
-      }
-    }
-    const nowIso = new Date().toISOString()
-    const horizonIso = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
-    let query = supabase.from('open_houses')
-      .select('id, property_address, city, open_house_date, open_house_hours, listing_price, bedrooms, bathrooms, start_at, end_at')
-      .in('agent_id', agentIds)
-      .neq('id', currentOhId)
-      .gte('start_at', nowIso)
-      .lte('start_at', horizonIso)
-      .order('start_at', { ascending: true })
-      .order('city', { ascending: true })
-      .limit(5)
-    const state = (oh.state || '').trim().replace(/[%_]/g, '')
-    if (state) query = query.ilike('state', state)
-    const { data } = await query
-    return buildUpcomingOpenHousesHtml((data ?? []) as UpcomingOpenHouse[], APP_URL)
-  } catch {
-    return ''
   }
 }
 
