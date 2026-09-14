@@ -2,10 +2,11 @@
 // for a US address, from RentCast (licensed listing + public-record data).
 // Pure helpers — the RentCast calls live in /api/property-facts.
 
-// RentCast bills per lookup (free Developer plan: 50/month, then $0.20 each).
-// Past this many open houses in 30 days the $74 Foundation plan (1,000
-// lookups) is cheaper — the admin dashboard says so when we cross it.
-export const RENTCAST_UPGRADE_AT_OPEN_HOUSES_PER_MONTH = 275
+// RentCast bills per lookup. We're on Foundation ($74/month for 1,000, then
+// $0.06 each); Growth ($199 for 5,000) is cheaper past ~3,080 lookups, which
+// at 1–2 lookups per open house is roughly this many open houses in 30 days.
+// The admin dashboard says so when we cross it.
+export const RENTCAST_UPGRADE_AT_OPEN_HOUSES_PER_MONTH = 2000
 
 export type PropertyFacts = {
   listing_price: string
