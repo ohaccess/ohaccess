@@ -1,11 +1,17 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { normalizeEmail } from '@/lib/invite-helpers'
+import { isEmail } from '@/lib/register-helpers'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// One-click email unsubscribe, two audiences behind one endpoint:
+// Email unsubscribe, three ways in behind one endpoint:
+//   - { email }  anyone, from the plain /unsubscribe link in marketing
+//     emails (no token: the person types their address). Lands in
+//     email_opt_outs with source 'marketing_unsubscribe', which the drip,
+//     weekend-games and invite senders all already honor.
 //   - ?token=…  visitors, from open-house invite emails. Opting out is
 //     GLOBAL — the address lands in email_opt_outs and is suppressed across
 //     all agents, mirroring how SMS STOP works in sms_opt_outs.
@@ -30,13 +36,30 @@ export async function POST(request: Request) {
     const params = new URL(request.url).searchParams
     let token = params.get('token') || ''
     let agentToken = params.get('agent') || ''
+    let email = ''
     if (!token && !agentToken) {
       const body = await request.json().catch(() => null)
       token = typeof body?.token === 'string' ? body.token : ''
       agentToken = typeof body?.agent === 'string' ? body.agent : ''
+      email = typeof body?.email === 'string' ? body.email : ''
     }
     token = token.trim()
     agentToken = agentToken.trim()
+
+    if (!token && !agentToken && email) {
+      const address = normalizeEmail(email)
+      if (!isEmail(address)) return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
+      // Idempotent: an address already on the list keeps its original time
+      // and source.
+      const { error } = await supabase
+        .from('email_opt_outs')
+        .upsert({ email: address, source: 'marketing_unsubscribe' }, { onConflict: 'email', ignoreDuplicates: true })
+      if (error) {
+        console.error('Marketing unsubscribe upsert failed', error)
+        return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 })
+      }
+      return NextResponse.json({ success: true })
+    }
 
     if (agentToken) {
       const { data: profile } = await supabase

@@ -797,6 +797,21 @@ export default function AdminDashboard() {
           >
             Referral Sources →
           </a>
+          <a
+            href="/admin/unsubscribes"
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: INK,
+              background: '#f5f5f7',
+              border: `1px solid ${BORDER}`,
+              borderRadius: 9,
+              padding: '9px 14px',
+              textDecoration: 'none',
+            }}
+          >
+            Unsubscribes →
+          </a>
           <button
             onClick={refresh}
             disabled={loading}

@@ -3,8 +3,10 @@ import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 // Landing page for the Unsubscribe link in open-house invite emails
-// (?token=…) and in the agent lifecycle emails (?agent=…) — the copy adapts
-// to which audience arrived. Deliberately a confirm-button page (not
+// (?token=…), in the agent lifecycle emails (?agent=…), and the plain
+// ohaccess.com/unsubscribe link in marketing emails (no token: the person
+// types their address; ?email=… pre-fills it) — the copy adapts to which
+// audience arrived. Deliberately a confirm-button page (not
 // auto-fire on load): email security scanners prefetch links, and a GET side
 // effect would silently unsubscribe people who never clicked. One tap here →
 // POST /api/unsubscribe → done.
@@ -14,15 +16,23 @@ function UnsubscribeInner() {
   const token = params.get('token') || ''
   const agentToken = params.get('agent') || ''
   const isAgent = !token && !!agentToken
+  const isMarketing = !token && !agentToken
+  const [email, setEmail] = useState(params.get('email') || '')
+  const [emailError, setEmailError] = useState('')
   const [state, setState] = useState<'idle' | 'working' | 'done' | 'error'>('idle')
 
   const unsubscribe = async () => {
+    if (isMarketing && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setEmailError('Please enter a valid email address.')
+      return
+    }
+    setEmailError('')
     setState('working')
     try {
       const res = await fetch('/api/unsubscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(isAgent ? { agent: agentToken } : { token }),
+        body: JSON.stringify(isMarketing ? { email: email.trim() } : isAgent ? { agent: agentToken } : { token }),
       })
       setState(res.ok ? 'done' : 'error')
     } catch {
@@ -40,17 +50,17 @@ function UnsubscribeInner() {
       <div style={card}>
         <div style={{ fontSize: '22px', fontWeight: 300, color: '#1d1d1f', marginBottom: '20px' }}>oh<strong style={{ fontWeight: 800 }}>ACCESS</strong></div>
 
-        {!token && !agentToken ? (
-          <>
-            <div style={{ fontSize: '17px', fontWeight: 700, color: '#1d1d1f', marginBottom: '8px' }}>This link is incomplete</div>
-            <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: 1.6 }}>Please use the Unsubscribe link at the bottom of the email you received.</div>
-          </>
-        ) : state === 'done' ? (
+        {state === 'done' ? (
           <>
             <div style={{ fontSize: '40px', marginBottom: '12px' }}>✓</div>
             <div style={{ fontSize: '17px', fontWeight: 700, color: '#1d1d1f', marginBottom: '8px' }}>You&rsquo;re unsubscribed</div>
             <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: 1.6 }}>
-              {isAgent ? (
+              {isMarketing ? (
+                <>
+                  {`${email.trim()} won't receive marketing emails from ohACCESS anymore.`}<br />
+                  Emails you need, like codewords at open houses you visit and updates about your own account, will keep working.
+                </>
+              ) : isAgent ? (
                 <>
                   You won&rsquo;t receive tips or reminder emails from ohACCESS anymore.<br />
                   Emails about your own open houses (reminders and reports) are unaffected.
@@ -66,16 +76,33 @@ function UnsubscribeInner() {
         ) : state === 'error' ? (
           <>
             <div style={{ fontSize: '17px', fontWeight: 700, color: '#1d1d1f', marginBottom: '8px' }}>Something went wrong</div>
-            <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: 1.6, marginBottom: '20px' }}>The link may have expired. Please try again, or contact support@ohaccess.com.</div>
+            <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: 1.6, marginBottom: '20px' }}>
+              {isMarketing ? 'Please try again, or contact support@ohaccess.com.' : 'The link may have expired. Please try again, or contact support@ohaccess.com.'}
+            </div>
             <button onClick={unsubscribe} style={{ background: '#1d1d1f', color: 'white', border: 'none', borderRadius: '10px', padding: '12px 28px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Try again</button>
           </>
         ) : (
           <>
             <div style={{ fontSize: '17px', fontWeight: 700, color: '#1d1d1f', marginBottom: '8px' }}>
-              {isAgent ? 'Stop receiving tips and reminders?' : 'Stop receiving open-house invites?'}
+              {isMarketing ? 'Unsubscribe from ohACCESS emails' : isAgent ? 'Stop receiving tips and reminders?' : 'Stop receiving open-house invites?'}
             </div>
             <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: 1.6, marginBottom: '24px' }}>
-              {isAgent ? (
+              {isMarketing ? (
+                <>
+                  Enter your email address and we&rsquo;ll stop sending you marketing emails.
+                  Emails you need, like codewords at open houses you visit and updates about your own account, will keep working.
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(ev) => { setEmail(ev.target.value); setEmailError('') }}
+                    onKeyDown={(ev) => { if (ev.key === 'Enter') unsubscribe() }}
+                    style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: '18px', padding: '12px 14px', fontSize: '15px', border: `1px solid ${emailError ? '#cc0000' : '#d2d2d7'}`, borderRadius: '10px', fontFamily: 'inherit', color: '#1d1d1f' }}
+                  />
+                  {emailError && <div style={{ fontSize: '13px', color: '#cc0000', marginTop: '6px', textAlign: 'left' }}>{emailError}</div>}
+                </>
+              ) : isAgent ? (
                 <>
                   You&rsquo;ll no longer get occasional tips, reminders, or offers from ohACCESS.
                   Emails about your own open houses (reminders and reports) will keep working.
