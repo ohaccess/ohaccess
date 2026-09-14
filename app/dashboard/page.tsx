@@ -11,6 +11,8 @@ import OpenHouseList from './_components/OpenHouseList'
 import NewOpenHouseForm from './_components/NewOpenHouseForm'
 import AgentVerificationCard from './_components/AgentVerificationCard'
 import { needsAgentVerification } from '@/lib/agent-verification'
+import SetupChecklist from './_components/SetupChecklist'
+import { setupSteps, showSetupChecklist, signSavedKey } from '@/lib/setup-checklist'
 import SettingsPanel from './_components/SettingsPanel'
 import VisitorDetail from '@/app/_components/VisitorDetail'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
@@ -102,6 +104,16 @@ export default function Dashboard() {
   // like membership on a paying team. Display/branding sponsorship alone
   // (unpaid sponsor) doesn't unlock anything.
   const [sponsorCovered, setSponsorCovered] = useState(false)
+  // Setup checklist: whether this agent has printed or downloaded their QR
+  // sign on this browser (see lib/setup-checklist.ts for why it's local).
+  const [signSaved, setSignSaved] = useState(false)
+  const loadSignSaved = (userId: string) => {
+    try { setSignSaved(localStorage.getItem(signSavedKey(userId)) === '1') } catch {}
+  }
+  const markSignSaved = () => {
+    setSignSaved(true)
+    try { if (user?.id) localStorage.setItem(signSavedKey(user.id), '1') } catch {}
+  }
 
   const primaryColor = profile?.primary_color || '#1d1d1f'
   const accentColor = profile?.accent_color || '#0071e3'
@@ -223,6 +235,7 @@ export default function Dashboard() {
       if (!refreshData.session) { window.location.href = '/login'; return }
       if (await isSponsorAccount(refreshData.session.user.id)) { window.location.href = '/sponsor/dashboard'; return }
       setUser(refreshData.session.user)
+      loadSignSaved(refreshData.session.user.id)
       reportSignupIfNew(refreshData.session.user)
       await loadProfile(refreshData.session.user.id)
       await loadOpenHouses(refreshData.session.user.id)
@@ -233,6 +246,7 @@ export default function Dashboard() {
     }
     if (await isSponsorAccount(session.user.id)) { window.location.href = '/sponsor/dashboard'; return }
     setUser(session.user)
+    loadSignSaved(session.user.id)
     reportSignupIfNew(session.user)
     await loadProfile(session.user.id)
     await loadOpenHouses(session.user.id)
@@ -1123,6 +1137,22 @@ export default function Dashboard() {
   const inputStyle = { width: '100%', background: '#f5f5f7', border: '1px solid #d1d1d6', borderRadius: '9px', padding: '9px 12px', fontSize: '13px', color: '#1d1d1f', outline: 'none', boxSizing: 'border-box' as const, fontFamily: "'Plus Jakarta Sans', sans-serif" }
   const labelStyle = { display: 'block' as const, fontSize: '11px', fontWeight: '600' as const, color: '#6e6e73', textTransform: 'uppercase' as const, letterSpacing: '0.6px', marginBottom: '5px' }
 
+  const checklistSteps = setupSteps({ profile, openHouseCount: openHouses.length, signSaved })
+  const setupChecklist = showSetupChecklist(checklistSteps, totalVisitors, locked) ? (
+    <SetupChecklist
+      steps={checklistSteps}
+      needsVerification={needsAgentVerification(profile)}
+      onAction={id => {
+        if (id === 'profile') setView('settings')
+        else if (id === 'open_house') { if (guardLocked()) return; setEditingOH(null); resetForm(); setView('new') }
+        else openPermanentQr()
+      }}
+      accentColor={accentColor}
+      onAccent={onAccent}
+      accentBtnBorder={accentBtnBorder}
+    />
+  ) : null
+
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f7', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -1275,6 +1305,7 @@ export default function Dashboard() {
             setDeleteConfirm={setDeleteConfirm}
             setVisitorModal={setVisitorModal}
             showToast={showToast}
+            setupChecklist={setupChecklist}
           />
         )}
 
@@ -1422,6 +1453,7 @@ export default function Dashboard() {
           accentBtnBorder={accentBtnBorder}
           logoUrl={profile?.logo_url || ''}
           brokerageName={profile?.brokerage || ''}
+          onSignSaved={markSignSaved}
         />
       )}
 

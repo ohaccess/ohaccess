@@ -21,6 +21,7 @@ export default function QrModal({
   accentBtnBorder,
   logoUrl,
   brokerageName,
+  onSignSaved,
 }: {
   data: QrModalData
   onClose: () => void
@@ -33,6 +34,9 @@ export default function QrModal({
   accentBtnBorder: string
   logoUrl?: string
   brokerageName?: string
+  // Printing the sign or downloading the QR image ticks "Print your QR sign"
+  // on the setup checklist.
+  onSignSaved?: () => void
 }) {
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px' }}
@@ -66,6 +70,7 @@ export default function QrModal({
             a.href = data.dataUrl
             a.download = `ohaccess-qr-${data.oh.property_address.replace(/\s+/g, '-')}.png`
             a.click()
+            onSignSaved?.()
           }} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             📥 Download PNG
           </button>
@@ -75,6 +80,7 @@ export default function QrModal({
             if (!w) { showToast('Please allow pop-ups to print the sign.', 'error'); return }
             w.document.write(buildSignHtml({ dataUrl: data.dataUrl, logoUrl: logoUrl || '', brokerageName: brokerageName || '', primaryColor, onPrimary, accentColor, onAccent }))
             w.document.close()
+            onSignSaved?.()
           }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             🖨 Print branded sign
           </button>
