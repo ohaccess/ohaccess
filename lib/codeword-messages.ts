@@ -15,6 +15,7 @@ import { codewordLinkPath } from '@/lib/codeword-link'
 import { buildCodewordEmail, type CodewordSponsor, type CodewordBrokerage } from '@/lib/codeword-email'
 import {
   buildSmsBody,
+  smsLink,
   isHttpUrl,
   twilioStatusCallbackUrl,
   twilioSender,
@@ -213,7 +214,7 @@ export async function sendVisitorCodewordMessages(params: {
       [
         // Bare URL (no "Listing:" label) — the label cost 9 chars, which was
         // enough to push long addresses past the single-segment budget.
-        ...(listingShortUrl ? [{ label: '', url: listingShortUrl }] : []),
+        ...(listingShortUrl ? [{ label: '', url: smsLink(listingShortUrl) }] : []),
       ]
     )
     const sendSms = () =>

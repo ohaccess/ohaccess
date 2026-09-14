@@ -119,6 +119,44 @@ export function abbreviateStreetAddress(address: string | null | undefined): str
   return words.join(' ') + rest
 }
 
+// Links in SMS bodies go out without "https://" (8 chars off every text):
+// phones still auto-link a bare "ohaccess.com/r/abc". SMS only; emails and
+// WhatsApp template variables keep the full URL.
+export function smsLink(url: string): string {
+  return url.replace(/^https:\/\//i, '')
+}
+
+// Countries whose preferred clock is 12-hour, per CLDR time data (generated
+// from Intl.Locale hourCycles for every country in lib/regions). Hard-coded
+// because runtimes disagree on the ambiguous ones (GB, MX, ZA...).
+const TWELVE_HOUR_COUNTRIES = new Set((
+  'AE AG AL AR AS AU BB BD BH BM BN BO BS BT CA CL CO CR CU CY DJ DM DO DZ EC ' +
+  'EG EH ER ET FJ FM GD GH GM GR GT GU GY HK HN IN IQ JM JO KH KI KN KP KR KW ' +
+  'KY LB LC LR LS LY MH MO MP MR MW MX MY NA NI NZ OM PA PE PG PH PK PR PS PW ' +
+  'PY QA SA SB SD SG SL SO SS SV SY SZ TC TD TN TO TT TW US UY VC VE VG VI VU ' +
+  'WS YE ZM'
+).split(' '))
+
+// Sign-in time for the agent's new-visitor SMS, in the property's timezone:
+// "2:14pm" in 12-hour countries, "16:14" elsewhere. No date (the alert fires
+// the moment the visitor signs in). Missing country = US; a missing or bad
+// timezone = the Central Time the alert always used.
+export function smsAlertTime(date: Date, timeZone: string | null | undefined, country: string | null | undefined): string {
+  const twelveHour = TWELVE_HOUR_COUNTRIES.has((country || 'US').toUpperCase())
+  const format = (tz: string) =>
+    new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit', hourCycle: twelveHour ? 'h12' : 'h23' }).formatToParts(date)
+  let parts: Intl.DateTimeFormatPart[]
+  try {
+    parts = format(timeZone || 'America/Chicago')
+  } catch {
+    parts = format('America/Chicago')
+  }
+  const part = (type: string) => parts.find(p => p.type === type)?.value ?? ''
+  return twelveHour
+    ? `${part('hour')}:${part('minute')}${part('dayPeriod').toLowerCase()}`
+    : `${part('hour').padStart(2, '0')}:${part('minute')}`
+}
+
 // Twilio signs its status callback over the exact URL it calls. The apex
 // domain (ohaccess.com) 307-redirects to www, and the signature no longer
 // validates after that hop — every callback was bouncing with a 403. So the

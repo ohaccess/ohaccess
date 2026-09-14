@@ -3,6 +3,8 @@ import {
   generateCode,
   buildSmsBody,
   abbreviateStreetAddress,
+  smsLink,
+  smsAlertTime,
   isHttpUrl,
   safeUrl,
   isHexColor,
@@ -553,5 +555,32 @@ describe('abbreviateStreetAddress', () => {
   it('handles missing addresses', () => {
     expect(abbreviateStreetAddress(null)).toBe('')
     expect(abbreviateStreetAddress('')).toBe('')
+  })
+})
+
+describe('smsLink', () => {
+  it('drops https:// and leaves the rest', () => {
+    expect(smsLink('https://ohaccess.com/r/abc123')).toBe('ohaccess.com/r/abc123')
+    expect(smsLink('ohaccess.com/r/abc123')).toBe('ohaccess.com/r/abc123')
+  })
+})
+
+describe('smsAlertTime', () => {
+  const at = new Date('2026-09-13T21:14:00Z')
+
+  it('uses a lowercase 12-hour time in 12-hour countries', () => {
+    expect(smsAlertTime(at, 'America/Chicago', 'US')).toBe('4:14pm')
+    expect(smsAlertTime(new Date('2026-09-13T01:05:00Z'), 'Australia/Sydney', 'au')).toBe('11:05am')
+  })
+
+  it('uses a 24-hour time elsewhere', () => {
+    expect(smsAlertTime(at, 'Europe/London', 'GB')).toBe('22:14')
+    expect(smsAlertTime(new Date('2026-09-13T07:05:00Z'), 'Europe/Berlin', 'DE')).toBe('09:05')
+    expect(smsAlertTime(new Date('2026-09-13T22:00:00Z'), 'Europe/Berlin', 'DE')).toBe('00:00')
+  })
+
+  it('defaults to US 12-hour and Central Time', () => {
+    expect(smsAlertTime(at, null, null)).toBe('4:14pm')
+    expect(smsAlertTime(at, 'Not/AZone', 'US')).toBe('4:14pm')
   })
 })
