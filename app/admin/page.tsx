@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { deviceLabel } from '@/lib/ua-label'
+import type { ScanTag } from '@/lib/scan-walkaways'
 import { IMPERSONATION_KEY } from '../_components/ImpersonationBanner'
 import { timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type SortState, type Sortable } from '@/lib/sort'
@@ -83,12 +84,16 @@ type Visitor = {
 
 type WindowCounts = { lifetime: number; last12mo: number; last30d: number }
 
+// One device's unconverted scans of one open house (lib/scan-walkaways.ts).
 type AbandonedScan = {
-  scanned_at: string
   openHouseAddress: string
   agentName: string
   ip_address: string
   user_agent: string
+  count: number
+  firstAt: string
+  lastAt: string
+  tag: ScanTag
 }
 
 type Funnel = {
@@ -1259,6 +1264,18 @@ function Badge({ text, color, bg }: { text: string; color: string; bg: string })
   )
 }
 
+// Reason tags for the Scanned, Didn't Register panel (lib/scan-walkaways.ts).
+const SCAN_TAGS: Record<ScanTag, { label: string; hint: string; color: string; bg: string }> = {
+  during: { label: 'During event', hint: 'Opened the form while the open house was live, then left', color: AMBER, bg: '#fff4e5' },
+  before: { label: 'Before event', hint: 'Opened before the open house started', color: BLUE, bg: '#e8f1fc' },
+  after: { label: 'After event', hint: 'Opened after the open house ended, while the form was still open', color: SUB, bg: '#f0f0f2' },
+  closed: { label: 'Sign-in closed', hint: 'Opened 6+ hours after the end, so they saw the ended card', color: SUB, bg: '#f0f0f2' },
+  test: { label: 'Test', hint: "The agent's own device (their signup IP, a device that signed in at their other open house, or a deleted open house that never had a sign-in)", color: SUB, bg: '#f0f0f2' },
+  preview: { label: 'Link preview', hint: 'An app building a link preview (e.g. iMessage), not a person', color: SUB, bg: '#f0f0f2' },
+  deleted: { label: 'Deleted', hint: 'The open house was deleted and its schedule is no longer on file', color: SUB, bg: '#f0f0f2' },
+  unknown: { label: 'No event time', hint: 'The open house has no end time to compare against', color: SUB, bg: '#f0f0f2' },
+}
+
 function tierBadge(tier: string, status: string) {
   const s = (status || '').toLowerCase()
   const t = (tier || 'free').toLowerCase()
@@ -1670,6 +1687,9 @@ function VisitorsTable({ rows }: { rows: Visitor[] }) {
 }
 
 function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void }) {
+  // Scanned, Didn't Register: real walk-aways (during a live open house) by
+  // default; "All" adds tests, link previews, and before/after-event scans.
+  const [scanView, setScanView] = useState<'during' | 'all'>('during')
   const recentAgents = data.agents.slice(0, 6)
   const recentVisitors = data.visitors.slice(0, 8)
   const topAgents = [...data.agents].sort((a, b) => b.visitorCount - a.visitorCount).slice(0, 6)
@@ -1850,22 +1870,62 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
 
       {data.funnel && (
         <Panel title="Scanned, Didn't Register">
-          {data.funnel.abandonedScans.length === 0 && <Muted>No abandoned scans yet.</Muted>}
-          {data.funnel.abandonedScans.slice(0, 8).map((s, i) => (
-            <div key={`${s.scanned_at}-${i}`} style={{ padding: '8px 0', borderTop: '1px solid #f0f0f2' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {s.openHouseAddress}
+          {(() => {
+            const all = data.funnel.abandonedScans
+            const during = all.filter((s) => s.tag === 'during')
+            const rows = scanView === 'during' ? during : all
+            return (
+              <>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                  {([['during', `During event (${during.length})`], ['all', `All (${all.length})`]] as const).map(([view, label]) => (
+                    <button
+                      key={view}
+                      onClick={() => setScanView(view)}
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: scanView === view ? 'white' : INK,
+                        background: scanView === view ? INK : '#f5f5f7',
+                        border: `1px solid ${scanView === view ? INK : '#d1d1d6'}`,
+                        borderRadius: 8,
+                        padding: '5px 10px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
-                <div style={{ fontSize: 12, color: SUB, whiteSpace: 'nowrap' }}>{fmtDateTime(s.scanned_at)}</div>
-              </div>
-              <div style={{ fontSize: 12, color: SUB, marginTop: 2 }}>
-                {s.agentName} · {deviceLabel(s.user_agent)} · {s.ip_address}
-              </div>
-            </div>
-          ))}
+                {rows.length === 0 && (
+                  <Muted>{scanView === 'during' ? 'No walk-aways during a live open house in recent scans.' : 'No abandoned scans yet.'}</Muted>
+                )}
+                {rows.slice(0, 8).map((s, i) => {
+                  const tag = SCAN_TAGS[s.tag]
+                  return (
+                    <div key={`${s.lastAt}-${i}`} style={{ padding: '8px 0', borderTop: '1px solid #f0f0f2' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {s.openHouseAddress}
+                        </div>
+                        <div style={{ fontSize: 12, color: SUB, whiteSpace: 'nowrap' }}>{fmtDateTime(s.lastAt)}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, fontSize: 12, color: SUB, marginTop: 3 }}>
+                        <span title={tag.hint}>
+                          <Badge text={tag.label} color={tag.color} bg={tag.bg} />
+                        </span>
+                        <span>
+                          {`${s.agentName} · ${deviceLabel(s.user_agent)} · ${s.ip_address}`}
+                          {s.count > 1 && ` · opened ${s.count} times`}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </>
+            )
+          })()}
           <div style={{ fontSize: 11, color: SUB, paddingTop: 8 }}>
-            Includes agent test scans, bots, and repeat loads — timestamps are what matter.
+            One row per device. A scan counts as registered if that device signed in within 30 minutes. Hover a tag for what it means.
           </div>
         </Panel>
       )}

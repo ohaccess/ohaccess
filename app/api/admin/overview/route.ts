@@ -6,6 +6,7 @@ import { stripe } from '@/lib/stripe'
 import type Stripe from 'stripe'
 import { trialLimitFor, isExpiredPrepaidAccess } from '@/lib/billing-plans'
 import { summarizeRatings } from '@/lib/report-rating'
+import { buildSignInMatcher, groupWalkaways, type EventInfo } from '@/lib/scan-walkaways'
 
 type ProfileRow = {
   id: string
@@ -54,6 +55,7 @@ type VisitorRow = {
   verified: boolean | null
   registered_at: string | null
   ip_address: string | null
+  user_agent: string | null
 }
 
 type ScanRow = {
@@ -94,7 +96,7 @@ export async function GET(request: Request) {
     supabase
       .from('visitors')
       .select(
-        'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, verified, registered_at, ip_address'
+        'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, verified, registered_at, ip_address, user_agent'
       )
       .order('registered_at', { ascending: false }),
   ])
@@ -165,15 +167,14 @@ export async function GET(request: Request) {
     }))(),
   ])
 
-  // Recent scans that never became a registration ("scanned but didn't
-  // submit"): a scan converts when a visitor row exists for the same open
-  // house from the same IP. Matched against live visitors only — good
-  // enough for a recent-activity view.
+  // Recent scans, for the "Scanned, Didn't Register" panel and the 30-day
+  // conversion rate (matched to sign-ins in the Scan funnel section below).
+  // Matched against live visitors only, which is fine for a recent-activity view.
   const { data: recentScansData } = await supabase
     .from('qr_scans')
     .select('open_house_id, agent_id, ip_address, user_agent, created_at')
     .order('created_at', { ascending: false })
-    .limit(200)
+    .limit(500)
   const recentScans = (recentScansData || []) as ScanRow[]
 
   // Lookup maps
@@ -352,38 +353,93 @@ export async function GET(request: Request) {
   }
 
   // ---- Scan funnel ----
-  // A scan "converted" when a visitor registered for the same open house
-  // from the same IP (visitors carry ip_address since migration 024, so
-  // older scans/visitors without one just can't match — shown as-is).
-  const convertedKeys = new Set(
-    visitors
-      .filter((v) => v.open_house_id && v.ip_address)
-      .map((v) => `${v.open_house_id}|${v.ip_address}`)
+  // A scan "converted" when it became a sign-in at the same open house: same
+  // IP, or the same browser registering within 30 minutes (an iPhone's IP
+  // often changes between loading the form and submitting it). Rules live in
+  // lib/scan-walkaways.ts. Older scans/visitors without an IP or browser
+  // (visitors carry them since migration 024) just can't match.
+  const isSignedIn = buildSignInMatcher(visitors)
+
+  // Schedules for the open houses the scans point at: live rows, plus the
+  // deletion archive for ones deleted since, so the panel can tell a deleted
+  // test event from a real past one.
+  const events = new Map<string, EventInfo>()
+  for (const oh of openHouses) {
+    events.set(oh.id, { start_at: oh.start_at, end_at: oh.end_at, deleted: false, visitorCount: null })
+  }
+  const deletedAddress = new Map<string, string>()
+  const deletedIds = [...new Set(recentScans.map((s) => s.open_house_id))].filter(
+    (id): id is string => !!id && !ohById.has(id)
   )
-  const abandonedScans = recentScans
-    .filter(
-      (s) => !(s.open_house_id && s.ip_address && convertedKeys.has(`${s.open_house_id}|${s.ip_address}`))
-    )
-    .slice(0, 30)
-    .map((s) => ({
-      scanned_at: s.created_at,
-      openHouseAddress: s.open_house_id ? ohAddress.get(s.open_house_id) || '(deleted open house)' : '—',
-      agentName: s.agent_id ? agentName.get(s.agent_id) || 'Unknown' : 'Unknown',
-      ip_address: s.ip_address || '—',
-      user_agent: (s.user_agent || '—').slice(0, 80),
-    }))
+  if (deletedIds.length > 0) {
+    const { data: archived } = await supabase
+      .from('open_house_archive')
+      .select('open_house_id, street_address, property_address, start_at, end_at, visitor_count')
+      .in('open_house_id', deletedIds)
+    for (const a of archived || []) {
+      events.set(a.open_house_id as string, {
+        start_at: a.start_at,
+        end_at: a.end_at,
+        deleted: true,
+        visitorCount: a.visitor_count,
+      })
+      const address = (a.street_address || a.property_address || '').trim()
+      if (address) deletedAddress.set(a.open_house_id as string, address)
+    }
+  }
+
+  // The IPs each scanned agent signed up from (terms_acceptances is keyed by
+  // email), so a scan from the agent's own device is tagged Test.
+  const scanAgentEmails = new Map<string, string>()
+  for (const p of profiles) {
+    if (p.email && recentScans.some((s) => s.agent_id === p.id)) scanAgentEmails.set(p.email.toLowerCase(), p.id)
+  }
+  const agentSignupIps = new Map<string, Set<string>>()
+  if (scanAgentEmails.size > 0) {
+    const emails = profiles.filter((p) => p.email && scanAgentEmails.has(p.email.toLowerCase())).map((p) => p.email as string)
+    const { data: acceptances } = await supabase
+      .from('terms_acceptances')
+      .select('email, ip_address')
+      .in('email', [...new Set([...emails, ...scanAgentEmails.keys()])])
+    for (const t of acceptances || []) {
+      const agentId = scanAgentEmails.get(((t.email as string) || '').toLowerCase())
+      if (!agentId || !t.ip_address) continue
+      const ips = agentSignupIps.get(agentId) || new Set<string>()
+      ips.add(t.ip_address as string)
+      agentSignupIps.set(agentId, ips)
+    }
+  }
+
+  // One row per device per open house (repeat loads collapse into a count),
+  // each with a reason tag. The page shows During event by default, so every
+  // During event row is sent, plus the newest 60 of everything.
+  const abandonedScans = groupWalkaways(recentScans, { visitors, events, agentSignupIps, isSignedIn })
+    .filter((g, i) => i < 60 || g.tag === 'during')
+    .map((g) => {
+      const deleted = g.openHouseId ? deletedAddress.get(g.openHouseId) : undefined
+      return {
+        openHouseAddress: !g.openHouseId
+          ? '—'
+          : ohAddress.get(g.openHouseId) || (deleted ? `${deleted} (deleted)` : '(deleted open house)'),
+        agentName: g.agentId ? agentName.get(g.agentId) || 'Unknown' : 'Unknown',
+        ip_address: g.ipAddress || '—',
+        user_agent: (g.userAgent || '').slice(0, 200),
+        count: g.count,
+        firstAt: g.firstAt,
+        lastAt: g.lastAt,
+        tag: g.tag,
+      }
+    })
 
   // Conversion = share of the last 30 days' scans that became a registration
   // (same open house + IP). Deliberately scan-based, NOT registrations÷scans:
   // registrations predate the scan log (live since 2026-07-20), so that ratio
   // reads absurdly high (1,000%+) until the log has 30 days of history.
-  // recentScans is capped at 200, so with heavy traffic this becomes a
-  // most-recent-200 sample — fine for a dashboard read.
+  // recentScans is capped at 500, so with heavy traffic this becomes a
+  // most-recent-500 sample — fine for a dashboard read.
   const d30Ms = Date.now() - 30 * 24 * 60 * 60 * 1000
   const scans30 = recentScans.filter((s) => new Date(s.created_at).getTime() >= d30Ms)
-  const converted30 = scans30.filter(
-    (s) => s.open_house_id && s.ip_address && convertedKeys.has(`${s.open_house_id}|${s.ip_address}`)
-  ).length
+  const converted30 = scans30.filter((s) => isSignedIn(s)).length
 
   const funnel = {
     openHousesCreated,
