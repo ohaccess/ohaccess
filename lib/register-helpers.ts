@@ -128,10 +128,12 @@ export function smsLink(url: string): string {
 
 // Countries whose preferred clock is 12-hour, per CLDR time data (generated
 // from Intl.Locale hourCycles for every country in lib/regions). Hard-coded
-// because runtimes disagree on the ambiguous ones (GB, MX, ZA...).
+// because runtimes disagree on the ambiguous ones (GB, MX, ZA...). One
+// deliberate exception: GB is 12-hour here (CLDR says 24) because UK agents
+// write "2:14pm" in texts.
 const TWELVE_HOUR_COUNTRIES = new Set((
   'AE AG AL AR AS AU BB BD BH BM BN BO BS BT CA CL CO CR CU CY DJ DM DO DZ EC ' +
-  'EG EH ER ET FJ FM GD GH GM GR GT GU GY HK HN IN IQ JM JO KH KI KN KP KR KW ' +
+  'EG EH ER ET FJ FM GB GD GH GM GR GT GU GY HK HN IN IQ JM JO KH KI KN KP KR KW ' +
   'KY LB LC LR LS LY MH MO MP MR MW MX MY NA NI NZ OM PA PE PG PH PK PR PS PW ' +
   'PY QA SA SB SD SG SL SO SS SV SY SZ TC TD TN TO TT TW US UY VC VE VG VI VU ' +
   'WS YE ZM'

@@ -571,10 +571,11 @@ describe('smsAlertTime', () => {
   it('uses a lowercase 12-hour time in 12-hour countries', () => {
     expect(smsAlertTime(at, 'America/Chicago', 'US')).toBe('4:14pm')
     expect(smsAlertTime(new Date('2026-09-13T01:05:00Z'), 'Australia/Sydney', 'au')).toBe('11:05am')
+    expect(smsAlertTime(at, 'Europe/London', 'GB')).toBe('10:14pm')
   })
 
   it('uses a 24-hour time elsewhere', () => {
-    expect(smsAlertTime(at, 'Europe/London', 'GB')).toBe('22:14')
+    expect(smsAlertTime(at, 'Europe/Dublin', 'IE')).toBe('22:14')
     expect(smsAlertTime(new Date('2026-09-13T07:05:00Z'), 'Europe/Berlin', 'DE')).toBe('09:05')
     expect(smsAlertTime(new Date('2026-09-13T22:00:00Z'), 'Europe/Berlin', 'DE')).toBe('00:00')
   })
