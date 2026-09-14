@@ -100,7 +100,7 @@ export default function OptInProof() {
         <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>The one-time verification codeword a visitor receives after opting in above.</div>
         <div style={{ background: '#f5f5f7', border: '1px solid #e5e5ea', borderRadius: '12px', padding: '20px 24px', marginBottom: '10px', fontSize: '14px', lineHeight: '1.75', color: '#1d1d1f', fontFamily: 'monospace' }}>
           Codeword at 123 Main St, 75229 is &ldquo;LUXE&rdquo;. Share with host for access. Reply STOP to opt out.
-          https://ohaccess.com/r/aB3xK9
+          ohaccess.com/r/aB3xK9
         </div>
         <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '40px', lineHeight: '1.7' }}>
           The address and codeword vary per open house. The trailing link is a tracked ohACCESS short link to the property
