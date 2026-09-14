@@ -111,10 +111,21 @@ type Payload = {
   stats: Stats
   funnel?: Funnel
   revenue?: Revenue | null
+  // Null when the ratings table isn't there yet (migration 053) or failed.
+  ratings?: Ratings | null
   agents: Agent[]
   openHouses: OpenHouse[]
   visitors: Visitor[]
   generatedAt: string
+}
+
+// One-tap ratings from the post-event report email (lib/report-rating.ts).
+type Ratings = {
+  countAll: number
+  avgAll: number | null
+  count30d: number
+  avg30d: number | null
+  recent: { openHouseId: string; agentName: string; address: string; score: number; comment: string | null; rated_at: string }[]
 }
 
 type Tab = 'overview' | 'agents' | 'openhouses' | 'visitors' | 'map'
@@ -1753,6 +1764,44 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
             </div>
             {noOpenHouse.slice(0, 5).map((a) => (
               <Line key={a.id} left={a.name} sub={a.email} right={`joined ${fmtDate(a.created_at)}`} />
+            ))}
+          </>
+        )}
+      </Panel>
+
+      {/* Stars agents tap in each post-event report email. */}
+      <Panel title="Agent Ratings">
+        {!data.ratings && <Muted>Ratings aren&apos;t available right now.</Muted>}
+        {data.ratings && data.ratings.countAll === 0 && (
+          <Muted>No ratings yet. They come from the stars in each post-event report email.</Muted>
+        )}
+        {data.ratings && data.ratings.countAll > 0 && (
+          <>
+            <div style={{ display: 'flex', gap: 18, alignItems: 'baseline', paddingBottom: 8 }}>
+              <div>
+                <span style={{ fontSize: 22, fontWeight: 800, color: INK }}>{data.ratings.avgAll}</span>
+                <span style={{ fontSize: 13, color: '#f5a623', marginLeft: 3 }}>★</span>
+                <span style={{ fontSize: 12, color: SUB, marginLeft: 6 }}>{`${data.ratings.countAll} ${data.ratings.countAll === 1 ? 'rating' : 'ratings'}`}</span>
+              </div>
+              <div style={{ fontSize: 12, color: SUB }}>
+                {data.ratings.count30d > 0 ? `Last 30 days: ${data.ratings.avg30d} from ${data.ratings.count30d}` : 'None in the last 30 days'}
+              </div>
+            </div>
+            {data.ratings.recent.slice(0, 8).map((r) => (
+              <div key={r.openHouseId} style={{ padding: '8px 0', borderTop: '1px solid #f0f0f2' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span style={{ color: '#f5a623', letterSpacing: 1 }}>{'★'.repeat(r.score)}</span>
+                    <span style={{ color: '#d1d1d6', letterSpacing: 1 }}>{'★'.repeat(5 - r.score)}</span>
+                    {` ${r.agentName}`}
+                  </div>
+                  <div style={{ fontSize: 12, color: SUB, whiteSpace: 'nowrap' }}>{fmtDate(r.rated_at)}</div>
+                </div>
+                <div style={{ fontSize: 12, color: SUB, marginTop: 2 }}>{r.address}</div>
+                {r.comment && (
+                  <div style={{ fontSize: 12.5, color: INK, marginTop: 4, whiteSpace: 'pre-wrap' }}>{`“${r.comment}”`}</div>
+                )}
+              </div>
             ))}
           </>
         )}
