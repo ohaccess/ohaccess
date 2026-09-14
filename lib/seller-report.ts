@@ -11,9 +11,13 @@ import {
   MAX_CHOICE_OPTIONS,
   MAX_OPTION_LENGTH,
 } from '@/lib/custom-questions'
+import { isManualVisitor } from '@/lib/manual-visitor'
 
 export interface SellerReportStats {
   total: number
+  // Visitors who signed in themselves and got a codeword; the rest (total -
+  // verifiedCount) were added by the agent by hand (lib/manual-visitor.ts).
+  verifiedCount: number
   // Timeline buckets in soonest-first order, zero-count buckets dropped, with
   // anything unrecognized collected under "Other".
   groups: { label: string; count: number }[]
@@ -58,6 +62,7 @@ export interface SellerReportVisitor {
   feedback_rating?: number | null
   feedback_price?: string | null
   custom_answers?: unknown
+  source?: string | null
 }
 
 export function buildSellerReportStats(
@@ -86,8 +91,13 @@ export function buildSellerReportStats(
     TIMELINE_ORDER.slice(0, 2).includes(v.purchasing_timeline || '')
   ).length
 
+  // Hand-added visitors never scanned or registered online, so the funnel
+  // compares scans with self sign-ins only.
+  const verifiedCount = visitors.filter(v => !isManualVisitor(v)).length
   const funnel =
-    scanCount > 0 && scanCount >= total ? { scans: scanCount, registered: total } : null
+    scanCount > 0 && scanCount >= verifiedCount && verifiedCount > 0
+      ? { scans: scanCount, registered: verifiedCount }
+      : null
 
   // A response requires both answers (the form submits them together), so a
   // numeric rating is a reliable marker of a completed feedback row.
@@ -171,5 +181,5 @@ export function buildSellerReportStats(
     if (!liveQuestions.some(q => q.id === id)) customQuestions.push(build(id, entry))
   }
 
-  return { total, groups, soonCount, funnel, feedback, customQuestions }
+  return { total, verifiedCount, groups, soonCount, funnel, feedback, customQuestions }
 }
