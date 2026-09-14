@@ -1481,6 +1481,7 @@ export default function Dashboard() {
           logoUrl={profile?.logo_url || ''}
           brokerageName={profile?.brokerage || ''}
           onSignSaved={markSignSaved}
+          onShowPermanent={openPermanentQr}
         />
       )}
 

@@ -446,8 +446,11 @@ export default function OpenHouseList({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f' }}>Your open houses</div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button onClick={() => { if (guardLocked()) return; openPermanentQr() }} title="One QR code that always points to your next open house. Print it once, reuse it forever." style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          {/* "Recommended" pill: agents were confusing this with each open
+              house's own QR code. Same yellow as the tip in QrModal. */}
+          <button onClick={() => { if (guardLocked()) return; openPermanentQr() }} title="One QR code that always points to your next open house. Print it once, reuse it forever." style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             📌 My QR code
+            <span style={{ background: '#fff8e6', color: '#8a5a00', border: '1px solid #f5d48a', borderRadius: '20px', padding: '1px 7px', fontSize: '10px', fontWeight: '700' }}>Recommended</span>
           </button>
           <button onClick={() => { if (guardLocked()) return; setEditingOH(null); resetForm(); setView('new') }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             + New open house
