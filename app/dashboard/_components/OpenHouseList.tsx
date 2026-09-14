@@ -339,6 +339,7 @@ export default function OpenHouseList({
   setDeleteConfirm,
   setVisitorModal,
   showToast,
+  setupChecklist,
 }: {
   user: any
   openHouses: any[]
@@ -377,6 +378,8 @@ export default function OpenHouseList({
   setDeleteConfirm: (id: string | null) => void
   setVisitorModal: (v: any) => void
   showToast: (message: string, type?: 'success' | 'error') => void
+  // The "Get set up" card for new agents (built by page.tsx, null when hidden).
+  setupChecklist?: ReactNode
 }) {
   const visitorSort = useSortable('time', 'desc')
   const sortedVisitors = useMemo(
@@ -420,6 +423,8 @@ export default function OpenHouseList({
     <>
       <div style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: '3px' }}>Dashboard</div>
       <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '16px' }}>Real-time visitor log and open house management.</div>
+
+      {setupChecklist}
 
       {/* Hidden for sponsored agents even if the sponsor's billing isn't
           active yet (Dave's call) — a sponsored account shouldn't see trial
