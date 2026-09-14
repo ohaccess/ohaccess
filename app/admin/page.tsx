@@ -7,6 +7,7 @@ import { IMPERSONATION_KEY } from '../_components/ImpersonationBanner'
 import { timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type SortState, type Sortable } from '@/lib/sort'
 import OpenHouseMap from '@/app/_components/OpenHouseMap'
+import { RENTCAST_UPGRADE_AT_OPEN_HOUSES_PER_MONTH } from '@/lib/property-facts'
 
 type Stats = {
   totalAgents: number
@@ -1682,6 +1683,17 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, marginTop: 24 }}>
+      {/* The address auto-fill runs on RentCast's free plan (50 lookups, then
+          $0.20 each). Past the threshold the $74 plan is cheaper. */}
+      {data.funnel && data.funnel.openHousesCreated.last30d > RENTCAST_UPGRADE_AT_OPEN_HOUSES_PER_MONTH && (
+        <div style={{ gridColumn: '1 / -1', background: '#fff0f0', border: '1px solid #ffc9c9', borderRadius: 14, padding: '14px 18px', fontSize: 14, color: INK }}>
+          <strong style={{ color: '#cc0000' }}>Time to upgrade RentCast.</strong>{' '}
+          {`${data.funnel.openHousesCreated.last30d} open houses were created in the last 30 days (over ${RENTCAST_UPGRADE_AT_OPEN_HOUSES_PER_MONTH}). `}
+          Switch to the Foundation plan ($74/mo, 1,000 lookups) at{' '}
+          <a href="https://app.rentcast.io/app/api" target="_blank" rel="noopener noreferrer" style={{ color: INK }}>app.rentcast.io/app/api</a>
+          {' '}so the address auto-fill stops paying $0.20 per lookup.
+        </div>
+      )}
       <Panel title="Subscriptions Ending" onMore={cancelingAgents.length > 0 ? () => setTab('agents') : undefined}>
         {cancelingAgents.length === 0 && <Muted>No subscriptions are set to cancel.</Muted>}
         {cancelingAgents.map((a) => (

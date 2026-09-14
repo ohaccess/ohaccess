@@ -22,6 +22,7 @@ import { normalizeAgreementTemplates } from '@/lib/agreements'
 import { loadMarketingTags, trackPurchase, trackSignupOnce } from '@/lib/marketing-tags'
 import { regionFor, inferProfileCountry, normalizeCountry, countryFromLocale, countryName } from '@/lib/regions'
 import { phoneError } from '@/lib/phone'
+import { fillEmptyFacts } from '@/lib/property-facts'
 
 // OAuth (Google) signups never pass the signup form, so their signup
 // conversion fires on the first dashboard load instead. The freshness window
@@ -64,6 +65,9 @@ export default function Dashboard() {
   const [visitorModal, setVisitorModal] = useState<any>(null)
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
+  // The address the agent picked last — a slow property-facts answer for an
+  // earlier pick is ignored.
+  const selectedPlaceId = useRef('')
   const [form, setForm] = useState({
     street_address: '',
     address_2: '',
@@ -584,11 +588,28 @@ export default function Dashboard() {
           country: data.country || prev.country || agentCountry,
           property_timezone: data.timezone || ''
         }))
+        selectedPlaceId.current = placeId
+        if (data.country === 'US') fillPropertyFacts(placeId, data)
       }
       setShowSuggestions(false)
       setAddressSuggestions([])
     } catch {
       setShowSuggestions(false)
+    }
+  }
+
+  // Price, beds, baths and size for a US address (RentCast, via
+  // /api/property-facts). Fills only boxes the agent left empty, and drops
+  // the answer if they've picked a different address in the meantime.
+  const fillPropertyFacts = async (placeId: string, addr: { street: string; city: string; state: string; zip?: string }) => {
+    try {
+      const qs = new URLSearchParams({ street: addr.street, city: addr.city, state: addr.state, zip: addr.zip || '' })
+      const res = await fetch(`/api/property-facts?${qs}`, { headers: await authHeaders() })
+      const { facts } = await res.json()
+      if (!facts || selectedPlaceId.current !== placeId) return
+      setForm(prev => ({ ...prev, ...fillEmptyFacts(prev, facts) }))
+    } catch {
+      // No auto-fill — the agent types the details as before.
     }
   }
 
