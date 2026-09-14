@@ -169,7 +169,10 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
       v.first_name, v.last_name, v.email, v.phone, v.purchasing_timeline,
       formatPropertyTime(v.registered_at, selectedOH.timezone, 'csv'), v.verified ? 'Yes' : 'No',
     ])
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+    // Every cell RFC-4180 quoted (same as the dashboard's own export): the
+    // Registered time ("9/13/2026, 1:30 PM") and addresses contain commas.
+    const csvCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
+    const csv = [headers, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
