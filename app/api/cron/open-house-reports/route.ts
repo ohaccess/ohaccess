@@ -4,6 +4,8 @@ import { Resend } from 'resend'
 import { escapeHtml } from '@/lib/escape-html'
 import { TIMELINE_ORDER } from '@/lib/timeline'
 import { getOrCreateSellerReportCode } from '@/lib/report-link'
+import { reportRatingUrl } from '@/lib/report-rating-link'
+import { RATING_MAX } from '@/lib/report-rating'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -41,8 +43,10 @@ function buildReportHtml(args: {
   visitors: Visitor[]
   tz: string | null
   reportUrl: string | null
+  // Signed /rate links for 1..5 stars (lib/report-rating-link.ts).
+  ratingLinks: string[]
 }): string {
-  const { agentName, address, primary, accent, logoUrl, brokerage, visitors, tz, reportUrl } = args
+  const { agentName, address, primary, accent, logoUrl, brokerage, visitors, tz, reportUrl, ratingLinks } = args
   const verified = visitors.filter(v => v.verified).length
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
   const feedbackMailto = `mailto:support@ohaccess.com?subject=${encodeURIComponent(`ohACCESS feedback: ${address}`)}`
@@ -110,12 +114,19 @@ function buildReportHtml(args: {
       <a href="${escapeHtml(reportUrl)}" style="display:inline-block;margin-top:10px;background:${escapeHtml(primary)};color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:8px;">View &amp; share the seller report</a>
     </div>` : ''}
     <!-- Agent feedback ask. Shown on every report (zero-visitor events
-         included). Replies already route to support@ via replyTo; the
-         mailto button covers clients that bury the reply action. -->
+         included). The star links open /rate, which saves the score (migration
+         053) and takes an optional comment. Replies still route to support@
+         via replyTo; the mailto button covers clients that bury the reply
+         action. -->
     <div style="margin-top:16px;border:1px solid #e5e5ea;border-radius:12px;padding:16px 18px;">
       <div style="font-size:14px;font-weight:700;color:#1d1d1f;">💬 How did ohACCESS work for you today?</div>
-      <div style="font-size:13px;color:#6e6e73;margin-top:4px;line-height:1.5;">
-        What worked, what got in the way, or what you wish it did. Just hit reply.
+      <div style="font-size:13px;color:#6e6e73;margin-top:4px;line-height:1.5;">Tap a number to rate it:</div>
+      <div style="margin-top:8px;">
+        ${ratingLinks.map((url, i) => `<a href="${escapeHtml(url)}" style="display:inline-block;margin:0 6px 6px 0;background:#ffffff;border:1px solid #d2d2d7;border-radius:8px;padding:8px 12px;font-size:14px;font-weight:700;color:#1d1d1f;text-decoration:none;">${i + 1} <span style="color:#f5a623;">&#9733;</span></a>`).join('')}
+      </div>
+      <div style="font-size:11px;color:#8e8e93;">1 = frustrating · ${RATING_MAX} = loved it</div>
+      <div style="font-size:13px;color:#6e6e73;margin-top:12px;line-height:1.5;">
+        What worked, what got in the way, or what you wish it did? Just hit reply.
         A real person reads every note, and your feedback shapes what we build next.
       </div>
       <a href="${escapeHtml(feedbackMailto)}" style="display:inline-block;margin-top:10px;background:#ffffff;color:#1d1d1f;border:1px solid #d2d2d7;text-decoration:none;font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px;">Share feedback</a>
@@ -194,6 +205,7 @@ async function handle(request: Request) {
       visitors: (visitors ?? []) as Visitor[],
       tz: oh.timezone,
       reportUrl,
+      ratingLinks: Array.from({ length: RATING_MAX }, (_, i) => reportRatingUrl(oh.id, i + 1)),
     })
 
     try {

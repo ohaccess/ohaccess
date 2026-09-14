@@ -5,6 +5,7 @@ import { ohStatus } from '@/lib/oh-status'
 import { stripe } from '@/lib/stripe'
 import type Stripe from 'stripe'
 import { trialLimitFor, isExpiredPrepaidAccess } from '@/lib/billing-plans'
+import { summarizeRatings } from '@/lib/report-rating'
 
 type ProfileRow = {
   id: string
@@ -452,10 +453,42 @@ export async function GET(request: Request) {
     // card just says it couldn't reach Stripe.
   }
 
+  // ---- Agent ratings (stars in the post-event report email, migration 053) ----
+  // Null (panel says unavailable) if the table isn't there yet or the query
+  // fails; the rest of the dashboard loads either way.
+  let ratings: (ReturnType<typeof summarizeRatings> & {
+    recent: { openHouseId: string; agentName: string; address: string; score: number; comment: string | null; rated_at: string }[]
+  }) | null = null
+  try {
+    const { data: rows, error: ratingsErr } = await supabase
+      .from('agent_report_ratings')
+      .select('open_house_id, agent_id, score, comment, updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(1000)
+    if (!ratingsErr && rows) {
+      const agentName = new Map(profiles.map((p) => [p.id, p.full_name || p.email || 'Unknown agent']))
+      const ohAddress = new Map(openHouses.map((o) => [o.id, o.property_address || o.street_address || '']))
+      ratings = {
+        ...summarizeRatings(rows, now),
+        recent: rows.slice(0, 20).map((r) => ({
+          openHouseId: r.open_house_id,
+          agentName: agentName.get(r.agent_id) || 'Unknown agent',
+          address: ohAddress.get(r.open_house_id) || '(open house deleted)',
+          score: r.score,
+          comment: r.comment,
+          rated_at: r.updated_at,
+        })),
+      }
+    }
+  } catch {
+    // Leave ratings null.
+  }
+
   return NextResponse.json({
     stats,
     funnel,
     revenue,
+    ratings,
     agents,
     openHouses: openHouseRows,
     visitors: visitorRows,
