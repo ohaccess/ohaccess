@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type SortState, type Sortable } from '@/lib/sort'
+import { formatPropertyTime } from '@/lib/property-time'
 
 interface AgentRollup {
   id: string
@@ -19,6 +20,7 @@ interface OpenHouseRow {
   property_address: string
   open_house_date: string | null
   open_house_hours: string | null
+  timezone: string | null
   status: string
   visitor_count: number
   verified_count: number
@@ -165,7 +167,7 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
     const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Timeline', 'Registered', 'Verified']
     const rows = visitors.map(v => [
       v.first_name, v.last_name, v.email, v.phone, v.purchasing_timeline,
-      new Date(v.registered_at).toLocaleString(), v.verified ? 'Yes' : 'No',
+      formatPropertyTime(v.registered_at, selectedOH.timezone, 'csv'), v.verified ? 'Yes' : 'No',
     ])
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
@@ -307,7 +309,7 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
                       <td style={td}>{v.phone}</td>
                       <td style={td}>{v.email}</td>
                       <td style={td}>{v.purchasing_timeline}</td>
-                      <td style={td}>{new Date(v.registered_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>
+                      <td style={td}>{formatPropertyTime(v.registered_at, selectedOH?.timezone)}</td>
                       <td style={td}>{v.verified ? <span style={{ color: '#30d158', fontWeight: 700 }}>✓</span> : '—'}</td>
                     </tr>
                   ))}

@@ -5,6 +5,7 @@ import { timelineStyle, timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type Sortable } from '@/lib/sort'
 import { phoneLineKind, PHONE_LINE_CHIPS } from '@/lib/register-helpers'
 import { langMeta } from '@/lib/register-i18n'
+import { formatPropertyTime } from '@/lib/property-time'
 
 // The main "Dashboard" view: the agent's open-house cards (with per-event
 // stat strips and QR / copy / edit / delete actions), and the visitor log
@@ -635,7 +636,7 @@ export default function OpenHouseList({
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.phone}{v.sms_opted_out ? <span title="This number replied STOP. Do not contact." style={optedOutBadgeStyle}>🚫 Opted out</span> : deliveryFlag(v.sms_status) ? <span title={v.codeword_channel === 'whatsapp' ? 'WhatsApp message could not be delivered to this number' : 'Text could not be delivered to this number'} style={deliveryBadgeStyle}>⚠ undelivered</span> : v.codeword_channel === 'whatsapp' ? <span title="Codeword was sent by WhatsApp, not SMS" style={whatsAppBadgeStyle}>WhatsApp</span> : null}<PhoneLineChip lineType={v.phone_line_type} /></td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{v.email}{deliveryFlag(v.email_status) && <span title="Email bounced. This address may be invalid." style={deliveryBadgeStyle}>⚠ bounced</span>}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>{getTimelineBadge(v.purchasing_timeline)}</td>
-                      <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{new Date(v.registered_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>
+                      <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', color: '#6e6e73', whiteSpace: 'nowrap' }}>{formatPropertyTime(v.registered_at, selectedOH?.timezone)}</td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
                         <button onClick={() => toggleVerified(v.id, v.verified)} style={{ background: v.verified ? '#30d158' : primaryColor, color: v.verified ? 'white' : onPrimary, border: v.verified ? 'none' : primaryBtnBorder, borderRadius: '6px', padding: '4px 8px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
                           {v.verified ? '✓' : 'Verify'}

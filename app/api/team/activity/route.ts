@@ -41,7 +41,7 @@ export async function GET(request: Request) {
   const [{ data: openHouses }, { data: visitors }] = await Promise.all([
     supabase
       .from('open_houses')
-      .select('id, agent_id, property_address, open_house_date, open_house_hours, status, created_at')
+      .select('id, agent_id, property_address, open_house_date, open_house_hours, timezone, status, created_at')
       .in('agent_id', agentIds)
       .order('created_at', { ascending: false }),
     supabase
@@ -76,6 +76,7 @@ export async function GET(request: Request) {
       property_address: oh.property_address,
       open_house_date: oh.open_house_date,
       open_house_hours: oh.open_house_hours,
+      timezone: oh.timezone,
       status: oh.status,
       visitor_count: counts.total,
       verified_count: counts.verified,

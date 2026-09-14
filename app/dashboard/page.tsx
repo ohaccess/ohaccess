@@ -16,6 +16,7 @@ import VisitorDetail from '@/app/_components/VisitorDetail'
 import { isLightColor, onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { normalizeCustomAnswers } from '@/lib/custom-questions'
+import { formatPropertyTime } from '@/lib/property-time'
 import { sanitizeSmsCodeWord } from '@/lib/register-helpers'
 import { normalizeAgreementTemplates } from '@/lib/agreements'
 import { loadMarketingTags, trackPurchase, trackSignupOnce } from '@/lib/marketing-tags'
@@ -925,11 +926,12 @@ export default function Dashboard() {
     return cols
   }
   const VISITOR_CSV_HEADERS = ['First Name','Last Name','Email','Phone','Timeline','Registered','Verified']
-  const visitorCells = (v: any, questionColumns: { id: string; prompt: string }[]) => {
+  // Registered time is in the property's timezone (see lib/property-time).
+  const visitorCells = (v: any, questionColumns: { id: string; prompt: string }[], timeZone?: string | null) => {
     const answers = normalizeCustomAnswers(v.custom_answers)
     return [
       v.first_name, v.last_name, v.email, v.phone, v.purchasing_timeline,
-      new Date(v.registered_at).toLocaleString(), v.verified ? 'Yes' : 'No',
+      formatPropertyTime(v.registered_at, timeZone, 'csv'), v.verified ? 'Yes' : 'No',
       ...questionColumns.map(q => answers.find(a => a.id === q.id)?.answer ?? ''),
     ]
   }
@@ -939,7 +941,7 @@ export default function Dashboard() {
     const qs = questionColumnsFor(visitors)
     downloadCSV(
       [...VISITOR_CSV_HEADERS, ...qs.map(q => q.prompt)],
-      visitors.map(v => visitorCells(v, qs)),
+      visitors.map(v => visitorCells(v, qs, selectedOH?.timezone)),
       `${selectedOH?.property_address}-visitors.csv`
     )
   }
@@ -976,7 +978,7 @@ export default function Dashboard() {
       ['Open House', 'Event Date', ...VISITOR_CSV_HEADERS, ...qs.map(q => q.prompt)],
       all.map(v => {
         const oh = ohById.get(v.open_house_id)
-        return [oh?.property_address ?? '', oh?.open_house_date ?? '', ...visitorCells(v, qs)]
+        return [oh?.property_address ?? '', oh?.open_house_date ?? '', ...visitorCells(v, qs, oh?.timezone)]
       }),
       'ohACCESS-all-visitors.csv'
     )
