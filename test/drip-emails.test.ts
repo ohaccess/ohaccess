@@ -82,7 +82,7 @@ describe('buildHardwareOfferEmail', () => {
     expect(html).toContain('first 100 agents in your state')
     expect(html).toContain('$240')
     expect(html).toContain(`${APP_URL}/login?plan=pro&amp;interval=two_year_prepay`)
-    expect(html).toContain('Lock in 2-year Pro + free signs')
+    expect(html).toContain('Lock in 2-year Pro + free stands')
     expect(html).toContain(`${APP_URL}/subscriber-terms`)
   })
 })

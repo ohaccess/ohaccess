@@ -217,8 +217,12 @@ export function buildHardwareOfferEmail(o: {
     <div style="margin-top:16px;background:#fff9ec;border:1px solid #f0dfb8;border-radius:12px;padding:16px;">
       <div style="font-size:14px;line-height:1.7;">
         🎁 The <strong>first 100 agents in your state</strong> to lock in a 2-year Pro plan get
-        <strong>two pedestal sign stands or one A-frame sidewalk sign</strong>, shipped to your
+        <strong>two pedestal sign stands or one A-frame sidewalk frame</strong>, shipped to your
         door, on us.
+      </div>
+      <div style="font-size:14px;line-height:1.7;margin-top:8px;">
+        It's the hardware only: printed signs aren't included. Print your branded QR sign from
+        your dashboard and slide it in.
       </div>
     </div>
     <div style="font-size:14px;line-height:1.7;margin-top:16px;">
@@ -226,17 +230,17 @@ export function buildHardwareOfferEmail(o: {
       with unlimited visitor sign-ins the whole way. The button below goes straight to checkout,
       where you pick two pedestal stands or an A-frame and enter your shipping address.
     </div>
-    ${ctaButton('Lock in 2-year Pro + free signs', checkoutUrl)}
+    ${ctaButton('Lock in 2-year Pro + free stands', checkoutUrl)}
     <div style="font-size:12px;color:#aeaeb2;margin-top:16px;line-height:1.6;">
-      One claim per account, while your state's allotment lasts.
+      Stands and frames only, printed signs not included. One claim per account, while your state's allotment lasts.
       <a href="${e(`${o.appUrl}/subscriber-terms`)}" style="color:#aeaeb2;">Offer terms</a>.
     </div>`
 
   return {
-    subject: 'Free pedestal stands or an A-frame sign, while your state lasts',
+    subject: 'Free sign stands or an A-frame, while your state lasts',
     html: shell({
-      preheader: 'First 100 agents per state on a 2-year plan get sign hardware free.',
-      title: 'Your welcome sign, on us',
+      preheader: 'First 100 agents per state on a 2-year plan get sign stands free.',
+      title: 'Your sign stands, on us',
       subtitle: 'The founding-member 2-year offer',
       greeting: greetingFor(o.firstName),
       bodyHtml,
