@@ -527,10 +527,10 @@ export async function POST(request: Request) {
           // VoIP flag (plain text, not emoji — emoji forces UCS-2 encoding and
           // triples SMS cost). nonFixedVoip = TextNow/Google Voice-style app
           // number, worth extra scrutiny at the door.
-          // Timeline "0–3 Months" sent as "0-3 mos.": an en-dash isn't in the
-          // GSM-7 set (forces UCS-2 and 3-4 billed segments), and "mos." saves
-          // a few more chars toward the 160 budget.
-          body: `ohACCESS: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${formatPhoneDisplay(phone)}${isVirtualNumber(phoneLineType) ? ' (FYI - VoIP/internet number)' : ''}, ${email}, Timeline: ${String(purchasingTimeline).replace(/[–—]/g, '-').replace(/\bMonths\b/gi, 'mos.')}, Time: ${now}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
+          // Timeline "0–3 Months" sent as "Buying 0-3 mos.": an en-dash isn't in
+          // the GSM-7 set (forces UCS-2 and 3-4 billed segments), and "Buying"
+          // / "mos." save a few more chars toward the 160 budget.
+          body: `ohACCESS: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${formatPhoneDisplay(phone)}${isVirtualNumber(phoneLineType) ? ' (FYI - VoIP/internet number)' : ''}, ${email}, Buying ${String(purchasingTimeline).replace(/[–—]/g, '-').replace(/\bMonths\b/gi, 'mos.')}, Time: ${now}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
           ...twilioSender(),
           to: agentAlertTo
         })
