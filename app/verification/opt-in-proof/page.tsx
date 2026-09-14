@@ -116,8 +116,7 @@ export default function OptInProof() {
           transactional notification each time a new visitor registers. Agents can stop these any time by replying STOP.
         </div>
         <div style={{ background: '#f5f5f7', border: '1px solid #e5e5ea', borderRadius: '12px', padding: '20px 24px', marginBottom: '10px', fontSize: '14px', lineHeight: '1.75', color: '#1d1d1f', fontFamily: 'monospace' }}>
-          ohACCESS: New visitor at 123 Main St. Jane Smith, (214) 555-0142, jane@email.com, Timeline: 0&ndash;3 Months, Time:
-          6/3/26, 12:47 PM https://ohaccess.com/r/aB3xK9
+          ohACCESS: New visitor at 123 Main St. Jane Smith, (214) 555-0142, jane@email.com, Buying 0-3 mos., at 12:47pm ohaccess.com/r/aB3xK9
         </div>
         <div style={{ fontSize: '13px', color: '#6e6e73', marginBottom: '40px', lineHeight: '1.7' }}>
           The trailing link is a tracked ohACCESS short link to that visitor&rsquo;s record, where the agent verifies them and
