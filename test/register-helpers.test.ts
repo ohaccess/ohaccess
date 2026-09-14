@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   generateCode,
   buildSmsBody,
+  abbreviateStreetAddress,
   isHttpUrl,
   safeUrl,
   isHexColor,
@@ -514,5 +515,43 @@ describe('buildDisclosuresHtml', () => {
       { label: 'Doc', url: 'https://e.com/a.pdf?x="onmouseover="alert(1)' },
     ])
     expect(html).not.toContain('"onmouseover="')
+  })
+})
+
+describe('abbreviateStreetAddress', () => {
+  it('shortens the street type', () => {
+    expect(abbreviateStreetAddress('94 Ligham Street')).toBe('94 Ligham St')
+    expect(abbreviateStreetAddress('12 Oak Lane')).toBe('12 Oak Ln')
+    expect(abbreviateStreetAddress('5 Quail Ridge Trail')).toBe('5 Quail Ridge Trl')
+    expect(abbreviateStreetAddress('800 Sunset Boulevard.')).toBe('800 Sunset Blvd')
+  })
+
+  it('only shortens the last street-type word', () => {
+    expect(abbreviateStreetAddress('7 Circle Drive')).toBe('7 Circle Dr')
+    expect(abbreviateStreetAddress('7 Park Court Road')).toBe('7 Park Court Rd')
+  })
+
+  it('leaves the rest of the address alone', () => {
+    expect(abbreviateStreetAddress('123 Main Street, Dallas, TX 75201')).toBe('123 Main St, Dallas, TX 75201')
+    expect(abbreviateStreetAddress('123 Main Street Apt 4')).toBe('123 Main St Apt 4')
+    expect(abbreviateStreetAddress('123 Main Street #4')).toBe('123 Main St #4')
+  })
+
+  it('shortens directionals, but never the only name word', () => {
+    expect(abbreviateStreetAddress('123 North Park Drive')).toBe('123 N Park Dr')
+    expect(abbreviateStreetAddress('123 Main Street North')).toBe('123 Main St N')
+    expect(abbreviateStreetAddress('123 South Street')).toBe('123 South St')
+    expect(abbreviateStreetAddress('123 Street')).toBe('123 Street')
+  })
+
+  it('keeps all-caps addresses all caps and leaves unknown words alone', () => {
+    expect(abbreviateStreetAddress('1 MAIN STREET')).toBe('1 MAIN ST')
+    expect(abbreviateStreetAddress('1977 Mos Eisley')).toBe('1977 Mos Eisley')
+    expect(abbreviateStreetAddress('10 Broadway')).toBe('10 Broadway')
+  })
+
+  it('handles missing addresses', () => {
+    expect(abbreviateStreetAddress(null)).toBe('')
+    expect(abbreviateStreetAddress('')).toBe('')
   })
 })

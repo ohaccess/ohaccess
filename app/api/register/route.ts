@@ -11,6 +11,7 @@ import {
   buildCrmLeadEmail,
   resolveDisclosureLinks,
   isVirtualNumber,
+  abbreviateStreetAddress,
   twilioSender,
   pickCachedPhoneIntel,
   PHONE_INTEL_CANDIDATES,
@@ -530,7 +531,7 @@ export async function POST(request: Request) {
           // Timeline "0–3 Months" sent as "Buying 0-3 mos.": an en-dash isn't in
           // the GSM-7 set (forces UCS-2 and 3-4 billed segments), and "Buying"
           // / "mos." save a few more chars toward the 160 budget.
-          body: `ohACCESS: New visitor at ${streetAddress}. ${firstName} ${lastName}, ${formatPhoneDisplay(phone)}${isVirtualNumber(phoneLineType) ? ' (FYI - VoIP/internet number)' : ''}, ${email}, Buying ${String(purchasingTimeline).replace(/[–—]/g, '-').replace(/\bMonths\b/gi, 'mos.')}, On ${now}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
+          body: `ohACCESS: New visitor at ${abbreviateStreetAddress(streetAddress)}. ${firstName} ${lastName}, ${formatPhoneDisplay(phone)}${isVirtualNumber(phoneLineType) ? ' (FYI - VoIP/internet number)' : ''}, ${email}, Buying ${String(purchasingTimeline).replace(/[–—]/g, '-').replace(/\bMonths\b/gi, 'mos.')}, On ${now}${visitorShortUrl ? ` ${visitorShortUrl}` : ''}`,
           ...twilioSender(),
           to: agentAlertTo
         })

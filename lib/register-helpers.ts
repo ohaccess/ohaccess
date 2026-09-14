@@ -66,6 +66,59 @@ export function buildSmsBody(base: string, extras: { label: string; url: string 
   return body
 }
 
+// USPS (Publication 28) street-type and directional abbreviations, used to
+// shorten the address in the agent's new-visitor SMS toward the 160 budget.
+const STREET_TYPES = new Map(Object.entries({
+  alley: 'Aly', avenue: 'Ave', bend: 'Bnd', boulevard: 'Blvd', bypass: 'Byp',
+  canyon: 'Cyn', causeway: 'Cswy', center: 'Ctr', circle: 'Cir', court: 'Ct',
+  cove: 'Cv', creek: 'Crk', crossing: 'Xing', drive: 'Dr', estates: 'Ests',
+  expressway: 'Expy', freeway: 'Fwy', glen: 'Gln', grove: 'Grv', harbor: 'Hbr',
+  heights: 'Hts', highway: 'Hwy', hill: 'Hl', hills: 'Hls', hollow: 'Holw',
+  junction: 'Jct', lake: 'Lk', landing: 'Lndg', lane: 'Ln', manor: 'Mnr',
+  meadow: 'Mdw', meadows: 'Mdws', parkway: 'Pkwy', place: 'Pl', plaza: 'Plz',
+  point: 'Pt', ridge: 'Rdg', road: 'Rd', route: 'Rte', square: 'Sq',
+  street: 'St', terrace: 'Ter', trace: 'Trce', trail: 'Trl', turnpike: 'Tpke',
+  valley: 'Vly', view: 'Vw', village: 'Vlg', vista: 'Vis',
+}))
+const DIRECTIONS = new Map(Object.entries({
+  north: 'N', south: 'S', east: 'E', west: 'W',
+  northeast: 'NE', northwest: 'NW', southeast: 'SE', southwest: 'SW',
+}))
+
+// "94 Ligham Street" -> "94 Ligham St"; "123 North Park Drive, Dallas, TX" ->
+// "123 N Park Dr, Dallas, TX". Only the street part (before the first comma)
+// changes, and only its LAST street-type word ("Circle Drive" -> "Circle Dr"),
+// looking past a trailing unit ("Apt 4", "#4") or directional ("Main Street
+// North" -> "Main St N"). A word that is the street's only name word is left
+// whole, so "South Street" becomes "South St", never "S St".
+export function abbreviateStreetAddress(address: string | null | undefined): string {
+  if (!address) return ''
+  const comma = address.indexOf(',')
+  const street = comma === -1 ? address : address.slice(0, comma)
+  const rest = comma === -1 ? '' : address.slice(comma)
+  const words = street.trim().split(/\s+/)
+  const key = (w: string) => w.toLowerCase().replace(/\.$/, '')
+  // Keep an all-caps address all caps ("MAIN STREET" -> "MAIN ST").
+  const shorten = (w: string, abbr: string) => (/[A-Z]/.test(w) && w === w.toUpperCase() ? abbr.toUpperCase() : abbr)
+
+  let end = words.findIndex((w, i) => i > 0 && /^(#|apt\b|apartment\b|unit\b|suite\b|ste\b)/i.test(w))
+  if (end === -1) end = words.length
+  let typeIdx = end - 1
+  const trailingDir = typeIdx > 0 && DIRECTIONS.has(key(words[typeIdx])) && STREET_TYPES.has(key(words[typeIdx - 1]))
+  if (trailingDir) typeIdx--
+  // First name word: skip the house number.
+  const first = /^\d/.test(words[0]) ? 1 : 0
+
+  if (typeIdx > first && STREET_TYPES.has(key(words[typeIdx]))) {
+    words[typeIdx] = shorten(words[typeIdx], STREET_TYPES.get(key(words[typeIdx]))!)
+    if (trailingDir) words[typeIdx + 1] = shorten(words[typeIdx + 1], DIRECTIONS.get(key(words[typeIdx + 1]))!)
+  }
+  if (typeIdx - first >= 2 && DIRECTIONS.has(key(words[first]))) {
+    words[first] = shorten(words[first], DIRECTIONS.get(key(words[first]))!)
+  }
+  return words.join(' ') + rest
+}
+
 // Twilio signs its status callback over the exact URL it calls. The apex
 // domain (ohaccess.com) 307-redirects to www, and the signature no longer
 // validates after that hop — every callback was bouncing with a 403. So the
