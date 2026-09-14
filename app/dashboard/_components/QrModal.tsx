@@ -22,6 +22,7 @@ export default function QrModal({
   logoUrl,
   brokerageName,
   onSignSaved,
+  onShowPermanent,
 }: {
   data: QrModalData
   onClose: () => void
@@ -37,6 +38,10 @@ export default function QrModal({
   // Printing the sign or downloading the QR image ticks "Print your QR sign"
   // on the setup checklist.
   onSignSaved?: () => void
+  // Agents kept printing a single open house's code as their reusable sign.
+  // Per-event codes (the only ones with an oh.id) get a nudge toward the
+  // permanent "My QR code", with a button that swaps this modal over to it.
+  onShowPermanent?: () => void
 }) {
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px' }}
@@ -62,6 +67,20 @@ export default function QrModal({
         <div style={{ fontSize: '12px', color: '#6e6e73', marginBottom: '20px' }}>
           Visitors scan this code to register and receive their codeword
         </div>
+
+        {data.oh.id && onShowPermanent && (
+          <div style={{ background: '#fff8e6', border: '1px solid #f5d48a', borderRadius: '12px', padding: '12px 14px', marginBottom: '20px', textAlign: 'left' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#1d1d1f', marginBottom: '4px' }}>
+              📌 Printing a sign to reuse? Use My QR code.
+            </div>
+            <div style={{ fontSize: '12px', color: '#6e6e73', lineHeight: 1.5, marginBottom: '10px' }}>
+              This code only works for this open house. <strong>My QR code</strong> always points to your next open house, so you can print it once and use it every time.
+            </div>
+            <button onClick={onShowPermanent} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '8px', padding: '7px 12px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              Show My QR code
+            </button>
+          </div>
+        )}
 
         {/* Action buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
