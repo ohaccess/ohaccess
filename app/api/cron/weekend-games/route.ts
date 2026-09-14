@@ -176,7 +176,7 @@ async function handle(request: Request) {
       firstName: welcomeFirstName(d.profile.full_name, null),
       plan,
       appUrl: APP_URL,
-      unsubscribeUrl: `${APP_URL}/unsubscribe?agent=${d.profile.drip_unsubscribe_token}`,
+      unsubscribeUrl: `${APP_URL}/unsubscribe?agent=${d.profile.drip_unsubscribe_token}&from=weekend_games`,
     })
 
     try {
@@ -187,7 +187,7 @@ async function handle(request: Request) {
         subject: built.subject,
         html: built.html,
         headers: {
-          'List-Unsubscribe': `<${APP_URL}/api/unsubscribe?agent=${d.profile.drip_unsubscribe_token}>`,
+          'List-Unsubscribe': `<${APP_URL}/api/unsubscribe?agent=${d.profile.drip_unsubscribe_token}&from=weekend_games>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },
       })

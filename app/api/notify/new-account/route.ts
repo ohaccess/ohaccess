@@ -133,7 +133,7 @@ export async function POST(request: Request) {
           // mail (migration 050); the mailto stays as the fallback.
           headers: {
             'List-Unsubscribe': welcome.drip_unsubscribe_token
-              ? `<${APP_URL}/api/unsubscribe?agent=${welcome.drip_unsubscribe_token}>, <mailto:support@ohaccess.com?subject=Unsubscribe>`
+              ? `<${APP_URL}/api/unsubscribe?agent=${welcome.drip_unsubscribe_token}&from=tips>, <mailto:support@ohaccess.com?subject=Unsubscribe>`
               : '<mailto:support@ohaccess.com?subject=Unsubscribe>',
             ...(welcome.drip_unsubscribe_token
               ? { 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }

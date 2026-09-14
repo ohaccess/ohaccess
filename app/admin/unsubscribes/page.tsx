@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
-
-type Row = { email: string; opted_out_at: string; sources: string[] }
+import type { UnsubscribeDetail as Row } from '@/lib/unsubscribe-details'
 
 const SOURCE_LABELS: Record<string, string> = {
   marketing_unsubscribe: 'Marketing email',
@@ -11,6 +10,33 @@ const SOURCE_LABELS: Record<string, string> = {
   agent_tips: 'Agent tips & reminders',
 }
 const label = (s: string) => SOURCE_LABELS[s] || s
+
+const fmtDay = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '')
+
+// Plain-text detail lines for a row, shared by the table and the CSV.
+function details(r: Row) {
+  const invite = !r.invite
+    ? ''
+    : r.invite.openHouses.length === 0
+      ? 'Invite: open house not on file'
+      : `${r.invite.exact ? 'Invite for' : 'Invite for one of'}: ${r.invite.openHouses.map((o) => `${o.address} (from ${o.agentName})`).join('; ')}`
+  const agentEmail =
+    r.agentEmail === 'weekend_games'
+      ? 'Clicked in: weekend games email'
+      : r.agentEmail === 'tips'
+        ? 'Clicked in: tips & reminders email'
+        : r.agentEmail === 'unrecorded'
+          ? 'Clicked in: tips or weekend games (not recorded)'
+          : ''
+  const who =
+    r.who === 'agent'
+      ? `Agent: ${r.agentName}`
+      : r.who === 'visitor'
+        ? 'Past visitor'
+        : 'Not an agent or visitor'
+  const signedInAt = r.signedInAt.map((s) => `${s.address}${s.registeredAt ? ` (${fmtDay(s.registeredAt)})` : ''}`).join('; ')
+  return { invite, agentEmail, who, signedInAt }
+}
 
 const FILTERS = [
   { key: 'all', name: 'All' },
@@ -59,8 +85,11 @@ export default function AdminUnsubscribesPage() {
   const downloadCsv = () => {
     const q = (v: string) => `"${v.replace(/"/g, '""')}"`
     const lines = [
-      ['Email', 'Unsubscribed at', 'From'].map(q).join(','),
-      ...shown.map((r) => [r.email, r.opted_out_at, r.sources.map(label).join('; ')].map(q).join(',')),
+      ['Email', 'Unsubscribed at', 'From', 'Who', 'Signed in at', 'Invite', 'Agent email'].map(q).join(','),
+      ...shown.map((r) => {
+        const d = details(r)
+        return [r.email, r.opted_out_at, r.sources.map(label).join('; '), d.who, d.signedInAt, d.invite, d.agentEmail].map(q).join(',')
+      }),
     ]
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
@@ -142,16 +171,26 @@ export default function AdminUnsubscribesPage() {
                     <th style={{ padding: '12px 14px', fontWeight: 600, color: '#1d1d1f' }}>Email</th>
                     <th style={{ padding: '12px 14px', fontWeight: 600, color: '#1d1d1f' }}>Unsubscribed</th>
                     <th style={{ padding: '12px 14px', fontWeight: 600, color: '#1d1d1f' }}>From</th>
+                    <th style={{ padding: '12px 14px', fontWeight: 600, color: '#1d1d1f' }}>Details</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {shown.map((r) => (
-                    <tr key={r.email} style={{ borderTop: '1px solid #e5e5ea' }}>
-                      <td style={{ padding: '12px 14px', color: '#1d1d1f' }}>{r.email}</td>
-                      <td style={{ padding: '12px 14px', color: '#6e6e73', whiteSpace: 'nowrap' }}>{fmt(r.opted_out_at)}</td>
-                      <td style={{ padding: '12px 14px', color: '#6e6e73' }}>{r.sources.map(label).join(', ')}</td>
-                    </tr>
-                  ))}
+                  {shown.map((r) => {
+                    const d = details(r)
+                    return (
+                      <tr key={r.email} style={{ borderTop: '1px solid #e5e5ea', verticalAlign: 'top' }}>
+                        <td style={{ padding: '12px 14px', color: '#1d1d1f' }}>{r.email}</td>
+                        <td style={{ padding: '12px 14px', color: '#6e6e73', whiteSpace: 'nowrap' }}>{fmt(r.opted_out_at)}</td>
+                        <td style={{ padding: '12px 14px', color: '#6e6e73' }}>{r.sources.map(label).join(', ')}</td>
+                        <td style={{ padding: '12px 14px', color: '#6e6e73', lineHeight: 1.5 }}>
+                          <div style={{ color: '#1d1d1f', fontWeight: 600 }}>{d.who}</div>
+                          {d.signedInAt && <div>{`Signed in at: ${d.signedInAt}`}</div>}
+                          {d.invite && <div>{d.invite}</div>}
+                          {d.agentEmail && <div>{d.agentEmail}</div>}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

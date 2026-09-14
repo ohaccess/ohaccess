@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { normalizeEmail } from '@/lib/invite-helpers'
 import { isEmail } from '@/lib/register-helpers'
+import { parseAgentEmailKind } from '@/lib/unsubscribe-details'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -36,12 +37,16 @@ export async function POST(request: Request) {
     const params = new URL(request.url).searchParams
     let token = params.get('token') || ''
     let agentToken = params.get('agent') || ''
+    // Which agent email the link was in (tips vs weekend games), recorded
+    // for the admin Unsubscribes list only (migration 054).
+    let agentEmail = parseAgentEmailKind(params.get('from'))
     let email = ''
     if (!token && !agentToken) {
       const body = await request.json().catch(() => null)
       token = typeof body?.token === 'string' ? body.token : ''
       agentToken = typeof body?.agent === 'string' ? body.agent : ''
       email = typeof body?.email === 'string' ? body.email : ''
+      agentEmail = parseAgentEmailKind(body?.from)
     }
     token = token.trim()
     agentToken = agentToken.trim()
@@ -72,7 +77,7 @@ export async function POST(request: Request) {
       // Conditional so a second click keeps the original opt-out time.
       const { error } = await supabase
         .from('profiles')
-        .update({ drip_opt_out_at: new Date().toISOString() })
+        .update({ drip_opt_out_at: new Date().toISOString(), drip_opt_out_source: agentEmail })
         .eq('id', profile.id)
         .is('drip_opt_out_at', null)
       if (error) {
@@ -86,15 +91,19 @@ export async function POST(request: Request) {
 
     const { data: invite } = await supabase
       .from('visitor_invites')
-      .select('email')
+      .select('email, open_house_id, agent_id')
       .eq('unsubscribe_token', token)
       .maybeSingle()
     if (!invite) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    // Idempotent: clicking twice is fine.
+    // Idempotent: clicking twice is fine. Records the open house the invite
+    // was for and the agent who sent it (migration 054).
     const { error } = await supabase
       .from('email_opt_outs')
-      .upsert({ email: invite.email, source: 'invite_unsubscribe' }, { onConflict: 'email', ignoreDuplicates: true })
+      .upsert(
+        { email: invite.email, source: 'invite_unsubscribe', open_house_id: invite.open_house_id, agent_id: invite.agent_id },
+        { onConflict: 'email', ignoreDuplicates: true }
+      )
     if (error) {
       console.error('Unsubscribe upsert failed', error)
       return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 })

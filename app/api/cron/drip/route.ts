@@ -271,7 +271,7 @@ async function handle(request: Request) {
       supabase.from('agent_email_log').delete().eq('agent_id', c.userId).eq('email_key', c.key)
 
     const firstName = welcomeFirstName(profile.full_name, u.user_metadata)
-    const unsubscribeUrl = `${APP_URL}/unsubscribe?agent=${profile.drip_unsubscribe_token}`
+    const unsubscribeUrl = `${APP_URL}/unsubscribe?agent=${profile.drip_unsubscribe_token}&from=tips`
     const opts = { firstName, appUrl: APP_URL, unsubscribeUrl }
 
     let built: { subject: string; html: string } | null = null
@@ -295,7 +295,7 @@ async function handle(request: Request) {
         subject: built.subject,
         html: built.html,
         headers: {
-          'List-Unsubscribe': `<${APP_URL}/api/unsubscribe?agent=${profile.drip_unsubscribe_token}>`,
+          'List-Unsubscribe': `<${APP_URL}/api/unsubscribe?agent=${profile.drip_unsubscribe_token}&from=tips>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         },
       })

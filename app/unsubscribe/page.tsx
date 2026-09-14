@@ -15,6 +15,9 @@ function UnsubscribeInner() {
   const params = useSearchParams()
   const token = params.get('token') || ''
   const agentToken = params.get('agent') || ''
+  // Which agent email the link was in (?from=tips|weekend_games), passed
+  // through so the admin Unsubscribes list can show it.
+  const from = params.get('from') || ''
   const isAgent = !token && !!agentToken
   const isMarketing = !token && !agentToken
   const [email, setEmail] = useState(params.get('email') || '')
@@ -32,7 +35,7 @@ function UnsubscribeInner() {
       const res = await fetch('/api/unsubscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(isMarketing ? { email: email.trim() } : isAgent ? { agent: agentToken } : { token }),
+        body: JSON.stringify(isMarketing ? { email: email.trim() } : isAgent ? { agent: agentToken, from } : { token }),
       })
       setState(res.ok ? 'done' : 'error')
     } catch {
