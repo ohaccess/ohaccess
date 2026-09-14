@@ -6,6 +6,7 @@ import { useSortable, applySort, type Sortable } from '@/lib/sort'
 import { phoneLineKind, PHONE_LINE_CHIPS } from '@/lib/register-helpers'
 import { langMeta } from '@/lib/register-i18n'
 import { formatPropertyTime } from '@/lib/property-time'
+import { isManualVisitor } from '@/lib/manual-visitor'
 
 // The main "Dashboard" view: the agent's open-house cards (with per-event
 // stat strips and QR / copy / edit / delete actions), and the visitor log
@@ -174,6 +175,9 @@ const deliveryFlag = (status: string | null | undefined): boolean =>
   status === 'bounced' || status === 'complained' || status === 'undelivered' || status === 'failed'
 const deliveryBadgeStyle = { marginLeft: '6px', background: '#fff0f0', color: '#cc0000', border: '1px solid #f0c0c0', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 const optedOutBadgeStyle = { marginLeft: '6px', background: '#f2f2f7', color: '#6e6e73', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
+// Visitor the agent typed in by hand (lib/manual-visitor.ts): a neutral fact,
+// grey like the opted-out chip.
+const manualBadgeStyle = optedOutBadgeStyle
 // Codeword went by WhatsApp (lib/messaging-channel.ts) rather than SMS.
 const whatsAppBadgeStyle = { marginLeft: '6px', background: '#e9f9ee', color: '#1a7f37', border: '1px solid #b7e4c4', borderRadius: '6px', padding: '1px 6px', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' as const }
 // Agreement chips — only shown when the open house requires a signed
@@ -340,6 +344,7 @@ export default function OpenHouseList({
   setVisitorModal,
   showToast,
   setupChecklist,
+  openAddVisitor,
 }: {
   user: any
   openHouses: any[]
@@ -380,6 +385,8 @@ export default function OpenHouseList({
   showToast: (message: string, type?: 'success' | 'error') => void
   // The "Get set up" card for new agents (built by page.tsx, null when hidden).
   setupChecklist?: ReactNode
+  // "+ Add visitor" for the selected open house (hand-entered visitor).
+  openAddVisitor: () => void
 }) {
   const visitorSort = useSortable('time', 'desc')
   const sortedVisitors = useMemo(
@@ -589,9 +596,10 @@ export default function OpenHouseList({
     )
     return (
         <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6', flexWrap: 'wrap', gap: '8px' }}>
             <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f' }}>Visitor log: {selectedOH.property_address}</div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button onClick={() => { if (guardLocked()) return; openAddVisitor() }} title="Add someone who couldn't sign in with the QR code (no signal, no phone). They don't get a codeword or emails." style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>+ Add visitor</button>
               <button onClick={() => { if (guardLocked()) return; openSellerReport(selectedOH.id) }} title="A shareable results page for your seller: visitor counts and buyer timelines, no visitor contact info" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>📊 Seller report</button>
               <button onClick={exportCSV} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, padding: '6px 13px', borderRadius: '7px', fontSize: '12px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Export CSV</button>
             </div>
@@ -621,9 +629,13 @@ export default function OpenHouseList({
                   {sortedVisitors.map((v, i) => (
                     <tr key={v.id} style={{ background: i % 2 === 0 ? 'white' : '#fafafa' }}>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
-                        <Tip width={220} body={<><strong>{langMeta(v.lang).label}</strong><div style={{ color: '#6e6e73', marginTop: '2px' }}>The language this visitor signed in with: the one to greet and follow up in.</div></>}>
-                          <span style={{ cursor: 'help' }}>{langMeta(v.lang).flag}</span>
-                        </Tip>
+                        {isManualVisitor(v) ? (
+                          <span style={{ color: '#c7c7cc' }}>–</span>
+                        ) : (
+                          <Tip width={220} body={<><strong>{langMeta(v.lang).label}</strong><div style={{ color: '#6e6e73', marginTop: '2px' }}>The language this visitor signed in with: the one to greet and follow up in.</div></>}>
+                            <span style={{ cursor: 'help' }}>{langMeta(v.lang).flag}</span>
+                          </Tip>
+                        )}
                       </td>
                       <td style={{ padding: '8px', borderBottom: '1px solid #f2f2f7', whiteSpace: 'nowrap' }}>
                         <button onClick={() => setVisitorModal(v)} style={{ background: 'none', border: 'none', padding: 0, color: accentText, fontWeight: 600, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '12px', textAlign: 'left' }}>
@@ -634,7 +646,10 @@ export default function OpenHouseList({
                             <span style={{ cursor: 'help', marginLeft: '4px' }}>📝</span>
                           </Tip>
                         )}
-                        {selectedOH?.require_agreement && (v.agreement_signed
+                        {isManualVisitor(v) && (
+                          <span title="You added this visitor by hand. Their phone and email weren't checked with a codeword, and ohACCESS doesn't email them." style={manualBadgeStyle}>✋ Added by you</span>
+                        )}
+                        {selectedOH?.require_agreement && !isManualVisitor(v) && (v.agreement_signed
                           ? <span title="Signed the required agreement. Copies were emailed to you both." style={signedBadgeStyle}>✍ Signed</span>
                           : <span title="Hasn't signed the required agreement. Ask before letting them tour." style={unsignedBadgeStyle}>✍ Not signed</span>)}
                       </td>

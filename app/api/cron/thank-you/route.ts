@@ -39,6 +39,9 @@ async function handle(request: Request) {
     .is('thank_you_sent_at', null)
     .gte('registered_at', floorIso)
     .not('email', 'is', null)
+    // Visitors the agent added by hand never accepted the sign-in consent,
+    // so ohACCESS doesn't email them (lib/manual-visitor.ts).
+    .or('source.is.null,source.neq.manual')
     .limit(300)
 
   if (error) {

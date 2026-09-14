@@ -108,7 +108,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
   if (!oh) return <NotAvailable />
 
   const [{ data: visitors }, { count: scanCount }, { data: agent }] = await Promise.all([
-    supabase.from('visitors').select('purchasing_timeline, feedback_rating, feedback_price, custom_answers').eq('open_house_id', oh.id),
+    supabase.from('visitors').select('purchasing_timeline, feedback_rating, feedback_price, custom_answers, source').eq('open_house_id', oh.id),
     supabase.from('qr_scans').select('id', { count: 'exact', head: true }).eq('open_house_id', oh.id),
     supabase
       .from('profiles')
@@ -202,10 +202,19 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
 
         {stats.total > 0 ? (
           <>
-            <div style={{ background: '#e8f9ee', border: '1px solid #b2f0c8', borderRadius: 12, padding: '11px 14px', marginTop: 10, fontSize: 12.5, color: '#1a7a3c', fontWeight: 600, lineHeight: 1.45 }}>
-              ✓ Every visitor&apos;s phone and email were verified at sign-in with a one-time
-              code: legible names, no bad numbers, no unreadable sign-in sheets.
-            </div>
+            {/* Honest about hand-added visitors (lib/manual-visitor.ts): the
+                "every visitor" promise only holds when all of them signed in. */}
+            {stats.verifiedCount > 0 && (
+              <div style={{ background: '#e8f9ee', border: '1px solid #b2f0c8', borderRadius: 12, padding: '11px 14px', marginTop: 10, fontSize: 12.5, color: '#1a7a3c', fontWeight: 600, lineHeight: 1.45 }}>
+                {stats.verifiedCount === stats.total ? (
+                  <>✓ Every visitor&apos;s phone and email were verified at sign-in with a one-time
+                  code: legible names, no bad numbers, no unreadable sign-in sheets.</>
+                ) : (
+                  <>✓ {stats.verifiedCount} of {stats.total} visitors verified their phone and email at sign-in
+                  with a one-time code. The hosting agent added the other {stats.total - stats.verifiedCount} by hand.</>
+                )}
+              </div>
+            )}
 
             {/* Timeline breakdown */}
             <div style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '18px 20px', marginTop: 10 }}>
@@ -366,7 +375,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
 
         <div style={{ textAlign: 'center', marginTop: 22, fontSize: 11, color: '#aeaeb2' }}>
           Powered by <a href="https://www.ohaccess.com" style={{ color: '#6e6e73', fontWeight: 700, textDecoration: 'none' }}>ohACCESS.com</a> · Patent Pending
-          <div style={{ marginTop: 3 }}>Visitor identities verified · Contact details are shared only with the hosting agent</div>
+          <div style={{ marginTop: 3 }}>{stats.verifiedCount === stats.total ? 'Visitor identities verified · ' : ''}Contact details are shared only with the hosting agent</div>
         </div>
       </main>
     </div>

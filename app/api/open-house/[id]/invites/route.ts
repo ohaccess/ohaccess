@@ -75,6 +75,9 @@ async function buildAudience(request: Request, id: string) {
     .select('first_name, last_name, email, email_status, sms_opted_out, purchasing_timeline, registered_at, open_house_id')
     .eq('agent_id', user.id)
     .not('email', 'is', null)
+    // Hand-added visitors never accepted the sign-in consent, so they're never
+    // invited (lib/manual-visitor.ts).
+    .or('source.is.null,source.neq.manual')
     .order('registered_at', { ascending: false })
     .limit(2000)
   if (vErr) {

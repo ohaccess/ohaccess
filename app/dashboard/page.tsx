@@ -12,6 +12,7 @@ import NewOpenHouseForm from './_components/NewOpenHouseForm'
 import AgentVerificationCard from './_components/AgentVerificationCard'
 import { needsAgentVerification } from '@/lib/agent-verification'
 import SetupChecklist from './_components/SetupChecklist'
+import AddVisitorModal from './_components/AddVisitorModal'
 import { setupSteps, showSetupChecklist, signSavedKey } from '@/lib/setup-checklist'
 import SettingsPanel from './_components/SettingsPanel'
 import VisitorDetail from '@/app/_components/VisitorDetail'
@@ -65,6 +66,8 @@ export default function Dashboard() {
   const [inviteModal, setInviteModal] = useState<any>(null)
   const [visitorEmails, setVisitorEmails] = useState<any>(null)
   const [visitorModal, setVisitorModal] = useState<any>(null)
+  // Open house the "+ Add visitor" form is adding to (null when closed).
+  const [addVisitorFor, setAddVisitorFor] = useState<{ id: string; property_address?: string | null; country?: string | null } | null>(null)
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   // The address the agent picked last — a slow property-facts answer for an
@@ -1306,6 +1309,7 @@ export default function Dashboard() {
             setVisitorModal={setVisitorModal}
             showToast={showToast}
             setupChecklist={setupChecklist}
+            openAddVisitor={() => { if (guardLocked()) return; setAddVisitorFor(selectedOH) }}
           />
         )}
 
@@ -1437,6 +1441,29 @@ export default function Dashboard() {
           accentColor={accentColor}
           onAccent={onAccent}
           accentBtnBorder={accentBtnBorder}
+        />
+      )}
+
+      {/* ADD VISITOR BY HAND */}
+      {addVisitorFor && (
+        <AddVisitorModal
+          oh={addVisitorFor}
+          defaultCountry={agentCountry}
+          onClose={() => setAddVisitorFor(null)}
+          onAdded={async () => {
+            const oh = addVisitorFor
+            setAddVisitorFor(null)
+            showToast('Visitor added.')
+            await loadVisitors(oh.id)
+            await loadVisitorCount(user.id)
+            void loadOhStats()
+          }}
+          authHeaders={authHeaders}
+          primaryColor={primaryColor}
+          onPrimary={onPrimary}
+          primaryBtnBorder={primaryBtnBorder}
+          inputStyle={inputStyle}
+          labelStyle={labelStyle}
         />
       )}
 
