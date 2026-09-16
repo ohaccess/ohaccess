@@ -59,6 +59,18 @@ export type Game = {
 
 export const NO_TEAM: TeamSide = { id: '', short: '', nickname: '', rank: null, homeState: null, homeAt: null }
 
+// Fills in homeAt from team-states.json when a stored team lacks it (rows
+// the planner cached before the field existed). Server-side only: the JSON
+// is too big for the browser bundle.
+export function withHomeAt(team: TeamSide, leagueKey: string): TeamSide {
+  if (team.homeAt !== undefined || !team.id) return team
+  const known = TEAM_STATES[leagueKey]?.[team.id]
+  return {
+    ...team,
+    homeAt: typeof known?.la === 'number' && typeof known?.lo === 'number' ? { lat: known.la, lng: known.lo } : null,
+  }
+}
+
 const SKIP_STATUSES = new Set([
   'STATUS_POSTPONED',
   'STATUS_CANCELED',

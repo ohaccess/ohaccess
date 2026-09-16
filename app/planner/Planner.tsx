@@ -6,6 +6,8 @@ import type { Game } from '@/lib/weekend-games/espn'
 import { buildDayPlan, daySummary, METER_START_HOUR, type DayPlan, type PlannedGame } from '@/lib/weekend-games/plan'
 import { STATE_TIME_ZONES, addDays, dateLabel, meterHourLabel, timeZoneLabel, zonedParts } from '@/lib/weekend-games/time'
 import { fromWire, type PlannerResponse } from '@/lib/planner/rows'
+import { normalizeZip, type ZipPlace } from '@/lib/planner/zip'
+import type { AgentLocation } from '@/lib/weekend-games/markets'
 
 // The public game-day planner. All the planning rules live in
 // lib/weekend-games/plan.ts (shared with the Wednesday email); this file is
@@ -66,7 +68,7 @@ function defaultSelection(today: string): string {
   return addDays(today, 6 - wd)
 }
 
-function loadPrefs(): { state?: string; off?: string[] } {
+function loadPrefs(): { state?: string; off?: string[]; place?: ZipPlace } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     return raw ? JSON.parse(raw) : {}
@@ -75,7 +77,7 @@ function loadPrefs(): { state?: string; off?: string[] } {
   }
 }
 
-function savePrefs(p: { state: string; off: string[] }) {
+function savePrefs(p: { state: string; off: string[]; place: ZipPlace | null }) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(p))
   } catch {
@@ -89,11 +91,19 @@ function refreshedLabel(iso: string | null): string | null {
 }
 
 // initialDate: a ?date= in the link (the New Open House form links here
-// with the day being booked); otherwise the coming Saturday.
-export default function Planner({ initialState, initialDate }: { initialState: string; initialDate: string | null }) {
+// with the day being booked); otherwise the coming Saturday. initialZip: a
+// ?zip= in the link, looked up on load.
+export default function Planner({ initialState, initialDate, initialZip }: { initialState: string; initialDate: string | null; initialZip: string | null }) {
   const [state, setState] = useState(initialState)
   const [off, setOff] = useState<Set<string>>(new Set())
   const [hydrated, setHydrated] = useState(false)
+  // ZIP box: what's typed, and the place it resolved to (which also sets
+  // the state). With a place, the day plans use the visitor's own market
+  // and sun times instead of the state's biggest metro.
+  const [zipInput, setZipInput] = useState(initialZip ?? '')
+  const [place, setPlace] = useState<ZipPlace | null>(null)
+  const [zipStatus, setZipStatus] = useState<'idle' | 'looking' | 'error'>('idle')
+  const [zipError, setZipError] = useState('')
   const timeZone = STATE_TIME_ZONES[state] ?? 'America/New_York'
   const today = zonedParts(new Date(), timeZone).ymd
   const [month, setMonth] = useState(() => monthOf(initialDate && initialDate >= today ? initialDate : defaultSelection(today)))
@@ -110,9 +120,18 @@ export default function Planner({ initialState, initialDate }: { initialState: s
     Promise.resolve().then(() => {
       if (cancelled) return
       const prefs = loadPrefs()
-      const linked = new URLSearchParams(window.location.search).get('state')
+      const params = new URLSearchParams(window.location.search)
+      const linked = params.get('state')
+      const linkedZip = normalizeZip(params.get('zip'))
       if (!linked && prefs.state && US_STATES[prefs.state]) setState(prefs.state)
       if (prefs.off) setOff(new Set(prefs.off.filter((k) => LEAGUES.some((l) => l.key === k))))
+      // A remembered ZIP applies unless the link names a different state
+      // (or its own ZIP, which the lookup below resolves).
+      if (!linkedZip && prefs.place && normalizeZip(prefs.place.zip) && (!linked || linked === prefs.place.state)) {
+        setPlace(prefs.place)
+        setZipInput(prefs.place.zip)
+        setState(prefs.place.state)
+      }
       setHydrated(true)
     })
     return () => {
@@ -122,11 +141,59 @@ export default function Planner({ initialState, initialDate }: { initialState: s
 
   useEffect(() => {
     if (!hydrated) return
-    savePrefs({ state, off: [...off] })
+    savePrefs({ state, off: [...off], place })
     const url = new URL(window.location.href)
     url.searchParams.set('state', state)
+    if (place) url.searchParams.set('zip', place.zip)
+    else url.searchParams.delete('zip')
     window.history.replaceState(null, '', url.toString())
-  }, [state, off, hydrated])
+  }, [state, off, place, hydrated])
+
+  const lookupZip = useCallback(async (raw: string) => {
+    const zip = normalizeZip(raw)
+    if (!zip) {
+      setZipError('Enter a 5-digit ZIP code.')
+      setZipStatus('error')
+      return
+    }
+    setZipStatus('looking')
+    setZipError('')
+    try {
+      const res = await fetch(`/api/planner/zip?zip=${zip}`)
+      const body = await res.json()
+      if (!res.ok) throw new Error(body?.error || `HTTP ${res.status}`)
+      const found = body as ZipPlace
+      setPlace(found)
+      setZipInput(found.zip)
+      setState(found.state)
+      setZipStatus('idle')
+    } catch (e) {
+      setZipError(e instanceof Error ? e.message : 'ZIP lookup failed')
+      setZipStatus('error')
+    }
+  }, [])
+
+  // A ?zip= in the link: look it up once, after hydration (deferred a
+  // microtask so the effect itself sets no state).
+  useEffect(() => {
+    if (!hydrated || !initialZip) return
+    let cancelled = false
+    Promise.resolve().then(() => {
+      if (!cancelled) lookupZip(initialZip)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [hydrated, initialZip, lookupZip])
+
+  const clearZip = () => {
+    setPlace(null)
+    setZipInput('')
+    setZipStatus('idle')
+    setZipError('')
+  }
+
+  const location = useMemo<AgentLocation | null>(() => (place ? { at: place.at, source: 'zip' } : null), [place])
 
   const cacheKey = `${state}|${month}`
   const data = cache[cacheKey]
@@ -165,10 +232,10 @@ export default function Planner({ initialState, initialDate }: { initialState: s
   const plans = useMemo(() => {
     const out: Record<string, DayPlan> = {}
     for (let d = firstOfMonth(month); d <= lastOfMonth(month); d = addDays(d, 1)) {
-      out[d] = buildDayPlan({ games: visibleGames, state, timeZone, ymd: d })
+      out[d] = buildDayPlan({ games: visibleGames, state, timeZone, ymd: d, location })
     }
     return out
-  }, [visibleGames, state, timeZone, month])
+  }, [visibleGames, state, timeZone, month, location])
 
   const selectedPlan = monthOf(selected) === month ? plans[selected] : undefined
   const horizon = data?.horizon ?? null
@@ -197,8 +264,10 @@ export default function Planner({ initialState, initialDate }: { initialState: s
     setSelected(first)
   }
 
+  // Picking a state by hand drops a ZIP from another state.
   const changeState = (next: string) => {
     setState(next)
+    if (place && place.state !== next) clearZip()
   }
 
   // Calendar cells: leading blanks so the 1st lands on its weekday.
@@ -215,6 +284,14 @@ export default function Planner({ initialState, initialDate }: { initialState: s
         .pl * { box-sizing: border-box; }
         .pl-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; justify-content: center; margin-bottom: 14px; }
         .pl-select { font: inherit; font-size: 15px; font-weight: 600; padding: 9px 36px 9px 12px; border: 1px solid ${RULE}; border-radius: 10px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236e6e73' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; color: #1d1d1f; }
+        .pl-zip { font: inherit; font-size: 15px; font-weight: 600; width: 92px; padding: 9px 10px; border: 1px solid ${RULE}; border-radius: 10px; background: #fff; color: #1d1d1f; font-variant-numeric: tabular-nums; }
+        .pl-zip:focus { outline: none; border-color: ${GOLD}; }
+        .pl-zip-go { font: inherit; font-size: 13px; font-weight: 700; padding: 9px 12px; border-radius: 10px; border: 1px solid #1d1d1f; background: #1d1d1f; color: #fff; cursor: pointer; margin-left: 6px; }
+        .pl-zip-go:disabled { opacity: .5; cursor: default; }
+        .pl-zip-clear { font: inherit; font-size: 12px; color: ${MUTED}; background: none; border: none; cursor: pointer; text-decoration: underline; padding: 4px 6px; }
+        .pl-zip-msg { flex-basis: 100%; text-align: center; font-size: 13px; color: ${MUTED}; margin-top: -4px; }
+        .pl-zip-msg.err { color: ${BIG_RED}; }
+        .pl-market { font-size: 11px; font-weight: 700; color: ${GOLD}; text-transform: uppercase; letter-spacing: .5px; margin-left: 6px; }
         .pl-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; margin-bottom: 6px; }
         .pl-group { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: ${MUTED}; margin: 0 4px 0 10px; }
         .pl-chip { font: inherit; font-size: 13px; font-weight: 600; padding: 6px 11px; border-radius: 999px; border: 1px solid ${RULE}; background: #fff; color: #1d1d1f; cursor: pointer; transition: all .15s; }
@@ -282,7 +359,41 @@ export default function Planner({ initialState, initialDate }: { initialState: s
               ))}
           </select>
         </label>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            lookupZip(zipInput)
+          }}
+          style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: MUTED, fontWeight: 600 }}
+        >
+          <label>
+            Your ZIP{' '}
+            <input
+              className="pl-zip"
+              inputMode="numeric"
+              autoComplete="postal-code"
+              placeholder="optional"
+              maxLength={5}
+              value={zipInput}
+              onChange={(e) => setZipInput(e.target.value.replace(/\D/g, '').slice(0, 5))}
+              aria-label="ZIP code"
+            />
+          </label>
+          {place && place.zip === zipInput ? (
+            <button type="button" className="pl-zip-clear" onClick={clearZip}>clear</button>
+          ) : (
+            <button type="submit" className="pl-zip-go" disabled={zipStatus === 'looking' || zipInput.length !== 5}>
+              {zipStatus === 'looking' ? '…' : 'Go'}
+            </button>
+          )}
+        </form>
         <span style={{ fontSize: '13px', color: MUTED }}>Times are {tzText}</span>
+        {zipStatus === 'error' && zipError && <div className="pl-zip-msg err">{zipError}</div>}
+        {zipStatus !== 'error' && place && (
+          <div className="pl-zip-msg">
+            Planning around {place.city ? `${place.city}, ` : ''}{place.state} {place.zip}: your market&rsquo;s teams are tagged, and sunrise and sunset are local.
+          </div>
+        )}
       </div>
 
       <div className="pl-chips">
@@ -357,7 +468,7 @@ export default function Planner({ initialState, initialDate }: { initialState: s
 
         <div className="pl-day">
           {selectedPlan ? (
-            <DayPanel plan={selectedPlan} beyond={!!horizon && selected > horizon} refreshedAt={data?.refreshedAt ?? null} tzText={tzText} />
+            <DayPanel plan={selectedPlan} beyond={!!horizon && selected > horizon} refreshedAt={data?.refreshedAt ?? null} tzText={tzText} showMarket={!!place} />
           ) : (
             <div className="pl-empty">Pick a day on the calendar.</div>
           )}
@@ -399,7 +510,7 @@ function Meter({ plan }: { plan: DayPlan }) {
   )
 }
 
-function Row({ p, big }: { p: PlannedGame; big: boolean }) {
+function Row({ p, big, showMarket }: { p: PlannedGame; big: boolean; showMarket: boolean }) {
   return (
     <tr className={big ? 'big' : undefined}>
       <td className="pl-time">{p.timeText}</td>
@@ -407,6 +518,7 @@ function Row({ p, big }: { p: PlannedGame; big: boolean }) {
       <td>
         <strong>{p.matchup}</strong>
         {big && <span className="pl-big">Big one</span>}
+        {showMarket && p.local && <span className="pl-market">Your market</span>}
         {p.detail && <div className="pl-detail">{p.detail}</div>}
       </td>
     </tr>
@@ -418,7 +530,7 @@ function short(p: PlannedGame): string {
   return bits.join(' · ')
 }
 
-function DayPanel({ plan, beyond, refreshedAt, tzText }: { plan: DayPlan; beyond: boolean; refreshedAt: string | null; tzText: string }) {
+function DayPanel({ plan, beyond, refreshedAt, tzText, showMarket }: { plan: DayPlan; beyond: boolean; refreshedAt: string | null; tzText: string; showMarket: boolean }) {
   const updated = refreshedLabel(refreshedAt)
   return (
     <div>
@@ -439,7 +551,7 @@ function DayPanel({ plan, beyond, refreshedAt, tzText }: { plan: DayPlan; beyond
             <table className="pl-rows">
               <tbody>
                 {plan.rows.map((p) => (
-                  <Row key={p.game.id + p.game.league.key} p={p} big={p === plan.bigGame} />
+                  <Row key={p.game.id + p.game.league.key} p={p} big={p === plan.bigGame} showMarket={showMarket} />
                 ))}
               </tbody>
             </table>

@@ -92,6 +92,15 @@ land before Wednesday's email. To refresh more often, change the schedule
 
 ## Operational notes
 
+- **ZIP code box** (added 2026-09-16): a visitor can type their ZIP; the
+  planner then picks their own market's teams (gold "Your market" tag, the
+  same rule as the Wednesday email) and computes sunrise/sunset for that
+  spot. `/api/planner/zip` geocodes the ZIP with Google
+  (`GOOGLE_MAPS_SERVER_KEY`, already set for the map), 60 lookups per IP
+  per hour, cached at the CDN for 30 days. The ZIP is remembered in the
+  browser and carried in the link as `?zip=`, so
+  `ohaccess.com/planner?zip=77005` opens straight to a Houston view.
+
 - **A league ESPN can't serve** keeps last week's rows and is named in
   `sports_refresh_runs.failed_leagues`. A required league failing (NFL,
   college football, MLB, NBA, NHL) or the run hitting its time budget

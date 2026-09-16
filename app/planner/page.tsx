@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import Footer from '../_components/Footer'
 import Planner from './Planner'
 import { normalizeStateCode } from '@/lib/hardware-offer'
+import { normalizeZip } from '@/lib/planner/zip'
 
 export const metadata: Metadata = {
   title: 'Open House Game-Day Planner',
@@ -15,12 +16,13 @@ export const metadata: Metadata = {
 // the page is rendered per request.
 export const dynamic = 'force-dynamic'
 
-export default async function PlannerPage({ searchParams }: { searchParams: Promise<{ state?: string; date?: string }> }) {
+export default async function PlannerPage({ searchParams }: { searchParams: Promise<{ state?: string; date?: string; zip?: string }> }) {
   const sp = await searchParams
   const h = await headers()
   const geoState = h.get('x-vercel-ip-country') === 'US' ? normalizeStateCode(h.get('x-vercel-ip-country-region')) : null
   const initialState = normalizeStateCode(sp.state) ?? geoState ?? 'TX'
   const initialDate = /^\d{4}-\d{2}-\d{2}$/.test(sp.date ?? '') ? sp.date! : null
+  const initialZip = normalizeZip(sp.zip)
 
   return (
     <main style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#ffffff', color: '#1d1d1f', minHeight: '100vh' }}>
@@ -47,11 +49,11 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
             Open House Game-Day Planner
           </h1>
           <p style={{ fontSize: '16px', color: '#6e6e73', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>
-            Pick your state and a day. See every game your buyers might be watching, hour by hour, before you choose your open house time.
+            Pick your state and a day. See every game your buyers might be watching, hour by hour, before you choose your open house time. Add your ZIP code and your own market&rsquo;s teams rise to the top.
           </p>
         </div>
 
-        <Planner initialState={initialState} initialDate={initialDate} />
+        <Planner initialState={initialState} initialDate={initialDate} initialZip={initialZip} />
 
         <div style={{ maxWidth: '760px', margin: '48px auto 0', fontSize: '14px', color: '#48484a', lineHeight: 1.7 }}>
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1d1d1f', margin: '0 0 8px' }}>How to read it</h2>

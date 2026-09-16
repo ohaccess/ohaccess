@@ -4,6 +4,7 @@ import { SPORT_EMOJI, SPORT_WORDS } from './leagues'
 import type { DayPlan, PlannedGame, WeekendPlan } from './plan'
 import { METER_END_HOUR, METER_START_HOUR } from './plan'
 import { meterHourLabel } from './time'
+import { isKnownLocation } from './markets'
 
 // The Wednesday "Planning on an Open House this weekend?" email. Design
 // approved by Dave 2026-09-13 (mockup: real Texas games, Team "Dodge the
@@ -160,7 +161,7 @@ export function buildWeekendGamesEmail(o: {
   const quiet = plan.totalGames === 0
   // "Your market" only when we know where the agent works (their open house
   // or their area code), never from the state-metro guess.
-  const showMarket = plan.locationSource === 'open_house' || plan.locationSource === 'area_code'
+  const showMarket = isKnownLocation(plan.locationSource)
 
   let bodyHtml: string
   if (quiet) {
