@@ -17,16 +17,20 @@ const BIG_RED = '#b4533a'
 const AFTER_HOURS_NAMES = 8
 
 const METER_COLORS = ['#d6ecd9', '#f6e3b8', '#f2c98a', '#e8907a']
-function meterColor(count: number): string {
-  return METER_COLORS[Math.min(count, METER_COLORS.length - 1)]
+// A meter hour that ends after sunset: same meaning, dimmed toward dusk.
+const DUSK_COLORS = ['#b9c5c9', '#cfc3ae', '#c9ad86', '#bf7f6e']
+function meterColor(count: number, dusk: boolean): string {
+  return (dusk ? DUSK_COLORS : METER_COLORS)[Math.min(count, METER_COLORS.length - 1)]
 }
 
-function meterHtml(meter: number[]): string {
+function meterHtml(day: DayPlan): string {
+  const { meter } = day
   const last = meter.length - 1
+  const dusk = new Set(day.duskHours)
   const cells = meter
     .map((count, i) => {
       const radius = i === 0 ? 'border-radius:5px 0 0 5px;' : i === last ? 'border-radius:0 5px 5px 0;' : ''
-      return `<td style="background:${meterColor(count)};height:26px;${radius}"></td>`
+      return `<td style="background:${meterColor(count, dusk.has(i))};height:26px;${radius}"></td>`
     })
     .join('')
   const labels = meter
@@ -34,6 +38,10 @@ function meterHtml(meter: number[]): string {
     .join('')
   const swatch = (color: string) =>
     `<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${color};"></span>`
+  const duskKey = dusk.size ? ` &nbsp;${swatch(DUSK_COLORS[0])} After sunset` : ''
+  const sunLine = day.sun
+    ? `<div style="font-size:12px;color:${MUTED};margin-top:4px;">☀️ Sunrise ${e(day.sun.sunriseText)} · 🌇 Sunset ${e(day.sun.sunsetText)}</div>`
+    : ''
   return `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;border-collapse:separate;border-spacing:3px 0;table-layout:fixed;">
     <tr>${cells}</tr>
@@ -42,8 +50,9 @@ function meterHtml(meter: number[]): string {
   <div style="font-size:12px;color:${MUTED};margin-top:6px;">
     ${swatch(METER_COLORS[0])} Coast is clear &nbsp;
     ${swatch(METER_COLORS[2])} A game or two &nbsp;
-    ${swatch(METER_COLORS[3])} Game-day chaos
-  </div>`
+    ${swatch(METER_COLORS[3])} Game-day chaos${duskKey}
+  </div>
+  ${sunLine}`
 }
 
 function gameRow(p: PlannedGame, isBig: boolean): string {
@@ -95,7 +104,7 @@ function dayHtml(day: DayPlan): string {
   return `
   <div style="margin-top:28px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${GOLD};">${e(day.weekdayName)} · ${e(day.dateText)}</div>
   <div style="font-size:18px;font-weight:700;margin-top:2px;line-height:1.3;">${e(day.headline)}</div>
-  ${meterHtml(day.meter)}
+  ${meterHtml(day)}
   <div style="margin-top:12px;background:#fbf5ea;border-radius:10px;padding:10px 14px;font-size:14px;">
     🏡 <strong>${e(day.sweetSpot.label)}:</strong> ${e(day.sweetSpot.text)}.${day.goBold ? ` ${e(day.goBold)}` : ''}
   </div>
@@ -114,6 +123,16 @@ const TEAMS_HTML = `
       </td>
     </tr>
   </table>`
+
+// The quiet version has no meters, so daylight gets its own two lines.
+function quietSunHtml(plan: WeekendPlan): string {
+  const days = [plan.saturday, plan.sunday].filter((d) => d.sun)
+  if (!days.length) return ''
+  return `
+      <div style="font-size:12px;color:${MUTED};margin-top:10px;line-height:1.7;">
+        ${days.map((d) => `${e(d.weekdayName)}: ☀️ Sunrise ${e(d.sun!.sunriseText)} · 🌇 Sunset ${e(d.sun!.sunsetText)}`).join('<br/>')}
+      </div>`
+}
 
 function gameName(p: PlannedGame): string {
   if (p.game.league.sport === 'soccer') return p.stateTeam.short
@@ -142,6 +161,7 @@ export function buildWeekendGamesEmail(o: {
     <div style="margin-top:20px;background:#eef6ef;border-radius:12px;padding:18px;">
       <div style="font-size:20px;font-weight:700;">Coast is clear, ${e(state)}.</div>
       <div style="font-size:14px;line-height:1.7;margin-top:4px;">Every hour is a sweet spot. Pick your favorite and let's get it on the calendar.</div>
+      ${quietSunHtml(plan)}
     </div>
     ${cta}
     <div style="font-size:14px;line-height:1.7;margin-top:18px;">

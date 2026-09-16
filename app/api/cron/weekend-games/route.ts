@@ -15,6 +15,7 @@ import { fetchWeekendGames, type Game } from '@/lib/weekend-games/espn'
 import { buildWeekendPlan } from '@/lib/weekend-games/plan'
 import { buildWeekendGamesEmail } from '@/lib/weekend-games/email'
 import { addDays } from '@/lib/weekend-games/time'
+import { isLatLng, type LatLng } from '@/lib/weekend-games/sun'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -153,6 +154,32 @@ async function handle(request: Request) {
     )
     return NextResponse.json({ error: 'Schedule unavailable', due: due.length }, { status: 502 })
   }
+  // Sunrise/sunset location: each agent's most recent open house with map
+  // coordinates (the map geocodes them on first load; rows created before
+  // migration 037 or never mapped have none). Missing = state metro fallback.
+  const locationByAgent = new Map<string, LatLng>()
+  try {
+    const dueIds = due.map((d) => d.profile.id)
+    for (let i = 0; i < dueIds.length; i += 200) {
+      const { data, error } = await supabase
+        .from('open_houses')
+        .select('agent_id, lat, lng, start_at')
+        .in('agent_id', dueIds.slice(i, i + 200))
+        .not('lat', 'is', null)
+        .not('lng', 'is', null)
+        .order('start_at', { ascending: false })
+      if (error) throw error
+      for (const row of data ?? []) {
+        if (!locationByAgent.has(row.agent_id) && isLatLng(row)) {
+          locationByAgent.set(row.agent_id, { lat: row.lat, lng: row.lng })
+        }
+      }
+    }
+  } catch (e) {
+    // Best-effort: the metro fallback is fine for everyone.
+    console.error('weekend-games: open-house coordinates unavailable', e)
+  }
+
   if (skippedLeagues.size) {
     const list = [...skippedLeagues].join(', ')
     console.error('weekend-games: sending without optional leagues', list)
@@ -185,6 +212,7 @@ async function handle(request: Request) {
       state: d.state,
       timeZone: d.timeZone,
       saturdayYmd: d.saturdayYmd,
+      location: locationByAgent.get(d.profile.id) ?? null,
     })
     const built = buildWeekendGamesEmail({
       firstName: welcomeFirstName(d.profile.full_name, null),

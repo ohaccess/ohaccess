@@ -11,6 +11,7 @@ import {
 } from '../lib/weekend-games/audience'
 import { buildWeekendPlan, sweetSpot } from '../lib/weekend-games/plan'
 import { buildWeekendGamesEmail } from '../lib/weekend-games/email'
+import { STATE_METRO, isLatLng, sunTimes } from '../lib/weekend-games/sun'
 
 const league = (key: string) => LEAGUES.find((l) => l.key === key)!
 const NFL = league('football/nfl')
@@ -320,6 +321,42 @@ const plan = buildWeekendPlan({
   saturdayYmd: '2026-09-19',
 })
 
+// ── Sunrise / sunset ──────────────────────────────────────────────────────
+describe('sunTimes', () => {
+  const hm = (min: number) => `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`
+
+  it('matches published times within a couple of minutes', () => {
+    // Reference values from sunrise-sunset.org, checked 2026-09-16.
+    // Dallas, Sep 19 2026: 7:12 AM / 7:29 PM CDT.
+    const dallas = sunTimes('2026-09-19', STATE_METRO.TX, 'America/Chicago')!
+    expect(Math.abs(dallas.sunrise - (7 * 60 + 12))).toBeLessThanOrEqual(2)
+    expect(Math.abs(dallas.sunset - (19 * 60 + 29))).toBeLessThanOrEqual(2)
+    // Dallas, Dec 19 2026 (standard time): 7:23 AM / 5:25 PM CST.
+    const winter = sunTimes('2026-12-19', STATE_METRO.TX, 'America/Chicago')!
+    expect(Math.abs(winter.sunrise - (7 * 60 + 23))).toBeLessThanOrEqual(2)
+    expect(Math.abs(winter.sunset - (17 * 60 + 25))).toBeLessThanOrEqual(2)
+    // Honolulu, Sep 19 2026: 6:18 AM / 6:31 PM HST.
+    const honolulu = sunTimes('2026-09-19', STATE_METRO.HI, 'Pacific/Honolulu')!
+    expect(Math.abs(honolulu.sunrise - (6 * 60 + 18))).toBeLessThanOrEqual(2)
+    expect(Math.abs(honolulu.sunset - (18 * 60 + 31))).toBeLessThanOrEqual(2)
+    // Phoenix never changes clocks: Jun 20 2026, 5:17 AM / 7:42 PM MST.
+    const phoenix = sunTimes('2026-06-20', STATE_METRO.AZ, 'America/Phoenix')!
+    expect(hm(phoenix.sunrise)).toMatch(/^5:(1[7-9]|2[01])$/)
+    expect(hm(phoenix.sunset)).toMatch(/^19:4[0-4]$/)
+  })
+
+  it('returns null for polar night', () => {
+    expect(sunTimes('2026-12-21', { lat: 71.29, lng: -156.79 }, 'America/Anchorage')).toBeNull() // Utqiagvik
+  })
+
+  it('validates coordinates', () => {
+    expect(isLatLng({ lat: 32.78, lng: -96.8 })).toBe(true)
+    expect(isLatLng({ lat: null, lng: -96.8 })).toBe(false)
+    expect(isLatLng({ lat: 132.78, lng: -96.8 })).toBe(false)
+    expect(isLatLng(null)).toBe(false)
+  })
+})
+
 describe('buildWeekendPlan', () => {
   it('keeps in-state games and state teams playing away, drops the rest', () => {
     const sat = plan.saturday
@@ -371,6 +408,24 @@ describe('buildWeekendPlan', () => {
     expect(evening.saturday.headline).toBe('A light one: just one game, nothing huge.')
   })
 
+  it('adds sunrise and sunset, and shades meter hours that end after sunset', () => {
+    // September: sunset after 7 PM, so nothing in the 10 to 6 meter is dark.
+    expect(plan.saturday.sun?.sunriseText).toMatch(/^7:1\d AM$/)
+    expect(plan.saturday.sun?.sunsetText).toMatch(/^7:2\d PM$/)
+    expect(plan.saturday.duskHours).toEqual([])
+    // December in Dallas: sunset about 5:25 PM, so the 5 to 6 hour is dusk.
+    const winter = buildWeekendPlan({ games: [], state: 'TX', timeZone: 'America/Chicago', saturdayYmd: '2026-12-19' })
+    expect(winter.saturday.duskHours).toEqual([7])
+    expect(winter.sunday.sun?.sunsetText).toMatch(/^5:2\d PM$/)
+    // The agent's own coordinates win over the state metro: El Paso is ~35
+    // minutes behind Dallas (same clock, much further west).
+    const elPaso = buildWeekendPlan({
+      games: [], state: 'TX', timeZone: 'America/Chicago', saturdayYmd: '2026-09-19',
+      location: { lat: 31.76, lng: -106.49 },
+    })
+    expect(elPaso.saturday.sun?.sunsetText).toMatch(/^8:0\d PM$/)
+  })
+
   it('writes a quiet day and a light day', () => {
     const quiet = buildWeekendPlan({ games: [], state: 'WY', timeZone: 'America/Denver', saturdayYmd: '2026-09-19' })
     expect(quiet.saturday.headline).toBe('Coast is clear. Not a single game on the schedule.')
@@ -404,6 +459,22 @@ describe('buildWeekendGamesEmail', () => {
     expect(html).toContain('Time TBA')
     expect(html).toContain(`${APP_URL}/dashboard?view=new`)
     expect(html).toContain('Times are Central Time and come from ESPN.')
+    expect(html).toMatch(/☀️ Sunrise 7:1\d AM · 🌇 Sunset 7:2\d PM/)
+    expect(html).not.toContain('After sunset')
+    const winter = buildWeekendGamesEmail({
+      firstName: 'Kathryn',
+      // One December game, so the day gets a meter (a game-free day has none).
+      plan: buildWeekendPlan({
+        games: [game({ league: NFL, start: '2026-12-19T18:00:00Z', home: team({ short: 'Cowboys', homeState: 'TX' }), venueState: 'TX' })],
+        state: 'TX',
+        timeZone: 'America/Chicago',
+        saturdayYmd: '2026-12-19',
+      }),
+      appUrl: APP_URL,
+      unsubscribeUrl: UNSUB,
+    })
+    expect(winter.html).toContain('After sunset')
+    expect(winter.html).toMatch(/🌇 Sunset 5:2\d PM/)
     expect(html).toContain('Whoever walks in during the 4th quarter really wants the house.')
     expect(html).toContain(UNSUB)
     expect(html).not.toContain('—')
@@ -419,6 +490,7 @@ describe('buildWeekendGamesEmail', () => {
     })
     expect(subject).toBe('Planning on an Open House this weekend? The coast is clear in Wyoming')
     expect(html).toContain('Coast is clear, Wyoming.')
+    expect(html).toMatch(/Saturday: ☀️ Sunrise 6:\d\d AM · 🌇 Sunset 7:\d\d PM/)
     expect(html).not.toContain('Team "Go Bold"')
     expect(html).not.toContain('<script>')
   })

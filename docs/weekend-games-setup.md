@@ -14,6 +14,12 @@ the day's "Big one", and a Create my open house button. Approved by Dave
 - **Data**: ESPN's free public schedule feed. If it can't be read, nobody
   gets the email that hour and support@ohaccess.com gets an alert; the next
   hourly run tries again.
+- **Sunrise and sunset** under each day's meter (added 2026-09-16), computed
+  locally with the NOAA formulas, no service involved. Location: the
+  agent's most recent open house that has map coordinates, otherwise
+  their state's largest metro (`lib/weekend-games/sun.ts`). Meter hours
+  that end after sunset are dimmed and keyed "After sunset"; in summer none
+  are, from November to February the last one or two.
 - **Sent to agents with open houses already booked too** (they can adjust).
 - **Unsubscribe**: the same one-click link as the tips emails. Reminders,
   reports and billing mail are unaffected.
