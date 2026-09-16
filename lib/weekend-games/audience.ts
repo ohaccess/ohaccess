@@ -38,8 +38,22 @@ export function agentTimeZone(state: string): string {
 }
 
 // The coming Saturday if it's send time for this agent, else null.
-export function sendDue(now: Date, timeZone: string): { saturdayYmd: string } | null {
+//
+// Catch-up mode (the cron called by hand with ?catchup=true after a missed
+// Wednesday) ignores the 8 to 10 AM window: any time from Wednesday through
+// Friday counts, so the email still lands before the weekend it describes.
+// The at-most-once ledger keeps a catch-up from re-sending to anyone who
+// already got that weekend's email.
+export function sendDue(
+  now: Date,
+  timeZone: string,
+  opts: { catchup?: boolean } = {}
+): { saturdayYmd: string } | null {
   const local = zonedParts(now, timeZone)
+  if (opts.catchup) {
+    if (local.weekday < SEND_WEEKDAY || local.weekday > 5) return null
+    return { saturdayYmd: addDays(local.ymd, 6 - local.weekday) }
+  }
   if (local.weekday !== SEND_WEEKDAY || !SEND_HOURS.includes(local.hour)) return null
   return { saturdayYmd: addDays(local.ymd, 3) }
 }

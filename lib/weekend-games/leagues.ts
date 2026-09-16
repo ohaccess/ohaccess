@@ -18,6 +18,11 @@ export type LeagueDef = {
   // College hoops has hundreds of games a weekend: keep only ranked teams
   // and the NCAA Tournament.
   onlyWhenItMatters?: boolean
+  // If ESPN can't serve this league one week, the email still goes out
+  // without it (and the team gets a warning). Leagues without this flag are
+  // required: a lineup missing the NFL or college football is worse than
+  // no email, so the run stops instead.
+  optional?: boolean
 }
 
 export const LEAGUES: LeagueDef[] = [
@@ -26,10 +31,10 @@ export const LEAGUES: LeagueDef[] = [
   { key: 'baseball/mlb', sport: 'baseball', college: false, durationMin: 180, importance: 30 },
   { key: 'basketball/nba', sport: 'basketball', college: false, durationMin: 150, importance: 55 },
   { key: 'hockey/nhl', sport: 'hockey', college: false, durationMin: 150, importance: 45 },
-  { key: 'basketball/wnba', sport: 'basketball', college: false, durationMin: 120, importance: 35 },
-  { key: 'soccer/usa.1', sport: 'soccer', college: false, durationMin: 120, importance: 30 },
-  { key: 'basketball/mens-college-basketball', group: '50', sport: 'basketball', college: true, durationMin: 120, importance: 40, onlyWhenItMatters: true },
-  { key: 'basketball/womens-college-basketball', group: '50', sport: 'basketball', college: true, durationMin: 120, importance: 40, onlyWhenItMatters: true },
+  { key: 'basketball/wnba', sport: 'basketball', college: false, durationMin: 120, importance: 35, optional: true },
+  { key: 'soccer/usa.1', sport: 'soccer', college: false, durationMin: 120, importance: 30, optional: true },
+  { key: 'basketball/mens-college-basketball', group: '50', sport: 'basketball', college: true, durationMin: 120, importance: 40, onlyWhenItMatters: true, optional: true },
+  { key: 'basketball/womens-college-basketball', group: '50', sport: 'basketball', college: true, durationMin: 120, importance: 40, onlyWhenItMatters: true, optional: true },
 ]
 
 export const SPORT_EMOJI: Record<Sport, string> = {

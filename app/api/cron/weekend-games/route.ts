@@ -63,8 +63,11 @@ async function pageAll<T>(build: (from: number, to: number) => any): Promise<T[]
 // weekend?" with the agent's state's games, at 8 AM in the agent's own time
 // zone. Protected by the shared cron secret. At-most-once per (agent,
 // weekend) via an agent_email_log claim; a failed send releases its claim so
-// the next hourly run retries. If the schedule can't be read, nobody gets a
-// half-empty email: the run stops and the team gets an alert.
+// the next hourly run retries. If a required league's schedule can't be
+// read, nobody gets a half-empty email: the run stops and the team gets an
+// alert. ?catchup=true (called by hand after a missed Wednesday, see the
+// setup doc) sends to everyone who hasn't had this weekend's email yet,
+// whatever the local time, Wednesday through Friday.
 async function handle(request: Request) {
   const secret = process.env.CRON_SECRET
   const auth = request.headers.get('authorization')
@@ -73,6 +76,7 @@ async function handle(request: Request) {
   }
 
   const now = new Date()
+  const catchup = new URL(request.url).searchParams.get('catchup') === 'true'
 
   let profiles: ProfileRow[]
   let sentKeys: Set<string>
@@ -120,23 +124,25 @@ async function handle(request: Request) {
     if (!isEmail(to) || profile.drip_opt_out_at || !profile.drip_unsubscribe_token) continue
     if (optOutEmails.has(to.toLowerCase())) continue
     const timeZone = agentTimeZone(state)
-    const when = sendDue(now, timeZone)
+    const when = sendDue(now, timeZone, { catchup })
     if (!when) continue
     const key = weekendGamesEmailKey(when.saturdayYmd)
     if (sentKeys.has(`${profile.id}|${key}`)) continue
     due.push({ profile, to, state, timeZone, saturdayYmd: when.saturdayYmd, key })
   }
-  if (!due.length) return NextResponse.json({ ok: true, due: 0, sent: 0, failed: 0 })
+  if (!due.length) return NextResponse.json({ ok: true, catchup, due: 0, sent: 0, failed: 0 })
 
   // ── This weekend's games (normally one weekend per run) ──────────────────
   const gamesByWeekend = new Map<string, Game[]>()
+  const skippedLeagues = new Set<string>()
   try {
     for (const saturdayYmd of new Set(due.map((d) => d.saturdayYmd))) {
-      const games = await fetchWeekendGames(saturdayYmd, addDays(saturdayYmd, 1))
+      const { games, skippedLeagues: skipped } = await fetchWeekendGames(saturdayYmd, addDays(saturdayYmd, 1))
       // Every weekend of the year has pro games somewhere in the country, so
       // an empty feed means ESPN changed something, not a quiet weekend.
       if (!games.length) throw new Error('ESPN returned no games in any league')
       gamesByWeekend.set(saturdayYmd, games)
+      for (const key of skipped) skippedLeagues.add(key)
     }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
@@ -146,6 +152,14 @@ async function handle(request: Request) {
       `<p>The Wednesday "Planning on an Open House this weekend?" email couldn't read the game schedule from ESPN, so nothing was sent this run (${due.length} agents waiting). It tries again next hour, until 10 AM in each agent's time zone.</p><p style="color:#6e6e73;font-size:13px;">${escapeHtml(message)}</p>`
     )
     return NextResponse.json({ error: 'Schedule unavailable', due: due.length }, { status: 502 })
+  }
+  if (skippedLeagues.size) {
+    const list = [...skippedLeagues].join(', ')
+    console.error('weekend-games: sending without optional leagues', list)
+    await notifyAdmins(
+      'Weekend games email: sent without some leagues',
+      `<p>ESPN couldn't serve these leagues this run, so the "Planning on an Open House this weekend?" email went out without them (${due.length} agents): ${escapeHtml(list)}. Everything else was included. Nothing to do unless it keeps happening.</p>`
+    )
   }
 
   // ── Send ──────────────────────────────────────────────────────────────────
@@ -201,7 +215,7 @@ async function handle(request: Request) {
     await sleep(SEND_SPACING_MS)
   }
 
-  return NextResponse.json({ ok: true, due: due.length, sent, failed })
+  return NextResponse.json({ ok: true, catchup, due: due.length, sent, failed, skippedLeagues: [...skippedLeagues] })
 }
 
 export const GET = handle
