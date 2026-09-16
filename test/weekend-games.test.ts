@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseScoreboard, venueLocation, type Game, type TeamSide } from '../lib/weekend-games/espn'
+import { fetchWeekendGames, parseScoreboard, venueLocation, type Game, type TeamSide } from '../lib/weekend-games/espn'
 import { LEAGUES } from '../lib/weekend-games/leagues'
 import { addDays, dateLabel, timeLabel, timeZoneLabel, zonedParts } from '../lib/weekend-games/time'
 import {
@@ -100,6 +100,57 @@ describe('parseScoreboard', () => {
   })
 })
 
+// A stand-in for fetch: one Cowboys game on Sunday in the NFL feed, empty
+// feeds elsewhere, and HTTP 400 for any URL `fails` matches.
+function fakeEspn(fails: (url: string) => boolean) {
+  const urls: string[] = []
+  const impl = (async (input: string | URL | Request) => {
+    const url = String(input)
+    urls.push(url)
+    if (fails(url)) return new Response('bad request', { status: 400 })
+    const events =
+      url.includes('football/nfl') && url.includes('dates=20260920')
+        ? [espnEvent({ venue: { city: 'Arlington', state: 'TX' } })]
+        : []
+    return new Response(JSON.stringify({ events }), { status: 200 })
+  }) as unknown as typeof fetch
+  return { impl, urls }
+}
+
+describe('fetchWeekendGames', () => {
+  it('asks ESPN for each day separately, two ways, never a date range, and merges the answers', async () => {
+    const { impl, urls } = fakeEspn(() => false)
+    const { games, skippedLeagues } = await fetchWeekendGames('2026-09-19', '2026-09-20', impl)
+    expect(urls).toHaveLength(LEAGUES.length * 2 * 2)
+    expect(urls.every((u) => /dates=202609(19|20)(&|$)/.test(u))).toBe(true)
+    expect(urls.some((u) => u.includes('20260919-20260920'))).toBe(false)
+    expect(urls.some((u) => u.includes('limit=1000'))).toBe(false)
+    expect(urls.filter((u) => u.includes('limit=500'))).toHaveLength(LEAGUES.length * 2)
+    // The same Cowboys game came back from both request forms: listed once.
+    expect(games.map((g) => g.home.short)).toEqual(['Cowboys'])
+    expect(skippedLeagues).toEqual([])
+  })
+
+  it('keeps going when only one request form fails', async () => {
+    const { impl } = fakeEspn((u) => u.includes('limit=500'))
+    const { games, skippedLeagues } = await fetchWeekendGames('2026-09-19', '2026-09-20', impl)
+    expect(games.map((g) => g.home.short)).toEqual(['Cowboys'])
+    expect(skippedLeagues).toEqual([])
+  }, 15_000)
+
+  it('leaves out an optional league ESPN cannot serve, and says so', async () => {
+    const { impl } = fakeEspn((u) => u.includes('soccer/usa.1'))
+    const { games, skippedLeagues } = await fetchWeekendGames('2026-09-19', '2026-09-20', impl)
+    expect(games).toHaveLength(1)
+    expect(skippedLeagues).toEqual(['soccer/usa.1'])
+  }, 15_000)
+
+  it('refuses to build a lineup without a required league', async () => {
+    const { impl } = fakeEspn((u) => u.includes('football/nfl'))
+    await expect(fetchWeekendGames('2026-09-19', '2026-09-20', impl)).rejects.toThrow(/football\/nfl.*HTTP 400/)
+  }, 15_000)
+})
+
 // ── Time + audience ───────────────────────────────────────────────────────
 describe('time helpers', () => {
   it('formats times, dates and zone names', () => {
@@ -151,6 +202,16 @@ describe('audience', () => {
     expect(sendDue(new Date('2026-09-15T13:00:00Z'), chicago)).toBeNull() // Tuesday
     expect(sendDue(new Date('2026-09-16T15:00:00Z'), agentTimeZone('AZ'))).toEqual({ saturdayYmd: '2026-09-19' })
     expect(weekendGamesEmailKey('2026-09-19')).toBe('weekend_games_2026-09-19')
+  })
+
+  it('catch-up mode ignores the clock, Wednesday through Friday only', () => {
+    const chicago = agentTimeZone('TX')
+    const catchup = { catchup: true }
+    expect(sendDue(new Date('2026-09-16T20:11:00Z'), chicago, catchup)).toEqual({ saturdayYmd: '2026-09-19' }) // Wed 3 PM
+    expect(sendDue(new Date('2026-09-18T23:00:00Z'), chicago, catchup)).toEqual({ saturdayYmd: '2026-09-19' }) // Fri 6 PM
+    expect(sendDue(new Date('2026-09-19T15:00:00Z'), chicago, catchup)).toBeNull() // Saturday
+    expect(sendDue(new Date('2026-09-15T15:00:00Z'), chicago, catchup)).toBeNull() // Tuesday
+    expect(sendDue(new Date('2026-09-16T20:11:00Z'), chicago)).toBeNull() // no catch-up flag: window closed
   })
 })
 

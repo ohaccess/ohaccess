@@ -54,7 +54,49 @@ winter. Each run only emails the agents for whom it is currently 8, 9 or
 
 To verify it's registered: `select jobname, schedule from cron.job;`
 
+## If a Wednesday is missed: catch-up send
+
+If the 8 to 10 AM runs all failed (an ESPN outage, say), send the email by
+hand any time Wednesday through Friday. The route's `?catchup=true` mode
+ignores the time-of-day window and emails everyone who hasn't had this
+weekend's email yet; the ledger stops anyone getting it twice. Run this in
+the Supabase SQL editor (it reuses the scheduled job's secret, so there's
+nothing to paste):
+
+```sql
+select net.http_post(
+  url := 'https://www.ohaccess.com/api/cron/weekend-games?catchup=true',
+  headers := jsonb_build_object(
+    'Content-Type', 'application/json',
+    'Authorization', substring(
+      (select command from cron.job where jobname = 'weekend-games-email')
+      from 'Bearer [^'']+'
+    )
+  ),
+  body := '{}'::jsonb,
+  timeout_milliseconds := 120000
+);
+```
+
+Then check the result a minute later:
+
+```sql
+select status_code, content::text from net._http_response order by id desc limit 3;
+select count(*) from agent_email_log where email_key = 'weekend_games_' || to_char(current_date + (6 - extract(dow from current_date))::int, 'YYYY-MM-DD');
+```
+
 ## Operational notes
+
+- **ESPN quirks seen so far** (2026-09-16, three days after launch): the
+  two-day range form of the schedule URL (`dates=20260919-20260920`) began
+  returning HTTP 400 for every league, and `limit=1000` began silently
+  returning only 25 games, while single-day requests with no limit (or a
+  limit up to 500) still returned everything. The code now asks for each
+  day separately, two ways, and merges the answers. If ESPN can't serve
+  MLS, the WNBA or college basketball, the email still goes out without
+  them and support@ gets a note; if it can't serve the NFL, college
+  football, MLB, the NBA or the NHL, nothing is sent and support@ gets an
+  alert (see `optional` in `lib/weekend-games/leagues.ts`).
 
 - **Pause it**: `select cron.unschedule('weekend-games-email');`
 - **Who got it**: `select * from agent_email_log where email_key like 'weekend_games_%' order by sent_at desc;`
