@@ -153,6 +153,28 @@ export default function Resources() {
           </div>
         </div>
 
+        {/* Game-Day Planner */}
+        <div style={{ marginBottom: '48px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 4px' }}>
+            🏈 Game-Day Planner
+          </h2>
+          <div style={{ fontSize: '14px', color: '#6e6e73', marginBottom: '20px' }}>
+            Pick your state and a day to see every game your buyers might be watching, hour by hour, before you choose your open house time.
+          </div>
+
+          <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px' }}>
+            <div style={{ flex: '1 1 320px' }}>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#1d1d1f', marginBottom: '6px' }}>Free for every agent, no login needed</div>
+              <div style={{ fontSize: '13px', color: '#6e6e73', lineHeight: '1.6' }}>
+                NFL, college football, MLB, NBA, NHL, golf, racing and more on one calendar, shaded by how busy the usual open house hours are. Each day shows the sweet spot, the Big one to plan around, TV channels, and sunrise and sunset.
+              </div>
+            </div>
+            <Link href="/planner" style={{ display: 'inline-block', background: '#c9963a', color: '#1d1d1f', padding: '12px 24px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              Open the planner →
+            </Link>
+          </div>
+        </div>
+
         {/* Welcome Sign Templates */}
         <div style={{ marginBottom: '48px' }}>
           <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 4px' }}>
