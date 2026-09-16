@@ -2,6 +2,7 @@ import { US_STATES } from '../hardware-offer'
 import type { Game, TeamSide } from './espn'
 import { SPORT_WORDS } from './leagues'
 import { addDays, dateLabel, hourLabel, timeLabel, timeZoneLabel, zonedParts } from './time'
+import { STATE_METRO, sunTimes, type LatLng } from './sun'
 
 // Turns a weekend of games into what one state's email shows: each day's
 // game list, the 10 AM to 6 PM game meter, the sweet spot, the "Big one" and
@@ -44,6 +45,11 @@ export type DayPlan = {
   afterHours: PlannedGame[]
   tba: PlannedGame[]
   total: number
+  // Local wall-clock times; null in polar day/night.
+  sun: { sunriseText: string; sunsetText: string; sunsetMinute: number } | null
+  // Meter hours (index) that are dark by the time they end: none in
+  // summer, the last one or two from November to February.
+  duskHours: number[]
 }
 
 export type WeekendPlan = {
@@ -178,7 +184,27 @@ function biggest(games: PlannedGame[]): PlannedGame | null {
   )
 }
 
-function buildDay(ymd: string, weekdayName: DayPlan['weekdayName'], planned: PlannedGame[]): DayPlan {
+function buildDay(
+  ymd: string,
+  weekdayName: DayPlan['weekdayName'],
+  planned: PlannedGame[],
+  sunAt: { at: LatLng; timeZone: string }
+): DayPlan {
+  const times = sunTimes(ymd, sunAt.at, sunAt.timeZone)
+  const sun = times
+    ? {
+        sunriseText: timeLabel(Math.floor(times.sunrise / 60), times.sunrise % 60),
+        sunsetText: timeLabel(Math.floor(times.sunset / 60), times.sunset % 60),
+        sunsetMinute: times.sunset,
+      }
+    : null
+  const duskHours: number[] = []
+  if (sun) {
+    for (let hour = METER_START_HOUR; hour < METER_END_HOUR; hour++) {
+      if ((hour + 1) * 60 > sun.sunsetMinute) duskHours.push(hour - METER_START_HOUR)
+    }
+  }
+
   const timed = planned.filter((p) => p.game.timeKnown)
   const tba = planned.filter((p) => !p.game.timeKnown)
 
@@ -217,6 +243,8 @@ function buildDay(ymd: string, weekdayName: DayPlan['weekdayName'], planned: Pla
     afterHours: timed.filter((p) => p.startMinute >= METER_END_HOUR * 60).sort(byStart),
     tba,
     total: planned.length,
+    sun,
+    duskHours,
   }
 }
 
@@ -225,7 +253,11 @@ export function buildWeekendPlan(o: {
   state: string
   timeZone: string
   saturdayYmd: string
+  // Where to compute sunrise/sunset: the agent's latest open house if its
+  // coordinates are known, else the state's largest metro.
+  location?: LatLng | null
 }): WeekendPlan {
+  const sunAt = { at: o.location ?? STATE_METRO[o.state] ?? { lat: 39.83, lng: -98.58 }, timeZone: o.timeZone }
   const sundayYmd = addDays(o.saturdayYmd, 1)
   const byDay: Record<string, PlannedGame[]> = { [o.saturdayYmd]: [], [sundayYmd]: [] }
 
@@ -247,8 +279,8 @@ export function buildWeekendPlan(o: {
     if (planned) byDay[day].push(planned)
   }
 
-  const saturday = buildDay(o.saturdayYmd, 'Saturday', byDay[o.saturdayYmd])
-  const sunday = buildDay(sundayYmd, 'Sunday', byDay[sundayYmd])
+  const saturday = buildDay(o.saturdayYmd, 'Saturday', byDay[o.saturdayYmd], sunAt)
+  const sunday = buildDay(sundayYmd, 'Sunday', byDay[sundayYmd], sunAt)
   const bigGame =
     [saturday.bigGame, sunday.bigGame]
       .filter((p): p is PlannedGame => !!p)
