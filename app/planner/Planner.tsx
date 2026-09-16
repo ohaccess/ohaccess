@@ -253,7 +253,7 @@ export default function Planner({ initialState, initialDate }: { initialState: s
         .pl-rows { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
         .pl-rows td { padding: 9px 0; border-top: 1px solid ${RULE}; vertical-align: top; }
         .pl-rows tr.big td { background: #fff8f5; }
-        .pl-time { width: 78px; font-weight: 700; white-space: nowrap; }
+        .pl-time { width: 78px; font-weight: 700; white-space: nowrap; text-align: right; padding-right: 8px; font-variant-numeric: tabular-nums; }
         .pl-emoji { width: 26px; padding-right: 6px; }
         .pl-detail { color: ${MUTED}; font-size: 13px; }
         .pl-big { font-size: 11px; font-weight: 700; color: ${BIG_RED}; text-transform: uppercase; letter-spacing: .5px; margin-left: 6px; }

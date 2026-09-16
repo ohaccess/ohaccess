@@ -61,7 +61,7 @@ function gameRow(p: PlannedGame, isBig: boolean): string {
     : ''
   return `
     <tr style="border-top:1px solid ${RULE};${isBig ? 'background:#fff8f5;' : ''}">
-      <td style="padding:9px 0 9px ${isBig ? '6px' : '0'};width:78px;font-weight:700;white-space:nowrap;vertical-align:top;">${e(p.timeText)}</td>
+      <td style="padding:9px 0 9px ${isBig ? '6px' : '0'};width:78px;font-weight:700;white-space:nowrap;vertical-align:top;text-align:right;font-variant-numeric:tabular-nums;">${e(p.timeText)}</td>
       <td style="padding:9px 8px;width:22px;vertical-align:top;">${SPORT_EMOJI[p.game.league.sport]}</td>
       <td style="padding:9px 0;vertical-align:top;"><strong>${e(p.matchup)}</strong>${tag}${p.detail ? `<br/><span style="color:${MUTED};">${e(p.detail)}</span>` : ''}</td>
     </tr>`
@@ -70,7 +70,7 @@ function gameRow(p: PlannedGame, isBig: boolean): string {
 function noteRow(label: string, icon: string, html: string): string {
   return `
     <tr style="border-top:1px solid ${RULE};">
-      <td style="padding:9px 0;font-weight:700;white-space:nowrap;vertical-align:top;color:${MUTED};">${e(label)}</td>
+      <td style="padding:9px 0;font-weight:700;white-space:nowrap;vertical-align:top;color:${MUTED};text-align:right;">${e(label)}</td>
       <td style="padding:9px 8px;vertical-align:top;">${icon}</td>
       <td style="padding:9px 0;vertical-align:top;color:${MUTED};">${html}</td>
     </tr>`
