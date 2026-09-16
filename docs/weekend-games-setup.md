@@ -20,6 +20,18 @@ the day's "Big one", and a Create my open house button. Approved by Dave
   their state's largest metro (`lib/weekend-games/sun.ts`). Meter hours
   that end after sunset are dimmed and keyed "After sunset"; in summer none
   are, from November to February the last one or two.
+- **Market-aware "Big one"** (added 2026-09-16): the agent's own market's
+  team outranks the rest of the state, so a Houston agent's headline says
+  "Sunday belongs to the Texans" while a Dallas agent's says the Cowboys.
+  A team whose home city is within 60 miles of the agent gets a big boost
+  (and a gold "Your market" tag), within 150 miles a small one
+  (`lib/weekend-games/markets.ts`). The agent's location comes from their
+  latest open house with map coordinates, else their mobile number's area
+  code (the ~50 largest metros are mapped), else the state's largest metro;
+  the "Your market" tag is never shown from that last guess. Team home
+  cities and coordinates live in `team-states.json`, geocoded once by
+  `scripts/build-team-states.mjs` (Google key from `.env.local`; reruns
+  reuse what's already there).
 - **Sent to agents with open houses already booked too** (they can adjust).
 - **Unsubscribe**: the same one-click link as the tips emails. Reminders,
   reports and billing mail are unaffected.

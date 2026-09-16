@@ -16,6 +16,7 @@ import { buildWeekendPlan } from '@/lib/weekend-games/plan'
 import { buildWeekendGamesEmail } from '@/lib/weekend-games/email'
 import { addDays } from '@/lib/weekend-games/time'
 import { isLatLng, type LatLng } from '@/lib/weekend-games/sun'
+import { resolveAgentLocation } from '@/lib/weekend-games/markets'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -154,10 +155,11 @@ async function handle(request: Request) {
     )
     return NextResponse.json({ error: 'Schedule unavailable', due: due.length }, { status: 502 })
   }
-  // Sunrise/sunset location: each agent's most recent open house with map
-  // coordinates (the map geocodes them on first load; rows created before
-  // migration 037 or never mapped have none). Missing = state metro fallback.
-  const locationByAgent = new Map<string, LatLng>()
+  // Where each agent works (sunrise/sunset + "Your market"): their most
+  // recent open house with map coordinates (the map geocodes them on first
+  // load; rows created before migration 037 or never mapped have none), else
+  // their phone's area code, else the state metro (lib/weekend-games/markets.ts).
+  const openHouseByAgent = new Map<string, LatLng>()
   try {
     const dueIds = due.map((d) => d.profile.id)
     for (let i = 0; i < dueIds.length; i += 200) {
@@ -170,8 +172,8 @@ async function handle(request: Request) {
         .order('start_at', { ascending: false })
       if (error) throw error
       for (const row of data ?? []) {
-        if (!locationByAgent.has(row.agent_id) && isLatLng(row)) {
-          locationByAgent.set(row.agent_id, { lat: row.lat, lng: row.lng })
+        if (!openHouseByAgent.has(row.agent_id) && isLatLng(row)) {
+          openHouseByAgent.set(row.agent_id, { lat: row.lat, lng: row.lng })
         }
       }
     }
@@ -212,7 +214,11 @@ async function handle(request: Request) {
       state: d.state,
       timeZone: d.timeZone,
       saturdayYmd: d.saturdayYmd,
-      location: locationByAgent.get(d.profile.id) ?? null,
+      location: resolveAgentLocation({
+        state: d.state,
+        openHouse: openHouseByAgent.get(d.profile.id) ?? null,
+        phone: d.profile.phone,
+      }),
     })
     const built = buildWeekendGamesEmail({
       firstName: welcomeFirstName(d.profile.full_name, null),

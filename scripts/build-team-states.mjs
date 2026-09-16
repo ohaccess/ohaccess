@@ -13,8 +13,14 @@
 // Each league is scanned from the start of its 2025 season through today, so
 // brand-new teams (2026 expansion) are picked up from their first home games.
 // Keep LEAGUES in step with lib/weekend-games/leagues.ts.
+//
+// Each team also gets its home city's coordinates (la/lo), so the email can
+// tell a Houston agent's market from a Dallas agent's. Cities are geocoded
+// once with Google (GOOGLE_MAPS_SERVER_KEY in .env.local) and reused from
+// the existing JSON on later runs, so a rerun costs nothing unless a team
+// moved.
 
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 const LEAGUES = [
   { key: 'football/nfl', from: '2025-09-04' },
@@ -29,12 +35,52 @@ const LEAGUES = [
   { key: 'soccer/usa.nwsl', from: '2025-03-14' }, // planner only (see leagues.ts)
 ]
 
-const LIMIT = 1000
+const LIMIT = 500 // ESPN's real ceiling per request; higher values silently return 25
 
 // Teams ESPN lists without a usable stadium address, checked by hand. FC Dallas
 // plays at "Toyota Stadium, USA": no city, no state.
 const OVERRIDES = {
-  'soccer/usa.1': { 185: { s: 'TX', n: 'FC Dallas' } },
+  'soccer/usa.1': { 185: { s: 'TX', n: 'FC Dallas', c: 'Frisco', la: 33.15, lo: -96.82 } },
+}
+
+const OUT_PATH = new URL('../lib/weekend-games/team-states.json', import.meta.url)
+
+function loadEnvKey(name) {
+  if (process.env[name]) return process.env[name]
+  try {
+    const line = readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
+      .split('\n')
+      .find((l) => l.startsWith(`${name}=`))
+    return line ? line.slice(name.length + 1).trim().replace(/^["']|["']$/g, '') : null
+  } catch {
+    return null
+  }
+}
+
+// "City, ST" → { la, lo } via Google Geocoding, remembered across runs.
+const geoCache = new Map()
+try {
+  const previous = JSON.parse(readFileSync(OUT_PATH, 'utf8'))
+  for (const teams of Object.values(previous)) {
+    for (const t of Object.values(teams)) {
+      if (t.c && typeof t.la === 'number' && typeof t.lo === 'number') geoCache.set(`${t.c}, ${t.s}`, { la: t.la, lo: t.lo })
+    }
+  }
+} catch {}
+let geocodeCalls = 0
+async function geocode(city, state) {
+  const key = `${city}, ${state}`
+  if (geoCache.has(key)) return geoCache.get(key)
+  const apiKey = loadEnvKey('GOOGLE_MAPS_SERVER_KEY')
+  if (!apiKey) throw new Error('GOOGLE_MAPS_SERVER_KEY missing: needed to geocode team cities')
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(`${key}, USA`)}&key=${apiKey}`
+  const data = await fetchJson(url)
+  geocodeCalls++
+  const loc = data.results?.[0]?.geometry?.location
+  const value = loc ? { la: Math.round(loc.lat * 100) / 100, lo: Math.round(loc.lng * 100) / 100 } : null
+  if (!value) console.warn(`  ? could not geocode "${key}" (${data.status})`)
+  geoCache.set(key, value)
+  return value
 }
 
 const US_STATES = {
@@ -72,6 +118,17 @@ function venueState(address) {
   return comma >= 0 ? stateCode(city.slice(comma + 1)) : null
 }
 
+// The venue's city ("Houston, Texas" → "Houston"; a stadium name standing in
+// for the city → none).
+function venueCity(address, venueName) {
+  const raw = String(address?.city || '').trim()
+  let city = raw
+  const comma = raw.lastIndexOf(',')
+  if (comma >= 0 && stateCode(raw.slice(comma + 1))) city = raw.slice(0, comma).trim()
+  if (venueName && city.toLowerCase() === String(venueName).trim().toLowerCase()) city = ''
+  return { city: city || null }
+}
+
 const NON_US = 'non-US'
 const ALL_STAR_NAME = /^(Team|USA|World) |All-?Stars?/i
 
@@ -89,14 +146,37 @@ function ymd(d) {
   return d.toISOString().slice(0, 10).replaceAll('-', '')
 }
 
-function weeklyWindows(from, to) {
+// ESPN stopped accepting date ranges (dates=20250904-20250910 → HTTP 400 as
+// of 2026-09-16), so a season is read a month at a time (dates=202509, which
+// ESPN caps at 500 games) or, for college basketball with thousands of
+// games a month, a day at a time.
+function monthWindows(from, to) {
   const out = []
   const end = new Date(`${to}T00:00:00Z`)
-  for (let d = new Date(`${from}T00:00:00Z`); d <= end; d = new Date(d.getTime() + 7 * 864e5)) {
-    const last = new Date(Math.min(d.getTime() + 6 * 864e5, end.getTime()))
-    out.push(`${ymd(d)}-${ymd(last)}`)
+  for (let d = new Date(`${from.slice(0, 7)}-01T00:00:00Z`); d <= end; d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1))) {
+    out.push(ymd(d).slice(0, 6))
   }
   return out
+}
+
+function dayWindows(from, to) {
+  const out = []
+  const end = new Date(`${to}T00:00:00Z`)
+  for (let d = new Date(`${from}T00:00:00Z`); d <= end; d = new Date(d.getTime() + 864e5)) out.push(ymd(d))
+  return out
+}
+
+// A few requests at a time: ~4,000 day requests for college basketball
+// would take too long one by one.
+async function mapLimit(items, limit, fn) {
+  const results = new Array(items.length)
+  let next = 0
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      for (let i = next++; i < items.length; i = next++) results[i] = await fn(items[i])
+    })
+  )
+  return results
 }
 
 async function fetchJson(url) {
@@ -114,16 +194,22 @@ async function fetchJson(url) {
 
 const result = {}
 for (const league of LEAGUES) {
-  const votes = new Map() // teamId -> { name, counts: Map<state, n> }
+  const votes = new Map() // teamId -> { name, counts: Map<state, n>, cities: Map<"City|ST", n> }
   const unplaced = new Map() // teamId -> name, home games with no usable address
   let events = 0
-  for (const window of weeklyWindows(league.from, new Date().toISOString().slice(0, 10))) {
+  const today = new Date().toISOString().slice(0, 10)
+  const daily = /college-basketball/.test(league.key)
+  const windows = daily ? dayWindows(league.from, today) : monthWindows(league.from, today)
+  const pages = await mapLimit(windows, 6, async (window) => {
     const params = new URLSearchParams({ dates: window, limit: String(LIMIT) })
     if (league.group) params.set('groups', league.group)
     const url = `https://site.api.espn.com/apis/site/v2/sports/${league.key}/scoreboard?${params}`
     const data = await fetchJson(url)
     const list = data.events || []
-    if (list.length >= LIMIT) console.warn(`  ! ${league.key} ${window} hit the ${LIMIT} limit`)
+    if (list.length >= 500) console.warn(`  ! ${league.key} ${window} returned ${list.length} games: ESPN caps a window at 500, some may be missing`)
+    return list
+  })
+  for (const list of pages) {
     events += list.length
     for (const ev of list) {
       const comp = ev.competitions?.[0]
@@ -138,8 +224,15 @@ for (const league of LEAGUES) {
         unplaced.set(home.team.id, home.team.displayName)
         continue
       }
-      const v = votes.get(home.team.id) ?? { name: home.team.displayName, counts: new Map() }
+      const v = votes.get(home.team.id) ?? { name: home.team.displayName, counts: new Map(), cities: new Map() }
       v.counts.set(vote, (v.counts.get(vote) ?? 0) + 1)
+      if (vote !== NON_US) {
+        const { city } = venueCity(comp.venue?.address, comp.venue?.fullName)
+        if (city) {
+          const ck = `${city}|${vote}`
+          v.cities.set(ck, (v.cities.get(ck) ?? 0) + 1)
+        }
+      }
       votes.set(home.team.id, v)
     }
   }
@@ -149,7 +242,11 @@ for (const league of LEAGUES) {
     // All-Star squads ("Team Stars", "MLS All-Stars") host a game or three a
     // year; real teams host dozens.
     if (state === NON_US || homeGames < 3 || ALL_STAR_NAME.test(v.name)) continue
-    teams[id] = { s: state, n: v.name }
+    // Most common home city in the winning state, then its coordinates.
+    const cityKey = [...v.cities].filter(([k]) => k.endsWith(`|${state}`)).sort((a, b) => b[1] - a[1])[0]?.[0]
+    const city = cityKey ? cityKey.split('|')[0] : null
+    const geo = city ? await geocode(city, state) : null
+    teams[id] = { s: state, n: v.name, ...(city ? { c: city } : {}), ...(geo ?? {}) }
   }
   Object.assign(teams, OVERRIDES[league.key] ?? {})
   for (const [id, name] of unplaced) {
@@ -161,6 +258,7 @@ for (const league of LEAGUES) {
   console.log(`${league.key}: ${events} games scanned, ${Object.keys(teams).length} US teams`)
 }
 
-const outPath = new URL('../lib/weekend-games/team-states.json', import.meta.url)
-writeFileSync(outPath, JSON.stringify(result, null, 1) + '\n')
-console.log(`wrote ${outPath.pathname}`)
+writeFileSync(OUT_PATH, JSON.stringify(result, null, 1) + '\n')
+const placed = Object.values(result).flatMap((t) => Object.values(t)).filter((t) => typeof t.la === 'number').length
+const total = Object.values(result).flatMap((t) => Object.values(t)).length
+console.log(`wrote ${OUT_PATH.pathname}: ${placed}/${total} teams have coordinates (${geocodeCalls} geocoding calls this run)`)

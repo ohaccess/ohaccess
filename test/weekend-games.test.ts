@@ -12,6 +12,7 @@ import {
 import { buildWeekendPlan, sweetSpot } from '../lib/weekend-games/plan'
 import { buildWeekendGamesEmail } from '../lib/weekend-games/email'
 import { STATE_METRO, isLatLng, sunTimes } from '../lib/weekend-games/sun'
+import { distanceMiles, locationFromPhone, marketBoost, resolveAgentLocation } from '../lib/weekend-games/markets'
 
 const league = (key: string) => LEAGUES.find((l) => l.key === key)!
 const NFL = league('football/nfl')
@@ -218,7 +219,7 @@ describe('audience', () => {
 
 // ── Plan + email ──────────────────────────────────────────────────────────
 function team(o: Partial<TeamSide> & { short: string }): TeamSide {
-  return { id: o.short, nickname: o.short, rank: null, homeState: null, ...o }
+  return { id: o.short, nickname: o.short, rank: null, homeState: null, homeAt: null, ...o }
 }
 
 function game(o: Partial<Game> & { start: string }): Game {
@@ -362,6 +363,44 @@ describe('sunTimes', () => {
   })
 })
 
+// ── Markets ───────────────────────────────────────────────────────────────
+const DALLAS = { lat: 32.78, lng: -96.8 }
+const HOUSTON = { lat: 29.76, lng: -95.37 }
+const ARLINGTON = { lat: 32.74, lng: -97.11 }
+
+describe('markets', () => {
+  it('measures distance and turns it into a boost', () => {
+    expect(Math.round(distanceMiles(DALLAS, HOUSTON))).toBeGreaterThan(220)
+    expect(Math.round(distanceMiles(DALLAS, HOUSTON))).toBeLessThan(250)
+    expect(Math.round(distanceMiles(DALLAS, ARLINGTON))).toBeLessThan(25)
+    expect(marketBoost(20)).toBe(30)
+    expect(marketBoost(100)).toBe(10)
+    expect(marketBoost(240)).toBe(0)
+    expect(marketBoost(null)).toBe(0)
+  })
+
+  it('reads the metro off a phone number’s area code', () => {
+    expect(locationFromPhone('+17135550182')).toEqual(HOUSTON)
+    expect(locationFromPhone('(214) 555-0182')).toEqual(DALLAS)
+    expect(locationFromPhone('+12545550182')).toEqual({ lat: 31.55, lng: -97.15 }) // Waco
+    expect(locationFromPhone('+13075550182')).toBeNull() // Wyoming: no mapped metro
+    expect(locationFromPhone('+447700900123')).toBeNull()
+    expect(locationFromPhone(null)).toBeNull()
+  })
+
+  it('prefers the open house, then the area code, then the state metro', () => {
+    expect(resolveAgentLocation({ state: 'TX', openHouse: { lat: 29.8, lng: -95.4 }, phone: '+12145550182' })).toEqual({
+      at: { lat: 29.8, lng: -95.4 },
+      source: 'open_house',
+    })
+    expect(resolveAgentLocation({ state: 'TX', openHouse: { lat: null, lng: null }, phone: '+17135550182' })).toEqual({
+      at: HOUSTON,
+      source: 'area_code',
+    })
+    expect(resolveAgentLocation({ state: 'WY', phone: '+13075550182' })).toEqual({ at: STATE_METRO.WY, source: 'metro' })
+  })
+})
+
 describe('buildWeekendPlan', () => {
   it('keeps in-state games and state teams playing away, drops the rest', () => {
     const sat = plan.saturday
@@ -426,9 +465,49 @@ describe('buildWeekendPlan', () => {
     // minutes behind Dallas (same clock, much further west).
     const elPaso = buildWeekendPlan({
       games: [], state: 'TX', timeZone: 'America/Chicago', saturdayYmd: '2026-09-19',
-      location: { lat: 31.76, lng: -106.49 },
+      location: { at: { lat: 31.76, lng: -106.49 }, source: 'open_house' },
     })
     expect(elPaso.saturday.sun?.sunsetText).toMatch(/^8:0\d PM$/)
+  })
+
+  it('lifts the agent’s own market: Texans for Houston, Cowboys for Dallas', () => {
+    const sunday: Game[] = [
+      game({
+        league: NFL,
+        start: '2026-09-20T17:00:00Z',
+        home: team({ short: 'Texans', homeState: 'TX', homeAt: HOUSTON }),
+        away: team({ short: 'Bengals', homeState: 'OH' }),
+        venueState: 'TX',
+        city: 'Houston',
+        broadcasts: { national: ['CBS'], home: [], away: [] },
+      }),
+      game({
+        league: NFL,
+        start: '2026-09-20T20:25:00Z',
+        home: team({ short: 'Cowboys', homeState: 'TX', homeAt: ARLINGTON }),
+        away: team({ short: 'Commanders', homeState: 'MD' }),
+        venueState: 'TX',
+        city: 'Arlington',
+        broadcasts: { national: ['FOX'], home: [], away: [] },
+      }),
+    ]
+    const build = (location: Parameters<typeof buildWeekendPlan>[0]['location']) =>
+      buildWeekendPlan({ games: sunday, state: 'TX', timeZone: 'America/Chicago', saturdayYmd: '2026-09-19', location })
+
+    const houston = build({ at: HOUSTON, source: 'area_code' })
+    expect(houston.sunday.bigGame?.stateTeam.short).toBe('Texans')
+    expect(houston.sunday.headline).toBe('Sunday belongs to the Texans. Kickoff 12:00 PM on CBS.')
+    expect(houston.sunday.rows.map((p) => [p.stateTeam.short, p.local])).toEqual([['Texans', true], ['Cowboys', false]])
+
+    const dallas = build({ at: DALLAS, source: 'open_house' })
+    expect(dallas.sunday.bigGame?.stateTeam.short).toBe('Cowboys')
+    expect(dallas.sunday.rows.find((p) => p.stateTeam.short === 'Cowboys')?.milesAway).toBeLessThan(25)
+
+    // No location at all: the later kickoff wins the tie, as before.
+    const nowhere = build(null)
+    expect(nowhere.sunday.bigGame?.stateTeam.short).toBe('Cowboys')
+    expect(nowhere.locationSource).toBeNull()
+    expect(nowhere.sunday.rows.every((p) => !p.local)).toBe(true)
   })
 
   it('writes a quiet day and a light day', () => {
@@ -465,6 +544,7 @@ describe('buildWeekendGamesEmail', () => {
     expect(html).toContain(`${APP_URL}/dashboard?view=new`)
     expect(html).toContain('Times are Central Time and come from ESPN.')
     expect(html).toMatch(/☀️ Sunrise 7:1\d AM · 🌇 Sunset 7:2\d PM/)
+    expect(html).not.toContain('Your market')
     expect(html).not.toContain('After sunset')
     const winter = buildWeekendGamesEmail({
       firstName: 'Kathryn',
@@ -483,6 +563,28 @@ describe('buildWeekendGamesEmail', () => {
     expect(html).toContain('Whoever walks in during the 4th quarter really wants the house.')
     expect(html).toContain(UNSUB)
     expect(html).not.toContain('—')
+  })
+
+  it('labels "Your market" only when the location is known, never from the metro guess', () => {
+    const texans = game({
+      league: NFL,
+      start: '2026-09-20T17:00:00Z',
+      home: team({ short: 'Texans', homeState: 'TX', homeAt: HOUSTON }),
+      away: team({ short: 'Bengals', homeState: 'OH' }),
+      venueState: 'TX',
+      city: 'Houston',
+      broadcasts: { national: ['CBS'], home: [], away: [] },
+    })
+    const render = (source: 'open_house' | 'area_code' | 'metro') =>
+      buildWeekendGamesEmail({
+        firstName: 'Kathryn',
+        plan: buildWeekendPlan({ games: [texans], state: 'TX', timeZone: 'America/Chicago', saturdayYmd: '2026-09-19', location: { at: HOUSTON, source } }),
+        appUrl: APP_URL,
+        unsubscribeUrl: UNSUB,
+      }).html
+    expect(render('area_code')).toContain('Your market')
+    expect(render('open_house')).toContain('Your market')
+    expect(render('metro')).not.toContain('Your market')
   })
 
   it('has a coast-is-clear version and escapes names', () => {
