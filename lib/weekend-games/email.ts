@@ -134,6 +134,11 @@ function quietSunHtml(plan: WeekendPlan): string {
       </div>`
 }
 
+// Under the button: the planner covers any day, not just this weekend.
+function plannerLine(appUrl: string, stateCode: string): string {
+  return `<div style="font-size:13px;color:${MUTED};margin-top:10px;">Looking at a different weekend? <a href="${e(appUrl)}/planner?state=${e(stateCode)}" style="color:${GOLD};font-weight:600;">Open the Game-Day Planner</a> for any day of the season.</div>`
+}
+
 function gameName(p: PlannedGame): string {
   if (p.game.league.sport === 'soccer') return p.stateTeam.short
   return p.game.league.college ? p.stateTeam.nickname : p.stateTeam.short
@@ -164,6 +169,7 @@ export function buildWeekendGamesEmail(o: {
       ${quietSunHtml(plan)}
     </div>
     ${cta}
+    ${plannerLine(o.appUrl, plan.stateCode)}
     <div style="font-size:14px;line-height:1.7;margin-top:18px;">
       P.S. No games means buyers have nowhere better to be. Maybe this is the weekend to hold two.
     </div>`
@@ -183,6 +189,7 @@ export function buildWeekendGamesEmail(o: {
     ${dayHtml(plan.saturday)}
     ${dayHtml(plan.sunday)}
     ${cta}
+    ${plannerLine(o.appUrl, plan.stateCode)}
     <div style="font-size:14px;line-height:1.7;margin-top:18px;">${ps}</div>`
   }
 

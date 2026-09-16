@@ -26,6 +26,7 @@ const LEAGUES = [
   { key: 'soccer/usa.1', from: '2025-02-22' },
   { key: 'basketball/mens-college-basketball', group: '50', from: '2025-11-03' },
   { key: 'basketball/womens-college-basketball', group: '50', from: '2025-11-03' },
+  { key: 'soccer/usa.nwsl', from: '2025-03-14' }, // planner only (see leagues.ts)
 ]
 
 const LIMIT = 1000

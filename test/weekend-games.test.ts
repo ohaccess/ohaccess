@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { fetchWeekendGames, parseScoreboard, venueLocation, type Game, type TeamSide } from '../lib/weekend-games/espn'
-import { LEAGUES } from '../lib/weekend-games/leagues'
+import { EMAIL_LEAGUES, LEAGUES } from '../lib/weekend-games/leagues'
 import { addDays, dateLabel, timeLabel, timeZoneLabel, zonedParts } from '../lib/weekend-games/time'
 import {
   agentTimeZone,
@@ -122,11 +122,11 @@ describe('fetchWeekendGames', () => {
   it('asks ESPN for each day separately, two ways, never a date range, and merges the answers', async () => {
     const { impl, urls } = fakeEspn(() => false)
     const { games, skippedLeagues } = await fetchWeekendGames('2026-09-19', '2026-09-20', impl)
-    expect(urls).toHaveLength(LEAGUES.length * 2 * 2)
+    expect(urls).toHaveLength(EMAIL_LEAGUES.length * 2 * 2)
     expect(urls.every((u) => /dates=202609(19|20)(&|$)/.test(u))).toBe(true)
     expect(urls.some((u) => u.includes('20260919-20260920'))).toBe(false)
     expect(urls.some((u) => u.includes('limit=1000'))).toBe(false)
-    expect(urls.filter((u) => u.includes('limit=500'))).toHaveLength(LEAGUES.length * 2)
+    expect(urls.filter((u) => u.includes('limit=500'))).toHaveLength(EMAIL_LEAGUES.length * 2)
     // The same Cowboys game came back from both request forms: listed once.
     expect(games.map((g) => g.home.short)).toEqual(['Cowboys'])
     expect(skippedLeagues).toEqual([])
@@ -226,8 +226,13 @@ function game(o: Partial<Game> & { start: string }): Game {
   return {
     id: start + (o.home?.short ?? ''),
     league: CFB,
+    kind: 'game',
+    name: null,
+    importance: (o.league ?? CFB).importance,
     startIso: start,
     timeKnown: true,
+    timeApprox: false,
+    national: false,
     home: team({ short: 'Home' }),
     away: team({ short: 'Away' }),
     neutral: false,

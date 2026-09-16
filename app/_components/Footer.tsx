@@ -12,6 +12,7 @@ const LINKS = [
   { href: '/faq', label: 'FAQ' },
   { href: '/blog', label: 'Blog' },
   { href: '/resources', label: 'Resources' },
+  { href: '/planner', label: 'Game-Day Planner' },
   { href: '/partners', label: 'Partners' },
   { href: '/gift', label: 'Gift' },
   { href: '/contact', label: 'Contact' },
