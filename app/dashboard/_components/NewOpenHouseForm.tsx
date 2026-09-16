@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import { SMS_CODE_WORD_MAX_LENGTH, sanitizeSmsCodeWord } from '@/lib/register-helpers'
 import { MAX_OPEN_HOUSE_AGREEMENT_DOCS, type AgreementTemplate } from '@/lib/agreements'
 import { areaLabel, areaPlaceholder, type RegionConfig } from '@/lib/regions'
+import GameDayHint from './GameDayHint'
 
 // The New / Edit Open House form: property details (with Google address
 // autocomplete + a date-picker calendar) and the two access code words.
@@ -208,6 +209,9 @@ export default function NewOpenHouseForm({
           </div>
         </div>
       </div>
+
+      {/* Game day check: appears once the address and the date are in */}
+      <GameDayHint address={form.street_address} state={form.state} country={form.country} dateIso={form.open_house_date_iso} startTime={form.open_house_start_time} endTime={form.open_house_end_time} timeZone={form.property_timezone} />
 
       <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '6px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>

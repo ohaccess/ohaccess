@@ -15,11 +15,12 @@ export const metadata: Metadata = {
 // the page is rendered per request.
 export const dynamic = 'force-dynamic'
 
-export default async function PlannerPage({ searchParams }: { searchParams: Promise<{ state?: string }> }) {
+export default async function PlannerPage({ searchParams }: { searchParams: Promise<{ state?: string; date?: string }> }) {
   const sp = await searchParams
   const h = await headers()
   const geoState = h.get('x-vercel-ip-country') === 'US' ? normalizeStateCode(h.get('x-vercel-ip-country-region')) : null
   const initialState = normalizeStateCode(sp.state) ?? geoState ?? 'TX'
+  const initialDate = /^\d{4}-\d{2}-\d{2}$/.test(sp.date ?? '') ? sp.date! : null
 
   return (
     <main style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#ffffff', color: '#1d1d1f', minHeight: '100vh' }}>
@@ -50,7 +51,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
           </p>
         </div>
 
-        <Planner initialState={initialState} />
+        <Planner initialState={initialState} initialDate={initialDate} />
 
         <div style={{ maxWidth: '760px', margin: '48px auto 0', fontSize: '14px', color: '#48484a', lineHeight: 1.7 }}>
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1d1d1f', margin: '0 0 8px' }}>How to read it</h2>

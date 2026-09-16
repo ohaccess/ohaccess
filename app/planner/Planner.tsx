@@ -88,14 +88,16 @@ function refreshedLabel(iso: string | null): string | null {
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(iso))
 }
 
-export default function Planner({ initialState }: { initialState: string }) {
+// initialDate: a ?date= in the link (the New Open House form links here
+// with the day being booked); otherwise the coming Saturday.
+export default function Planner({ initialState, initialDate }: { initialState: string; initialDate: string | null }) {
   const [state, setState] = useState(initialState)
   const [off, setOff] = useState<Set<string>>(new Set())
   const [hydrated, setHydrated] = useState(false)
   const timeZone = STATE_TIME_ZONES[state] ?? 'America/New_York'
   const today = zonedParts(new Date(), timeZone).ymd
-  const [month, setMonth] = useState(() => monthOf(defaultSelection(today)))
-  const [selected, setSelected] = useState(() => defaultSelection(today))
+  const [month, setMonth] = useState(() => monthOf(initialDate && initialDate >= today ? initialDate : defaultSelection(today)))
+  const [selected, setSelected] = useState(() => (initialDate && initialDate >= today ? initialDate : defaultSelection(today)))
   const [cache, setCache] = useState<Record<string, MonthData>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
 
