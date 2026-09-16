@@ -6,10 +6,16 @@ import { STATE_METRO, isLatLng, type LatLng } from './sun'
 //
 //   open_house   their most recent open house with map coordinates
 //   area_code    their mobile number's area code, for the big metros below
-//   metro        the state's largest metro (a guess, so the email doesn't
-//                label anything "Your market" from it)
+//   zip          a ZIP code typed into the public planner
+//   metro        the state's largest metro (a guess, so nothing gets
+//                labelled "Your market" from it)
 
-export type LocationSource = 'open_house' | 'area_code' | 'metro'
+export type LocationSource = 'open_house' | 'area_code' | 'zip' | 'metro'
+
+// Precise enough to call a team "Your market".
+export function isKnownLocation(source: LocationSource | null | undefined): boolean {
+  return !!source && source !== 'metro'
+}
 export type AgentLocation = { at: LatLng; source: LocationSource }
 
 // A team whose home is this close is the agent's own market.

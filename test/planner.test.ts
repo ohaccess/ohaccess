@@ -11,6 +11,7 @@ import { EMAIL_LEAGUES, LEAGUES, eventImportance, leagueByKey } from '../lib/wee
 import { buildDayPlan, buildWeekendPlan, daySummary, weekdayName } from '../lib/weekend-games/plan'
 import { CURATED, curatedGames, withoutSuperseded } from '../lib/planner/curated'
 import { fromRow, fromWire, toRow, toWire } from '../lib/planner/rows'
+import { normalizeZip, parseZipGeocode } from '../lib/planner/zip'
 
 const NFL = leagueByKey('football/nfl')!
 const MLB = leagueByKey('baseball/mlb')!
@@ -377,4 +378,58 @@ describe('fetchLeagueRange', () => {
     const { impl } = fakeEspn({ fail: () => true })
     await expect(fetchLeagueRange(NFL, '2027-01-01', '2027-01-03', impl, { nearDays: 0 })).rejects.toThrow(/HTTP 500/)
   }, 20_000)
+})
+
+describe('ZIP lookup', () => {
+  const google = (o: { postal?: string; state?: string; city?: string; status?: string }) => ({
+    status: o.status ?? 'OK',
+    results: [
+      {
+        address_components: [
+          { long_name: o.postal ?? '77005', short_name: o.postal ?? '77005', types: ['postal_code'] },
+          { long_name: o.city ?? 'Houston', short_name: o.city ?? 'Houston', types: ['locality', 'political'] },
+          { long_name: 'Texas', short_name: o.state ?? 'TX', types: ['administrative_area_level_1', 'political'] },
+          { long_name: 'United States', short_name: 'US', types: ['country', 'political'] },
+        ],
+        geometry: { location: { lat: 29.72, lng: -95.42 } },
+      },
+    ],
+  })
+
+  it('accepts only 5-digit ZIPs', () => {
+    expect(normalizeZip('77005')).toBe('77005')
+    expect(normalizeZip(' 77005-1234 ')).toBe('77005')
+    expect(normalizeZip('7700')).toBeNull()
+    expect(normalizeZip('abcde')).toBeNull()
+    expect(normalizeZip(null)).toBeNull()
+  })
+
+  it('reads the place out of a Google answer, and rejects a near-miss', () => {
+    expect(parseZipGeocode('77005', google({}))).toEqual({ zip: '77005', state: 'TX', city: 'Houston', at: { lat: 29.72, lng: -95.42 } })
+    // Google answers a made-up ZIP with the closest real one: not a match.
+    expect(parseZipGeocode('77000', google({ postal: '77005' }))).toBeNull()
+    expect(parseZipGeocode('77005', google({ status: 'ZERO_RESULTS' }))).toBeNull()
+    expect(parseZipGeocode('77005', { status: 'OK', results: [] })).toBeNull()
+  })
+
+  it('lets the planner pick the visitor’s own market from a ZIP', () => {
+    const texans = game({
+      start: '2026-09-20T17:00:00Z',
+      id: 'hou',
+      home: { id: '34', short: 'Texans', nickname: 'Texans', rank: null, homeState: 'TX', homeAt: { lat: 29.76, lng: -95.37 } },
+      away: { id: '4', short: 'Bengals', nickname: 'Bengals', rank: null, homeState: 'OH' },
+      city: 'Houston',
+      broadcasts: { national: ['CBS'], home: [], away: [] },
+    })
+    const cowboys = game({
+      start: '2026-09-20T20:25:00Z',
+      id: 'dal',
+      home: { id: '6', short: 'Cowboys', nickname: 'Cowboys', rank: null, homeState: 'TX', homeAt: { lat: 32.74, lng: -97.11 } },
+    })
+    const base = { games: [texans, cowboys], state: 'TX', timeZone: 'America/Chicago', ymd: '2026-09-20' }
+    expect(buildDayPlan(base).bigGame?.stateTeam.short).toBe('Cowboys')
+    const houston = buildDayPlan({ ...base, location: { at: { lat: 29.72, lng: -95.42 }, source: 'zip' } })
+    expect(houston.bigGame?.stateTeam.short).toBe('Texans')
+    expect(houston.rows.map((p) => [p.stateTeam.short, p.local])).toEqual([['Texans', true], ['Cowboys', false]])
+  })
 })

@@ -4,7 +4,7 @@ import { US_STATES, normalizeStateCode } from '@/lib/hardware-offer'
 import { curatedGames, withoutSuperseded } from '@/lib/planner/curated'
 import { fromRow, toWire, type PlannerResponse, type SportsEventRow } from '@/lib/planner/rows'
 import { addDays } from '@/lib/weekend-games/time'
-import type { Game } from '@/lib/weekend-games/espn'
+import { withHomeAt, type Game } from '@/lib/weekend-games/espn'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -52,7 +52,12 @@ export async function GET(request: Request) {
     .limit(1)
     .maybeSingle()
 
-  const espn = rows.map(fromRow).filter((g): g is Game => g !== null)
+  const espn = rows
+    .map(fromRow)
+    .filter((g): g is Game => g !== null)
+    // Rows saved before teams carried home coordinates get them here, so
+    // the ZIP box works without waiting for the weekly refresh.
+    .map((g) => ({ ...g, home: withHomeAt(g.home, g.league.key), away: withHomeAt(g.away, g.league.key) }))
   const curated = withoutSuperseded(curatedGames(from, to), espn)
   const body: PlannerResponse = {
     state,
