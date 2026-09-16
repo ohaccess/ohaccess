@@ -63,6 +63,9 @@ export async function GET(request: Request) {
     horizon: run?.to_day ?? null,
   }
   return NextResponse.json(body, {
-    headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=86400' },
+    // max-age keeps a browser from holding an old copy for days (it used to
+    // apply its own heuristic and served a pre-refresh empty month); the CDN
+    // keeps it 30 minutes.
+    headers: { 'Cache-Control': 'public, max-age=300, s-maxage=1800, stale-while-revalidate=86400' },
   })
 }
