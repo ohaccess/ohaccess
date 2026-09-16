@@ -55,10 +55,12 @@ function meterHtml(day: DayPlan): string {
   ${sunLine}`
 }
 
-function gameRow(p: PlannedGame, isBig: boolean): string {
-  const tag = isBig
-    ? ` <span style="font-size:11px;font-weight:700;color:${BIG_RED};text-transform:uppercase;letter-spacing:0.5px;">Big one</span>`
-    : ''
+function gameRow(p: PlannedGame, isBig: boolean, showMarket: boolean): string {
+  const tagStyle = (color: string) =>
+    `font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.5px;`
+  const tag =
+    (isBig ? ` <span style="${tagStyle(BIG_RED)}">Big one</span>` : '') +
+    (showMarket && p.local ? ` <span style="${tagStyle(GOLD)}">Your market</span>` : '')
   return `
     <tr style="border-top:1px solid ${RULE};${isBig ? 'background:#fff8f5;' : ''}">
       <td style="padding:9px 0 9px ${isBig ? '6px' : '0'};width:78px;font-weight:700;white-space:nowrap;vertical-align:top;text-align:right;font-variant-numeric:tabular-nums;">${e(p.timeText)}</td>
@@ -84,15 +86,15 @@ function afterHoursHtml(games: PlannedGame[]): string {
   return `<strong style="color:#1d1d1f;">${count}</strong>: ${e(list)}. Your sign's already back in the trunk by then.`
 }
 
-function dayHtml(day: DayPlan): string {
-  const rows = day.rows.map((p) => gameRow(p, p === day.bigGame))
+function dayHtml(day: DayPlan, showMarket: boolean): string {
+  const rows = day.rows.map((p) => gameRow(p, p === day.bigGame, showMarket))
   if (day.moreDaytime > 0) {
     rows.push(noteRow('', '➕', `Plus ${day.moreDaytime} smaller daytime ${day.moreDaytime === 1 ? 'game' : 'games'}.`))
   }
   if (day.afterHours.length) {
     rows.push(noteRow(`${METER_END_HOUR - 12} PM on`, '🌙', afterHoursHtml(day.afterHours)))
   }
-  rows.push(...day.tba.map((p) => gameRow(p, false)))
+  rows.push(...day.tba.map((p) => gameRow(p, false, showMarket)))
 
   const table = rows.length
     ? `
@@ -156,6 +158,9 @@ export function buildWeekendGamesEmail(o: {
   const cta = ctaButton('Create my open house →', `${o.appUrl}/dashboard?view=new`)
   const opener = "It's Wednesday, so buyers are already planning their weekend."
   const quiet = plan.totalGames === 0
+  // "Your market" only when we know where the agent works (their open house
+  // or their area code), never from the state-metro guess.
+  const showMarket = plan.locationSource === 'open_house' || plan.locationSource === 'area_code'
 
   let bodyHtml: string
   if (quiet) {
@@ -186,8 +191,8 @@ export function buildWeekendGamesEmail(o: {
       ${e(opener)}${soAre} Here's every ${e(state)} game this weekend, so you can pick your open house hours on purpose.
     </div>
     ${TEAMS_HTML}
-    ${dayHtml(plan.saturday)}
-    ${dayHtml(plan.sunday)}
+    ${dayHtml(plan.saturday, showMarket)}
+    ${dayHtml(plan.sunday, showMarket)}
     ${cta}
     ${plannerLine(o.appUrl, plan.stateCode)}
     <div style="font-size:14px;line-height:1.7;margin-top:18px;">${ps}</div>`

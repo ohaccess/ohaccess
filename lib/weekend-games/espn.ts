@@ -12,7 +12,9 @@ import { addDays, zonedParts } from './time'
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports'
 const ET = 'America/New_York'
 
-type TeamStates = Record<string, Record<string, { s: string; n: string }>>
+// Per league, per ESPN team id: s = home state, n = name, c = home city,
+// la/lo = the city's coordinates (built by scripts/build-team-states.mjs).
+type TeamStates = Record<string, Record<string, { s: string; n: string; c?: string; la?: number; lo?: number }>>
 const TEAM_STATES = teamStatesJson as TeamStates
 
 export type TeamSide = {
@@ -21,6 +23,9 @@ export type TeamSide = {
   nickname: string // "Cowboys", "Aggies"
   rank: number | null // AP Top 25, college only
   homeState: string | null // from team-states.json
+  // Home city, from team-states.json. Optional: rows the planner cached
+  // before this field existed don't carry it.
+  homeAt?: { lat: number; lng: number } | null
 }
 
 export type Game = {
@@ -52,7 +57,7 @@ export type Game = {
   expected?: boolean
 }
 
-export const NO_TEAM: TeamSide = { id: '', short: '', nickname: '', rank: null, homeState: null }
+export const NO_TEAM: TeamSide = { id: '', short: '', nickname: '', rank: null, homeState: null, homeAt: null }
 
 const SKIP_STATUSES = new Set([
   'STATUS_POSTPONED',
@@ -95,12 +100,15 @@ function side(c: any, league: LeagueDef): TeamSide {
   const id = String(team.id ?? '')
   const short = String(team.shortDisplayName || team.displayName || team.abbreviation || 'TBD')
   const rankValue = Number(c?.curatedRank?.current)
+  const known = TEAM_STATES[league.key]?.[id]
   return {
     id,
     short,
     nickname: String(team.name || short),
     rank: Number.isInteger(rankValue) && rankValue >= 1 && rankValue <= 25 ? rankValue : null,
     homeState: TEAM_STATES[league.key]?.[id]?.s ?? null,
+    homeAt:
+      typeof known?.la === 'number' && typeof known?.lo === 'number' ? { lat: known.la, lng: known.lo } : null,
   }
 }
 

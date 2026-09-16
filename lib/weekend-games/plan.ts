@@ -3,6 +3,7 @@ import type { Game, TeamSide } from './espn'
 import { SPORT_WORDS } from './leagues'
 import { addDays, dateLabel, hourLabel, timeLabel, timeZoneLabel, zonedParts } from './time'
 import { STATE_METRO, sunTimes, type LatLng } from './sun'
+import { LOCAL_MILES, distanceMiles, marketBoost, type AgentLocation } from './markets'
 
 // Turns a day of games into what one state sees: the game list, the 10 AM
 // to 6 PM game meter, the sweet spot, the "Big one" and the headline. Used
@@ -32,6 +33,10 @@ export type PlannedGame = {
   detail: string
   tv: string | null
   score: number
+  // Miles from the agent to the state team's home city; null when either
+  // side is unknown. local = within LOCAL_MILES ("Your market").
+  milesAway: number | null
+  local: boolean
 }
 
 export type DayPlan = {
@@ -61,6 +66,9 @@ export type WeekendPlan = {
   stateName: string
   timeZone: string
   timeZoneText: string
+  // How the agent's location was found; the email only labels "Your
+  // market" when it wasn't the state-metro guess.
+  locationSource: AgentLocation['source'] | null
   saturday: DayPlan
   sunday: DayPlan
   totalGames: number
@@ -97,7 +105,8 @@ function planGame(
   state: string,
   startMinute: number,
   timeText: string,
-  includeNational: boolean
+  includeNational: boolean,
+  agentAt: LatLng | null
 ): PlannedGame | null {
   // The Wednesday email keeps to real matchups with a state tie; placeholders
   // and national events are the planner's.
@@ -119,6 +128,11 @@ function planGame(
   if (g.league.college && bestRank <= 25) score += 26 - bestRank
   if (g.league.college && tv && BIG_NETWORKS.has(tv)) score += 10
   if (g.postseason) score += 40
+  // The agent's own market outranks the rest of the state: a Houston
+  // agent's Texans over the Cowboys.
+  const milesAway =
+    agentAt && g.kind === 'game' && stateTeam.homeAt ? Math.round(distanceMiles(agentAt, stateTeam.homeAt)) : null
+  score += marketBoost(milesAway)
 
   const label = (t: TeamSide) => (g.league.college && t.rank ? `#${t.rank} ${t.short}` : t.short)
   const matchup =
@@ -142,7 +156,20 @@ function planGame(
     .filter(Boolean)
     .join(' · ')
 
-  return { game: g, involvement, stateTeam, otherTeam, startMinute, timeText, matchup, detail, tv, score }
+  return {
+    game: g,
+    involvement,
+    stateTeam,
+    otherTeam,
+    startMinute,
+    timeText,
+    matchup,
+    detail,
+    tv,
+    score,
+    milesAway,
+    local: milesAway !== null && milesAway <= LOCAL_MILES,
+  }
 }
 
 function endMinute(p: PlannedGame): number {
@@ -310,13 +337,14 @@ function planDays(
   state: string,
   timeZone: string,
   days: string[],
-  includeNational: boolean
+  includeNational: boolean,
+  agentAt: LatLng | null
 ): Record<string, PlannedGame[]> {
   const byDay: Record<string, PlannedGame[]> = Object.fromEntries(days.map((d) => [d, []]))
   for (const g of games) {
     const slot = localSlot(g, timeZone)
     if (!slot || !byDay[slot.day]) continue
-    const planned = planGame(g, state, slot.startMinute, slot.timeText, includeNational)
+    const planned = planGame(g, state, slot.startMinute, slot.timeText, includeNational, agentAt)
     if (planned) byDay[slot.day].push(planned)
   }
   return byDay
@@ -330,10 +358,13 @@ export function buildDayPlan(o: {
   timeZone: string
   ymd: string
   includeNational?: boolean
-  location?: LatLng | null
+  // The agent's location (see lib/weekend-games/markets.ts). Sets sunrise/
+  // sunset and lifts the agent's own market's games. The public planner
+  // passes none: state-level, metro sun times.
+  location?: AgentLocation | null
 }): DayPlan {
-  const byDay = planDays(o.games, o.state, o.timeZone, [o.ymd], o.includeNational ?? true)
-  return buildDay(o.ymd, byDay[o.ymd], sunAtFor(o.state, o.timeZone, o.location))
+  const byDay = planDays(o.games, o.state, o.timeZone, [o.ymd], o.includeNational ?? true, o.location?.at ?? null)
+  return buildDay(o.ymd, byDay[o.ymd], sunAtFor(o.state, o.timeZone, o.location?.at))
 }
 
 // What a calendar cell needs to know about a day.
@@ -356,13 +387,13 @@ export function buildWeekendPlan(o: {
   state: string
   timeZone: string
   saturdayYmd: string
-  // Where to compute sunrise/sunset: the agent's latest open house if its
-  // coordinates are known, else the state's largest metro.
-  location?: LatLng | null
+  // The agent's location (see lib/weekend-games/markets.ts): sets sunrise/
+  // sunset and lifts their own market's games. Null = state metro.
+  location?: AgentLocation | null
 }): WeekendPlan {
-  const sunAt = sunAtFor(o.state, o.timeZone, o.location)
+  const sunAt = sunAtFor(o.state, o.timeZone, o.location?.at)
   const sundayYmd = addDays(o.saturdayYmd, 1)
-  const byDay = planDays(o.games, o.state, o.timeZone, [o.saturdayYmd, sundayYmd], false)
+  const byDay = planDays(o.games, o.state, o.timeZone, [o.saturdayYmd, sundayYmd], false, o.location?.at ?? null)
 
   const saturday = buildDay(o.saturdayYmd, byDay[o.saturdayYmd], sunAt)
   const sunday = buildDay(sundayYmd, byDay[sundayYmd], sunAt)
@@ -376,6 +407,7 @@ export function buildWeekendPlan(o: {
     stateName: US_STATES[o.state] ?? o.state,
     timeZone: o.timeZone,
     timeZoneText: timeZoneLabel(o.timeZone, new Date(`${o.saturdayYmd}T12:00:00Z`)),
+    locationSource: o.location?.source ?? null,
     saturday,
     sunday,
     totalGames: saturday.total + sunday.total,
