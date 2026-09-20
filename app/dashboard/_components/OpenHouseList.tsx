@@ -239,6 +239,11 @@ const ohState = (oh: { status?: string | null; start_at?: string | null; end_at?
 // end time out.
 const isEditLocked = (oh: { end_at?: string | null }) => editLocked(oh.end_at, Date.now())
 
+// A locked card's own QR code and sign-in link are greyed out too: handing out
+// a finished event's code is how visitors end up on the expired card. Points
+// at the two things that do work.
+const OVER_QR_MSG = 'This open house is over. Use Duplicate to run another at this property, or 📌 My QR code for a sign that works every time.'
+
 const OH_BADGE: Record<'upcoming' | 'live' | 'ended', { bg: string; color: string; dot: string; label: string }> = {
   upcoming: { bg: '#e5f0ff', color: '#0040a0', dot: '#0071e3', label: 'Upcoming' },
   live: { bg: '#e8f9ee', color: '#1a7a3c', dot: '#30d158', label: 'Live' },
@@ -505,6 +510,7 @@ export default function OpenHouseList({
                 <button onClick={async (e) => {
                   e.stopPropagation()
                   if (guardLocked()) return
+                  if (isEditLocked(oh)) { showToast(OVER_QR_MSG); return }
                   const url = `${window.location.origin}/register/${oh.id}`
                   const res = await fetch(`/api/qrcode?url=${encodeURIComponent(url)}`)
                   const blob = await res.blob()
@@ -514,14 +520,15 @@ export default function OpenHouseList({
                     reader.readAsDataURL(blob)
                   })
                   setQrModal({ oh, url, dataUrl, blob })
-                }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📱 QR Code</button>
+                }} style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked || isEditLocked(oh) ? 'not-allowed' : 'pointer', opacity: locked || isEditLocked(oh) ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📱 QR Code</button>
                 <button onClick={(e) => {
                   e.stopPropagation()
                   if (guardLocked()) return
+                  if (isEditLocked(oh)) { showToast(OVER_QR_MSG); return }
                   const url = `${window.location.origin}/register/${oh.id}`
                   navigator.clipboard.writeText(url)
                   showToast('Registration URL copied!')
-                }} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
+                }} style={{ background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked || isEditLocked(oh) ? 'not-allowed' : 'pointer', opacity: locked || isEditLocked(oh) ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>📋 Copy URL</button>
                 {ohState(oh) !== 'ended' && (
                   <button onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openInvites(oh) }} title="Email the past visitors who are still in their buying window a personal invite to this open house" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>💌 Invite</button>
                 )}

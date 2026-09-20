@@ -46,11 +46,15 @@ export default function QrModal({
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px' }}
       onClick={onClose}>
-      <div style={{ background: 'white', borderRadius: '24px', padding: '28px', maxWidth: '380px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', textAlign: 'center' }}
+      {/* Taller than a laptop screen since the My QR code tip went in: cap the
+          height and scroll inside, and keep a close button at the top so it
+          never depends on reaching the bottom. */}
+      <div style={{ position: 'relative', background: 'white', borderRadius: '24px', padding: '28px', maxWidth: '380px', width: '100%', maxHeight: 'calc(100vh - 48px)', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', textAlign: 'center' }}
         onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: '12px', right: '14px', background: 'none', border: 'none', color: '#aeaeb2', fontSize: '20px', cursor: 'pointer', lineHeight: 1, padding: '2px 6px' }}>✕</button>
 
         {/* Header */}
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: '16px', padding: '0 16px' }}>
           <div style={{ fontSize: '16px', fontWeight: '700', color: '#1d1d1f', marginBottom: '3px' }}>
             {data.oh.street_address || data.oh.property_address}
           </div>
