@@ -7,6 +7,7 @@ import { phoneLineKind, PHONE_LINE_CHIPS } from '@/lib/register-helpers'
 import { langMeta } from '@/lib/register-i18n'
 import { formatPropertyTime } from '@/lib/property-time'
 import { isManualVisitor } from '@/lib/manual-visitor'
+import { editLocked } from '@/lib/signin-window'
 
 // The main "Dashboard" view: the agent's open-house cards (with per-event
 // stat strips and QR / copy / edit / delete actions), and the visitor log
@@ -233,6 +234,11 @@ const ohState = (oh: { status?: string | null; start_at?: string | null; end_at?
   }
   return oh.status === 'active' ? 'live' : 'ended'
 }
+// Read-only for the agent: 30 minutes past the end (see editLocked). Later than
+// the 'ended' badge on purpose, so an agent running over can still push the
+// end time out.
+const isEditLocked = (oh: { end_at?: string | null }) => editLocked(oh.end_at, Date.now())
+
 const OH_BADGE: Record<'upcoming' | 'live' | 'ended', { bg: string; color: string; dot: string; label: string }> = {
   upcoming: { bg: '#e5f0ff', color: '#0040a0', dot: '#0071e3', label: 'Upcoming' },
   live: { bg: '#e8f9ee', color: '#1a7a3c', dot: '#30d158', label: 'Live' },
@@ -520,8 +526,15 @@ export default function OpenHouseList({
                   <button onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openInvites(oh) }} title="Email the past visitors who are still in their buying window a personal invite to this open house" style={{ background: accentColor, color: onAccent, border: accentBtnBorder, borderRadius: '6px', padding: '5px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>💌 Invite</button>
                 )}
                 <button onClick={(e) => { e.stopPropagation(); if (guardLocked()) return; openVisitorEmails(oh) }} title="See the emails your visitors get: the codeword at sign-in, the thank-you the next morning, and invites to your future open houses" style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✉️ Visitor emails</button>
-                <button onClick={(e) => { e.stopPropagation(); startCopy(oh) }} title="Start a new open house with these same details. Just pick the new date and times." style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⧉ Duplicate</button>
-                <button onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
+                {/* Once the card has locked (editLocked), Duplicate is the way
+                    forward, so it takes the primary color and Edit becomes a
+                    quiet Locked chip that explains why when clicked. */}
+                <button onClick={(e) => { e.stopPropagation(); startCopy(oh) }} title="Start a new open house with these same details. Just pick the new date and times." style={{ background: isEditLocked(oh) ? primaryColor : '#f5f5f7', color: isEditLocked(oh) ? onPrimary : '#1d1d1f', border: isEditLocked(oh) ? primaryBtnBorder : '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>⧉ Duplicate</button>
+                {isEditLocked(oh) ? (
+                  <button onClick={(e) => { e.stopPropagation(); startEdit(oh) }} title="This open house is over, so its details are locked. Use Duplicate to run another at this property." style={{ background: 'transparent', color: '#8e8e93', border: '1px dashed #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>🔒 Locked</button>
+                ) : (
+                  <button onClick={(e) => { e.stopPropagation(); startEdit(oh) }} style={{ background: '#f5f5f7', color: '#1d1d1f', border: '1px solid #d1d1d6', borderRadius: '6px', padding: '4px 9px', fontSize: '10px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>✏️ Edit</button>
+                )}
                 {/* Delete is locked too (and server-enforced): deleting an
                     open house cascades its visitors, which would pull the
                     count back under the trial cap and re-open registration. */}
