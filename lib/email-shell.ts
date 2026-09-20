@@ -36,6 +36,13 @@ export function resolveEmailBranding(agent: Row | null | undefined, brokerage: R
   return { primary, accent, onPrimary: onColor(primary), onAccent: onColor(accent), logoUrl }
 }
 
+// ohACCESS speaking in its own voice (welcome, tips, billing, invitations):
+// the same layout and the same rule, in the ohACCESS colors. Black header,
+// gold buttons / labels / links, dark text on the gold.
+export const OHACCESS_BRAND: EmailBrand = {
+  primary: '#1d1d1f', accent: '#c9963a', onPrimary: '#ffffff', onAccent: '#1d1d1f', logoUrl: null,
+}
+
 export const EMAIL_FONT = "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif"
 
 // The accent as TEXT (labels, links) on the white/grey email body: an agent
@@ -61,6 +68,9 @@ export function emailButton(labelHtml: string, href: string, brand: Pick<EmailBr
   return `<a href="${href}" style="display:inline-block;background:${brand.accent};color:${brand.onAccent};text-decoration:none;font-weight:700;${size}">${labelHtml}</a>`
 }
 
+// Footer sign-off for ohACCESS's own emails (nothing is "powered by" us there).
+export const EMAIL_OHACCESS_SIGNOFF = '<span style="font-weight:300;">oh</span><b style="font-weight:700;">ACCESS</b>.com &middot; Patent Pending'
+
 export const EMAIL_POWERED_BY = 'Powered by <span style="font-weight:300;">oh</span><b style="font-weight:700;">ACCESS</b>.com &middot; Patent Pending'
 
 // The full document. All `*Html` fields are interpolated as-is.
@@ -69,7 +79,9 @@ export function brandedEmailShell(o: {
   headerTitleHtml?: string  // bold line under the wordmark
   headerSubHtml?: string    // quieter line under that
   bodyHtml: string
-  footerHtml: string        // the "why you got this" lines; "Powered by" is appended
+  footerHtml: string        // the "why you got this" lines; the sign-off is appended
+  preheaderHtml?: string    // hidden inbox-preview text
+  signoffHtml?: string      // defaults to "Powered by ohACCESS"
 }): string {
   const { primary, onPrimary } = o.brand
   const title = o.headerTitleHtml
@@ -81,6 +93,7 @@ export function brandedEmailShell(o: {
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;background:#eceef1;font-family:${EMAIL_FONT};">
+  ${o.preheaderHtml ? `<div style="display:none;max-height:0;overflow:hidden;">${o.preheaderHtml}</div>` : ''}
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eceef1;padding:24px 0;">
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
@@ -92,11 +105,28 @@ export function brandedEmailShell(o: {
           ${o.bodyHtml}
           <div style="border-top:1px solid #ececf0;margin-top:24px;padding-top:14px;font-size:11px;color:#9a9aa0;line-height:1.5;text-align:center;">
             ${o.footerHtml}${o.footerHtml ? '<br>' : ''}
-            ${EMAIL_POWERED_BY}
+            ${o.signoffHtml ?? EMAIL_POWERED_BY}
           </div>
         </td></tr>
       </table>
     </td></tr>
   </table>
 </body></html>`
+}
+
+// A short ohACCESS-voiced email (billing notices, invitations, gifts): the
+// shared layout in ohACCESS colors around a simple body. `bodyHtml` as-is.
+export function ohaccessEmail(o: { bodyHtml: string; footerHtml?: string; headerSubHtml?: string; center?: boolean }): string {
+  return brandedEmailShell({
+    brand: OHACCESS_BRAND,
+    headerSubHtml: o.headerSubHtml,
+    signoffHtml: EMAIL_OHACCESS_SIGNOFF,
+    bodyHtml: `<div style="font-size:14px;line-height:1.6;color:#1d1d1f;${o.center ? 'text-align:center;' : ''}">${o.bodyHtml}</div>`,
+    footerHtml: o.footerHtml ?? '',
+  })
+}
+
+// Filled gold button for ohACCESS-voiced emails. `labelHtml`/`href` as-is.
+export function ohaccessButton(labelHtml: string, href: string): string {
+  return emailButton(labelHtml, href, OHACCESS_BRAND, { large: true })
 }

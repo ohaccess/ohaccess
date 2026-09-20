@@ -6,6 +6,7 @@ import { getAuthenticatedUser } from '@/lib/auth'
 import { getBrokerageContext, getSeatUsage } from '@/lib/team'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/escape-html'
+import { ohaccessEmail, ohaccessButton } from '@/lib/email-shell'
 
 export const runtime = 'nodejs'
 
@@ -101,12 +102,7 @@ export async function POST(request: Request) {
       // noreply subdomain.
       replyTo: 'support@ohaccess.com',
       subject: `You're invited to join ${ctx.name} on ohACCESS`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
-          <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-            <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
-          </div>
-          <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; text-align: center;">
+      html: ohaccessEmail({ bodyHtml: `
             <div style="font-size: 18px; font-weight: 700; color: #1d1d1f; margin-bottom: 8px;">
               You're invited to join ${teamName}
             </div>
@@ -114,16 +110,12 @@ export async function POST(request: Request) {
               Your team lead has invited you to ohACCESS: verified open-house sign-ins for real estate agents.
               Click below to set up your account and start verifying visitors.
             </p>
-            <a href="${escapeHtml(acceptUrl)}" style="display: inline-block; background: #c9963a; color: #1d1d1f; padding: 14px 32px; border-radius: 10px; font-size: 15px; font-weight: 700; text-decoration: none;">
-              Accept invitation →
-            </a>
+            ${ohaccessButton('Accept invitation →', escapeHtml(acceptUrl))}
             <p style="font-size: 12px; color: #aeaeb2; margin-top: 24px; line-height: 1.6;">
               This invitation expires in ${INVITE_TTL_DAYS} days.<br/>
               If you weren't expecting this, you can safely ignore this email.
             </p>
-          </div>
-        </div>
-      `,
+`, center: true }),
     })
   } catch (e) {
     console.error('Invite email send failed', e)

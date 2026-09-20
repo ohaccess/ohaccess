@@ -1,4 +1,5 @@
 import { escapeHtml } from './escape-html'
+import { brandedEmailShell, OHACCESS_BRAND, EMAIL_OHACCESS_SIGNOFF } from './email-shell'
 
 // The one-time "getting started" email for a brand-new agent account, sent
 // from /api/notify/new-account on the first authenticated dashboard load.
@@ -34,38 +35,36 @@ export function buildWelcomeEmail(o: { firstName?: string | null; appUrl: string
   html: string
 } {
   const e = escapeHtml
-  const gold = '#c9963a'
+  const gold = OHACCESS_BRAND.accent
   const settingsUrl = `${o.appUrl}/dashboard?view=settings`
   const newOhUrl = `${o.appUrl}/dashboard?view=new`
   const pricingUrl = `${o.appUrl}/#pricing`
   const greeting = o.firstName?.trim() ? `Hi ${e(o.firstName.trim())},` : 'Hi there,'
 
   const sectionTitle = (label: string) => `
-      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${gold};margin-bottom:8px;">${label}</div>`
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${gold};margin-bottom:6px;">${label}</div>`
 
   const watchLink = (label: string, url: string) => `
       <div style="font-size:14px;margin-top:12px;">
         <a href="${e(url)}" style="color:${gold};font-weight:700;">▶ Watch: ${e(label)}</a>
       </div>`
 
-  const html = `
-  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1d1d1f;">
-    <div style="display:none;max-height:0;overflow:hidden;">Two quick steps now. We handle the rest automatically.</div>
-
-    <div style="background:#1d1d1f;border-radius:14px;padding:20px 22px;color:white;">
-      <div style="font-size:18px;font-weight:200;letter-spacing:-0.5px;">oh<span style="font-weight:700;">ACCESS</span></div>
-      <div style="font-size:20px;font-weight:700;margin-top:8px;">Welcome to ohACCESS</div>
-      <div style="font-size:13px;opacity:0.7;margin-top:2px;">Your first open house is 10 minutes away</div>
-    </div>
-
-    <div style="font-size:14px;line-height:1.7;margin-top:20px;">${greeting}</div>
+  // Same layout as every other email (lib/email-shell), in ohACCESS colors.
+  const html = brandedEmailShell({
+    brand: OHACCESS_BRAND,
+    preheaderHtml: 'Two quick steps now. We handle the rest automatically.',
+    headerTitleHtml: 'Welcome to ohACCESS',
+    headerSubHtml: 'Your first open house is 10 minutes away',
+    signoffHtml: EMAIL_OHACCESS_SIGNOFF,
+    bodyHtml: `
+    <div style="font-size:14px;line-height:1.7;">${greeting}</div>
     <div style="font-size:14px;line-height:1.7;margin-top:12px;">
       Welcome to ohACCESS! You're about to replace the paper sign-in sheet with verified digital
       check-ins: legible names, real phone numbers, real leads.
     </div>
     <div style="font-size:14px;line-height:1.7;margin-top:12px;">Getting started takes three steps:</div>
 
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       ${sectionTitle('Step 1: Set up your profile (about 5 minutes)')}
       <div style="font-size:14px;line-height:1.7;">
         Go to <a href="${e(settingsUrl)}" style="color:${gold};font-weight:600;">Settings</a> and fill
@@ -82,7 +81,7 @@ export function buildWelcomeEmail(o: { firstName?: string | null; appUrl: string
       ${watchLink('Setting up your profile', WELCOME_VIDEO_SETTINGS)}
     </div>
 
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       ${sectionTitle('Step 2: Create your first open house (about 3 minutes)')}
       <div style="font-size:14px;line-height:1.7;">
         Click <a href="${e(newOhUrl)}" style="color:${gold};font-weight:600;">New Open House</a>.
@@ -100,7 +99,7 @@ export function buildWelcomeEmail(o: { firstName?: string | null; appUrl: string
       ${watchLink('Your first open house', WELCOME_VIDEO_OPEN_HOUSE)}
     </div>
 
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       ${sectionTitle('Step 3: Display your welcome sign (optional)')}
       <div style="font-size:14px;line-height:1.7;">Two ways agents display it at the door:</div>
       <div style="font-size:14px;line-height:1.7;margin-top:10px;background:#fff9ec;border:1px solid #f0dfb8;border-radius:8px;padding:12px 14px;">
@@ -133,7 +132,7 @@ export function buildWelcomeEmail(o: { firstName?: string | null; appUrl: string
       </div>
     </div>
 
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       ${sectionTitle('Then ohACCESS takes over')}
       <div style="font-size:14px;line-height:1.7;">Here's what happens automatically, with no buttons to press:</div>
       <ul style="font-size:14px;line-height:1.7;margin:10px 0 0;padding-left:20px;">
@@ -145,7 +144,7 @@ export function buildWelcomeEmail(o: { firstName?: string | null; appUrl: string
       </ul>
     </div>
 
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       ${sectionTitle('Three features people love once they find them')}
       <ul style="font-size:14px;line-height:1.7;margin:0;padding-left:20px;">
         <li style="margin-bottom:8px;"><strong>💌 Invite</strong>: scheduling a new open house? One tap emails your past visitors who are still in their buying window a personal invitation. Your open houses start filling themselves.</li>
@@ -166,13 +165,10 @@ export function buildWelcomeEmail(o: { firstName?: string | null; appUrl: string
     <div style="font-size:14px;line-height:1.7;margin-top:16px;">
       Dave Sheehan<br/>
       <span style="color:#6e6e73;">Founder, ohACCESS</span>
-    </div>
-
-    <div style="font-size:12px;color:#aeaeb2;margin-top:24px;border-top:1px solid #e5e5ea;padding-top:12px;line-height:1.6;">
-      You're receiving this one-time email because you created an ohACCESS account.
-      Manage everything anytime from your <a href="${e(`${o.appUrl}/dashboard`)}" style="color:#aeaeb2;">dashboard</a>.
-    </div>
-  </div>`
+    </div>`,
+    footerHtml: `You're receiving this one-time email because you created an ohACCESS account.
+      Manage everything anytime from your <a href="${e(`${o.appUrl}/dashboard`)}" style="color:#9a9aa0;">dashboard</a>.`,
+  })
 
   return { subject: 'Welcome to ohACCESS. Your first open house is 10 minutes away', html }
 }

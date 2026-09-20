@@ -5,6 +5,7 @@ import { Resend } from 'resend'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/escape-html'
+import { ohaccessEmail, ohaccessButton } from '@/lib/email-shell'
 
 export const runtime = 'nodejs'
 
@@ -147,12 +148,7 @@ export async function POST(request: Request) {
       to: email,
       replyTo: 'support@ohaccess.com',
       subject: `${sponsor.full_name} wants to sponsor your ohACCESS account`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
-          <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-            <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
-          </div>
-          <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; text-align: center;">
+      html: ohaccessEmail({ bodyHtml: `
             <div style="font-size: 18px; font-weight: 700; color: #1d1d1f; margin-bottom: 8px;">
               ${sponsorLabel} wants to sponsor your account
             </div>
@@ -162,17 +158,13 @@ export async function POST(request: Request) {
               them in the visitor consent language. You can remove the sponsorship anytime from
               your Settings tab.
             </p>
-            <a href="${escapeHtml(acceptUrl)}" style="display: inline-block; background: #c9963a; color: #1d1d1f; padding: 14px 32px; border-radius: 10px; font-size: 15px; font-weight: 700; text-decoration: none;">
-              Review &amp; accept →
-            </a>
+            ${ohaccessButton('Review &amp; accept →', escapeHtml(acceptUrl))}
             <p style="font-size: 12px; color: #aeaeb2; margin-top: 24px; line-height: 1.6;">
               This invitation expires in ${INVITE_TTL_DAYS} days.<br/>
               If you weren't expecting this, you can safely ignore this email. Nothing changes
               on your account unless you accept.
             </p>
-          </div>
-        </div>
-      `,
+`, center: true }),
     })
   } catch (e) {
     console.error('Sponsor invite email send failed', e)

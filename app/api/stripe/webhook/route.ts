@@ -4,6 +4,7 @@ import type Stripe from 'stripe'
 import { Resend } from 'resend'
 import { stripe } from '@/lib/stripe'
 import { escapeHtml } from '@/lib/escape-html'
+import { ohaccessEmail, ohaccessButton } from '@/lib/email-shell'
 import { notifyAdmins } from '@/lib/notify-admin'
 import { ensureManagedBrokerage } from '@/lib/team'
 import { MIN_BROKERAGE_SEATS } from '@/lib/billing-plans'
@@ -195,19 +196,13 @@ async function handleGiftPurchase(session: Stripe.Checkout.Session) {
     : ''
   const codeBlock = `
     <div style="text-align: center; margin: 24px 0;">
-      <a href="${claimUrl}" style="background: #c9963a; color: #1d1d1f; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700;">Claim this gift</a>
+      ${ohaccessButton('Claim this gift', claimUrl)}
       <div style="margin-top: 14px; font-size: 12px; color: #6e6e73;">Gift code (works at ohaccess.com/gift/claim):</div>
       <div style="font-family: monospace; font-size: 18px; font-weight: 700; letter-spacing: 1px; margin-top: 4px;">${code}</div>
     </div>`
-  const emailShell = (inner: string) => `
-    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
-      <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-        <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
-      </div>
-      <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; color: #1d1d1f; font-size: 14px; line-height: 1.6;">
+  const emailShell = (inner: string) => ohaccessEmail({ bodyHtml: `
         ${inner}
-      </div>
-    </div>`
+` })
 
   // Giver: their copy of the claim link + code, so they can deliver the gift
   // however they like (forward, text, or tuck the code into a card).
@@ -554,22 +549,15 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
       to: profile.email,
       replyTo: 'support@ohaccess.com',
       subject: "Your ohACCESS payment didn't go through",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
-          <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-            <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
-          </div>
-          <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; color: #1d1d1f; font-size: 14px; line-height: 1.6;">
+      html: ohaccessEmail({ bodyHtml: `
             <p>Hi ${name},</p>
             <p>We tried to process your recent ohACCESS subscription payment, but it didn't go through.</p>
             <p>To keep your account active, please update your payment method or pay the outstanding invoice:</p>
             <p style="text-align: center; margin: 24px 0;">
-              <a href="${payUrl}" style="background: #c9963a; color: #1d1d1f; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700;">Update payment</a>
+              ${ohaccessButton('Update payment', payUrl)}
             </p>
-            <p style="font-size: 13px; color: #6e6e73;">We'll automatically retry over the next few days. You can also manage your subscription anytime from your <a href="${manageUrl}" style="color: #0071e3;">dashboard settings</a>. If you think this is a mistake, just reply to this email.</p>
-          </div>
-        </div>
-      `,
+            <p style="font-size: 13px; color: #6e6e73;">We'll automatically retry over the next few days. You can also manage your subscription anytime from your <a href="${manageUrl}" style="color: #c9963a;">dashboard settings</a>. If you think this is a mistake, just reply to this email.</p>
+` }),
     })
   } catch (e) {
     console.error('invoice.payment_failed: customer email failed', e)
@@ -635,22 +623,15 @@ async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
       to: profile.email,
       replyTo: 'support@ohaccess.com',
       subject: `Your ohACCESS plan renews on ${renewDate}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
-          <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-            <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
-          </div>
-          <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; color: #1d1d1f; font-size: 14px; line-height: 1.6;">
+      html: ohaccessEmail({ bodyHtml: `
             <p>Hi ${name},</p>
             <p>A quick heads-up: your ohACCESS ${escapeHtml(termLabel)} plan renews on <strong>${escapeHtml(renewDate)}</strong>, and your card on file will be charged <strong>${escapeHtml(amount)}</strong>.</p>
             <p>No action is needed if you'd like to continue. Everything keeps working without interruption.</p>
             <p style="text-align: center; margin: 24px 0;">
-              <a href="${manageUrl}" style="background: #1d1d1f; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700;">Manage subscription</a>
+              ${ohaccessButton('Manage subscription', manageUrl)}
             </p>
             <p style="font-size: 13px; color: #6e6e73;">You can cancel or change your plan anytime before the renewal date from your dashboard settings. Questions? Just reply to this email.</p>
-          </div>
-        </div>
-      `,
+` }),
     })
   } catch (e) {
     console.error('invoice.upcoming: renewal notice email failed', e)

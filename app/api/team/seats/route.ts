@@ -7,6 +7,7 @@ import { getBrokerageContext, getSeatUsage, type BrokerageContext } from '@/lib/
 import { stripe, type BillingInterval } from '@/lib/stripe'
 import { isValidSeatCount, perSeatCents, totalCents, MIN_BROKERAGE_SEATS, MAX_BROKERAGE_SEATS } from '@/lib/billing-plans'
 import { escapeHtml } from '@/lib/escape-html'
+import { ohaccessEmail } from '@/lib/email-shell'
 
 const resend = new Resend(process.env.RESEND_API_KEY!)
 
@@ -182,19 +183,12 @@ export async function POST(request: Request) {
             to: owner.email,
             replyTo: 'support@ohaccess.com',
             subject: `Your ohACCESS plan is now ${quantity} seats`,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
-                <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-                  <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
-                </div>
-                <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px; color: #1d1d1f; font-size: 14px; line-height: 1.6;">
+            html: ohaccessEmail({ bodyHtml: `
                   <p>Hi ${escapeHtml((owner.full_name || '').trim() || 'there')},</p>
                   <p>Confirming your seat change: your plan went from <strong>${currentQty}</strong> to <strong>${quantity}</strong> seats.</p>
                   <p>Per our terms, reductions don't generate refunds or credits for the current billing period. The lower rate of <strong>$${(totalCents(quantity, interval) / 100).toLocaleString('en-US')}</strong> takes effect on ${escapeHtml(nextInvoice)}.</p>
                   <p style="font-size: 13px; color: #6e6e73;">Questions? Just reply to this email.</p>
-                </div>
-              </div>
-            `,
+` }),
           })
         } catch (e) {
           console.error('Seat-decrease confirmation email failed', e)

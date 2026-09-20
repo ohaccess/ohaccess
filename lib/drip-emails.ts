@@ -1,5 +1,6 @@
 import { escapeHtml } from './escape-html'
 import { WELCOME_VIDEO_SETTINGS, WELCOME_VIDEO_OPEN_HOUSE } from './welcome-email'
+import { brandedEmailShell, emailButton, OHACCESS_BRAND, EMAIL_OHACCESS_SIGNOFF } from './email-shell'
 
 // The lifecycle ("drip") email bodies, sent by /api/cron/drip on the
 // schedule in lib/drip.ts. Pure builders (welcome-email pattern) so each can
@@ -11,7 +12,7 @@ import { WELCOME_VIDEO_SETTINGS, WELCOME_VIDEO_OPEN_HOUSE } from './welcome-emai
 // headers). Opting out stops these emails only — reminders, reports and
 // billing mail are unaffected, and the footer says so.
 
-export const GOLD = '#c9963a'
+export const GOLD = OHACCESS_BRAND.accent
 
 export type BuiltEmail = { subject: string; html: string }
 
@@ -40,23 +41,21 @@ function watchLink(label: string, url: string): string {
 export function ctaButton(label: string, url: string): string {
   return `
     <div style="margin-top:20px;">
-      <a href="${escapeHtml(url)}" style="display:inline-block;background:#1d1d1f;color:white;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:600;text-decoration:none;">${escapeHtml(label)}</a>
+      ${emailButton(escapeHtml(label), escapeHtml(url), OHACCESS_BRAND, { large: true })}
     </div>`
 }
 
 export function shell(o: ShellOpts): string {
   const e = escapeHtml
-  return `
-  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1d1d1f;">
-    <div style="display:none;max-height:0;overflow:hidden;">${e(o.preheader)}</div>
-
-    <div style="background:#1d1d1f;border-radius:14px;padding:20px 22px;color:white;">
-      <div style="font-size:18px;font-weight:200;letter-spacing:-0.5px;">oh<span style="font-weight:700;">ACCESS</span></div>
-      <div style="font-size:20px;font-weight:700;margin-top:8px;">${e(o.title)}</div>
-      <div style="font-size:13px;opacity:0.7;margin-top:2px;">${e(o.subtitle)}</div>
-    </div>
-
-    <div style="font-size:14px;line-height:1.7;margin-top:20px;">${o.greeting}</div>
+  // Same layout as every other email (lib/email-shell), in ohACCESS colors.
+  return brandedEmailShell({
+    brand: OHACCESS_BRAND,
+    preheaderHtml: e(o.preheader),
+    headerTitleHtml: e(o.title),
+    headerSubHtml: e(o.subtitle),
+    signoffHtml: EMAIL_OHACCESS_SIGNOFF,
+    bodyHtml: `
+    <div style="font-size:14px;line-height:1.7;">${o.greeting}</div>
     ${o.bodyHtml}
 
     <div style="font-size:14px;line-height:1.7;margin-top:16px;">
@@ -66,14 +65,11 @@ export function shell(o: ShellOpts): string {
     <div style="font-size:14px;line-height:1.7;margin-top:16px;">
       Dave Sheehan<br/>
       <span style="color:#6e6e73;">Founder, ohACCESS</span>
-    </div>
-
-    <div style="font-size:12px;color:#aeaeb2;margin-top:24px;border-top:1px solid #e5e5ea;padding-top:12px;line-height:1.6;">
-      ${o.footerNote ? `${e(o.footerNote)} ` : ''}You're receiving occasional tips because you have an ohACCESS account.
-      <a href="${e(o.unsubscribeUrl)}" style="color:#aeaeb2;">Unsubscribe</a> from these anytime.
-      Emails about your own open houses (reminders, reports) are unaffected.
-    </div>
-  </div>`
+    </div>`,
+    footerHtml: `${o.footerNote ? `${e(o.footerNote)} ` : ''}You're receiving occasional tips because you have an ohACCESS account.
+      <a href="${e(o.unsubscribeUrl)}" style="color:#9a9aa0;">Unsubscribe</a> from these anytime.
+      Emails about your own open houses (reminders, reports) are unaffected.`,
+  })
 }
 
 // ── Day 2: signed up, never logged in ───────────────────────────────────────
@@ -90,8 +86,8 @@ export function buildFinishSetupEmail(o: {
       check-ins: legible names, real phone numbers, real leads.
     </div>
     ${ctaButton('Log in and finish setting up', loginUrl)}
-    <div style="margin-top:20px;background:#f5f5f7;border-radius:12px;padding:16px;">
-      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${GOLD};margin-bottom:8px;">What's waiting once you're in</div>
+    <div style="margin-top:20px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${GOLD};margin-bottom:6px;">What's waiting once you're in</div>
       <ul style="font-size:14px;line-height:1.7;margin:0;padding-left:20px;">
         <li style="margin-bottom:8px;"><strong>Your profile</strong>: headshot, logo and colors, so everything visitors see looks like you (about 5 minutes).</li>
         <li style="margin-bottom:8px;"><strong>Your first open house</strong>: address, date, codewords, printable QR sign (about 3 minutes).</li>
@@ -131,7 +127,7 @@ export function buildFirstOpenHouseEmail(o: {
       You're set up. The only thing left is your first open house. It takes about three minutes,
       and here's the whole recipe:
     </div>
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       <ol style="font-size:14px;line-height:1.7;margin:0;padding-left:20px;">
         <li style="margin-bottom:8px;">Click <a href="${escapeHtml(newOhUrl)}" style="color:${GOLD};font-weight:600;">New Open House</a> and start typing the address, and we fill in the rest, including the time zone.</li>
         <li style="margin-bottom:8px;">Pick the date and times, then set your two codewords (or tap auto-generate). Visitors receive them by text and email, which proves their contact info is real.</li>
@@ -173,7 +169,7 @@ export function buildReferralEmail(o: {
       Quick one. You have a personal referral link, and it earns you free ohACCESS time:
     </div>
     <div style="margin-top:16px;background:#fff9ec;border:1px solid #f0dfb8;border-radius:12px;padding:16px;text-align:center;">
-      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${GOLD};margin-bottom:8px;">Your referral link</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${GOLD};margin-bottom:6px;">Your referral link</div>
       <a href="${e(o.referralUrl)}" style="font-size:16px;font-weight:700;color:#1d1d1f;word-break:break-all;">${e(o.referralUrl)}</a>
     </div>
     <div style="font-size:14px;line-height:1.7;margin-top:16px;">
@@ -261,7 +257,7 @@ export function buildCheckinEmail(o: {
       Holding an open house soon? It's been a little while, so here's your 60-second refresher:
       setup is three steps:
     </div>
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       <ol style="font-size:14px;line-height:1.7;margin:0;padding-left:20px;">
         <li style="margin-bottom:8px;"><a href="${escapeHtml(newOhUrl)}" style="color:${GOLD};font-weight:600;">New Open House</a>: type the address, we fill in the rest.</li>
         <li style="margin-bottom:8px;">Pick date, times, and your two codewords.</li>
