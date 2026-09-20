@@ -6,6 +6,8 @@ import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/escape-html'
 import { agentCopyRecipients } from '@/lib/register-helpers'
 import { sendVisitorCodewordMessages } from '@/lib/codeword-messages'
+import { brandedEmailShell, emailSection, resolveEmailBranding } from '@/lib/email-shell'
+import { buildAgentCardHtml } from '@/lib/email-cards'
 import {
   normalizeAgreementTemplates,
   resolveAgreementDocs,
@@ -155,6 +157,30 @@ export async function POST(request: Request) {
     const docList = snapshots
       .map(d => `<li style="padding: 2px 0;">${escapeHtml(d.label)}</li>`)
       .join('')
+    // Same branded layout + agent card as the visitor's other emails
+    // (lib/email-shell, lib/email-cards); team members inherit team branding.
+    let brokerageRow: { primary_color: string | null; accent_color: string | null; logo_url: string | null } | null = null
+    if (agent?.brokerage_id) {
+      const { data } = await supabase
+        .from('brokerages')
+        .select('primary_color, accent_color, logo_url')
+        .eq('id', agent.brokerage_id)
+        .maybeSingle()
+      brokerageRow = data ?? null
+    }
+    const brand = resolveEmailBranding(agent, brokerageRow)
+    const agentCardHtml = buildAgentCardHtml({
+      name: agent?.full_name || 'Your Agent',
+      brokerage: agent?.brokerage || null,
+      email: agent?.display_email || null,
+      phone: agent?.phone || null,
+      licenseNumber: agent?.license_number || null,
+      licenseState: agent?.state || null,
+      headshotUrl: agent?.headshot_url || null,
+      logoUrl: brand.logoUrl,
+      infoUrl: agent?.landing_page_url || null,
+    }, { primary: brand.primary, accent: brand.accent })
+
     const sent = await resend.emails.send({
       from: 'ohACCESS <noreply@mail.ohaccess.com>',
       to: visitor.email,
@@ -168,26 +194,22 @@ export async function POST(request: Request) {
           content: Buffer.from(pdfBytes),
         },
       ],
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
-          <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-            <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
-            <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px;">Your signed copy is attached</div>
-          </div>
-          <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px;">
-            <div style="font-size: 13px; color: #1d1d1f; line-height: 1.7;">
-              <strong>${escapeHtml(signerName)}</strong> signed the following before touring
-              <strong>${escapeHtml(openHouse.property_address || '')}</strong>:
+      html: brandedEmailShell({
+        brand,
+        headerSubHtml: 'Your signed copy is attached',
+        bodyHtml: `
+            <div style="font-size: 15px; color: #444; line-height: 1.6;">
+              <strong style="color: #1d1d1f;">${escapeHtml(signerName)}</strong> signed the following before touring
+              <strong style="color: #1d1d1f;">${escapeHtml(openHouse.property_address || '')}</strong>:
             </div>
-            <ul style="font-size: 13px; color: #1d1d1f; line-height: 1.7; margin: 10px 0; padding-left: 20px;">${docList}</ul>
-            <div style="background: #f5f5f7; border-radius: 10px; padding: 12px 14px; font-size: 12px; color: #6e6e73; line-height: 1.7;">
+            <ul style="font-size: 14px; color: #1d1d1f; line-height: 1.7; margin: 10px 0; padding-left: 20px;">${docList}</ul>
+            ${emailSection(`<div style="font-size: 12px; color: #6e6e73; line-height: 1.7;">
               The attached PDF is the complete signed record: the document${snapshots.length === 1 ? '' : 's'} plus a signature certificate.
               <strong style="color: #1d1d1f;">Please keep this email: ohACCESS does not store signed documents.</strong>
-              This copy went to both the signer and the host agent.
-            </div>
-          </div>
-        </div>
-      `,
+              This copy went to both the signer and the host agent.</div>`)}
+            ${agentCardHtml}`,
+        footerHtml: `You're receiving this because you signed at ${escapeHtml(agent?.full_name || 'your host agent')}'s open house at ${escapeHtml(openHouse.property_address || streetAddress)}.`,
+      }),
     })
     if (sent.error) {
       console.error('Agreement sign: email send failed:', sent.error)

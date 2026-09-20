@@ -115,7 +115,7 @@ async function handle(request: Request) {
     const fullAddress = oh.property_address || street
     const dateLabel = fmtDate(v.registered_at, oh.timezone)
 
-    const upcomingHtml = buildUpcomingOpenHousesHtml(await loadUpcomingOpenHouses(supabase, agent, oh, v.open_house_id), APP_URL)
+    const upcomingHtml = buildUpcomingOpenHousesHtml(await loadUpcomingOpenHouses(supabase, agent, oh, v.open_house_id), APP_URL, accent)
 
     let sponsor: ThankYouSponsorCard | null = null
     if (v.sponsor_id) {

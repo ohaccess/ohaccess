@@ -5,6 +5,8 @@ import { isEmail } from '@/lib/register-helpers'
 import { escapeHtml } from '@/lib/escape-html'
 import { inferProfileCountry } from '@/lib/regions'
 import { signInEnded } from '@/lib/signin-window'
+import { brandedEmailShell, emailEyebrow, emailLinkColor, emailSection, resolveEmailBranding, type EmailBrand } from '@/lib/email-shell'
+import { buildBrandMarkHtml } from '@/lib/email-cards'
 
 // Expired-link referral loop: when a visitor scans the QR for an open house
 // that no longer exists, or one whose online sign-in has closed (more than
@@ -30,6 +32,9 @@ export type ExpiredAgentContact = {
   propertyAddress: string | null
   // ISO country of the agent — the lead form's default phone dial code.
   country: string
+  // Agent (or team) branding for the lead email, same rule as every other
+  // branded email (lib/email-shell).
+  brand: EmailBrand
 }
 
 type StandingFields = {
@@ -129,6 +134,16 @@ export async function resolveExpiredAgent(
   const email = isEmail(agent.display_email) ? agent.display_email.trim() : agent.email
   if (!isEmail(email)) return null
 
+  let brokerageRow: { primary_color: string | null; accent_color: string | null; logo_url: string | null } | null = null
+  if (agent.brokerage_id) {
+    const { data } = await supabase
+      .from('brokerages')
+      .select('primary_color, accent_color, logo_url')
+      .eq('id', agent.brokerage_id)
+      .maybeSingle()
+    brokerageRow = data ?? null
+  }
+
   return {
     fullName: agent.full_name || null,
     brokerage: agent.brokerage || null,
@@ -136,6 +151,7 @@ export async function resolveExpiredAgent(
     phone: agent.phone || null,
     propertyAddress: archived.property_address || null,
     country: inferProfileCountry(agent),
+    brand: resolveEmailBranding(agent, brokerageRow),
   }
 }
 
@@ -149,7 +165,7 @@ export type ExpiredLead = {
 // The lead email sent to the agent. Pure so it's unit-testable; every
 // visitor-supplied value is HTML-escaped.
 export function buildExpiredLeadEmail(
-  agent: { fullName: string | null; propertyAddress: string | null },
+  agent: { fullName: string | null; propertyAddress: string | null; brokerage?: string | null; brand?: EmailBrand },
   lead: ExpiredLead
 ): { subject: string; html: string } {
   const address = agent.propertyAddress
@@ -163,31 +179,26 @@ export function buildExpiredLeadEmail(
   const safeAddress = escapeHtml(address || '')
   const greetName = escapeHtml(agent.fullName || 'there')
 
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 20px;">
-      <div style="background: #1d1d1f; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-        <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
-        <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px;">New Buyer Lead</div>
-      </div>
-      <div style="background: white; border-radius: 0 0 16px 16px; padding: 24px;">
-        <div style="font-size: 14px; color: #1d1d1f; line-height: 1.6; margin-bottom: 16px;">
+  const brand = agent.brand ?? resolveEmailBranding(null, null)
+  const html = brandedEmailShell({
+    brand,
+    headerTitleHtml: 'New buyer lead',
+    bodyHtml: `
+        <div style="font-size: 15px; color: #444; line-height: 1.6;">
           Hi ${greetName}, a home shopper just scanned the QR code for your past open house${safeAddress ? ` at <strong>${safeAddress}</strong>` : ''}. That event link has expired, so ohACCESS collected their details for you:
         </div>
-        <div style="background: #f5f5f7; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
-          <div style="font-size: 11px; color: #6e6e73; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Lead Details</div>
+        ${emailSection(`
+          ${emailEyebrow('Lead details', brand.accent)}
           <div style="font-size: 14px; color: #1d1d1f; margin-bottom: 6px;"><strong>Name:</strong> ${safeName}</div>
-          <div style="font-size: 14px; color: #1d1d1f; margin-bottom: 6px;"><strong>Email:</strong> <a href="mailto:${safeEmail}" style="color: #0071e3;">${safeEmail}</a></div>
+          <div style="font-size: 14px; color: #1d1d1f; margin-bottom: 6px;"><strong>Email:</strong> <a href="mailto:${safeEmail}" style="color: ${emailLinkColor(brand.accent)};">${safeEmail}</a></div>
           <div style="font-size: 14px; color: #1d1d1f; margin-bottom: 6px;"><strong>Phone:</strong> ${safePhone}</div>
-          <div style="font-size: 14px; color: #1d1d1f;"><strong>Zip / Postal Code:</strong> ${safeZip}</div>
-        </div>
+          <div style="font-size: 14px; color: #1d1d1f;"><strong>Zip / Postal Code:</strong> ${safeZip}</div>`)}
         <div style="font-size: 13px; color: #6e6e73; line-height: 1.6;">
           Reply to this email to reach them directly.
         </div>
-      </div>
-      <div style="text-align: center; padding: 16px; font-size: 11px; color: #aeaeb2;">
-        Sent by <span style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;"><span style="font-weight: 300;">oh</span><strong>ACCESS</strong></span> · www.ohaccess.com
-      </div>
-    </div>`
+        ${buildBrandMarkHtml(brand.logoUrl, agent.brokerage ?? null, brand.primary)}`,
+    footerHtml: "You're receiving this because a shopper scanned the QR code from one of your past open houses.",
+  })
 
   return { subject, html }
 }

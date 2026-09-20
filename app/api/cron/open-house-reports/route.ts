@@ -6,6 +6,8 @@ import { TIMELINE_ORDER } from '@/lib/timeline'
 import { getOrCreateSellerReportCode } from '@/lib/report-link'
 import { reportRatingUrl } from '@/lib/report-rating-link'
 import { RATING_MAX } from '@/lib/report-rating'
+import { brandedEmailShell, emailButton, emailEyebrow, resolveEmailBranding, type EmailBrand } from '@/lib/email-shell'
+import { buildBrandMarkHtml } from '@/lib/email-cards'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -36,9 +38,7 @@ function fmtTime(iso: string, tz: string | null): string {
 function buildReportHtml(args: {
   agentName: string
   address: string
-  primary: string
-  accent: string
-  logoUrl: string | null
+  brand: EmailBrand
   brokerage: string | null
   visitors: Visitor[]
   tz: string | null
@@ -46,7 +46,7 @@ function buildReportHtml(args: {
   // Signed /rate links for 1..5 stars (lib/report-rating-link.ts).
   ratingLinks: string[]
 }): string {
-  const { agentName, address, primary, accent, logoUrl, brokerage, visitors, tz, reportUrl, ratingLinks } = args
+  const { agentName, address, brand, brokerage, visitors, tz, reportUrl, ratingLinks } = args
   const verified = visitors.filter(v => v.verified).length
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
   const feedbackMailto = `mailto:support@ohaccess.com?subject=${encodeURIComponent(`ohACCESS feedback: ${address}`)}`
@@ -62,9 +62,7 @@ function buildReportHtml(args: {
 
   const groupHtml = groups.map(g => `
     <div style="margin-top:20px;">
-      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${escapeHtml(accent)};margin-bottom:8px;">
-        ${escapeHtml(g.label)} <span style="color:#aeaeb2;font-weight:600;">· ${g.rows.length}</span>
-      </div>
+      ${emailEyebrow(`${escapeHtml(g.label)} <span style="color:#aeaeb2;font-weight:600;">· ${g.rows.length}</span>`, brand.accent)}
       ${g.rows.map(v => `
         <div style="padding:10px 0;border-top:1px solid #f2f2f7;">
           <div style="font-size:14px;font-weight:600;color:#1d1d1f;">
@@ -80,38 +78,37 @@ function buildReportHtml(args: {
     </div>
   `).join('')
 
-  return `
-  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1d1d1f;">
-    <div style="background:${escapeHtml(primary)};border-radius:14px;padding:20px 22px;color:white;">
-      <div style="font-size:18px;font-weight:200;letter-spacing:-0.5px;">oh<span style="font-weight:700;">ACCESS</span></div>
-      <div style="font-size:20px;font-weight:700;margin-top:8px;">Your open house report</div>
-      <!-- Pre-wrapped in a white, underline-free anchor so mail clients'
-           address auto-linking can't restyle it link-blue against the dark
-           header (same fix as the reminder email). -->
-      <div style="font-size:13px;opacity:0.7;margin-top:2px;"><a href="${escapeHtml(mapsUrl)}" style="color:#ffffff;text-decoration:none;">${escapeHtml(address)}</a></div>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:16px;">
-      <div style="flex:1;background:#f5f5f7;border-radius:12px;padding:14px;text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:#1d1d1f;">${visitors.length}</div>
-        <div style="font-size:11px;color:#6e6e73;text-transform:uppercase;letter-spacing:0.5px;">Registrations</div>
-      </div>
-      <div style="flex:1;background:#f5f5f7;border-radius:12px;padding:14px;text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:#1d1d1f;">${verified}</div>
-        <div style="font-size:11px;color:#6e6e73;text-transform:uppercase;letter-spacing:0.5px;">Verified at door</div>
-      </div>
-    </div>
+  const statTile = (value: number, label: string) => `
+        <td width="50%" style="background:#f6f7f9;border-radius:12px;padding:14px;text-align:center;">
+          <div style="font-size:24px;font-weight:700;color:#1d1d1f;">${value}</div>
+          <div style="font-size:11px;color:#6e6e73;text-transform:uppercase;letter-spacing:0.5px;">${label}</div>
+        </td>`
+
+  // The address is pre-wrapped in an underline-free anchor in the header's own
+  // text color so mail clients' address auto-linking can't restyle it
+  // link-blue against the header (same fix as the reminder email).
+  return brandedEmailShell({
+    brand,
+    headerTitleHtml: 'Your open house report',
+    headerSubHtml: `<a href="${escapeHtml(mapsUrl)}" style="color:${brand.onPrimary};text-decoration:none;">${escapeHtml(address)}</a>`,
+    bodyHtml: `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;"><tr>
+      ${statTile(visitors.length, 'Registrations')}
+      <td width="10" style="width:10px;font-size:0;">&nbsp;</td>
+      ${statTile(verified, 'Verified at door')}
+    </tr></table>
     <div style="font-size:14px;color:#1d1d1f;margin-top:20px;">Hi ${escapeHtml(agentName)}, here are your verified leads, organized by buying timeline. Reach out while it's fresh.</div>
     ${visitors.length === 0
       ? '<div style="margin-top:18px;font-size:13px;color:#6e6e73;">No visitors registered at this open house.</div>'
       : groupHtml}
     ${reportUrl && visitors.length > 0 ? `
-    <div style="margin-top:24px;background:#f5f5f7;border-radius:12px;padding:16px 18px;">
+    <div style="margin-top:24px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       <div style="font-size:14px;font-weight:700;color:#1d1d1f;">📊 Share your results with the seller</div>
       <div style="font-size:13px;color:#6e6e73;margin-top:4px;line-height:1.5;">
         A polished report card of this open house: visitor count and buyer timelines only,
         never your leads' contact info. Sellers love seeing the turnout.
       </div>
-      <a href="${escapeHtml(reportUrl)}" style="display:inline-block;margin-top:10px;background:${escapeHtml(primary)};color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:9px 16px;border-radius:8px;">View &amp; share the seller report</a>
+      ${emailButton('View &amp; share the seller report', escapeHtml(reportUrl), brand)}
     </div>` : ''}
     <!-- Agent feedback ask. Shown on every report (zero-visitor events
          included). The star links open /rate, which saves the score (migration
@@ -131,15 +128,9 @@ function buildReportHtml(args: {
       </div>
       <a href="${escapeHtml(feedbackMailto)}" style="display:inline-block;margin-top:10px;background:#ffffff;color:#1d1d1f;border:1px solid #d2d2d7;text-decoration:none;font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px;">Share feedback</a>
     </div>
-    <div style="margin-top:24px;padding-top:14px;border-top:1px solid #e5e5ea;font-size:11px;color:#aeaeb2;text-align:center;">
-      ${logoUrl
-        ? `<img src="${escapeHtml(logoUrl)}" style="max-height:48px;max-width:160px;object-fit:contain;margin-bottom:8px;" /><br/>`
-        : brokerage
-          ? `<div style="font-size:16px;font-weight:800;letter-spacing:-0.3px;color:${escapeHtml(primary)};margin-bottom:8px;">${escapeHtml(brokerage)}</div>`
-          : ''}
-      Sent by <span style="font-weight:300;">oh</span><strong>ACCESS</strong> · Tip: export the full list anytime from your dashboard.
-    </div>
-  </div>`
+    ${buildBrandMarkHtml(brand.logoUrl, brokerage, brand.primary)}`,
+    footerHtml: 'Tip: export the full list anytime from your dashboard.',
+  })
 }
 
 // POST/GET: recurring job (Supabase cron) — send the post-event report for any
@@ -174,7 +165,7 @@ async function handle(request: Request) {
   for (const oh of due ?? []) {
     const { data: agent } = await supabase
       .from('profiles')
-      .select('full_name, email, display_email, brokerage, primary_color, accent_color, logo_url')
+      .select('full_name, email, display_email, brokerage, brokerage_id, primary_color, accent_color, logo_url')
       .eq('id', oh.agent_id)
       .maybeSingle()
 
@@ -195,12 +186,22 @@ async function handle(request: Request) {
     const reportCode = await getOrCreateSellerReportCode(oh.id, oh.agent_id)
     const reportUrl = reportCode ? `https://www.ohaccess.com/report/${reportCode}` : null
 
+    // Team/brokerage members inherit their team's branding, by the same rule
+    // as every other branded email (lib/email-shell).
+    let brokerageRow: { primary_color: string | null; accent_color: string | null; logo_url: string | null } | null = null
+    if (agent?.brokerage_id) {
+      const { data: brokerage } = await supabase
+        .from('brokerages')
+        .select('primary_color, accent_color, logo_url')
+        .eq('id', agent.brokerage_id)
+        .maybeSingle()
+      brokerageRow = brokerage ?? null
+    }
+
     const html = buildReportHtml({
       agentName: agent?.full_name || 'there',
       address: oh.property_address || 'your open house',
-      primary: agent?.primary_color || '#1d1d1f',
-      accent: agent?.accent_color || '#0071e3',
-      logoUrl: agent?.logo_url || null,
+      brand: resolveEmailBranding(agent, brokerageRow),
       brokerage: agent?.brokerage || null,
       visitors: (visitors ?? []) as Visitor[],
       tz: oh.timezone,

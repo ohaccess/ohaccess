@@ -23,7 +23,7 @@ describe('buildCodewordEmail', () => {
     const { subject, html } = buildCodewordEmail(base)
     expect(subject).toBe('Your ohACCESS codeword: lantern')
     expect(html).toContain('<q>lantern</q>')
-    expect(html).toContain('background: #112233')
+    expect(html).toContain('background:#112233')
   })
   it('falls back to the text codeword on legacy open houses', () => {
     const { subject } = buildCodewordEmail({ ...base, openHouse: { ...base.openHouse, code_word_email: null } })
@@ -31,7 +31,7 @@ describe('buildCodewordEmail', () => {
   })
   it('lets team branding override the agent header color and logo', () => {
     const { html } = buildCodewordEmail({ ...base, brokerageRow: { primary_color: '#445566', logo_url: 'https://example.com/logo.png', disclosure_links: null } })
-    expect(html).toContain('background: #445566')
+    expect(html).toContain('background:#445566')
     expect(html).toContain('https://example.com/logo.png')
   })
   it('escapes agent-controlled text', () => {

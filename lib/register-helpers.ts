@@ -1,4 +1,5 @@
 import { escapeHtml } from './escape-html'
+import { readableOnLight } from './colors'
 
 // Pure helpers for the visitor-registration flow. Kept free of side-effecting
 // imports (no Twilio/Resend/Supabase clients) so they can be unit-tested in
@@ -255,16 +256,19 @@ export function resolveDisclosureLinks(
 // The disclosures block for the visitor's code-word email. Returns '' when the
 // agent has configured none, so the email simply omits the section. Labels are
 // agent-entered, so both label and URL are escaped before interpolation.
-export function buildDisclosuresHtml(links: DisclosureLink[]): string {
+// `accent` is the agent's brand accent (section label + links), so the block
+// matches the rest of the branded email (lib/email-shell).
+export function buildDisclosuresHtml(links: DisclosureLink[], accent: string = '#0071e3'): string {
   if (links.length === 0) return ''
   const e = escapeHtml
+  const linkColor = readableOnLight(accent)
   const items = links.map(l => `
               <div style="padding: 6px 0; font-size: 13px;">
-                <a href="${e(l.url)}" style="color: #0071e3;">${e(l.label)}</a>
+                <a href="${e(l.url)}" style="color: ${linkColor};">${e(l.label)}</a>
               </div>`).join('')
   return `
-            <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
-              <div style="font-size: 11px; color: #6e6e73; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 8px;">Disclosures &amp; Notices</div>
+            <div style="background: #f6f7f9; border-radius: 12px; padding: 16px 18px; margin: 18px 0;">
+              <div style="font-size: 11px; font-weight: 700; color: ${linkColor}; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 6px;">Disclosures &amp; Notices</div>
               <div style="font-size: 12px; color: #6e6e73; text-align: center; margin-bottom: 4px;">Provided by your host agent.</div>${items}
             </div>`
 }
@@ -325,9 +329,11 @@ export function googleCalendarUrl(title: string, startIso: string, endIso: strin
 // URLs; Apple has no URL scheme, so it points at our downloadable .ics
 // endpoint). Returns '' when there's nothing upcoming — the email simply
 // omits the section. All values are agent-entered, so everything is escaped.
-export function buildUpcomingOpenHousesHtml(houses: UpcomingOpenHouse[], appUrl: string): string {
+// `accent` is the agent's brand accent (section label + links).
+export function buildUpcomingOpenHousesHtml(houses: UpcomingOpenHouse[], appUrl: string, accent: string = '#0071e3'): string {
   if (houses.length === 0) return ''
   const e = escapeHtml
+  const linkColor = readableOnLight(accent)
 
   const items = houses.map(oh => {
     const address = oh.property_address || ''
@@ -346,7 +352,7 @@ export function buildUpcomingOpenHousesHtml(houses: UpcomingOpenHouse[], appUrl:
       const googleUrl = googleCalendarUrl(title, start, end, address)
       const outlookUrl = `https://outlook.live.com/calendar/0/action/compose?rru=addevent&subject=${encodeURIComponent(title)}&startdt=${encodeURIComponent(start)}&enddt=${encodeURIComponent(end)}&location=${encodeURIComponent(address)}`
       const appleUrl = `${appUrl}/api/open-house/${oh.id}/calendar`
-      calendarLine = `<div style="font-size: 12px; color: #6e6e73; margin-top: 2px;">📅 Add to calendar: <a href="${e(googleUrl)}" style="color: #0071e3;">Google</a> &middot; <a href="${e(outlookUrl)}" style="color: #0071e3;">Outlook</a> &middot; <a href="${e(appleUrl)}" style="color: #0071e3;">Apple</a></div>`
+      calendarLine = `<div style="font-size: 12px; color: #6e6e73; margin-top: 2px;">📅 Add to calendar: <a href="${e(googleUrl)}" style="color: ${linkColor};">Google</a> &middot; <a href="${e(outlookUrl)}" style="color: ${linkColor};">Outlook</a> &middot; <a href="${e(appleUrl)}" style="color: ${linkColor};">Apple</a></div>`
     }
 
     const facts = [
@@ -358,15 +364,15 @@ export function buildUpcomingOpenHousesHtml(houses: UpcomingOpenHouse[], appUrl:
     return `
               <div style="padding: 10px 0; border-top: 1px solid #e5e5ea; font-size: 13px; line-height: 1.7;">
                 <div style="color: #1d1d1f; font-weight: 700;">${when}</div>
-                ${address ? `<div><a href="${e(mapsUrl)}" style="color: #0071e3;">${e(address)}</a></div>` : ''}
+                ${address ? `<div><a href="${e(mapsUrl)}" style="color: ${linkColor};">${e(address)}</a></div>` : ''}
                 ${facts ? `<div style="color: #6e6e73;">${facts}</div>` : ''}
                 ${calendarLine}
               </div>`
   }).join('')
 
   return `
-            <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
-              <div style="font-size: 11px; color: #6e6e73; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 8px;">Upcoming Open Houses</div>
+            <div style="background: #f6f7f9; border-radius: 12px; padding: 16px 18px; margin: 18px 0;">
+              <div style="font-size: 11px; font-weight: 700; color: ${linkColor}; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 6px;">Upcoming Open Houses</div>
               <div style="font-size: 12px; color: #6e6e73; text-align: center; margin-bottom: 6px;">Come explore our other listings.</div>${items}
             </div>`
 }

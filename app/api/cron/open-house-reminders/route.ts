@@ -2,7 +2,9 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { escapeHtml } from '@/lib/escape-html'
-import { generateCode, isHexColor, safeUrl } from '@/lib/register-helpers'
+import { generateCode } from '@/lib/register-helpers'
+import { brandedEmailShell, emailEyebrow, emailLinkColor, resolveEmailBranding, type EmailBrand } from '@/lib/email-shell'
+import { buildBrandMarkHtml } from '@/lib/email-cards'
 import { isComped, isExpiredPrepaidAccess } from '@/lib/billing-plans'
 
 export const runtime = 'nodejs'
@@ -107,9 +109,7 @@ function buildReminderHtml(args: {
   streetAddress: string
   dayLine: string
   timeLine: string
-  primary: string
-  accent: string
-  logoUrl: string | null
+  brand: EmailBrand
   brokerage: string | null
   ohQrUrl: string
   ohSignUrl: string
@@ -122,19 +122,20 @@ function buildReminderHtml(args: {
 }): string {
   const e = escapeHtml
   const {
-    agentName, address, streetAddress, dayLine, timeLine, primary, accent,
-    logoUrl, brokerage, ohQrUrl, ohSignUrl, universalQrUrl, universalSignUrl,
+    agentName, address, streetAddress, dayLine, timeLine, brand, brokerage, ohQrUrl, ohSignUrl, universalQrUrl, universalSignUrl,
     smsSample, emailCodeWord, referralUrl, showSignPhotoOffer,
   } = args
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 
-  const sectionTitle = (label: string) => `
-      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${e(accent)};margin-bottom:8px;">${label}</div>`
+  // Same colors-to-elements rule as every branded email (lib/email-shell):
+  // primary = header band, accent = section labels and links.
+  const accent = emailLinkColor(brand.accent)
+  const sectionTitle = (label: string) => emailEyebrow(label, brand.accent)
 
   // Word-of-mouth nudge — shown to every agent (unlike the referral reward,
   // which is Pro-only), so it can't reference "your link above".
   const spreadTheWordHtml = `
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       ${sectionTitle('Spread the word')}
       <div style="font-size:14px;line-height:1.7;">
         Verified sign-ins work best when everyone around you expects them. Two conversations worth having:
@@ -178,7 +179,7 @@ function buildReminderHtml(args: {
     </div>` : ''
 
   const referralHtml = referralUrl ? `
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       ${sectionTitle('Save on your subscription')}
       <div style="font-size:14px;color:#1d1d1f;line-height:1.6;">
         Know an agent who'd want this at their open houses? When someone you refer becomes a paying
@@ -190,20 +191,18 @@ function buildReminderHtml(args: {
       </div>
     </div>` : ''
 
-  return `
-  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1d1d1f;">
-    <div style="background:${e(primary)};border-radius:14px;padding:20px 22px;color:white;">
-      <div style="font-size:18px;font-weight:200;letter-spacing:-0.5px;">oh<span style="font-weight:700;">ACCESS</span></div>
-      <div style="font-size:20px;font-weight:700;margin-top:8px;">Your open house is coming up</div>
-      <!-- Pre-wrapped in a white, underline-free anchor so mail clients'
-           address auto-linking can't restyle it link-blue against the dark
-           header (the tappable Maps link lives in "When & where" below). -->
-      <div style="font-size:13px;opacity:0.7;margin-top:2px;"><a href="${e(mapsUrl)}" style="color:#ffffff;text-decoration:none;">${e(address)}</a></div>
-    </div>
+  // The address is pre-wrapped in an underline-free anchor in the header's own
+  // text color so mail clients' address auto-linking can't restyle it
+  // link-blue against the header (the tappable Maps link lives in "When &
+  // where" below).
+  return brandedEmailShell({
+    brand,
+    headerTitleHtml: 'Your open house is coming up',
+    headerSubHtml: `<a href="${e(mapsUrl)}" style="color:${brand.onPrimary};text-decoration:none;">${e(address)}</a>`,
+    bodyHtml: `
+    <div style="font-size:14px;">Hi ${e(agentName)}, a quick heads-up and pre-flight checklist ahead of your open house.</div>
 
-    <div style="font-size:14px;margin-top:20px;">Hi ${e(agentName)}, a quick heads-up and pre-flight checklist ahead of your open house.</div>
-
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       ${sectionTitle('When & where')}
       <div style="font-size:15px;font-weight:700;">${e(dayLine)}</div>
       <div style="font-size:14px;color:#6e6e73;margin-top:2px;">${e(timeLine)}</div>
@@ -212,7 +211,7 @@ function buildReminderHtml(args: {
       </div>
     </div>
 
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       ${sectionTitle('Bring your sign')}
       <div style="font-size:14px;line-height:1.7;">
         Pack your ohACCESS sign with the QR code. Either code works:
@@ -237,7 +236,7 @@ function buildReminderHtml(args: {
 
     ${signPhotoOfferHtml}
 
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       ${sectionTitle('At the door')}
       <div style="font-size:14px;line-height:1.7;">
         ohACCESS works best when <strong>everyone</strong> scans. It's the security layer between the
@@ -257,7 +256,7 @@ function buildReminderHtml(args: {
       </div>
     </div>
 
-    <div style="margin-top:16px;background:#f5f5f7;border-radius:12px;padding:16px;">
+    <div style="margin-top:16px;background:#f6f7f9;border-radius:12px;padding:16px 18px;">
       ${sectionTitle('What your visitors will receive')}
       <div style="font-size:13px;color:#6e6e73;margin-bottom:8px;">These are live samples using this open house's actual codewords.</div>
       <div style="font-size:12px;color:#6e6e73;margin-bottom:4px;">Text message:</div>
@@ -280,15 +279,9 @@ function buildReminderHtml(args: {
     ${spreadTheWordHtml}
     ${referralHtml}
 
-    <div style="margin-top:24px;padding-top:14px;border-top:1px solid #e5e5ea;font-size:11px;color:#aeaeb2;text-align:center;">
-      ${logoUrl
-        ? `<img src="${e(logoUrl)}" style="max-height:48px;max-width:160px;object-fit:contain;margin-bottom:8px;" /><br/>`
-        : brokerage
-          ? `<div style="font-size:16px;font-weight:800;letter-spacing:-0.3px;color:${e(primary)};margin-bottom:8px;">${e(brokerage)}</div>`
-          : ''}
-      Sent by <span style="font-weight:300;">oh</span><strong>ACCESS</strong> · You're receiving this because you have an open house scheduled. Manage open houses anytime from your <a href="${e(`${APP_URL}/dashboard`)}" style="color:#aeaeb2;">dashboard</a>.
-    </div>
-  </div>`
+    ${buildBrandMarkHtml(brand.logoUrl, brokerage, brand.primary)}`,
+    footerHtml: `You're receiving this because you have an open house scheduled. Manage open houses anytime from your <a href="${e(`${APP_URL}/dashboard`)}" style="color:#9a9aa0;">dashboard</a>.`,
+  })
 }
 
 // POST/GET: recurring job (Supabase cron) — send a pre-event reminder for any
@@ -335,18 +328,16 @@ async function handle(request: Request) {
       continue
     }
 
-    // Team/brokerage members inherit their team's branding, matching every
-    // other email we send (see register route).
-    let brandColor = agent?.primary_color
-    let brandLogo = agent?.logo_url
+    // Team/brokerage members inherit their team's branding, by the same rule
+    // as every other branded email (lib/email-shell).
+    let brokerageRow: { primary_color: string | null; accent_color: string | null; logo_url: string | null } | null = null
     if (agent?.brokerage_id) {
       const { data: brokerage } = await supabase
         .from('brokerages')
-        .select('primary_color, logo_url')
+        .select('primary_color, accent_color, logo_url')
         .eq('id', agent.brokerage_id)
         .maybeSingle()
-      if (brokerage?.primary_color) brandColor = brokerage.primary_color
-      if (brokerage?.logo_url) brandLogo = brokerage.logo_url
+      brokerageRow = brokerage ?? null
     }
 
     // Sign + QR links for the per-event code and the agent's permanent code
@@ -387,9 +378,7 @@ async function handle(request: Request) {
       streetAddress,
       dayLine,
       timeLine,
-      primary: brandColor && isHexColor(brandColor) ? brandColor : '#1d1d1f',
-      accent: agent?.accent_color && isHexColor(agent.accent_color) ? agent.accent_color : '#0071e3',
-      logoUrl: safeUrl(brandLogo) || null,
+      brand: resolveEmailBranding(agent, brokerageRow),
       brokerage: agent?.brokerage || null,
       ohQrUrl,
       ohSignUrl,

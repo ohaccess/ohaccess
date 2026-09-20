@@ -1,6 +1,7 @@
 import { escapeHtml } from './escape-html'
 import { safeUrl, googleCalendarUrl } from './register-helpers'
 import { buildAgentCardHtml } from './email-cards'
+import { brandedEmailShell, emailButton, emailEyebrow, emailLinkColor, emailSection } from './email-shell'
 
 // "Re-invite past visitors": pure helpers for deciding WHO an agent may
 // invite to an upcoming open house, and for building the invite email.
@@ -196,7 +197,7 @@ export type InviteEmailOpts = {
 // thank-you email so a visitor sees one consistent voice from the agent.
 export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: string } {
   const e = escapeHtml
-  const street = e(o.oh.street)
+  const linkColor = emailLinkColor(o.accent)
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.oh.fullAddress)}`
 
   const opener = o.pastStreet
@@ -212,7 +213,7 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
     const googleUrl = googleCalendarUrl(title, start, end, o.oh.fullAddress)
     const outlookUrl = `https://outlook.live.com/calendar/0/action/compose?rru=addevent&subject=${encodeURIComponent(title)}&startdt=${encodeURIComponent(start)}&enddt=${encodeURIComponent(end)}&location=${encodeURIComponent(o.oh.fullAddress)}`
     const appleUrl = `${o.appUrl}/api/open-house/${o.oh.id}/calendar`
-    calendarLine = `<div style="font-size:12px;color:#6e6e73;border-top:1px solid #ececf0;margin-top:12px;padding-top:10px;">📅 Add to calendar: <a href="${e(googleUrl)}" style="color:${o.accent};">Google</a> &middot; <a href="${e(outlookUrl)}" style="color:${o.accent};">Outlook</a> &middot; <a href="${e(appleUrl)}" style="color:${o.accent};">Apple</a></div>`
+    calendarLine = `<div style="font-size:12px;color:#6e6e73;border-top:1px solid #ececf0;margin-top:12px;padding-top:10px;">📅 Add to calendar: <a href="${e(googleUrl)}" style="color:${linkColor};">Google</a> &middot; <a href="${e(outlookUrl)}" style="color:${linkColor};">Outlook</a> &middot; <a href="${e(appleUrl)}" style="color:${linkColor};">Apple</a></div>`
   }
 
   const listingUrl = safeUrl(o.oh.listingUrl)
@@ -230,44 +231,28 @@ export function buildInviteEmail(o: InviteEmailOpts): { subject: string; html: s
 
   const subject = `You're invited: open house at ${o.oh.street}, ${o.oh.dateLabel}`
 
-  const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;background:#eceef1;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eceef1;padding:24px 0;">
-    <tr><td align="center">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
-        <tr><td style="background:${o.primary};text-align:center;padding:28px 20px;">
-          <div style="font-size:30px;font-weight:200;letter-spacing:-1px;color:${o.onPrimary};">oh<b style="font-weight:800;">ACCESS</b></div>
-        </td></tr>
-        <tr><td style="padding:28px 26px;">
+  const html = brandedEmailShell({
+    brand: o,
+    bodyHtml: `
           <div style="font-size:22px;font-weight:800;color:#1d1d1f;">You&rsquo;re invited.</div>
           <div style="font-size:15px;color:#444;line-height:1.6;margin-top:10px;">${opener}</div>
 
-          <div style="background:#f6f7f9;border-radius:12px;padding:16px 18px;margin:18px 0;">
-            <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:${o.accent};text-transform:uppercase;margin-bottom:6px;text-align:center;">Upcoming Open House</div>
+          ${emailSection(`
+            ${emailEyebrow('Upcoming Open House', o.accent, { center: true })}
             <div style="font-size:15px;font-weight:700;color:#1d1d1f;">${when}</div>
-            <div style="font-size:15px;margin-top:3px;">📍 <a href="${e(mapsUrl)}" style="color:${o.accent};">${e(o.oh.fullAddress)}</a></div>
+            <div style="font-size:15px;margin-top:3px;">📍 <a href="${e(mapsUrl)}" style="color:${linkColor};">${e(o.oh.fullAddress)}</a></div>
             ${o.oh.facts ? `<div style="font-size:14px;color:#6e6e73;margin-top:3px;">${e(o.oh.facts)}</div>` : ''}
-            ${listingUrl ? `<a href="${e(listingUrl)}" style="display:inline-block;margin-top:12px;background:${o.accent};color:${o.onAccent};text-decoration:none;font-size:14px;font-weight:700;padding:9px 16px;border-radius:8px;">View the listing &rarr;</a>` : ''}
-            ${calendarLine}
-          </div>
+            ${listingUrl ? emailButton('View the listing &rarr;', e(listingUrl), o) : ''}
+            ${calendarLine}`)}
 
           <div style="text-align:center;margin:20px 0;">
-            <a href="${e(rsvpUrl)}" style="display:inline-block;background:${o.accent};color:${o.onAccent};text-decoration:none;font-size:15px;font-weight:700;padding:11px 22px;border-radius:10px;">Let ${e(o.agentName.split(' ')[0] || o.agentName)} know you&rsquo;re coming &rarr;</a>
+            ${emailButton(`Let ${e(o.agentName.split(' ')[0] || o.agentName)} know you&rsquo;re coming &rarr;`, e(rsvpUrl), o, { large: true })}
           </div>
 
-          ${agentCardHtml}
-
-          <div style="border-top:1px solid #ececf0;margin-top:24px;padding-top:14px;font-size:11px;color:#9a9aa0;line-height:1.5;text-align:center;">
-            You&rsquo;re receiving this because you signed in at one of ${e(o.agentName)}&rsquo;s open houses and agreed to hear about other properties.<br>
-            <a href="${e(o.unsubscribeUrl)}" style="color:#9a9aa0;">Unsubscribe</a>: one click, and you won&rsquo;t get open-house invites again.<br>
-            Powered by <span style="font-weight:300;">oh</span><b style="font-weight:700;">ACCESS</b>.com &middot; Patent Pending
-          </div>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`
+          ${agentCardHtml}`,
+    footerHtml: `You&rsquo;re receiving this because you signed in at one of ${e(o.agentName)}&rsquo;s open houses and agreed to hear about other properties.<br>
+            <a href="${e(o.unsubscribeUrl)}" style="color:#9a9aa0;">Unsubscribe</a>: one click, and you won&rsquo;t get open-house invites again.`,
+  })
 
   return { subject, html }
 }

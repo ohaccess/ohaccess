@@ -1,7 +1,8 @@
 import { escapeHtml } from './escape-html'
 import { buildAgentCardHtml, buildSponsorCardHtml } from './email-cards'
 import { areaAbbrev, areaUnitFor } from './regions'
-import { isHexColor, buildDisclosuresHtml, type DisclosureLink } from './register-helpers'
+import { buildDisclosuresHtml, type DisclosureLink } from './register-helpers'
+import { brandedEmailShell, emailButton, emailSection, resolveEmailBranding } from './email-shell'
 
 // The visitor's branded codeword email, as a pure builder. Sent at sign-in by
 // lib/codeword-messages; also rendered (never sent) by the dashboard's
@@ -21,6 +22,7 @@ export type CodewordSponsor = {
 
 export type CodewordBrokerage = {
   primary_color: string | null
+  accent_color?: string | null
   logo_url: string | null
   disclosure_links: unknown
 }
@@ -73,16 +75,13 @@ export function buildCodewordEmail(o: CodewordEmailOpts): { subject: string; htm
     ? (sponsor.company ? `${sponsor.full_name} (${sponsor.company})` : sponsor.full_name)
     : null
 
-  // Team/brokerage members inherit their team's branding (logo + header
-  // color) instead of their individual settings, so every agent's emails
-  // look consistent. Falls back to the agent's own branding when they
-  // aren't on a team or the team hasn't set those fields.
-  let brandColor = agent?.primary_color
-  let brandLogo = agent?.logo_url
-  if (brokerageRow?.primary_color) brandColor = brokerageRow.primary_color
-  if (brokerageRow?.logo_url) brandLogo = brokerageRow.logo_url
-  const headerColor = isHexColor(brandColor) ? brandColor! : '#1d1d1f'
-  const accentColor = isHexColor(agent?.accent_color) ? agent!.accent_color! : '#0071e3'
+  // Team/brokerage members inherit their team's branding, by the same rule
+  // as every other branded email (lib/email-shell).
+  const brand = resolveEmailBranding(agent, brokerageRow && {
+    primary_color: brokerageRow.primary_color,
+    accent_color: brokerageRow.accent_color,
+    logo_url: brokerageRow.logo_url,
+  })
 
   // Agent card + logo, then the "Sponsored by" card + logo: the shared
   // builders every visitor email uses (lib/email-cards), so they match.
@@ -94,11 +93,11 @@ export function buildCodewordEmail(o: CodewordEmailOpts): { subject: string; htm
     licenseNumber: agent?.license_number || null,
     licenseState: agent?.state || null,
     headshotUrl: agent?.headshot_url || null,
-    logoUrl: brandLogo || null,
+    logoUrl: brand.logoUrl,
     infoUrl: agentShortUrl,
   }, {
-    primary: headerColor,
-    accent: accentColor,
+    primary: brand.primary,
+    accent: brand.accent,
     heading: 'Want a private tour?',
     blurb: "I'm happy to show you this home, or any other, on your schedule. Call me or just reply to this email.",
   })
@@ -112,45 +111,37 @@ export function buildCodewordEmail(o: CodewordEmailOpts): { subject: string; htm
         headshotUrl: sponsor.headshot_url,
         logoUrl: sponsor.logo_url,
         infoUrl: sponsorShortUrl,
-      })
+      }, { accent: brand.accent })
     : ''
 
   const subject = `Your ohACCESS codeword: ${emailCodeWord}`
 
-  const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f5f5f7; padding: 8px;">
-          <div style="background: ${headerColor}; border-radius: 16px 16px 0 0; padding: 20px; text-align: center;">
-            <div style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size: 22px; font-weight: 200; color: white;">oh<strong>ACCESS</strong></div>
-            <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px;">Your codeword is ready</div>
-          </div>
-          <div style="background: white; border-radius: 0 0 16px 16px; padding: 14px;">
-            <div style="background: #f5f5f7; border: 1px dashed #d1d1d6; border-radius: 10px; padding: 16px; text-align: center; margin-bottom: 16px;">
+  const html = brandedEmailShell({
+    brand,
+    headerSubHtml: 'Your codeword is ready',
+    bodyHtml: `
+            <div style="background: #f6f7f9; border: 1px dashed #d1d1d6; border-radius: 12px; padding: 16px; text-align: center;">
               <div style="font-size: 11px; color: #6e6e73; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Your Email Codeword</div>
               <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #1d1d1f;"><q>${escapeHtml(emailCodeWord)}</q></div>
               <div style="font-size: 12px; color: #6e6e73; margin-top: 8px;">Share this codeword with the host at the door to gain access.</div>
               <div style="font-size: 11px; color: #6e6e73; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e5ea;">📱 We also texted you a separate codeword. If the host asks for your <strong>SMS codeword</strong>, check your phone&apos;s messages.</div>
             </div>
-            <div style="background: #f5f5f7; border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 13px; color: #6e6e73; line-height: 1.8;">
+            ${emailSection(`<div style="font-size: 13px; color: #6e6e73; line-height: 1.8;">
               <strong style="color: #1d1d1f;">${escapeHtml(fullAddress)}</strong><br/>
               📅 ${escapeHtml(openHouse.open_house_date)}<br/>
               🕒 ${escapeHtml(openHouse.open_house_hours)}<br/>
               🛏 ${escapeHtml(openHouse.bedrooms || '—')} bed · 🛁 ${escapeHtml(openHouse.bathrooms || '—')} bath · 📐 ${escapeHtml(openHouse.square_footage || '—')} ${areaAbbrev(areaUnitFor(openHouse.country))} <br/>
-              💰 ${escapeHtml(openHouse.listing_price || '—')}<br/>
-              ${listingShortUrl ? `📝 <a href="${escapeHtml(listingShortUrl)}" style="color: #0071e3; font-weight: 600; font-size: 13px;">Full listing details </a>` : ''}
-            </div>
+              💰 ${escapeHtml(openHouse.listing_price || '—')}</div>
+              ${listingShortUrl ? emailButton('View the listing &rarr;', escapeHtml(listingShortUrl), brand) : ''}`)}
             ${agentCardHtml}
             ${sponsorHtml}
-            ${buildDisclosuresHtml(o.disclosureLinks)}
-            ${o.upcomingHtml}
-            <div style="margin-top: 16px; padding: 12px; background: #f5f5f7; border-radius: 8px; font-size: 11px; color: #6e6e73; text-align: center; line-height: 1.6;">
-              By registering you agreed to the ohACCESS <a href="https://ohaccess.com/terms" style="color: #6e6e73;">Terms of Service</a>.<br/>
+            ${buildDisclosuresHtml(o.disclosureLinks, brand.accent)}
+            ${o.upcomingHtml}`,
+    footerHtml: `By registering you agreed to the ohACCESS <a href="https://ohaccess.com/terms" style="color: #9a9aa0;">Terms of Service</a>.<br/>
               You consent to be contacted by the host agent${sponsorConsentName ? ` and today's sponsor, ${escapeHtml(sponsorConsentName)}` : ''}.<br/>
-              Reply STOP to any text to opt out · <a href="https://ohaccess.com/privacy" style="color: #6e6e73;">Privacy Policy</a><br/>
-              <em style="color: #6e6e73;">Heads up: opting out blocks codewords for all future ohACCESS open houses.</em>
-            </div>
-          </div>
-        </div>
-      `
+              Reply STOP to any text to opt out · <a href="https://ohaccess.com/privacy" style="color: #9a9aa0;">Privacy Policy</a><br/>
+              <em>Heads up: opting out blocks codewords for all future ohACCESS open houses.</em>`,
+  })
 
   return { subject, html }
 }

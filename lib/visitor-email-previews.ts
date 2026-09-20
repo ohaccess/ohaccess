@@ -68,7 +68,7 @@ export async function buildVisitorEmailPreviews(ohId: string, agentId: string): 
   // "Upcoming Open Houses" — shared by the codeword and thank-you emails.
   const upcoming = await loadUpcomingOpenHouses(supabase, agent, oh, ohId)
   const usingExamples = upcoming.length === 0
-  let upcomingHtml = buildUpcomingOpenHousesHtml(usingExamples ? exampleUpcomingOpenHouses(oh, new Date()) : upcoming, APP_URL)
+  let upcomingHtml = buildUpcomingOpenHousesHtml(usingExamples ? exampleUpcomingOpenHouses(oh, new Date()) : upcoming, APP_URL, accent)
   if (usingExamples) {
     upcomingHtml = `
           <div style="border:2px dashed ${accent};border-radius:12px;padding:12px 10px 0;margin:22px 0 16px;">

@@ -1,7 +1,7 @@
 import { escapeHtml } from './escape-html'
 import { normalizePhone } from './phone'
 import { safeUrl } from './register-helpers'
-import { accentOnPrimary } from './colors'
+import { accentOnPrimary, readableOnLight } from './colors'
 
 // The agent card and "Sponsored by" card shared by every visitor email
 // (codeword at sign-in, next-morning thank-you, open-house invite), so each
@@ -65,23 +65,31 @@ export function buildAgentCardHtml(
     ? `<div style="font-size:17px;font-weight:800;color:#1d1d1f;">${e(o.heading)}</div>${o.blurb ? `<div style="font-size:14px;color:#444;line-height:1.6;margin-top:4px;">${e(o.blurb)}</div>` : ''}`
     : ''
 
-  // Below the card: the logo when set, otherwise the brokerage name.
-  const logo = safeUrl(a.logoUrl)
-  const brand = logo
-    ? logoHtml(logo, a.brokerage || '')
-    : a.brokerage
-      ? `<div style="text-align:center;margin:12px 0 0;font-size:19px;font-weight:800;letter-spacing:-0.3px;color:${o.primary};">${e(a.brokerage)}</div>`
-      : ''
+  const brand = buildBrandMarkHtml(a.logoUrl, a.brokerage, o.primary)
 
   const card = cardHtml({
     background: '#f6f7f9', border: '#f6f7f9', top, avatar,
-    details: detailsHtml({ name: a.name, org: a.brokerage, email: a.email, phone: a.phone, license, infoUrl: a.infoUrl, infoLabel: 'Agent information', linkColor: o.accent }),
+    details: detailsHtml({ name: a.name, org: a.brokerage, email: a.email, phone: a.phone, license, infoUrl: a.infoUrl, infoLabel: 'Agent information', linkColor: readableOnLight(o.accent) }),
     bottom: '',
   })
   return `<div style="margin:18px 0;">${card}${brand}</div>`
 }
 
-export function buildSponsorCardHtml(s: SponsorCard): string {
+// The agent's brand mark: the logo when set, otherwise the brokerage name in
+// the primary color. Sits below the agent card in visitor emails, and above
+// the footer in the agent's own emails (reminder, report), same size in both.
+export function buildBrandMarkHtml(logoUrl: string | null, brokerage: string | null, primary: string): string {
+  const logo = safeUrl(logoUrl)
+  if (logo) return logoHtml(logo, brokerage || '')
+  const name = (brokerage || '').trim()
+  return name
+    ? `<div style="text-align:center;margin:12px 0 0;font-size:19px;font-weight:800;letter-spacing:-0.3px;color:${readableOnLight(primary)};">${escapeHtml(name)}</div>`
+    : ''
+}
+
+// `o.accent` is the hosting agent's accent, so the sponsor's links match every
+// other link in the email; the card's gold palette itself never changes.
+export function buildSponsorCardHtml(s: SponsorCard, o: { accent?: string } = {}): string {
   const e = escapeHtml
   const headshot = safeUrl(s.headshotUrl)
   const logo = safeUrl(s.logoUrl)
@@ -89,7 +97,7 @@ export function buildSponsorCardHtml(s: SponsorCard): string {
     background: '#fdfaf3', border: '#ead9ad',
     top: '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8a6a1f;text-transform:uppercase;">Sponsored by</div>',
     avatar: headshot ? avatarImg(headshot, '#ead9ad') : '',
-    details: detailsHtml({ name: s.name, org: s.company, email: s.email, phone: s.phone, license: (s.licenseNumber || '').trim(), infoUrl: s.infoUrl, infoLabel: 'Sponsor information', linkColor: '#0071e3' }),
+    details: detailsHtml({ name: s.name, org: s.company, email: s.email, phone: s.phone, license: (s.licenseNumber || '').trim(), infoUrl: s.infoUrl, infoLabel: 'Sponsor information', linkColor: readableOnLight(o.accent || '#0071e3') }),
     bottom: `<div style="border-top:1px solid #ead9ad;padding-top:10px;font-size:11px;color:#8a6a1f;line-height:1.5;text-align:center;">You are not required to use ${e(s.company || s.name)} for any service. You are free to shop around.</div>`,
   })
   return `<div style="margin:18px 0;">${card}${logo ? logoHtml(logo, s.company || s.name) : ''}</div>`

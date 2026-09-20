@@ -12,6 +12,7 @@ import {
   type CodewordChannel,
 } from '@/lib/messaging-channel'
 import { codewordLinkPath } from '@/lib/codeword-link'
+import { resolveEmailBranding } from '@/lib/email-shell'
 import { buildCodewordEmail, type CodewordSponsor, type CodewordBrokerage } from '@/lib/codeword-email'
 import {
   buildSmsBody,
@@ -131,7 +132,7 @@ export async function sendVisitorCodewordMessages(params: {
     if (agent?.brokerage_id) {
       const { data } = await supabase
         .from('brokerages')
-        .select('primary_color, logo_url, disclosure_links')
+        .select('primary_color, accent_color, logo_url, disclosure_links')
         .eq('id', agent.brokerage_id)
         .maybeSingle()
       brokerageRow = data ?? null
@@ -339,7 +340,7 @@ export async function sendVisitorCodewordMessages(params: {
       if (state) query = query.ilike('state', state)
 
       const { data: upcoming } = await query
-      upcomingHtml = buildUpcomingOpenHousesHtml((upcoming || []) as UpcomingOpenHouse[], APP_URL)
+      upcomingHtml = buildUpcomingOpenHousesHtml((upcoming || []) as UpcomingOpenHouse[], APP_URL, resolveEmailBranding(agent, brokerageRow && { accent_color: brokerageRow.accent_color }).accent)
     } catch (err) {
       console.error('Upcoming open houses lookup failed:', err)
     }

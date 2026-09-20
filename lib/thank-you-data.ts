@@ -1,6 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { isHexColor, safeUrl, type UpcomingOpenHouse } from './register-helpers'
-import { onColor } from './colors'
+import { type UpcomingOpenHouse } from './register-helpers'
 import { formatArea } from './regions'
 
 // Data assembly shared by the next-morning thank-you cron and the dashboard's
@@ -9,16 +8,8 @@ import { formatArea } from './regions'
 
 type Row = Record<string, string | null | undefined>
 
-// Brokerage-over-agent branding, matching every other email (team settings
-// mirror colors onto member profiles; brokerage row is the extra guard).
-export function resolveEmailBranding(agent: Row, brokerage: Row | undefined) {
-  const primaryRaw = brokerage?.primary_color || agent.primary_color
-  const accentRaw = agent.accent_color || brokerage?.accent_color
-  const primary = primaryRaw && isHexColor(primaryRaw) ? primaryRaw : '#1d1d1f'
-  const accent = accentRaw && isHexColor(accentRaw) ? accentRaw : '#0071e3'
-  const logoUrl = safeUrl(brokerage?.logo_url || agent.logo_url) || null
-  return { primary, accent, onPrimary: onColor(primary), onAccent: onColor(accent), logoUrl }
-}
+// Moved to the shared email shell; re-exported for existing imports.
+export { resolveEmailBranding } from './email-shell'
 
 // "$625,000 · 4 bd · 3 ba · 2,450 sqft" — null when there's nothing to show.
 export function listingFacts(oh: Row): string | null {
