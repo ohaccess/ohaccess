@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { signInEnded, rescheduleResetsReminder, editLocked } from '@/lib/signin-window'
+import { signInEnded, rescheduleResetsReminder, editLocked, hideEmptyPast } from '@/lib/signin-window'
 
 // The Clifton case: ended Fri Sep 11, 6:00 PM Eastern (22:00 UTC).
 const END = '2026-09-11T22:00:00Z'
@@ -58,5 +58,24 @@ describe('editLocked', () => {
   it('never locks rows without a structured end time', () => {
     expect(editLocked(null, at('2030-01-01T00:00:00Z'))).toBe(false)
     expect(editLocked('not a date', at('2030-01-01T00:00:00Z'))).toBe(false)
+  })
+})
+
+describe('hideEmptyPast', () => {
+  it('hides a zero-visitor open house once it is more than 30 days past its end', () => {
+    expect(hideEmptyPast(END, 0, at('2026-10-11T22:00:00Z'))).toBe(false) // exactly 30 days
+    expect(hideEmptyPast(END, 0, at('2026-10-11T22:00:01Z'))).toBe(true)
+  })
+  it('never hides an open house that had visitors', () => {
+    expect(hideEmptyPast(END, 1, at('2027-09-11T22:00:00Z'))).toBe(false)
+  })
+  it('never hides upcoming, live, or recently ended open houses', () => {
+    expect(hideEmptyPast(END, 0, at('2026-09-01T12:00:00Z'))).toBe(false)
+    expect(hideEmptyPast(END, 0, at('2026-09-11T21:00:00Z'))).toBe(false)
+    expect(hideEmptyPast(END, 0, at('2026-09-20T22:00:00Z'))).toBe(false)
+  })
+  it('never hides while the visitor count is still loading, or without an end time', () => {
+    expect(hideEmptyPast(END, null, at('2027-09-11T22:00:00Z'))).toBe(false)
+    expect(hideEmptyPast(null, 0, at('2027-09-11T22:00:00Z'))).toBe(false)
   })
 })

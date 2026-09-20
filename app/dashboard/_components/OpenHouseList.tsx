@@ -7,7 +7,7 @@ import { phoneLineKind, PHONE_LINE_CHIPS } from '@/lib/register-helpers'
 import { langMeta } from '@/lib/register-i18n'
 import { formatPropertyTime } from '@/lib/property-time'
 import { isManualVisitor } from '@/lib/manual-visitor'
-import { editLocked } from '@/lib/signin-window'
+import { editLocked, hideEmptyPast } from '@/lib/signin-window'
 
 // The main "Dashboard" view: the agent's open-house cards (with per-event
 // stat strips and QR / copy / edit / delete actions), and the visitor log
@@ -423,12 +423,16 @@ export default function OpenHouseList({
   // behind a "Show N past open houses" line. Because an event's state is
   // derived from its dates (ohState), editing a past event to a future date
   // reactivates it and automatically lifts it out of the cap's reach.
+  // Zero-visitor events that ended 30+ days ago (hideEmptyPast) collapse behind
+  // the same line first, so washouts don't use up the 12 visible slots. A card
+  // missing from a loaded ohStats map means zero visitors.
   const [showAllPast, setShowAllPast] = useState(false)
   const nonEndedCount = openHouses.reduce((n, oh) => n + (ohState(oh) !== 'ended' ? 1 : 0), 0)
   const endedCap = Math.max(0, Math.min(12, 24 - nonEndedCount))
   let endedShown = 0
   const cappedOhs = openHouses.filter(oh => {
     if (ohState(oh) !== 'ended') return true
+    if (hideEmptyPast(oh.end_at, ohStats ? (ohStats[oh.id]?.visitors ?? 0) : null, Date.now())) return oh.id === selectedOH?.id
     if (endedShown < endedCap) { endedShown++; return true }
     // Keep a selected ended event visible past the cap — collapsing the list
     // must never hide the log the agent is looking at.

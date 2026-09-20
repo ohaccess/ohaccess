@@ -53,3 +53,21 @@ export function editLocked(endAt: string | null | undefined, now: number): boole
   if (Number.isNaN(end)) return false
   return now > end + EDIT_LOCKS_AFTER_END_MS
 }
+
+// A finished open house that nobody signed in at drops off the agent's
+// dashboard list this long after its end (it stays in the database and behind
+// the "Show past open houses" toggle). Hidden, not deleted: its scan data, any
+// printed QR code, and the admin view of washout events all still hang off the
+// row.
+export const EMPTY_PAST_HIDES_AFTER_MS = 30 * 24 * 60 * 60 * 1000
+
+// True for an open house with zero visitors that ended more than
+// EMPTY_PAST_HIDES_AFTER_MS ago. `visitors` is null while the count is still
+// loading, which never hides (a card shouldn't vanish on a guess). Rows with no
+// structured end time never hide.
+export function hideEmptyPast(endAt: string | null | undefined, visitors: number | null, now: number): boolean {
+  if (visitors === null || visitors > 0 || !endAt) return false
+  const end = Date.parse(endAt)
+  if (Number.isNaN(end)) return false
+  return now > end + EMPTY_PAST_HIDES_AFTER_MS
+}
