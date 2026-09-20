@@ -6,7 +6,7 @@ import TeamActivityPanel from './_components/TeamActivityPanel'
 import QrModal from './_components/QrModal'
 import InviteModal from './_components/InviteModal'
 import VisitorEmailsModal from './_components/VisitorEmailsModal'
-import { rescheduleResetsReminder } from '@/lib/signin-window'
+import { rescheduleResetsReminder, editLocked } from '@/lib/signin-window'
 import OpenHouseList from './_components/OpenHouseList'
 import NewOpenHouseForm from './_components/NewOpenHouseForm'
 import AgentVerificationCard from './_components/AgentVerificationCard'
@@ -766,8 +766,15 @@ export default function Dashboard() {
     } catch { /* skip the prompt */ }
   }
 
+  // Shown wherever an agent tries to edit an open house that has locked
+  // (30 minutes past its end; see editLocked). Points at Duplicate, and at the
+  // account-level QR for agents who were reusing one open house to keep a
+  // printed sign working.
+  const EDIT_LOCKED_MSG = 'This open house is over, so its details are locked. Use Duplicate to run another at this property. Tip: 📌 My QR code always points to whichever open house is live.'
+
   const startEdit = (oh: any) => {
     if (guardLocked()) return
+    if (editLocked(oh.end_at, Date.now())) { showToast(EDIT_LOCKED_MSG); return }
     setEditingOH(oh)
     const start = isoToLocalParts(oh.start_at, oh.timezone)
     const end = isoToLocalParts(oh.end_at, oh.timezone)
@@ -839,6 +846,9 @@ export default function Dashboard() {
 
   const updateOpenHouse = async () => {
     if (guardLocked()) return
+    // The form can sit open past the lock time; checked against the STORED end
+    // so typing a later end time into the form can't unlock a finished event.
+    if (editLocked(editingOH.end_at, Date.now())) { showToast(EDIT_LOCKED_MSG); return }
     const missing = missingListingFields()
     if (missing) {
       showToast(missing)
@@ -904,7 +914,9 @@ export default function Dashboard() {
     // day-before reminder; a same-day time tweak doesn't send a second one.
     if (timesChanged && rescheduleResetsReminder(editingOH.start_at, startAt)) update.reminder_sent_at = null
     const { error } = await supabase.from('open_houses').update(update).eq('id', editingOH.id)
-    if (error) { showToast('Error updating: ' + error.message); return }
+    // OPEN_HOUSE_LOCKED is migration 056's trigger: the database's own check of
+    // the same rule, for a save that slips past the one above.
+    if (error) { showToast(error.message.includes('OPEN_HOUSE_LOCKED') ? EDIT_LOCKED_MSG : 'Error updating: ' + error.message); return }
     setEditingOH(null)
     await loadOpenHouses(user.id)
     setView('dashboard')
