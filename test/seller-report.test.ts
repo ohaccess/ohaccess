@@ -6,8 +6,7 @@ const v = (timeline: string | null) => ({ purchasing_timeline: timeline })
 describe('buildSellerReportStats', () => {
   it('groups timelines soonest-first and drops empty buckets', () => {
     const stats = buildSellerReportStats(
-      [v('12+ Months'), v('0–3 Months'), v('0–3 Months'), v('6–12 Months')],
-      0
+      [v('12+ Months'), v('0–3 Months'), v('0–3 Months'), v('6–12 Months')]
     )
     expect(stats.total).toBe(4)
     expect(stats.groups).toEqual([
@@ -18,7 +17,7 @@ describe('buildSellerReportStats', () => {
   })
 
   it('collects unrecognized and missing timelines under Other', () => {
-    const stats = buildSellerReportStats([v('0–3 Months'), v(null), v('Just browsing')], 0)
+    const stats = buildSellerReportStats([v('0–3 Months'), v(null), v('Just browsing')])
     expect(stats.groups).toEqual([
       { label: '0–3 Months', count: 1 },
       { label: 'Other', count: 2 },
@@ -27,35 +26,21 @@ describe('buildSellerReportStats', () => {
 
   it('counts the two soonest buckets as buying within 6 months', () => {
     const stats = buildSellerReportStats(
-      [v('0–3 Months'), v('3–6 Months'), v('6–12 Months'), v(null)],
-      0
+      [v('0–3 Months'), v('3–6 Months'), v('6–12 Months'), v(null)]
     )
     expect(stats.soonCount).toBe(2)
   })
 
-  it('shows the scan funnel only when the scan log covers the event', () => {
-    // Scan log predates the open house: fewer scans than registrations.
-    expect(buildSellerReportStats([v(null), v(null), v(null)], 1).funnel).toBeNull()
-    // No scans recorded at all.
-    expect(buildSellerReportStats([v(null)], 0).funnel).toBeNull()
-    // Healthy funnel: at least as many scans as registrations.
-    expect(buildSellerReportStats([v(null), v(null)], 5).funnel).toEqual({
-      scans: 5,
-      registered: 2,
-    })
-  })
-
   it('handles an empty visitor list', () => {
-    const stats = buildSellerReportStats([], 0)
+    const stats = buildSellerReportStats([])
     expect(stats.total).toBe(0)
     expect(stats.groups).toEqual([])
     expect(stats.soonCount).toBe(0)
-    expect(stats.funnel).toBeNull()
     expect(stats.feedback).toBeNull()
   })
 
   it('returns null feedback when nobody answered', () => {
-    expect(buildSellerReportStats([v('0–3 Months'), v(null)], 0).feedback).toBeNull()
+    expect(buildSellerReportStats([v('0–3 Months'), v(null)]).feedback).toBeNull()
   })
 
   it('aggregates feedback: mean rating (one decimal) and price sentiment counts', () => {
@@ -70,8 +55,7 @@ describe('buildSellerReportStats', () => {
         fb('3–6 Months', 7, 'Reasonable'),
         fb('6–12 Months', 6, 'Too High'),
         fb('12+ Months', null, null), // registered but left no feedback
-      ],
-      0
+      ]
     )
     expect(stats.feedback).toEqual({
       responses: 3,
@@ -82,7 +66,7 @@ describe('buildSellerReportStats', () => {
 
   it('rounds the average rating to one decimal', () => {
     const fb = (rating: number) => ({ purchasing_timeline: null, feedback_rating: rating, feedback_price: 'Reasonable' })
-    const stats = buildSellerReportStats([fb(8), fb(9), fb(9)], 0) // 26/3 = 8.666…
+    const stats = buildSellerReportStats([fb(8), fb(9), fb(9)]) // 26/3 = 8.666…
     expect(stats.feedback?.avgRating).toBe(8.7)
   })
 
@@ -93,8 +77,8 @@ describe('buildSellerReportStats', () => {
     })
 
     it('returns no custom questions when nobody answered any', () => {
-      expect(buildSellerReportStats([v(null)], 0).customQuestions).toEqual([])
-      expect(buildSellerReportStats([v(null)], 0, [{ id: 'q1', prompt: 'Pre-approved?', type: 'choice', options: ['Yes', 'No'], surface: 'signin' }]).customQuestions).toEqual([])
+      expect(buildSellerReportStats([v(null)]).customQuestions).toEqual([])
+      expect(buildSellerReportStats([v(null)], [{ id: 'q1', prompt: 'Pre-approved?', type: 'choice', options: ['Yes', 'No'], surface: 'signin' }]).customQuestions).toEqual([])
     })
 
     it('counts choice answers per option, keeping zero-count options', () => {
@@ -106,7 +90,6 @@ describe('buildSellerReportStats', () => {
           withAnswers([{ id: 'q1', prompt: 'Are you pre-approved?', answer: 'No' }]),
           withAnswers([]), // signed in but skipped the question
         ],
-        0,
         questions
       )
       expect(stats.customQuestions).toEqual([
@@ -128,7 +111,6 @@ describe('buildSellerReportStats', () => {
       const questions = [{ id: 'q1', prompt: 'Financing?', type: 'choice', options: ['Cash', 'Mortgage'], surface: 'signin' }]
       const stats = buildSellerReportStats(
         [withAnswers([{ id: 'q1', prompt: 'Financing?', answer: 'VA loan' }])],
-        0,
         questions
       )
       expect(stats.customQuestions[0].choices).toEqual([
@@ -145,7 +127,6 @@ describe('buildSellerReportStats', () => {
           withAnswers([{ id: 'q2', prompt: 'What did you think of the kitchen?', answer: 'Loved it' }]),
           withAnswers([{ id: 'q2', prompt: 'What did you think of the kitchen?', answer: 'A bit dated' }]),
         ],
-        0,
         questions
       )
       expect(stats.customQuestions).toEqual([
@@ -166,7 +147,6 @@ describe('buildSellerReportStats', () => {
           withAnswers([{ id: 'q1', prompt: 'Pre-approved?', answer: 'Yes' }]), // answered before the reword
           withAnswers([{ id: 'q1', prompt: 'Pre-approved for a mortgage?', answer: 'No' }]),
         ],
-        0,
         questions
       )
       expect(stats.customQuestions).toHaveLength(1)
@@ -177,7 +157,6 @@ describe('buildSellerReportStats', () => {
     it('keeps answers to a question deleted from Settings, as free text under its snapshotted prompt', () => {
       const stats = buildSellerReportStats(
         [withAnswers([{ id: 'gone', prompt: 'Working with an agent?', answer: 'Yes' }])],
-        0,
         [] // question no longer in the profile
       )
       expect(stats.customQuestions).toEqual([
@@ -190,7 +169,6 @@ describe('buildSellerReportStats', () => {
         withAnswers([{ id: 'gone', prompt: 'Do you currently have a property to sell?', answer }])
       const stats = buildSellerReportStats(
         [a('Yes'), a('No'), a('No'), a('No'), a('Yes')],
-        0,
         [] // question deleted from Settings — no option list left
       )
       expect(stats.customQuestions).toEqual([
@@ -211,7 +189,6 @@ describe('buildSellerReportStats', () => {
       const a = (answer: string) => withAnswers([{ id: 'gone', prompt: 'Any feedback?', answer }])
       const stats = buildSellerReportStats(
         [a('Loved the garden'), a('Kitchen felt dated'), a('Great street')],
-        0,
         []
       )
       expect(stats.customQuestions[0].choices).toBeNull()
@@ -235,7 +212,6 @@ describe('buildSellerReportStats', () => {
             { id: 'a', prompt: 'First?', answer: 'z' },
           ]),
         ],
-        0,
         questions
       )
       expect(stats.customQuestions.map(q => q.id)).toEqual(['a', 'b', 'gone'])

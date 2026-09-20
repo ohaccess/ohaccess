@@ -9,7 +9,7 @@ import { agentInitials } from '@/lib/thank-you-email'
 import ShareLink from './ShareLink'
 
 // The shareable seller report card: a PII-free summary of one open house
-// (visitor count, buyer timelines, scan funnel) that the hosting agent sends
+// (visitor count, buyer timelines) that the hosting agent sends
 // to their seller. Reachable only by its /report/<code> link; shows counts
 // and timelines, never visitor names or contact info. The short_urls row
 // rides the open-house delete cascade, so the link dies with the event.
@@ -107,9 +107,8 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
     .maybeSingle()
   if (!oh) return <NotAvailable />
 
-  const [{ data: visitors }, { count: scanCount }, { data: agent }] = await Promise.all([
+  const [{ data: visitors }, { data: agent }] = await Promise.all([
     supabase.from('visitors').select('purchasing_timeline, feedback_rating, feedback_price, custom_answers, source').eq('open_house_id', oh.id),
-    supabase.from('qr_scans').select('id', { count: 'exact', head: true }).eq('open_house_id', oh.id),
     supabase
       .from('profiles')
       .select('full_name, email, display_email, phone, brokerage, brokerage_id, primary_color, accent_color, logo_url, headshot_url, custom_questions')
@@ -141,7 +140,7 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
   const chartAccent = readableOnLight(accentColor)
   const chartColor = (i: number) => (i % 2 === 0 ? chartPrimary : chartAccent)
 
-  const stats = buildSellerReportStats(visitors ?? [], scanCount ?? 0, agent?.custom_questions)
+  const stats = buildSellerReportStats(visitors ?? [], agent?.custom_questions)
   const agentContactEmail = agent?.display_email || agent?.email || null
   const agentHeadshot = safeUrl(agent?.headshot_url)
   // No logo: the brokerage name (mirrored onto the profile for team members)
@@ -241,19 +240,6 @@ export default async function SellerReportPage({ params }: { params: Promise<{ c
         ) : (
           <div style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '22px 20px', marginTop: 10, fontSize: 13, color: '#6e6e73', textAlign: 'center' }}>
             No registrations were recorded for this event.
-          </div>
-        )}
-
-        {/* Scan funnel — only when the scan log covers this event */}
-        {stats.funnel && (
-          <div style={{ background: 'white', border: '1px solid #d1d1d6', borderRadius: 14, padding: '16px 20px', marginTop: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#6e6e73', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
-              Interest at the door
-            </div>
-            <div style={{ fontSize: 13, lineHeight: 1.5 }}>
-              <strong>{stats.funnel.scans}</strong> {stats.funnel.scans === 1 ? 'person' : 'people'} scanned
-              the QR code · <strong>{stats.funnel.registered}</strong> completed registration
-            </div>
           </div>
         )}
 

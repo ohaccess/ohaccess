@@ -24,10 +24,6 @@ export interface SellerReportStats {
   // Visitors in the two soonest buckets (buying within ~6 months) — the
   // headline number a seller cares about.
   soonCount: number
-  // Scan → registration funnel, or null when the scan log can't be trusted
-  // for this event (the qr_scans table is younger than some open houses, so a
-  // scan count below the registration count means the log missed the event).
-  funnel: { scans: number; registered: number } | null
   // Post-visit feedback, aggregated PII-free, or null when nobody answered.
   // avgRating is the mean of the 1–10 overall ratings (one decimal); price is
   // the count of each sentiment. responses = visitors who submitted feedback.
@@ -67,7 +63,6 @@ export interface SellerReportVisitor {
 
 export function buildSellerReportStats(
   visitors: SellerReportVisitor[],
-  scanCount: number,
   // The agent's profiles.custom_questions jsonb, used only to learn each
   // question's type and option order. Answers snapshot their own prompt, so a
   // question deleted from Settings still reports under the prompt it was
@@ -91,13 +86,7 @@ export function buildSellerReportStats(
     TIMELINE_ORDER.slice(0, 2).includes(v.purchasing_timeline || '')
   ).length
 
-  // Hand-added visitors never scanned or registered online, so the funnel
-  // compares scans with self sign-ins only.
   const verifiedCount = visitors.filter(v => !isManualVisitor(v)).length
-  const funnel =
-    scanCount > 0 && scanCount >= verifiedCount && verifiedCount > 0
-      ? { scans: scanCount, registered: verifiedCount }
-      : null
 
   // A response requires both answers (the form submits them together), so a
   // numeric rating is a reliable marker of a completed feedback row.
@@ -181,5 +170,5 @@ export function buildSellerReportStats(
     if (!liveQuestions.some(q => q.id === id)) customQuestions.push(build(id, entry))
   }
 
-  return { total, verifiedCount, groups, soonCount, funnel, feedback, customQuestions }
+  return { total, verifiedCount, groups, soonCount, feedback, customQuestions }
 }
