@@ -91,10 +91,10 @@ export function buildWelcomeEmail(o: { firstName?: string | null; appUrl: string
         by text and email to show you at the door, which proves their contact info is real.)
       </div>
       <div style="font-size:14px;line-height:1.7;margin-top:10px;">
-        Save it, then tap <strong>📱 QR Code</strong> to print your branded sign. There's also
-        <strong>📌 My QR code</strong>: one permanent code that always points to your next open house,
-        whichever it is. Tip: the sign deliberately has no address on it, so laminate it once and reuse
-        it at every open house.
+        Save it, then tap <strong>📌 My QR code</strong> to print your branded sign. It's one permanent
+        code that always points to your next open house, whichever it is, and the sign deliberately has
+        no address on it: print it once, laminate it, and reuse it at every open house. (Each open house
+        card also has its own <strong>📱 QR Code</strong> button if you ever want a sign for just that one.)
       </div>
       ${watchLink('Your first open house', WELCOME_VIDEO_OPEN_HOUSE)}
     </div>

@@ -49,10 +49,11 @@ words, or use our auto-generate buttons if you prefer. (The codewords are
 what visitors receive by text and email to show you at the door — proof
 their contact info is real.)
 
-Save it, then tap **📱 QR Code** to print your branded sign. There's also
-**📌 My QR code** — one permanent code that always points to your next
-open house, whichever it is. Tip: the sign deliberately has no address on
-it, so laminate it once and reuse it at every open house.
+Save it, then tap **📌 My QR code** to print your branded sign. It's one
+permanent code that always points to your next open house, whichever it
+is, and the sign deliberately has no address on it: print it once,
+laminate it, and reuse it at every open house. (Each open house card also
+has its own **📱 QR Code** button if you ever want a sign for just that one.)
 
 ▶ [**Watch: Your first open house**](https://youtu.be/Rf_6rUxUQpQ)
 

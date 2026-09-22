@@ -131,7 +131,7 @@ export function buildFirstOpenHouseEmail(o: {
       <ol style="font-size:14px;line-height:1.7;margin:0;padding-left:20px;">
         <li style="margin-bottom:8px;">Click <a href="${escapeHtml(newOhUrl)}" style="color:${GOLD};font-weight:600;">New Open House</a> and start typing the address, and we fill in the rest, including the time zone.</li>
         <li style="margin-bottom:8px;">Pick the date and times, then set your two codewords (or tap auto-generate). Visitors receive them by text and email, which proves their contact info is real.</li>
-        <li>Save, then tap <strong>📱 QR Code</strong> to print your branded sign. Tip: it deliberately has no address on it, so laminate it once and reuse it at every open house.</li>
+        <li>Save, then tap <strong>📌 My QR code</strong> to print your branded sign. It always points to your next open house, so print it once, laminate it, and reuse it every time. (Each card also has a <strong>📱 QR Code</strong> button if you ever want a sign for that one open house only.)</li>
       </ol>
       ${watchLink('Your first open house', WELCOME_VIDEO_OPEN_HOUSE)}
     </div>
@@ -261,7 +261,7 @@ export function buildCheckinEmail(o: {
       <ol style="font-size:14px;line-height:1.7;margin:0;padding-left:20px;">
         <li style="margin-bottom:8px;"><a href="${escapeHtml(newOhUrl)}" style="color:${GOLD};font-weight:600;">New Open House</a>: type the address, we fill in the rest.</li>
         <li style="margin-bottom:8px;">Pick date, times, and your two codewords.</li>
-        <li>Print the QR sign from <strong>📱 QR Code</strong>. Then reminders, sign-ins, thank-yous, and your lead report all happen automatically.</li>
+        <li>Put out your QR sign. If you printed one from <strong>📌 My QR code</strong>, it already points to this open house, so there's nothing to reprint. (Or print a one-off sign from that card's <strong>📱 QR Code</strong> button.) Then reminders, sign-ins, thank-yous, and your lead report all happen automatically.</li>
       </ol>
       ${watchLink('Your first open house', WELCOME_VIDEO_OPEN_HOUSE)}
     </div>
