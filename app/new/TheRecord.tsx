@@ -63,13 +63,16 @@ export default function TheRecord() {
         ? `Two pedestal sign stands or an A-frame, shipped free. ${hw.claimed} ${hw.stateName} agents have claimed theirs.`
         : 'Two pedestal sign stands or an A-frame, shipped free to the first 100 agents in each state.'
   // Hero photo matches the visitor's current season; swaps at the exact
-  // equinox/solstice instants (see lib/season.ts). The Halloween/Christmas
-  // override depends on the visitor's local calendar, which the server can't
-  // know — applying it after mount keeps server and browser HTML identical.
+  // equinox/solstice instants (see lib/season.ts). The homepage HTML is
+  // prerendered, so the season baked into it can be as old as the page's
+  // last rebuild (app/page.tsx refreshes it hourly). The browser therefore
+  // re-picks the look after mount: the season from its own clock, or the
+  // Halloween/Christmas photo from its local calendar. Doing it after mount
+  // keeps server and browser HTML identical during hydration; when the
+  // baked-in photo is already right, React skips the re-render.
   const [heroSrc, setHeroSrc] = useState(() => heroImage(getSeason()))
   useEffect(() => {
-    const holiday = getHoliday()
-    if (holiday) setHeroSrc(heroImage(holiday))
+    setHeroSrc(heroImage(getHoliday() ?? getSeason()))
   }, [])
 
   useEffect(() => {

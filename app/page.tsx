@@ -26,6 +26,13 @@ const ORG_SCHEMA = {
     'Verified open house sign-in for real estate agents: QR-code check-in that confirms every visitor’s phone and email.',
 }
 
+// Rebuild the prerendered homepage at most hourly, so the seasonal hero photo
+// baked into the HTML (lib/season.ts) catches up within an hour of an
+// equinox/solstice instead of waiting for the next deploy. TheRecord also
+// corrects it in the browser, so this only keeps that correction from
+// flashing the old photo first.
+export const revalidate = 3600
+
 export default function Home() {
   return (
     <>
