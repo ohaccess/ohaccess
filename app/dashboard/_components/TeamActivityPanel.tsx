@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Fragment, useState, useEffect, useCallback, useMemo } from 'react'
 import { onColor, readableOnLight, fillBorder } from '@/lib/colors'
 import { timelineRank } from '@/lib/timeline'
 import { useSortable, applySort, type SortState, type Sortable } from '@/lib/sort'
@@ -122,6 +122,20 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
   const [selectedOH, setSelectedOH] = useState<OpenHouseRow | null>(null)
   const [visitors, setVisitors] = useState<Visitor[]>([])
   const [visitorsLoading, setVisitorsLoading] = useState(false)
+
+  // Same split view as the agent Dashboard (OpenHouseList): open houses down
+  // the left, visitor log sticky on the right. Narrow screens have no room
+  // for two columns, so the log renders beneath the selected card instead.
+  // Starts false and syncs in the effect: reading matchMedia during the first
+  // render breaks hydration.
+  const [isNarrow, setIsNarrow] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 900px)')
+    const apply = () => setIsNarrow(mq.matches)
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
+  }, [])
 
   const agentSort = useSortable('registrations', 'desc')
   const sortedAgents = useMemo(
@@ -248,8 +262,9 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
         )}
       </div>
 
-      {/* ALL OPEN HOUSES */}
-      <div style={card}>
+      {/* ALL OPEN HOUSES + VISITOR LOG (split view) */}
+      <div style={isNarrow ? undefined : { display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+      <div style={{ ...card, ...(isNarrow ? {} : { flex: '1 1 40%', minWidth: 0 }) }}>
         <div style={{ ...cardHeader, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span>Open houses{agentFilter !== 'all' ? ' · filtered' : ''}</span>
           {agentFilter !== 'all' && (
@@ -261,7 +276,8 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
             {visibleOpenHouses.map(oh => (
-              <div key={oh.id} onClick={() => openVisitorLog(oh)}
+              <Fragment key={oh.id}>
+              <div onClick={() => openVisitorLog(oh)}
                 style={{ background: selectedOH?.id === oh.id ? '#f5f9ff' : 'white', border: `1px solid ${selectedOH?.id === oh.id ? accentText : '#d1d1d6'}`, borderRadius: '14px', padding: '12px 16px', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: oh.status === 'active' ? accentText : '#aeaeb2', flexShrink: 0 }} />
@@ -276,13 +292,34 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
                   </div>
                 </div>
               </div>
+              {isNarrow && selectedOH?.id === oh.id && renderVisitorLog()}
+              </Fragment>
             ))}
           </div>
         )}
       </div>
+      {!isNarrow && (
+        /* Sticky: the log stays on screen while the list scrolls; a
+           taller-than-viewport log scrolls inside its own pane. */
+        <div style={{ flex: '1 1 60%', minWidth: 0, position: 'sticky', top: '16px', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto' }}>
+          {renderVisitorLog()}
+        </div>
+      )}
+      </div>
+    </>
+  )
 
-      {/* VISITOR LOG FOR SELECTED OPEN HOUSE */}
-      {selectedOH && (
+  // The visitor log card, rendered in two places: the sticky right pane on
+  // desktop, and beneath the selected card on narrow screens. A hoisted plain
+  // function (called, not mounted as a component) so React keeps the table's
+  // element identity stable across renders.
+  function renderVisitorLog() {
+    if (!selectedOH) return (
+      <div style={{ ...card, padding: '40px', textAlign: 'center', color: '#6e6e73', fontSize: '13px' }}>
+        Select an open house to see its visitor log.
+      </div>
+    )
+    return (
         <div style={card}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>
             <div style={{ fontSize: '13px', fontWeight: 600, color: '#1d1d1f' }}>
@@ -321,7 +358,6 @@ export default function TeamActivityPanel({ supabase, showToast, primaryColor, a
             </div>
           )}
         </div>
-      )}
-    </>
-  )
+    )
+  }
 }
