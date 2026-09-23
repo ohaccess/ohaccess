@@ -39,7 +39,7 @@ export default function Home() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_SCHEMA) }} />
       <RecoveryRedirect />
-      <TheRecord bakedSeason={getSeason() && "summer"} />
+      <TheRecord bakedSeason={getSeason()} />
     </>
   )
 }
