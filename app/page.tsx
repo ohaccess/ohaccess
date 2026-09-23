@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import TheRecord from './new/TheRecord'
+import { getSeason } from '@/lib/season'
 import RecoveryRedirect from './_components/RecoveryRedirect'
 
 // Homepage browser tab = the clean brand tagline. `absolute` skips the
@@ -38,7 +39,7 @@ export default function Home() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_SCHEMA) }} />
       <RecoveryRedirect />
-      <TheRecord />
+      <TheRecord bakedSeason={getSeason() && "summer"} />
     </>
   )
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import TheRecord from './TheRecord'
+import { getSeason } from '@/lib/season'
 
 // Parallel "The Record" landing page (design-drop handoff). Noindexed until
 // the 90-second film is delivered and this page is promoted to /.
@@ -21,5 +22,5 @@ export const metadata: Metadata = {
 }
 
 export default function Page() {
-  return <TheRecord />
+  return <TheRecord bakedSeason={getSeason()} />
 }
