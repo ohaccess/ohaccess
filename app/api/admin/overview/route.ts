@@ -38,6 +38,7 @@ type OpenHouseRow = {
   open_house_hours: string | null
   start_at: string | null
   end_at: string | null
+  timezone: string | null
   status: string | null
   code_word: string | null
   created_at: string
@@ -90,7 +91,7 @@ export async function GET(request: Request) {
     supabase
       .from('open_houses')
       .select(
-        'id, agent_id, property_address, street_address, listing_price, open_house_date, open_house_hours, start_at, end_at, status, code_word, created_at'
+        'id, agent_id, property_address, street_address, listing_price, open_house_date, open_house_hours, start_at, end_at, timezone, status, code_word, created_at'
       )
       .order('created_at', { ascending: false }),
     supabase
@@ -301,6 +302,7 @@ export async function GET(request: Request) {
       open_house_hours: oh.open_house_hours || '',
       start_at: oh.start_at,
       end_at: oh.end_at,
+      timezone: oh.timezone,
       status: oh.status || '',
       code_word: oh.code_word || '',
       when,

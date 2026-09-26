@@ -60,6 +60,7 @@ type OpenHouse = {
   open_house_hours: string
   start_at: string | null
   end_at: string | null
+  timezone: string | null
   status: string
   code_word: string
   when: 'past' | 'current' | 'future'
@@ -158,8 +159,42 @@ const fmtDateTime = (iso: string | null) =>
     : '—'
 const fmtLogin = (iso: string | null) => (iso ? fmtDateTime(iso) : 'Never')
 const fmtUsd = (cents: number) => `$${Math.round(cents / 100).toLocaleString()}`
-const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+
+// Open house "When": "Sep 27, 2026, 1:00 PM – 3:00 PM CDT". 'property' uses
+// the open house's own timezone (falls back to the viewer's if it's missing or
+// unrecognised); 'mine' uses the viewer's. The abbreviation always says which.
+type TimeView = 'property' | 'mine'
+function fmtOHWhen(o: OpenHouse, view: TimeView): string {
+  if (!o.start_at) return o.open_house_date || '—'
+  const fmt = (timeZone: string | undefined) => {
+    const zone = timeZone ? { timeZone } : {}
+    const start = new Date(o.start_at!).toLocaleString('en-US', {
+      ...zone,
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      ...(o.end_at ? {} : { timeZoneName: 'short' }),
+    })
+    if (!o.end_at) return start
+    const end = new Date(o.end_at).toLocaleTimeString('en-US', {
+      ...zone,
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short',
+    })
+    return `${start} – ${end}`
+  }
+  if (view === 'property' && o.timezone) {
+    try {
+      return fmt(o.timezone)
+    } catch {
+      // Unknown timezone id: fall through to the viewer's own.
+    }
+  }
+  return fmt(undefined)
+}
 
 function downloadCSV(filename: string, headers: string[], rows: (string | number)[][]) {
   const esc = (v: string | number) => {
@@ -181,6 +216,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('overview')
+  const [ohTimeView, setOhTimeView] = useState<TimeView>('property')
   const [query, setQuery] = useState('')
   const [ohFilter, setOhFilter] = useState<OHFilter>('all')
   const [reloadKey, setReloadKey] = useState(0)
@@ -965,7 +1001,7 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
-              <button onClick={() => exportCurrent(tab, data, filteredAgents, filteredOpenHouses, filteredVisitors)} style={exportBtn}>
+              <button onClick={() => exportCurrent(tab, data, filteredAgents, filteredOpenHouses, filteredVisitors, ohTimeView)} style={exportBtn}>
                 Export CSV
               </button>
             </div>
@@ -1060,6 +1096,8 @@ export default function AdminDashboard() {
               deletingId={deletingOHId}
               onToggleHold={toggleLegalHold}
               holdingId={holdingOHId}
+              timeView={ohTimeView}
+              onTimeView={setOhTimeView}
             />
           )}
           {tab === 'visitors' && <VisitorsTable rows={filteredVisitors} />}
@@ -1089,7 +1127,8 @@ function exportCurrent(
   data: Payload,
   agents: Agent[],
   openHouses: OpenHouse[],
-  visitors: Visitor[]
+  visitors: Visitor[],
+  ohTimeView: TimeView
 ) {
   if (tab === 'agents') {
     downloadCSV(
@@ -1117,7 +1156,7 @@ function exportCurrent(
       openHouses.map((o) => [
         o.address,
         o.agentName,
-        o.start_at ? fmtDateTime(o.start_at) : o.open_house_date,
+        fmtOHWhen(o, ohTimeView),
         o.open_house_hours,
         o.when === 'current' ? 'Live now' : o.when === 'future' ? 'Upcoming' : 'Past',
         o.code_word,
@@ -1535,16 +1574,46 @@ function OpenHousesTable({
   deletingId,
   onToggleHold,
   holdingId,
+  timeView,
+  onTimeView,
 }: {
   rows: OpenHouse[]
   onDelete: (o: OpenHouse) => void
   deletingId: string | null
   onToggleHold: (o: OpenHouse) => void
   holdingId: string | null
+  timeView: TimeView
+  onTimeView: (v: TimeView) => void
 }) {
   const { state, onSort } = useSortable('when', 'desc')
   const sorted = useMemo(() => applySort(rows, OH_ACC[state.key], state.dir), [rows, state])
+  const toggleBtn = (v: TimeView, label: string) => (
+    <button
+      onClick={() => onTimeView(v)}
+      style={{
+        padding: '5px 12px',
+        fontSize: 12,
+        fontWeight: 600,
+        border: 'none',
+        borderRadius: 6,
+        cursor: 'pointer',
+        background: timeView === v ? 'white' : 'transparent',
+        color: timeView === v ? INK : SUB,
+        boxShadow: timeView === v ? '0 1px 2px rgba(0,0,0,0.12)' : 'none',
+      }}
+    >
+      {label}
+    </button>
+  )
   return (
+    <>
+    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+      <span style={{ fontSize: 12, color: SUB }}>Show times in</span>
+      <div style={{ display: 'inline-flex', background: '#f0f0f2', borderRadius: 8, padding: 2 }}>
+        {toggleBtn('property', "Property's time")}
+        {toggleBtn('mine', 'My time')}
+      </div>
+    </div>
     <TableShell>
       <thead>
         <tr style={{ background: '#f5f5f7' }}>
@@ -1574,7 +1643,7 @@ function OpenHousesTable({
             </td>
             <td style={tdSub}>{o.agentName}</td>
             <td style={td}>
-              <div>{o.start_at ? `${fmtDateTime(o.start_at)}${o.end_at ? ` – ${fmtTime(o.end_at)}` : ''}` : o.open_house_date || '—'}</div>
+              <div>{fmtOHWhen(o, timeView)}</div>
               {o.open_house_hours && !o.start_at && <div style={{ fontSize: 12, color: SUB }}>{o.open_house_hours}</div>}
             </td>
             <td style={td}>
@@ -1634,6 +1703,7 @@ function OpenHousesTable({
         ))}
       </tbody>
     </TableShell>
+    </>
   )
 }
 
