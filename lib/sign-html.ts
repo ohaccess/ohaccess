@@ -11,9 +11,9 @@ const safe = (v: string) => String(v || '').replace(/[<>"'`]/g, '')
 // "PLEASE READ" banner, the QR code, and the ohACCESS footer. Same sign works
 // for a per-open-house QR and the permanent agent QR — no address on it.
 // Two looks, toggled on the page itself (screen-only control, like the
-// heading cycler): full color (default) floods the page with the primary
-// color, white-card logo and QR, accent banner; ink saver is the white-
-// background original.
+// heading cycler): ink saver (default) is the white-background original;
+// full color floods the page with the primary color, white-card logo and QR,
+// accent banner.
 export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; brokerageName?: string; primaryColor: string; onPrimary: string; accentColor: string; onAccent?: string }): string {
   const primary = safe(opts.primaryColor) || '#1d1d1f'
   const onPrimary = safe(opts.onPrimary) || '#ffffff'
@@ -68,7 +68,7 @@ export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; brokerag
   .footer-powered { font-size: 14px; color: #6e6e73; margin-bottom: 3px; }
   .footer-brand { font-size: 27px; font-weight: 800; }
   .footer-tag { font-size: 13px; font-weight: 600; letter-spacing: 4px; color: #6e6e73; margin-top: 3px; }
-  /* Full-color look (default): primary floods the page, logo and QR sit on
+  /* Full-color look (opt-in): primary floods the page, logo and QR sit on
      white cards so any logo and every scanner still work, banner goes accent.
      Same element heights as ink saver, so neither look risks a second page. */
   body.fullcolor { background: ${primary}; color: ${onPrimary}; }
@@ -82,16 +82,16 @@ export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; brokerag
   .fullcolor .footer-powered, .fullcolor .footer-tag { color: ${onPrimary}; opacity: 0.8; }
 </style>
 </head>
-<body class="fullcolor">
+<body>
   <button class="print-btn" id="printBtn" type="button">🖨 Print</button>
   <div class="sign">
     <div class="brandhead">${logoUrl
       ? `<img class="logo" src="${logoUrl}" alt="Logo" onerror="this.style.display='none';document.getElementById('wm').style.display='block'"><div id="wm" style="display:none">${brandFallback}</div>`
       : brandFallback}</div>
     <hr class="rule">
-    <div class="banner" id="banner">YOUR ATTENTION PLEASE</div>
+    <div class="banner" id="banner">SAFETY PROTOCOL</div>
     <div class="banner-hint">Click the banner to switch headings, then press Print. These tips and the Print button won't print.</div>
-    <div class="banner-hint" id="modeToggle" style="cursor: pointer; text-decoration: underline;">Switch to the ink-saver version (white background)</div>
+    <div class="banner-hint" id="modeToggle" style="cursor: pointer; text-decoration: underline;">Switch to the full-color version</div>
     <div class="lead">For the safety of the host, the property, and other guests, the owner of this property is requiring that <em>all</em> visitors scan the QR-code and complete the form <em>before</em> entering.</div>
     <div class="body">A valid phone number &amp; email are <strong>required</strong> in order to receive the unique codeword. Share the codeword with the host to tour the property.</div>
     <div class="qr"><img src="${opts.dataUrl}" alt="QR Code"></div>
@@ -108,7 +108,7 @@ export function buildSignHtml(opts: { dataUrl: string; logoUrl: string; brokerag
     // Clicking the banner cycles through alternate headings; the agent then
     // reprints with the Print button.
     ;(function () {
-      var headings = ['YOUR ATTENTION PLEASE', 'WELCOME! PLEASE READ.', 'REQUIRED BEFORE ENTRY', 'CODEWORD REQUIRED', 'SAFETY PROTOCOL']
+      var headings = ['SAFETY PROTOCOL', 'YOUR ATTENTION PLEASE', 'WELCOME! PLEASE READ.', 'REQUIRED BEFORE ENTRY', 'CODEWORD REQUIRED']
       var i = 0
       document.getElementById('banner').addEventListener('click', function () {
         i = (i + 1) % headings.length
