@@ -10,6 +10,7 @@ import { ensureManagedBrokerage } from '@/lib/team'
 import { MIN_BROKERAGE_SEATS } from '@/lib/billing-plans'
 import { generateGiftCode } from '@/lib/gift'
 import { HARDWARE_CHOICES, hardwareChoiceFromStripe, normalizeStateCode } from '@/lib/hardware-offer'
+import { sendRemovalEmail } from '@/lib/removal-email'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -95,7 +96,7 @@ async function managedShapeFromStripe(subId: string): Promise<{ tier: 'team' | '
 async function propagateTeamStatus(ownerProfileId: string, subId: string | null, status: string) {
   const { data: brokerage } = await supabase
     .from('brokerages')
-    .select('id, stripe_subscription_id')
+    .select('id, name, stripe_subscription_id')
     .eq('owner_id', ownerProfileId)
     .maybeSingle()
   if (!brokerage) return // not a team owner — nothing to propagate
@@ -125,11 +126,17 @@ async function propagateTeamStatus(ownerProfileId: string, subId: string | null,
     // Members → independent free agents, KEEPING their account, data, and their
     // own branding. (We don't null branding: those columns are per-agent and a
     // member may have set their own colors/logo, so erasing them is destructive.)
-    await supabase
+    // Each one gets the removal email (Privacy Policy §3A) once the unlink
+    // is written, so the free-trial maths in it reflects their new state.
+    const { data: members } = await supabase
       .from('profiles')
       .update({ tier: 'free', brokerage_id: null, role: 'agent' })
       .eq('brokerage_id', brokerage.id)
       .neq('id', ownerProfileId)
+      .select('id')
+    for (const m of members || []) {
+      await sendRemovalEmail(m.id, 'team', brokerage.name || '')
+    }
     // Owner → consistent free state (role/link cleared). Keep the brokerage row
     // so a later re-subscribe reuses it (ensureTeamBrokerage re-links on the
     // owner_id unique-violation path; the nulled sub id lets propagateTeamStatus
