@@ -32,7 +32,9 @@ Push to main as usual (Vercel).
 
 ## 3. Schedule the daily pg_cron job
 
-In the Supabase SQL editor, replace `PASTE-CRON-SECRET-HERE` with the real
+DONE 2026-09-26 (job `account-deletions`, 09:30 UTC daily, cloned from the
+data-retention job's command so the secret was never displayed). To
+re-create it, in the Supabase SQL editor, replace `PASTE-CRON-SECRET-HERE` with the real
 `CRON_SECRET` (same value the other cron jobs use) and run:
 
 ```sql
