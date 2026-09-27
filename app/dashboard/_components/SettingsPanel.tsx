@@ -5,6 +5,7 @@ import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import { fillBorder } from '@/lib/colors'
 import { isLegacyTwoYear, isComped, isExpiredPrepaidAccess, trialLimitFor } from '@/lib/billing-plans'
 import { normalizeAgreementTemplates, MAX_AGREEMENT_TEMPLATES } from '@/lib/agreements'
+import { decideAccountClosure, formatClosureDate, type ClosureProfile } from '@/lib/account-closure'
 import { regionFor, countryOptions, flagFor, inferProfileCountry } from '@/lib/regions'
 import { splitStoredPhone, storablePhone, formatNationalAsYouType } from '@/lib/phone'
 import PhoneInput, { type PhoneValue } from '@/app/_components/PhoneInput'
@@ -359,6 +360,149 @@ function SubscriptionSection({ profile, agentId, supabase, showToast, onChanged 
 // self-paid Pro agents earn credit now; everyone else banks it until they're
 // on their own Pro plan. The link is created lazily on first open of Settings
 // and is stable forever after.
+// Close account (Dave, 2026-09-26): the agent's own way out, at the very
+// bottom of Settings. lib/account-closure decides, before they confirm,
+// whether the account goes now or on the day their paid period ends, and
+// the copy says which. Confirmation = typing the account email, the same
+// guard the admin tool uses. A scheduled closure shows the date and a
+// Keep-my-account button here (and as a dashboard banner) until it arrives.
+function CloseAccountSection({ profile, showToast, onChanged }: {
+  profile: (ClosureProfile & { email?: string | null; deletion_scheduled_at?: string | null }) | null
+  showToast: (message: string, type?: 'success' | 'error') => void
+  onChanged?: () => void | Promise<void>
+}) {
+  const [open, setOpen] = useState(false)
+  const [confirmEmail, setConfirmEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const scheduledAt = profile?.deletion_scheduled_at as string | null
+  const decision = decideAccountClosure(profile)
+  const emailMatches = confirmEmail.trim().toLowerCase() === String(profile?.email || '').toLowerCase()
+
+  const authHeaders = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return null
+    return { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }
+  }
+
+  const closeAccount = async () => {
+    if (!emailMatches || busy) return
+    setBusy(true)
+    try {
+      const headers = await authHeaders()
+      if (!headers) { showToast('Please sign in again.', 'error'); return }
+      const res = await fetch('/api/account/close', { method: 'POST', headers, body: JSON.stringify({ confirmEmail }) })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) { showToast(json.error || 'Could not close your account.', 'error'); return }
+      if (json.deleted) {
+        // The login is gone; a signOut call would just error. Hard-navigate
+        // so nothing on this page tries to reload a profile that no longer exists.
+        window.location.href = '/?closed=1'
+        return
+      }
+      showToast(`Your account will close on ${formatClosureDate(json.scheduled)}. We've emailed you the details.`)
+      setOpen(false)
+      setConfirmEmail('')
+      await onChanged?.()
+    } catch {
+      showToast('Could not close your account.', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const keepAccount = async () => {
+    if (busy) return
+    setBusy(true)
+    try {
+      const headers = await authHeaders()
+      if (!headers) { showToast('Please sign in again.', 'error'); return }
+      const res = await fetch('/api/account/close', { method: 'DELETE', headers })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) { showToast(json.error || 'Could not update your account.', 'error'); return }
+      showToast('Your account will stay open. Welcome back.')
+      await onChanged?.()
+    } catch {
+      showToast('Could not update your account.', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const btnFont = "'Plus Jakarta Sans', sans-serif"
+
+  return (
+    <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px', marginTop: '24px' }}>
+      <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Close account</div>
+
+      {scheduledAt ? (
+        <>
+          <div style={{ background: '#fff9e0', border: '1px solid #ffe066', borderRadius: '10px', padding: '12px 14px', marginBottom: '14px' }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#8a6400' }}>Your account is set to close on {formatClosureDate(scheduledAt)}</div>
+            <div style={{ fontSize: '14px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
+              That is the end of the period you have already paid for. You keep full access until then and will not be charged again. On that day your profile, open houses, and visitor log are deleted and your login stops working.
+            </div>
+          </div>
+          <button onClick={keepAccount} disabled={busy} style={{ background: '#1d1d1f', color: 'white', border: 'none', borderRadius: '9px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: busy ? 'not-allowed' : 'pointer', fontFamily: btnFont, opacity: busy ? 0.6 : 1 }}>
+            {busy ? 'One moment…' : 'Keep my account'}
+          </button>
+          <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '10px', lineHeight: '1.5' }}>
+            Keeping your account does not restart a cancelled subscription. If you want to keep paying past that date, use Resume in the Subscription card above.
+          </div>
+        </>
+      ) : !open ? (
+        <>
+          <div style={{ fontSize: '14px', color: '#6e6e73', lineHeight: '1.6', marginBottom: '14px' }}>
+            Closing your account deletes your profile, branding, open houses, QR codes, and visitor log, and your login stops working. This cannot be undone. Export your visitor log first if you would like a copy.
+          </div>
+          <button onClick={() => setOpen(true)} style={{ background: 'white', color: '#cc0000', border: '1px solid #d1d1d6', borderRadius: '9px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: btnFont }}>
+            Close my account…
+          </button>
+        </>
+      ) : (
+        <>
+          <div style={{ background: '#fff0f0', border: '1px solid #ffcccc', borderRadius: '10px', padding: '12px 14px', marginBottom: '14px' }}>
+            {decision.mode === 'scheduled' ? (
+              <>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#cc0000' }}>You have paid through {formatClosureDate(decision.at)}</div>
+                <div style={{ fontSize: '14px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
+                  You keep full access until then and will not be charged again. Your account is deleted on that date. You can change your mind any time before it arrives.
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#cc0000' }}>Your account will be deleted right away</div>
+                <div style={{ fontSize: '14px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
+                  There is no paid period left on this account, so everything is removed as soon as you confirm. An archived copy of each visitor registration is kept for up to 3 years, as described in our <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#0071e3' }}>Privacy Policy</a>.
+                </div>
+              </>
+            )}
+          </div>
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#6e6e73', marginBottom: '6px' }}>
+            Type your account email to confirm
+          </label>
+          <input
+            type="email"
+            autoComplete="off"
+            value={confirmEmail}
+            onChange={e => setConfirmEmail(e.target.value)}
+            placeholder={profile?.email || ''}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border: '1px solid #d1d1d6', borderRadius: '9px', fontSize: '14px', fontFamily: btnFont, marginBottom: '12px' }}
+          />
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button onClick={closeAccount} disabled={!emailMatches || busy} style={{ background: '#cc0000', color: 'white', border: 'none', borderRadius: '9px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: !emailMatches || busy ? 'not-allowed' : 'pointer', fontFamily: btnFont, opacity: !emailMatches || busy ? 0.5 : 1 }}>
+              {busy ? 'Closing…' : decision.mode === 'scheduled' ? `Close on ${formatClosureDate(decision.at)}` : 'Delete my account now'}
+            </button>
+            <button onClick={() => { setOpen(false); setConfirmEmail('') }} disabled={busy} style={{ background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', padding: '10px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: btnFont }}>
+              Never mind
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 function ReferralSection({ profile }: { profile: any }) {
   const [link, setLink] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -1353,6 +1497,8 @@ export default function SettingsPanel({
           ✓ Save settings
         </button>
       </div>
+
+      <CloseAccountSection profile={profile} showToast={showToast} onChanged={onSubscriptionChanged} />
     </>
   )
 }

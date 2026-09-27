@@ -15,7 +15,7 @@ import { supabaseAdmin as supabase } from './supabase-admin'
 // sees the ordinary result rather than a notice that would tell them their
 // records are under preservation.
 
-type HoldCounts = { visitors: number; visitor_archive: number; qr_scans: number; agreement_receipts: number }
+export type HoldCounts = { visitors: number; visitor_archive: number; qr_scans: number; agreement_receipts: number }
 
 export type HoldCheck = {
   held: boolean

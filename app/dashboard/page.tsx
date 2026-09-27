@@ -1143,6 +1143,22 @@ export default function Dashboard() {
     window.location.href = '/login'
   }
 
+  // "Keep my account" on the closing banner: clears a scheduled closure
+  // (same call the Settings card makes). Does not resume a cancelled
+  // subscription; the Subscription card offers Resume separately.
+  const keepAccount = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { showToast('Please sign in again.', 'error'); return }
+    const res = await fetch('/api/account/close', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) { showToast(json.error || 'Could not update your account.', 'error'); return }
+    showToast('Your account will stay open. Welcome back.')
+    if (user?.id) await loadProfile(user.id)
+  }
+
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#f5f5f7' }}>
       <div style={{ fontSize: '16px', color: '#6e6e73' }}>Loading your dashboard...</div>
@@ -1242,6 +1258,23 @@ export default function Dashboard() {
                 A recent payment on your team&apos;s ohACCESS plan didn&apos;t go through. Please contact your team/brokerage admin so your access isn&apos;t interrupted. Your open houses and visitor data are safe.
               </div>
             </div>
+          </div>
+        )}
+
+        {/* CLOSING BANNER — the agent asked to close the account and is
+            riding out a paid period. Shown on every view until the date, with
+            the way back; the Settings card has the same button. */}
+        {profile?.deletion_scheduled_at && (
+          <div style={{ background: '#fff9e0', border: '1px solid #ffe066', borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '220px' }}>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: '#8a6400' }}>Your account is set to close on {new Date(profile.deletion_scheduled_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: '1.5' }}>
+                You keep full access until then and will not be charged again. On that day your profile, open houses, and visitor log are deleted. Changed your mind? Keep your account below.
+              </div>
+            </div>
+            <button onClick={keepAccount} style={{ background: '#1d1d1f', color: 'white', border: 'none', padding: '9px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: 'nowrap' }}>
+              Keep my account
+            </button>
           </div>
         )}
 

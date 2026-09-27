@@ -1,16 +1,11 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser, isAdmin } from '@/lib/auth'
-import { archiveVisitorsForAgent } from '@/lib/visitor-archive'
-import { checkAgentHold } from '@/lib/legal-hold'
+import { deleteAgentAccount, AccountLegalHoldError, AccountArchiveError } from '@/lib/delete-account'
 
-// Helper: run a delete and throw a labeled error so the caller knows which
-// step failed (deletions are not transactional across PostgREST calls).
-async function del(step: string, run: PromiseLike<{ error: { message: string } | null }>) {
-  const { error } = await run
-  if (error) throw new Error(`${step}: ${error.message}`)
-}
-
+// Admin-only hard delete of an agent account. The teardown itself lives in
+// lib/delete-account.ts (shared with the agent's own Close-account button
+// and the scheduled-closure cron); this route is the admin guards around it.
 export async function POST(request: Request) {
   const admin = await getAuthenticatedUser(request)
   if (!admin) {
@@ -63,101 +58,26 @@ export async function POST(request: Request) {
     )
   }
 
-  // Count what we're about to remove (for the summary returned to the admin).
-  const counts = async (table: string, column: string) => {
-    const { count } = await supabase
-      .from(table)
-      .select('id', { count: 'exact', head: true })
-      .eq(column, userId)
-    return count || 0
-  }
-  const visitorCount = await counts('visitors', 'agent_id')
-  const openHouseCount = await counts('open_houses', 'agent_id')
-  const shortUrlCount = await counts('short_urls', 'agent_id')
-
-  // Brokerages this account owns (owner_id is ON DELETE RESTRICT, so these
-  // must go before the auth user can be removed). Deleting a brokerage
-  // cascades its invitations and detaches its member agents (brokerage_id
-  // is ON DELETE SET NULL on profiles).
-  const { data: ownedBrokerages } = await supabase
-    .from('brokerages')
-    .select('id')
-    .eq('owner_id', userId)
-  const ownedIds = (ownedBrokerages || []).map((b) => b.id)
-  let membersDetached = 0
-  if (ownedIds.length) {
-    const { count } = await supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .in('brokerage_id', ownedIds)
-      .neq('id', userId)
-    membersDetached = count || 0
-  }
-
-  // Preservation hold (migration 041): if anything of this agent's is under
-  // a hold, don't tear down the surrounding account until it's released.
-  const hold = await checkAgentHold(userId)
-  if (hold.held) {
-    console.warn(`[DELETE-ACCOUNT] BLOCKED by legal hold: ${profile.email} — ${hold.summary}`)
-    return NextResponse.json(
-      {
-        error: `Blocked by a legal hold on this agent's data (${hold.summary}). Nothing was deleted. Release the hold in legal_holds only when counsel confirms the matter is closed.`,
-        legalHold: hold.counts,
-      },
-      { status: 409 }
-    )
-  }
-
-  // Archive the agent's live visitor log BEFORE anything is deleted, exactly
-  // like the agent-facing deletes do. Privacy Policy v1.3 §5 retention is a
-  // flat 3 years from collection with NO account-deletion trigger, so closing
-  // an account must not destroy the record of who was inside a house. If
-  // archiving fails, abort before deleting anything — never silently lose it.
-  let visitorsArchived = 0
   try {
-    visitorsArchived = await archiveVisitorsForAgent(userId)
+    const deleted = await deleteAgentAccount(userId, profile, `admin ${admin.email}`)
+    return NextResponse.json({ deleted })
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Unknown error'
-    console.error(`[DELETE-ACCOUNT] archive FAILED by ${admin.email} on ${profile.email}: ${message}`)
-    return NextResponse.json(
-      { error: `Could not archive visitor records (${message}). Nothing was deleted.` },
-      { status: 500 }
-    )
-  }
-
-  try {
-    // Children first, then parents. Existing visitor_archive rows are
-    // deliberately KEPT (Dave, 2026-07-20) for the same reason as above —
-    // they survive until the monthly retention purge
-    // (/api/cron/data-retention) ages them out at the 3-year mark.
-    await del('visitors', supabase.from('visitors').delete().eq('agent_id', userId))
-    await del('short_urls', supabase.from('short_urls').delete().eq('agent_id', userId))
-    // Agreement receipts carry visitor PII (migration 043) — a hard-delete
-    // clears them; held ones were caught by the checkAgentHold gate above.
-    await del('agreement_receipts', supabase.from('agreement_receipts').delete().eq('agent_id', userId))
-    await del('open_houses', supabase.from('open_houses').delete().eq('agent_id', userId))
-    if (ownedIds.length) {
-      await del('brokerages', supabase.from('brokerages').delete().eq('owner_id', userId))
+    if (e instanceof AccountLegalHoldError) {
+      return NextResponse.json(
+        {
+          error: `Blocked by a legal hold on this agent's data (${e.summary}). Nothing was deleted. Release the hold in legal_holds only when counsel confirms the matter is closed.`,
+          legalHold: e.counts,
+        },
+        { status: 409 }
+      )
     }
-    // Blank agreement-template files live under <userId>/ in the private
-    // bucket (043). Best-effort: an orphaned blank form is unreachable and
-    // holds no visitor data, so a cleanup failure must not fail the deletion.
-    try {
-      const { data: files } = await supabase.storage.from('agreement-templates').list(userId)
-      if (files && files.length > 0) {
-        await supabase.storage.from('agreement-templates').remove(files.map(f => `${userId}/${f.name}`))
-      }
-    } catch (e) {
-      console.error('[DELETE-ACCOUNT] agreement-template storage cleanup failed:', e)
+    if (e instanceof AccountArchiveError) {
+      return NextResponse.json(
+        { error: `Could not archive visitor records (${e.message}). Nothing was deleted.` },
+        { status: 500 }
+      )
     }
-    await del('profile', supabase.from('profiles').delete().eq('id', userId))
-
-    // Finally remove the auth login itself.
-    const { error: authError } = await supabase.auth.admin.deleteUser(userId)
-    if (authError) throw new Error(`auth user: ${authError.message}`)
-  } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error'
-    console.error(`[DELETE-ACCOUNT] FAILED by ${admin.email} on ${profile.email}: ${message}`)
     return NextResponse.json(
       {
         error: `Deletion partially failed at step "${message}". Some data may have been removed. Please retry.`,
@@ -165,23 +85,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-
-  console.log(
-    `[DELETE-ACCOUNT] ${admin.email} deleted ${profile.email} (${profile.id}) — ` +
-      `${visitorCount} visitors (${visitorsArchived} archived), ${openHouseCount} open houses, ${shortUrlCount} short URLs, ` +
-      `${ownedIds.length} brokerages, ${membersDetached} members detached, at ${new Date().toISOString()}`
-  )
-
-  return NextResponse.json({
-    deleted: {
-      email: profile.email,
-      name: profile.full_name || profile.email,
-      visitors: visitorCount,
-      visitorsArchived,
-      openHouses: openHouseCount,
-      shortUrls: shortUrlCount,
-      brokeragesDeleted: ownedIds.length,
-      membersDetached,
-    },
-  })
 }

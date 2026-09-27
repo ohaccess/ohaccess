@@ -26,6 +26,7 @@ interface ProfileUpdate {
   billing_interval?: string | null
   current_period_end?: string | null
   subscription_canceled_at?: string | null
+  deletion_scheduled_at?: string | null
 }
 
 async function findProfileId(
@@ -386,6 +387,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       billing_interval: interval,
       current_period_end: isoOrNull(sub.items.data[0]?.current_period_end ?? null),
       subscription_canceled_at: null,
+      // Buying a plan is the clearest possible "keep my account".
+      deletion_scheduled_at: null,
     })
   } else if (session.mode === 'payment') {
     // LEGACY branch: the 2-year term used to be sold as a one-time charge with
