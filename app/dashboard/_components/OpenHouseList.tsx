@@ -498,7 +498,8 @@ export default function OpenHouseList({
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: OH_BADGE[ohState(oh)].dot, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: '#1d1d1f', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{oh.property_address}</div>
-                  <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: 1.5 }}>{oh.open_house_date} · {oh.open_house_hours} · 📱 <strong>{oh.code_word}</strong> · ✉️ <strong>{oh.code_word_email || oh.code_word}</strong></div>
+                  <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '3px', lineHeight: 1.5 }}>{oh.open_house_date} · {oh.open_house_hours}</div>
+                  <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '1px', lineHeight: 1.5 }}>📱 <strong>{oh.code_word}</strong> · ✉️ <strong>{oh.code_word_email || oh.code_word}</strong></div>
                 </div>
                 {(() => { const b = OH_BADGE[ohState(oh)]; return (
                   <div style={{ background: b.bg, color: b.color, fontSize: '11px', fontWeight: '600', padding: '3px 9px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
