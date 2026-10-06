@@ -178,10 +178,24 @@ export async function GET(request: Request) {
     .limit(500)
   const recentScans = (recentScansData || []) as ScanRow[]
 
+  // Sponsors (lenders, title companies, etc.) sign up through the same
+  // email+password form as agents, so their profile row starts with no name.
+  // Their name lives on the sponsors table instead. Map owner -> sponsor so
+  // the Agents table can show "Bill Jacobs" rather than his email, and tag
+  // the row as a sponsor account.
+  const { data: ownedSponsorRows } = await supabase
+    .from('sponsors')
+    .select('id, owner_id, full_name, company')
+  const sponsorByOwner = new Map<string, { id: string; full_name: string | null; company: string | null }>()
+  for (const s of (ownedSponsorRows || []) as { id: string; owner_id: string; full_name: string | null; company: string | null }[]) {
+    sponsorByOwner.set(s.owner_id, { id: s.id, full_name: s.full_name, company: s.company })
+  }
+
   // Lookup maps
   const agentName = new Map<string, string>()
   for (const p of profiles) {
-    agentName.set(p.id, (p.full_name || p.email || 'Unknown').trim() || 'Unknown')
+    const sponsorName = sponsorByOwner.get(p.id)?.full_name
+    agentName.set(p.id, (p.full_name || sponsorName || p.email || 'Unknown').trim() || 'Unknown')
   }
 
   const ohAddress = new Map<string, string>()
@@ -255,6 +269,8 @@ export async function GET(request: Request) {
       referral_source: p.referral_source || '',
       // Gifted (comped) access: paid tier with no Stripe subscription behind it.
       comped: p.billing_interval === 'comped' && !p.stripe_subscription_id,
+      // Set when this login owns a sponsor account (sponsor portal user).
+      sponsorCompany: sponsorByOwner.has(p.id) ? sponsorByOwner.get(p.id)!.company || '' : null,
       created_at: p.created_at,
       last_sign_in_at: lastSignIn.get(p.id) || null,
       openHouseCount: openHousesByAgent.get(p.id) || 0,

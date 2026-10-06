@@ -38,6 +38,9 @@ type Agent = {
   bonus_visitors: number
   referral_source: string
   comped: boolean
+  // Non-null when this login owns a sponsor account (sponsor portal user);
+  // holds the sponsor's company name, or '' if they haven't entered one.
+  sponsorCompany: string | null
   created_at: string
   last_sign_in_at: string | null
   openHouseCount: number
@@ -1379,7 +1382,17 @@ function AgentsTable({
         {sorted.map((a) => (
           <tr key={a.id} style={{ borderTop: `1px solid ${BORDER}` }}>
             <td style={td}>
-              <div style={{ fontWeight: 600 }}>{a.name}</div>
+              <div style={{ fontWeight: 600 }}>
+                {a.name}
+                {a.sponsorCompany !== null && (
+                  <span
+                    title={`Sponsor account (sponsor portal)${a.sponsorCompany ? ` · ${a.sponsorCompany}` : ''}`}
+                    style={{ display: 'inline-block', marginLeft: 6, background: '#fff4e0', color: '#9a5b00', border: '1px solid #f3dcb0', borderRadius: 6, padding: '1px 6px', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap', verticalAlign: 'middle' }}
+                  >
+                    🤝 sponsor{a.sponsorCompany ? ` · ${a.sponsorCompany}` : ''}
+                  </span>
+                )}
+              </div>
               <div style={{ fontSize: 12, color: SUB }}>{a.email}</div>
               {a.referral_source && (
                 <div style={{ fontSize: 11, color: SUB }} title="Signed up via this ?ref= link">
