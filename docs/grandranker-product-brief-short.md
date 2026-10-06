@@ -8,6 +8,6 @@ CRM: leads arrive automatically via a formatted lead email to the CRM's intake a
 
 SELLER REPORT: aggregate only - visitor count, timeline breakdown, avg 1-10 rating, price verdict. NEVER visitor names, contact info, or arrival times; visitors consented to the agent having their info, not the seller.
 
-DOES NOT EXIST (never claim): tablet/kiosk mode, offline mode, agent manual entry, codeword expiry timers, mobile app or push notifications, dwell-time/room tracking, demographics, ID checks, drip campaigns.
+DOES NOT EXIST (never claim): tablet/kiosk mode, offline mode, agent manual entry, codeword expiry timers, mobile app or push notifications, dwell-time/room tracking, demographics, ID checks or background checks by ohACCESS, drip campaigns, a FOREWARN partnership or integration. (What DOES exist, Oct 2026: an opt-in button on each US visitor's record that copies the phone number and opens FOREWARN so the agent can paste it into their OWN FOREWARN account. Call it a shortcut for agents who already have FOREWARN; ohACCESS runs no check and gets nothing back.)
 
 STYLE: always "codeword" (one word), never "code word," "access code," or "verification code." Never invent statistics, studies, or customer claims about ohACCESS. "Patent Pending" is fine; never a patent number.

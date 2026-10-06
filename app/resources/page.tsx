@@ -267,6 +267,7 @@ export default function Resources() {
               { emoji: '🏷️', title: 'Choose a memorable codeword', body: 'Pick a codeword related to the property, like ACREAGE or LAKEHOUSE. Easier for visitors to remember.' },
               { emoji: '👤', title: 'Add your landing page URL', body: 'Add your bio page, website, or Instagram in Settings so every visitor email includes a link to your profile.' },
               { emoji: '🔔', title: 'Watch for agent alerts', body: 'You receive an instant SMS when a visitor registers, so you know who\'s coming before they reach the door. Tap the link in the alert to verify the visitor and save private notes.' },
+              { emoji: '🛡️', title: 'Check visitors in FOREWARN', body: 'Have FOREWARN through your association or MLS? Turn on "Safety Check with FOREWARN" in Settings and every US visitor\'s record gets a one-tap button that copies their number and opens FOREWARN, so you can confirm who you\'re meeting. For identity and safety only.' },
               { emoji: '📊', title: 'Export after every open house', body: 'Export your visitor log to CSV immediately after and import into your CRM while leads are fresh. Better yet, connect your CRM under Settings → "Send leads to your CRM" and every sign-in flows there automatically.' },
             ].map(tip => (
               <div key={tip.title} style={{ background: 'white', borderRadius: '14px', border: '1px solid #d1d1d6', padding: '16px' }}>
