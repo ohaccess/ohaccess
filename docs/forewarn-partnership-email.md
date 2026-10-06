@@ -26,7 +26,7 @@ A few things that may matter to you:
 
 - Every number we'd pass has already been verified by a one-time codeword, so
   searches are on real, reachable numbers.
-- Our agents are mostly US REALTORS who already have FOREWARN through their
+- Our agents are mostly US REALTORS® who already have FOREWARN through their
   association or MLS. We would not resell or re-display FOREWARN data; the
   report stays inside your widget, under your terms and your login.
 - We'd present the integration strictly as identity verification and personal
