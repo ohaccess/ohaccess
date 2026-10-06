@@ -5,6 +5,7 @@ import { timelineStyle } from '@/lib/timeline'
 import { phoneLineKind, PHONE_LINE_CHIPS } from '@/lib/register-helpers'
 import { normalizeCustomAnswers } from '@/lib/custom-questions'
 import { langMeta } from '@/lib/register-i18n'
+import { FOREWARN_URL, forewarnSearchDigits } from '@/lib/forewarn'
 
 // A hard delivery failure reported by Resend (email) or Twilio (SMS) means the
 // visitor's contact info is likely bad.
@@ -38,7 +39,7 @@ const unsignedBadge = { marginLeft: '10px', background: '#fff8e6', color: '#8a61
 // toggle and notes-save logic live in exactly one place. Saves via the
 // (authenticated) supabase client; the visitors RLS policy already restricts
 // writes to the owning agent.
-export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d1f', accentColor = '#0071e3', requireAgreement = false, locked = false, onChange, onDelete }: {
+export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d1f', accentColor = '#0071e3', requireAgreement = false, locked = false, forewarnEnabled = false, onChange, onDelete }: {
   visitor: any
   supabase: any
   primaryColor?: string
@@ -50,6 +51,10 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
   // but verify / notes / delete answer with a subscribe message instead of
   // acting (the delete route enforces this server-side too).
   locked?: boolean
+  // The agent turned on "Safety check with FOREWARN" in Settings
+  // (profiles.forewarn_enabled). Shows a copy-and-open button under the
+  // phone number for US visitors (lib/forewarn.ts).
+  forewarnEnabled?: boolean
   onChange?: (fields: { verified?: boolean; notes?: string }) => void
   // When provided, a "Delete visitor" button is shown. Called after the visitor
   // is successfully deleted, so the parent can close the modal / refresh its list.
@@ -70,6 +75,19 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(false)
   const [lockedMessage, setLockedMessage] = useState(false)
+  const [forewarnCopied, setForewarnCopied] = useState(false)
+
+  // FOREWARN has no link that accepts a number, so: copy the digits during
+  // the click (clipboard writes need the user gesture), and let the anchor
+  // open the web app in a new tab for the agent to paste into. Copy failure
+  // (old browser, permission) just leaves the hint on its default wording.
+  const forewarnDigits = forewarnEnabled ? forewarnSearchDigits(visitor.phone) : null
+  const copyForForewarn = () => {
+    if (!forewarnDigits) return
+    try {
+      navigator.clipboard?.writeText(forewarnDigits).then(() => setForewarnCopied(true)).catch(() => {})
+    } catch { /* leave the default hint */ }
+  }
 
   const tl = timelineStyle(visitor.purchasing_timeline)
   const dirty = notes !== (visitor.notes || '')
@@ -145,7 +163,22 @@ export default function VisitorDetail({ visitor, supabase, primaryColor = '#1d1d
       </div>
 
       <div style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
-        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{visitor.sms_opted_out ? <span style={optedOutBadge} title="This number replied STOP — do not contact">🚫 opted out</span> : deliveryFailed(visitor.sms_status) ? <span style={failBadge} title={visitor.codeword_channel === 'whatsapp' ? 'WhatsApp message could not be delivered to this number' : 'Text could not be delivered to this number'}>⚠ {visitor.codeword_channel === 'whatsapp' ? 'WhatsApp' : 'text'} undelivered</span> : visitor.codeword_channel === 'whatsapp' ? <span style={whatsAppBadge} title="Codeword was sent by WhatsApp, not SMS — ask to see the WhatsApp message">WhatsApp</span> : null}<PhoneLineChip lineType={visitor.phone_line_type} /></div>
+        <div><div style={label}>Phone</div><a href={`tel:${visitor.phone}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600 }}>{visitor.phone || '—'}</a>{visitor.sms_opted_out ? <span style={optedOutBadge} title="This number replied STOP — do not contact">🚫 opted out</span> : deliveryFailed(visitor.sms_status) ? <span style={failBadge} title={visitor.codeword_channel === 'whatsapp' ? 'WhatsApp message could not be delivered to this number' : 'Text could not be delivered to this number'}>⚠ {visitor.codeword_channel === 'whatsapp' ? 'WhatsApp' : 'text'} undelivered</span> : visitor.codeword_channel === 'whatsapp' ? <span style={whatsAppBadge} title="Codeword was sent by WhatsApp, not SMS — ask to see the WhatsApp message">WhatsApp</span> : null}<PhoneLineChip lineType={visitor.phone_line_type} />
+          {forewarnDigits && (
+            <div style={{ marginTop: '8px' }}>
+              <a href={FOREWARN_URL} target="_blank" rel="noopener noreferrer" onClick={copyForForewarn}
+                title="Copies the phone number, then opens FOREWARN so you can paste it into the search"
+                style={{ display: 'inline-block', background: 'white', color: accentText, border: `1px solid ${accentText}`, borderRadius: '8px', padding: '6px 12px', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}>
+                🛡 Copy number &amp; open FOREWARN
+              </a>
+              <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '5px', lineHeight: 1.5 }}>
+                {forewarnCopied
+                  ? 'Number copied. Paste it into FOREWARN\u2019s search box.'
+                  : 'Copies the number and opens FOREWARN in a new tab; paste it into the search box. For identity and safety only.'}
+              </div>
+            </div>
+          )}
+        </div>
         <div><div style={label}>Email</div><a href={`mailto:${visitor.email}`} style={{ fontSize: '15px', color: accentText, textDecoration: 'none', fontWeight: 600, wordBreak: 'break-all' }}>{visitor.email || '—'}</a>{deliveryFailed(visitor.email_status) && <span style={failBadge} title="Email bounced — this address may be invalid">⚠ email bounced</span>}</div>
         {/* The language they signed in with — the one to greet and follow up
             in. Unknown/legacy rows fall back to English, same as the log. */}

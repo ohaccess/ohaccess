@@ -1133,6 +1133,7 @@ export default function Dashboard() {
       crm_type: profile?.crm_type || null,
       disclosure_links: disclosures.length > 0 ? disclosures : null,
       custom_questions: cleanedQuestions.length > 0 ? cleanedQuestions : null,
+      forewarn_enabled: !!profile?.forewarn_enabled,
     }).eq('id', user.id)
     if (error) { showToast('Error saving: ' + error.message); return }
     showToast('Settings saved!')
@@ -1545,6 +1546,7 @@ export default function Dashboard() {
               primaryColor={primaryColor}
               accentColor={accentColor}
               locked={locked}
+              forewarnEnabled={!!profile?.forewarn_enabled}
               requireAgreement={!!openHouses.find(oh => oh.id === visitorModal.open_house_id)?.require_agreement}
               onChange={(fields) => {
                 setVisitors(prev => prev.map(v => v.id === visitorModal.id ? { ...v, ...fields } : v))

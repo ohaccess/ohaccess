@@ -13,6 +13,7 @@ export default function VisitorPage({ params }: { params: Promise<{ id: string }
   const [visitor, setVisitor] = useState<any>(null)
   const [requireAgreement, setRequireAgreement] = useState(false)
   const [locked, setLocked] = useState(false)
+  const [forewarnEnabled, setForewarnEnabled] = useState(false)
   const [status, setStatus] = useState<'loading' | 'ready' | 'notfound'>('loading')
 
   useEffect(() => {
@@ -25,6 +26,12 @@ export default function VisitorPage({ params }: { params: Promise<{ id: string }
       }
       const { data } = await supabase.from('visitors').select('*').eq('id', id).maybeSingle()
       if (data) {
+        // Settings flag for the FOREWARN button (lib/forewarn.ts). Best-effort:
+        // a lookup failure just means no button.
+        try {
+          const { data: prof } = await supabase.from('profiles').select('forewarn_enabled').eq('id', session.user.id).maybeSingle()
+          if (prof?.forewarn_enabled) setForewarnEnabled(true)
+        } catch { /* no button */ }
         // Agreement chip, mirroring the dashboard visitor log: shown only when
         // the open house requires a signed agreement, signed = a receipt
         // exists. Best-effort — a lookup failure just means no chip.
@@ -94,6 +101,7 @@ export default function VisitorPage({ params }: { params: Promise<{ id: string }
               supabase={supabase}
               requireAgreement={requireAgreement}
               locked={locked}
+              forewarnEnabled={forewarnEnabled}
               onDelete={() => { window.location.href = '/dashboard' }}
             />
           )}

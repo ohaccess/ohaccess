@@ -1318,6 +1318,23 @@ export default function SettingsPanel({
         </div>
       </div>
 
+      {/* FOREWARN: the agent's own safety lookup (lib/forewarn.ts). Opt-in
+          because most agents get it free through their association and the
+          rest don't have it; the visitor-record button would be noise for them. */}
+      <div style={{ background: 'white', borderRadius: '18px', border: '1px solid #d1d1d6', padding: '20px 22px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '16px', fontWeight: '600', color: '#1d1d1f', marginBottom: '4px', paddingBottom: '12px', borderBottom: '1px solid #d1d1d6' }}>Safety Check with FOREWARN</div>
+        <div style={{ fontSize: '14px', color: '#6e6e73', margin: '12px 0 14px', lineHeight: '1.6' }}>
+          FOREWARN is the identity and safety lookup many real estate associations include as a member benefit. Turn this on and every US visitor&apos;s record gets a button that copies their phone number and opens FOREWARN, so you can check who you&apos;re about to meet before you meet them.
+        </div>
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={!!profile?.forewarn_enabled} onChange={e => setProfile({ ...profile, forewarn_enabled: e.target.checked })} style={{ width: '18px', height: '18px', marginTop: '1px', cursor: 'pointer', flexShrink: 0 }} />
+          <span style={{ fontSize: '14px', color: '#1d1d1f', fontWeight: 600 }}>I have a FOREWARN account</span>
+        </label>
+        <div style={{ fontSize: '12px', color: '#6e6e73', marginTop: '12px', lineHeight: '1.6' }}>
+          Use FOREWARN only to confirm who someone is and to stay safe, never to decide whether to work with them. Fair housing rules apply to every visitor. Don&apos;t have FOREWARN? Ask your association or MLS; most include it at no cost.
+        </div>
+      </div>
+
       {/* Custom questions — one extra on the sign-in form (the entry gate, so
           strictly capped) and up to two after the tour. The built-in rating and
           price questions are fixed and not editable here: the seller report
