@@ -64,4 +64,10 @@ describe('buildCodewordEmail', () => {
     expect(html).toContain('href="https://kathryn.example"')
     expect(html).not.toContain('ohaccess.com/r/')
   })
+  it('footer links go straight to www (the apex 307-redirects, which link checkers flag)', () => {
+    const { html } = buildCodewordEmail(base)
+    expect(html).toContain('href="https://www.ohaccess.com/terms"')
+    expect(html).toContain('href="https://www.ohaccess.com/privacy"')
+    expect(html).not.toMatch(/href="https:\/\/ohaccess\.com\//)
+  })
 })

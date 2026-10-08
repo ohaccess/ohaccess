@@ -140,9 +140,9 @@ export function buildCodewordEmail(o: CodewordEmailOpts): { subject: string; htm
             ${sponsorHtml}
             ${buildDisclosuresHtml(o.disclosureLinks, brand.accent)}
             ${o.upcomingHtml}`,
-    footerHtml: `By registering you agreed to the ohACCESS <a href="https://ohaccess.com/terms" style="color: #9a9aa0;">Terms of Service</a>.<br/>
+    footerHtml: `By registering you agreed to the ohACCESS <a href="https://www.ohaccess.com/terms" style="color: #9a9aa0;">Terms of Service</a>.<br/>
               You consent to be contacted by the host agent${sponsorConsentName ? ` and today's sponsor, ${escapeHtml(sponsorConsentName)}` : ''}.<br/>
-              Reply STOP to any text to opt out · <a href="https://ohaccess.com/privacy" style="color: #9a9aa0;">Privacy Policy</a><br/>
+              Reply STOP to any text to opt out · <a href="https://www.ohaccess.com/privacy" style="color: #9a9aa0;">Privacy Policy</a><br/>
               <em>Heads up: opting out blocks codewords for all future ohACCESS open houses.</em>`,
   })
 
