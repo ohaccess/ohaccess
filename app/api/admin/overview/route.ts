@@ -88,6 +88,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
+  // Agent addresses Resend reported as bounced / complained (migration 060).
+  const suppressedByEmail = new Map<string, string>()
+  {
+    const { data } = await supabase.from('email_suppressions').select('email, reason')
+    for (const r of data ?? []) suppressedByEmail.set(String(r.email).toLowerCase(), String(r.reason))
+  }
+
   const [profilesRes, openHousesRes, visitorsRes] = await Promise.all([
     supabase
       .from('profiles')
@@ -276,6 +283,8 @@ export async function GET(request: Request) {
       referral_source: p.referral_source || '',
       // "source / medium / campaign" from the utm_* captured at first touch.
       campaign: attributionLabel(sanitizeAttribution(p)),
+      // 'bounced' | 'complained' | '' : we no longer email this address.
+      email_suppressed: suppressedByEmail.get((p.email || '').toLowerCase()) || '',
       landing_page: p.landing_page || '',
       // Gifted (comped) access: paid tier with no Stripe subscription behind it.
       comped: p.billing_interval === 'comped' && !p.stripe_subscription_id,

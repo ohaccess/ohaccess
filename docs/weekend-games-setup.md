@@ -122,3 +122,14 @@ select count(*) from agent_email_log where email_key = 'weekend_games_' || to_ch
   run `node scripts/build-team-states.mjs` and commit the updated
   `lib/weekend-games/team-states.json`.
 - A send failure releases its claim, so the next hourly run retries it.
+
+## Sender domain and suppression (added 2026-10-08)
+
+- The email goes out as `ohACCESS <hello@news.ohaccess.com>`, the newsletter
+  domain, not `mail.ohaccess.com`. It is the one weekly email agents might tire
+  of, and any complaints it draws must not touch the codeword domain's
+  reputation. Replies still go to support@ohaccess.com.
+- Besides `email_opt_outs` (unsubscribes), the send skips every address in
+  `email_suppressions` (migration 060): hard bounces and spam complaints that
+  Resend's webhook reported on any ohACCESS email. The admin Agents table
+  shows a red "bounced" or "complained" chip next to such an address.

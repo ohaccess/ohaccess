@@ -1,6 +1,7 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { recipientsFromResendEvent, recordSuppressions, suppressionReasonForEvent, type ResendEventData } from '@/lib/email-suppressions'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  let event: { type?: string; data?: { email_id?: string } }
+  let event: { type?: string; data?: ResendEventData }
   try {
     event = JSON.parse(body)
   } catch {
@@ -61,6 +62,12 @@ export async function POST(request: Request) {
     // Unhandled event type or missing id — acknowledge so Resend stops retrying.
     return NextResponse.json({ ok: true, ignored: true })
   }
+
+  // Hard bounce or spam complaint on ANY ohACCESS email (agent or visitor):
+  // add the address to email_suppressions so nothing mails it again
+  // (lib/email-suppressions). Best-effort; the visitor update below still runs.
+  const reason = suppressionReasonForEvent(event.type, event.data)
+  if (reason) await recordSuppressions(recipientsFromResendEvent(event.data), reason, event.type!)
 
   // A bounce/complaint is terminal — record it unconditionally so it wins over
   // any competing event. A "delivered" only counts as the FIRST event (status

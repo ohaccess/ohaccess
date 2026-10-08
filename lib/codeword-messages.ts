@@ -1,4 +1,5 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
+import { isEmailSuppressed } from '@/lib/email-suppressions'
 import twilio from 'twilio'
 import { Resend } from 'resend'
 import { normalizePhone, phoneCountry } from '@/lib/phone'
@@ -340,7 +341,13 @@ export async function sendVisitorCodewordMessages(params: {
       upcomingHtml,
     })
 
-    try {
+    if (await isEmailSuppressed(email)) {
+      // The address hard-bounced or filed a spam complaint before
+      // (lib/email-suppressions): mailing it again only costs reputation. The
+      // visitor still has the SMS codeword and the agent sees both on the
+      // dashboard.
+      console.warn('Visitor codeword email skipped: suppressed address')
+    } else try {
       const visitorEmail = await resend.emails.send({
         // hello@ rather than noreply@: "noreply" senders score worse with spam
         // filters, and this is the one email every visitor must receive.

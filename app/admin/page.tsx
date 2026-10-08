@@ -39,6 +39,7 @@ type Agent = {
   referral_source: string
   campaign: string
   landing_page: string
+  email_suppressed: string
   comped: boolean
   // Non-null when this login owns a sponsor account (sponsor portal user);
   // holds the sponsor's company name, or '' if they haven't entered one.
@@ -1396,7 +1397,17 @@ function AgentsTable({
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 12, color: SUB }}>{a.email}</div>
+              <div style={{ fontSize: 12, color: SUB }}>
+                {a.email}
+                {a.email_suppressed && (
+                  <span
+                    title={a.email_suppressed === 'complained' ? 'Marked an ohACCESS email as spam: we no longer email this address' : 'Address hard-bounced: we no longer email it'}
+                    style={{ display: 'inline-block', marginLeft: 6, background: '#fff0f0', color: '#b42318', border: '1px solid #f5c2c0', borderRadius: 6, padding: '1px 6px', fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap', verticalAlign: 'middle' }}
+                  >
+                    ✉️ {a.email_suppressed}
+                  </span>
+                )}
+              </div>
               {a.referral_source && (
                 <div style={{ fontSize: 11, color: SUB }} title="Signed up via this ?ref= link">
                   ref: <span style={{ fontFamily: 'monospace' }}>{a.referral_source}</span>

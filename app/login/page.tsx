@@ -319,7 +319,7 @@ function LoginForm() {
               Click the link in the email to activate your ohACCESS account and start your free trial.
             </p>
             <p style={{ fontSize: '12px', color: '#aeaeb2' }}>
-              Didn&apos;t receive it? Check your spam folder.
+              Didn&apos;t receive it? Check your spam folder, and if it is there, mark it Not spam so the next one reaches your inbox.
             </p>
             <div style={{ marginTop: '16px' }}>{resendPanel(true)}</div>
             <button

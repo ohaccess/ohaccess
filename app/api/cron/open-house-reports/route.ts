@@ -8,6 +8,7 @@ import { reportRatingUrl } from '@/lib/report-rating-link'
 import { RATING_MAX } from '@/lib/report-rating'
 import { brandedEmailShell, emailButton, emailEyebrow, resolveEmailBranding, type EmailBrand } from '@/lib/email-shell'
 import { buildBrandMarkHtml } from '@/lib/email-cards'
+import { loadSuppressedEmails } from '@/lib/email-suppressions'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -161,6 +162,9 @@ async function handle(request: Request) {
     return NextResponse.json({ error: 'Query failed' }, { status: 500 })
   }
 
+  // Hard-bounced / complained agent addresses (lib/email-suppressions).
+  const suppressed = await loadSuppressedEmails()
+
   let processed = 0
   for (const oh of due ?? []) {
     const { data: agent } = await supabase
@@ -170,8 +174,9 @@ async function handle(request: Request) {
       .maybeSingle()
 
     const to = agent?.display_email || agent?.email
-    if (!to) {
-      // No address to send to — mark as handled so we don't retry forever.
+    if (!to || suppressed.has(to.toLowerCase())) {
+      // No address to send to, or one that bounced / complained before —
+      // mark as handled so we don't retry forever.
       await supabase.from('open_houses').update({ report_sent_at: new Date().toISOString() }).eq('id', oh.id)
       continue
     }

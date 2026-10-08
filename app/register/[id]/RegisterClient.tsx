@@ -994,6 +994,9 @@ function ExpiredOpenHouse() {
               <div style={{ fontSize: '12px', color: accentText, fontWeight: '600', marginTop: '4px' }}>
                 {t.checkEmail}
               </div>
+              <div style={{ fontSize: '11px', color: '#6e6e73', marginTop: '2px' }}>
+                {t.checkSpam}
+              </div>
               <div style={{ fontSize: '12px', color: accentText, fontWeight: '600', marginTop: '4px' }}>
                 {t.checkAgent}
               </div>

@@ -17,6 +17,7 @@ import { buildWeekendGamesEmail } from '@/lib/weekend-games/email'
 import { addDays } from '@/lib/weekend-games/time'
 import { isLatLng, type LatLng } from '@/lib/weekend-games/sun'
 import { resolveAgentLocation } from '@/lib/weekend-games/markets'
+import { loadSuppressedEmails } from '@/lib/email-suppressions'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -105,13 +106,17 @@ async function handle(request: Request) {
         )
       ).map((r) => `${r.agent_id}|${r.email_key}`)
     )
-    optOutEmails = new Set(
-      (
+    optOutEmails = new Set([
+      ...(
         await pageAll<{ email: string }>((from, to) =>
           supabase.from('email_opt_outs').select('email').order('email').range(from, to)
         )
-      ).map((r) => r.email.toLowerCase())
-    )
+      ).map((r) => r.email.toLowerCase()),
+      // Plus addresses that hard-bounced or hit "report spam" on any
+      // ohACCESS email (lib/email-suppressions): mailing them again only
+      // costs sender reputation.
+      ...(await loadSuppressedEmails()),
+    ])
   } catch (e) {
     console.error('weekend-games: data load failed', e)
     return NextResponse.json({ error: 'Query failed' }, { status: 500 })
@@ -229,7 +234,10 @@ async function handle(request: Request) {
 
     try {
       const { error } = await resend.emails.send({
-        from: 'ohACCESS <hello@mail.ohaccess.com>',
+        // news.ohaccess.com, not the codeword domain: this is the one weekly
+        // email agents might tire of, and any complaints it draws must not
+        // touch mail.ohaccess.com's reputation.
+        from: 'ohACCESS <hello@news.ohaccess.com>',
         to: d.to,
         replyTo: 'support@ohaccess.com',
         subject: built.subject,

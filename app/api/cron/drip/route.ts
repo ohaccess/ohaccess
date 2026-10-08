@@ -14,6 +14,7 @@ import {
   buildCheckinEmail,
 } from '@/lib/drip-emails'
 import { getOrCreateReferralCode, referralShortUrl } from '@/lib/referral-code'
+import { loadSuppressedEmails } from '@/lib/email-suppressions'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -132,13 +133,17 @@ async function handle(request: Request) {
     )
     // The visitor suppression list doubles as a hard stop here: an address
     // that asked ohACCESS to go away gets nothing from us, in any role.
-    optOutEmails = new Set(
-      (
+    optOutEmails = new Set([
+      ...(
         await pageAll<{ email: string }>((from, to) =>
           supabase.from('email_opt_outs').select('email').order('email').range(from, to)
         )
-      ).map((r) => r.email.toLowerCase())
-    )
+      ).map((r) => r.email.toLowerCase()),
+      // Plus addresses that hard-bounced or hit "report spam" on any
+      // ohACCESS email (lib/email-suppressions): mailing them again only
+      // costs sender reputation.
+      ...(await loadSuppressedEmails()),
+    ])
     claimedProfileIds = new Set(
       (
         await pageAll<{ profile_id: string | null }>((from, to) =>
