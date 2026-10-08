@@ -155,35 +155,18 @@ export async function sendVisitorCodewordMessages(params: {
       ? `${openHouse.street_address}, ${openHouse.zip_code}`
       : streetAddress
 
-  // Tracked short links (best-effort — a failure just omits the link). The
-  // agent/sponsor links only appear in the email, so skip them on SMS-only
-  // sends.
+  // The SMS gets a tracked ohaccess.com/r/ short link for the listing, purely
+  // for the single-segment character budget (best-effort — a failure just
+  // omits the link). The EMAIL links straight to the listing, agent and
+  // sponsor pages instead: redirect links in a transactional email look like
+  // link cloaking to spam filters and were hurting codeword deliverability.
   let listingShortUrl: string | null = null
-  let agentShortUrl: string | null = null
-  let sponsorShortUrl: string | null = null
-
-  if (isHttpUrl(openHouse.listing_url)) {
+  if (channels.sms && isHttpUrl(openHouse.listing_url)) {
     listingShortUrl = await createShortUrl(
       openHouse.listing_url,
       openHouse.agent_id,
       openHouse.id,
       'listing'
-    )
-  }
-  if (channels.email && isHttpUrl(agent?.landing_page_url)) {
-    agentShortUrl = await createShortUrl(
-      agent!.landing_page_url!,
-      openHouse.agent_id,
-      openHouse.id,
-      'agent'
-    )
-  }
-  if (channels.email && sponsor && isHttpUrl(sponsor.landing_page_url)) {
-    sponsorShortUrl = await createShortUrl(
-      sponsor.landing_page_url!,
-      openHouse.agent_id,
-      openHouse.id,
-      'sponsor'
     )
   }
 
@@ -351,9 +334,9 @@ export async function sendVisitorCodewordMessages(params: {
       brokerageRow,
       sponsor,
       disclosureLinks,
-      listingShortUrl,
-      agentShortUrl,
-      sponsorShortUrl,
+      listingUrl: isHttpUrl(openHouse.listing_url) ? openHouse.listing_url : null,
+      agentInfoUrl: isHttpUrl(agent?.landing_page_url) ? agent!.landing_page_url! : null,
+      sponsorInfoUrl: sponsor && isHttpUrl(sponsor.landing_page_url) ? sponsor.landing_page_url! : null,
       upcomingHtml,
     })
 

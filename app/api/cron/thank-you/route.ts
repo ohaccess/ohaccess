@@ -2,7 +2,6 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { isEmail, isHttpUrl, buildUpcomingOpenHousesHtml } from '@/lib/register-helpers'
-import { createShortUrl } from '@/lib/short-urls'
 import { buildThankYouEmail, thankYouSendState, type ThankYouSponsorCard } from '@/lib/thank-you-email'
 import { resolveEmailBranding, listingFacts, loadUpcomingOpenHouses } from '@/lib/thank-you-data'
 
@@ -86,15 +85,11 @@ async function handle(request: Request) {
     for (const s of data ?? []) sponsorMap.set(s.id, s)
   }
 
-  // Tracked short links for the "Agent information" / "Sponsor information"
-  // links (same kinds as the codeword email), one per open house + page per run.
-  const shortLinks = new Map<string, Promise<string | null>>()
-  const shortLink = (url: string | null | undefined, agentId: string, ohId: string, kind: 'agent' | 'sponsor') => {
-    if (!isHttpUrl(url)) return Promise.resolve(null)
-    const key = `${kind}|${ohId}|${url}`
-    if (!shortLinks.has(key)) shortLinks.set(key, createShortUrl(url, agentId, ohId, kind))
-    return shortLinks.get(key)!
-  }
+  // "Agent information" / "Sponsor information" link straight to the agent's
+  // and sponsor's own pages (same rule as the codeword email): no
+  // ohaccess.com/r/ redirects in transactional email, they read as link
+  // cloaking to spam filters.
+  const directLink = (url: string | null | undefined): string | null => (isHttpUrl(url) ? url : null)
 
   let processed = 0
   for (const v of visitors ?? []) {
@@ -124,7 +119,7 @@ async function handle(request: Request) {
         sponsor = {
           name: s.full_name, company: s.company, email: s.display_email, phone: s.phone,
           licenseNumber: s.license_number, headshotUrl: s.headshot_url, logoUrl: s.logo_url,
-          infoUrl: await shortLink(s.landing_page_url, v.agent_id, v.open_house_id, 'sponsor'),
+          infoUrl: directLink(s.landing_page_url),
         }
       }
     }
@@ -141,7 +136,7 @@ async function handle(request: Request) {
       agentEmail: agent.display_email || agent.email || 'support@ohaccess.com',
       agentLicenseNumber: agent.license_number,
       agentLicenseState: agent.state,
-      agentInfoUrl: await shortLink(agent.landing_page_url, v.agent_id, v.open_house_id, 'agent'),
+      agentInfoUrl: directLink(agent.landing_page_url),
       listingUrl: oh.listing_url,
       facts: listingFacts(oh),
       // The after-tour questions, for the visitors who never scrolled back to

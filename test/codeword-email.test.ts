@@ -12,9 +12,9 @@ const base: CodewordEmailOpts = {
   brokerageRow: null,
   sponsor: null,
   disclosureLinks: [],
-  listingShortUrl: null,
-  agentShortUrl: null,
-  sponsorShortUrl: null,
+  listingUrl: null,
+  agentInfoUrl: null,
+  sponsorInfoUrl: null,
   upcomingHtml: '',
 }
 
@@ -47,11 +47,21 @@ describe('buildCodewordEmail', () => {
     const { html } = buildCodewordEmail({
       ...base,
       sponsor: { id: 's1', full_name: 'Pat Lender', company: 'Acme Mortgage', display_email: null, phone: null, license_number: null, headshot_url: 'https://example.com/pat.jpg', logo_url: 'https://example.com/acme.png', landing_page_url: 'https://acme.example' },
-      sponsorShortUrl: 'https://ohaccess.com/r/sp1',
+      sponsorInfoUrl: 'https://acme.example',
     })
     expect(html).toContain('https://example.com/pat.jpg')
     expect(html).toContain('https://example.com/acme.png')
-    expect(html).toContain('href="https://ohaccess.com/r/sp1"')
+    expect(html).toContain('href="https://acme.example"')
     expect(html).toContain('Sponsor information')
+  })
+  it('links straight to the listing and agent pages, never through a redirect', () => {
+    const { html } = buildCodewordEmail({
+      ...base,
+      listingUrl: 'https://listings.example/4124-cory-lee',
+      agentInfoUrl: 'https://kathryn.example',
+    })
+    expect(html).toContain('href="https://listings.example/4124-cory-lee"')
+    expect(html).toContain('href="https://kathryn.example"')
+    expect(html).not.toContain('ohaccess.com/r/')
   })
 })

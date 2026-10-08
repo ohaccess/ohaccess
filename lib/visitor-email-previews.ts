@@ -95,9 +95,9 @@ export async function buildVisitorEmailPreviews(ohId: string, agentId: string): 
     brokerageRow: brokerage ?? null,
     sponsor: agentSponsor,
     disclosureLinks: resolveDisclosureLinks(agent.disclosure_links, brokerage?.disclosure_links),
-    listingShortUrl: isHttpUrl(oh.listing_url) ? oh.listing_url : null,
-    agentShortUrl: isHttpUrl(agent.landing_page_url) ? agent.landing_page_url : null,
-    sponsorShortUrl: agentSponsor && isHttpUrl(agentSponsor.landing_page_url) ? agentSponsor.landing_page_url : null,
+    listingUrl: isHttpUrl(oh.listing_url) ? oh.listing_url : null,
+    agentInfoUrl: isHttpUrl(agent.landing_page_url) ? agent.landing_page_url : null,
+    sponsorInfoUrl: agentSponsor && isHttpUrl(agentSponsor.landing_page_url) ? agentSponsor.landing_page_url : null,
     upcomingHtml,
   })
 

@@ -55,16 +55,19 @@ export type CodewordEmailOpts = {
   brokerageRow: CodewordBrokerage | null
   sponsor: CodewordSponsor | null
   disclosureLinks: DisclosureLink[]
-  listingShortUrl: string | null
-  agentShortUrl: string | null
-  sponsorShortUrl: string | null
+  // Direct destination URLs, never ohaccess.com/r/ redirects: redirect links
+  // in a transactional email read as link cloaking to spam filters. Each is
+  // already validated with isHttpUrl by the caller ('' / null = no link).
+  listingUrl: string | null
+  agentInfoUrl: string | null
+  sponsorInfoUrl: string | null
   upcomingHtml: string   // pre-rendered by buildUpcomingOpenHousesHtml ('' if none)
 }
 
 // Escapes every agent-controlled field before interpolating it into the HTML
 // to prevent injection / tracking-pixel abuse.
 export function buildCodewordEmail(o: CodewordEmailOpts): { subject: string; html: string } {
-  const { openHouse, agent, brokerageRow, sponsor, listingShortUrl, agentShortUrl, sponsorShortUrl } = o
+  const { openHouse, agent, brokerageRow, sponsor, listingUrl, agentInfoUrl, sponsorInfoUrl } = o
 
   // Two code words: the SMS (text) word is primary; the email word is a
   // fallback. Legacy open houses only have code_word, so reuse it for email.
@@ -94,7 +97,7 @@ export function buildCodewordEmail(o: CodewordEmailOpts): { subject: string; htm
     licenseState: agent?.state || null,
     headshotUrl: agent?.headshot_url || null,
     logoUrl: brand.logoUrl,
-    infoUrl: agentShortUrl,
+    infoUrl: agentInfoUrl,
   }, {
     primary: brand.primary,
     accent: brand.accent,
@@ -110,7 +113,7 @@ export function buildCodewordEmail(o: CodewordEmailOpts): { subject: string; htm
         licenseNumber: sponsor.license_number,
         headshotUrl: sponsor.headshot_url,
         logoUrl: sponsor.logo_url,
-        infoUrl: sponsorShortUrl,
+        infoUrl: sponsorInfoUrl,
       }, { accent: brand.accent })
     : ''
 
@@ -132,7 +135,7 @@ export function buildCodewordEmail(o: CodewordEmailOpts): { subject: string; htm
               🕒 ${escapeHtml(openHouse.open_house_hours)}<br/>
               🛏 ${escapeHtml(openHouse.bedrooms || '—')} bed · 🛁 ${escapeHtml(openHouse.bathrooms || '—')} bath · 📐 ${escapeHtml(openHouse.square_footage || '—')} ${areaAbbrev(areaUnitFor(openHouse.country))} <br/>
               💰 ${escapeHtml(openHouse.listing_price || '—')}</div>
-              ${listingShortUrl ? emailButton('View the listing &rarr;', escapeHtml(listingShortUrl), brand) : ''}`)}
+              ${listingUrl ? emailButton('View the listing &rarr;', escapeHtml(listingUrl), brand) : ''}`)}
             ${agentCardHtml}
             ${sponsorHtml}
             ${buildDisclosuresHtml(o.disclosureLinks, brand.accent)}
