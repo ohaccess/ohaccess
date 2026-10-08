@@ -1,9 +1,13 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser, isAdmin } from '@/lib/auth'
+import { attributionLabel, sanitizeAttribution } from '@/lib/attribution'
 
 type ProfileRow = {
   referral_source: string | null
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
   tier: string | null
   created_at: string
   full_name: string | null
@@ -28,8 +32,8 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('referral_source, tier, created_at, full_name, email')
-    .not('referral_source', 'is', null)
+    .select('referral_source, utm_source, utm_medium, utm_campaign, tier, created_at, full_name, email')
+    .or('referral_source.not.is.null,utm_source.not.is.null,utm_campaign.not.is.null')
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -40,7 +44,10 @@ export async function GET(request: Request) {
     { source: string; signups: number; pro: number; first: string; last: string; agents: SourceAgent[] }
   >()
   for (const row of (data || []) as ProfileRow[]) {
-    const source = row.referral_source!
+    // ?ref= wins when both were captured (it is the deliberate ohACCESS
+    // tag); otherwise the utm_* trio identifies the post, ad or outreach link.
+    const source = row.referral_source || `utm: ${attributionLabel(sanitizeAttribution(row))}`
+    if (!source || source === 'utm: ') continue
     const isPro = (row.tier || '').toLowerCase() === 'pro'
     const agent: SourceAgent = {
       name: row.full_name || row.email || 'Unknown',

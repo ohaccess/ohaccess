@@ -7,6 +7,7 @@ import type Stripe from 'stripe'
 import { trialLimitFor, isExpiredPrepaidAccess } from '@/lib/billing-plans'
 import { summarizeRatings } from '@/lib/report-rating'
 import { buildSignInMatcher, groupWalkaways, type EventInfo } from '@/lib/scan-walkaways'
+import { attributionLabel, sanitizeAttribution } from '@/lib/attribution'
 
 type ProfileRow = {
   id: string
@@ -25,6 +26,12 @@ type ProfileRow = {
   bonus_visitors: number | null
   sponsor_id: string | null
   referral_source: string | null
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  utm_content?: string | null
+  utm_term?: string | null
+  landing_page?: string | null
   created_at: string
 }
 
@@ -85,7 +92,7 @@ export async function GET(request: Request) {
     supabase
       .from('profiles')
       .select(
-        'id, full_name, email, phone, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, bonus_visitors, sponsor_id, referral_source, created_at'
+        'id, full_name, email, phone, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, bonus_visitors, sponsor_id, referral_source, utm_source, utm_medium, utm_campaign, utm_content, utm_term, landing_page, created_at'
       )
       .order('created_at', { ascending: false }),
     supabase
@@ -267,6 +274,9 @@ export async function GET(request: Request) {
       current_period_end: p.current_period_end,
       bonus_visitors: p.bonus_visitors || 0,
       referral_source: p.referral_source || '',
+      // "source / medium / campaign" from the utm_* captured at first touch.
+      campaign: attributionLabel(sanitizeAttribution(p)),
+      landing_page: p.landing_page || '',
       // Gifted (comped) access: paid tier with no Stripe subscription behind it.
       comped: p.billing_interval === 'comped' && !p.stripe_subscription_id,
       // Set when this login owns a sponsor account (sponsor portal user).

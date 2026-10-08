@@ -37,6 +37,8 @@ type Agent = {
   current_period_end: string | null
   bonus_visitors: number
   referral_source: string
+  campaign: string
+  landing_page: string
   comped: boolean
   // Non-null when this login owns a sponsor account (sponsor portal user);
   // holds the sponsor's company name, or '' if they haven't entered one.
@@ -776,7 +778,8 @@ export default function AdminDashboard() {
         a.email.toLowerCase().includes(q) ||
         (qDigits.length >= 4 && a.phone.replace(/\D/g, '').includes(qDigits)) ||
         a.brokerage.toLowerCase().includes(q) ||
-        a.referral_source.toLowerCase().includes(q)
+        a.referral_source.toLowerCase().includes(q) ||
+        a.campaign.toLowerCase().includes(q)
     )
   }, [data, q])
 
@@ -1397,6 +1400,11 @@ function AgentsTable({
               {a.referral_source && (
                 <div style={{ fontSize: 11, color: SUB }} title="Signed up via this ?ref= link">
                   ref: <span style={{ fontFamily: 'monospace' }}>{a.referral_source}</span>
+                </div>
+              )}
+              {a.campaign && (
+                <div style={{ fontSize: 11, color: SUB }} title={`utm source / medium / campaign${a.landing_page ? ` · landed on ${a.landing_page}` : ''}`}>
+                  utm: <span style={{ fontFamily: 'monospace' }}>{a.campaign}</span>
                 </div>
               )}
             </td>

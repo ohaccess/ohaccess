@@ -63,7 +63,7 @@ export default function AdminSourcesPage() {
         Referral Sources
       </h1>
       <div style={{ fontSize: 13, color: '#6e6e73', marginBottom: 24 }}>
-        Tracks signups by the <code style={{ background: '#f5f5f7', padding: '2px 6px', borderRadius: 4 }}>?ref=</code> query parameter (30-day attribution window, first-touch wins).
+        Tracks signups by the <code style={{ background: '#f5f5f7', padding: '2px 6px', borderRadius: 4 }}>?ref=</code> query parameter, or by <code style={{ background: '#f5f5f7', padding: '2px 6px', borderRadius: 4 }}>utm_source / utm_medium / utm_campaign</code> when a link carries those instead (30-day attribution window, first-touch wins).
       </div>
 
       {loading && <div style={{ color: '#6e6e73' }}>Loading…</div>}

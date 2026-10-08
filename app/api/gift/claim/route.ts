@@ -4,6 +4,7 @@ import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthenticatedUser } from '@/lib/auth'
 import { stripe } from '@/lib/stripe'
 import { normalizeGiftCode, giftAccessEnd } from '@/lib/gift'
+import { REF_COOKIE, attributionProfileFields, parseUtmCookie, readCookie, sanitizeAttribution } from '@/lib/attribution'
 
 // POST { code }: redeem a 1-year Pro gift onto the signed-in agent's account.
 // Two application paths, per Dave's design (gifts always ADD 12 months):
@@ -85,10 +86,13 @@ export async function POST(request: Request) {
     if (!profile) {
       const metaRef = (user.user_metadata?.referral_source as string | undefined) || null
       const cookieHeader = request.headers.get('cookie') || ''
-      const refCookie = cookieHeader.split('; ').find((c) => c.startsWith('ohaccess_ref='))
-      const cookieRef = refCookie ? decodeURIComponent(refCookie.split('=')[1] || '') : null
-      const referralSource = metaRef || cookieRef
-      const insertRow: Record<string, unknown> = { id: user.id, email: user.email }
+      const referralSource = metaRef || readCookie(cookieHeader, REF_COOKIE)
+      const attribution = sanitizeAttribution(user.user_metadata) || parseUtmCookie(cookieHeader)
+      const insertRow: Record<string, unknown> = {
+        id: user.id,
+        email: user.email,
+        ...attributionProfileFields(attribution),
+      }
       if (referralSource) {
         insertRow.referral_source = referralSource
         insertRow.referral_source_first_seen_at = new Date().toISOString()

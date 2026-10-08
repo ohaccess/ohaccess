@@ -6,6 +6,17 @@ import { stripe, getPriceConfig, isTier, isBillingInterval } from '@/lib/stripe'
 import { isValidSeatCount, isExpiredPrepaidAccess, isComped, MIN_BROKERAGE_SEATS, MAX_BROKERAGE_SEATS } from '@/lib/billing-plans'
 import { HARDWARE_OFFER_ACTIVE, HARDWARE_CHOICES, STRIPE_HARDWARE_VALUES } from '@/lib/hardware-offer'
 
+// Meta's attribution cookies (_fbp browser id, _fbc click id), read off the
+// checkout request so the webhook can hand them to the Conversions API with
+// the Purchase event: that is what ties the sale back to the ad click. Stripe
+// metadata values cap at 500 characters. Format-checked so nothing but a
+// well-formed cookie value ever reaches Stripe.
+function metaCookie(cookieHeader: string, name: '_fbp' | '_fbc'): string | undefined {
+  const hit = cookieHeader.split('; ').find((c) => c.startsWith(`${name}=`))
+  const value = hit?.slice(name.length + 1) ?? ''
+  return /^fb\.[0-9]\.[0-9]+\.[A-Za-z0-9_-]{1,450}$/.test(value) ? value : undefined
+}
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://ohaccess.com'
 
 export async function POST(request: Request) {
@@ -89,6 +100,10 @@ export async function POST(request: Request) {
 
     const cfg = getPriceConfig(tier, interval)
 
+    const cookieHeader = request.headers.get('cookie') || ''
+    const fbp = metaCookie(cookieHeader, '_fbp')
+    const fbc = metaCookie(cookieHeader, '_fbc')
+
     // Free sign-hardware offer (terms §4.9): individual Pro 2-year purchases
     // only, one claim per account ever. When eligible, Stripe Checkout itself
     // collects the US shipping address and the stand-vs-A-frame choice; the
@@ -124,6 +139,8 @@ export async function POST(request: Request) {
         billing_interval: interval,
         ...(tier === 'brokerage' ? { seats: String(seatCount) } : {}),
         ...(hardwareOffer ? { hardware_offer: 'true' } : {}),
+        ...(fbp ? { fbp } : {}),
+        ...(fbc ? { fbc } : {}),
       },
       subscription_data: {
         metadata: {

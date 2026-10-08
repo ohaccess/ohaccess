@@ -11,6 +11,7 @@ import { MIN_BROKERAGE_SEATS } from '@/lib/billing-plans'
 import { generateGiftCode } from '@/lib/gift'
 import { HARDWARE_CHOICES, hardwareChoiceFromStripe, normalizeStateCode } from '@/lib/hardware-offer'
 import { sendRemovalEmail } from '@/lib/removal-email'
+import { sendMetaEvent } from '@/lib/meta-capi'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -443,6 +444,28 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
      <strong>Plan:</strong> ${escapeHtml(planLabel + intervalLabel)}<br/>
      <strong>Amount:</strong> ${escapeHtml(amount)}</p>`
   )
+
+  // Meta Purchase, server side, with Stripe's own charged amount. The
+  // session id is the event_id, the same id the dashboard's browser pixel
+  // uses when the buyer lands back there, so Meta counts one purchase
+  // however many legs arrive. stripe_events idempotency above means this
+  // runs once per checkout. Inert until the Meta env vars are set; a failure
+  // is logged and never affects provisioning.
+  await sendMetaEvent({
+    eventName: 'Purchase',
+    eventId: session.id,
+    email: buyer?.email ?? session.customer_details?.email ?? null,
+    userId: profileId,
+    sourceUrl: `${APP_URL}/dashboard?view=settings&checkout=success`,
+    fbp: session.metadata?.fbp ?? null,
+    fbc: session.metadata?.fbc ?? null,
+    customData: {
+      value: (session.amount_total ?? 0) / 100,
+      currency: String(session.currency || 'usd').toUpperCase(),
+      content_name: interval ? `${tier}_${interval}` : tier,
+      content_type: 'product',
+    },
+  })
 }
 
 async function handleSubscriptionChange(sub: Stripe.Subscription) {

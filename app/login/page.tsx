@@ -4,6 +4,7 @@ import { supabaseBrowser as supabase } from '@/lib/supabase-browser'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { trackSignup } from '@/lib/marketing-tags'
+import { REF_COOKIE, attributionProfileFields, parseUtmCookie, readCookie } from '@/lib/attribution'
 import Captcha, { captchaEnabled, CAPTCHA_WAIT_MESSAGE } from '@/app/_components/Captcha'
 
 function LoginForm() {
@@ -222,22 +223,24 @@ function LoginForm() {
         return
       }
     } else {
-      // Pull the referral source from the cookie set by RefCapture (if any)
-      // and stash it on the auth user. This survives the email-confirmation
-      // hop even when the confirm link opens in a different browser.
-      const refCookie = typeof document !== 'undefined'
-        ? document.cookie.split('; ').find((c) => c.startsWith('ohaccess_ref='))
-        : undefined
-      const referralSource = refCookie
-        ? decodeURIComponent(refCookie.split('=')[1] || '')
-        : null
+      // Pull the referral source and utm_* attribution from the cookies set
+      // by RefCapture (if any) and stash them on the auth user. This survives
+      // the email-confirmation hop even when the confirm link opens in a
+      // different browser; the signup trigger (migration 059) copies them
+      // onto the profile row.
+      const cookies = typeof document !== 'undefined' ? document.cookie : ''
+      const referralSource = readCookie(cookies, REF_COOKIE)
+      const signupMeta = {
+        ...(referralSource ? { referral_source: referralSource } : {}),
+        ...attributionProfileFields(parseUtmCookie(cookies)),
+      }
 
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: confirmRedirectUrl(),
-          data: referralSource ? { referral_source: referralSource } : undefined,
+          data: Object.keys(signupMeta).length > 0 ? signupMeta : undefined,
           captchaToken,
         }
       })

@@ -169,6 +169,16 @@ export const META_SIGNUP_CUSTOM_DATA = {
   value: 0,
 } as const
 
+// The agent's FIRST open house published: the activation moment ads should
+// eventually optimize for. Custom event (no Meta standard event fits), same
+// value rules as above.
+export const META_FIRST_OPEN_HOUSE_CUSTOM_DATA = {
+  content_name: 'first_open_house',
+  status: 'complete',
+  currency: 'USD',
+  value: 0,
+} as const
+
 // Account created (signup form submitted; email confirmation still pending).
 // Fired here rather than on the confirmation click because that click often
 // happens on another device, where the ad-click attribution cookie isn't.
@@ -260,6 +270,43 @@ export async function trackSignupOnce(email?: string, userId?: string, method = 
   googleAdsConversion(GOOGLE_ADS_SIGNUP_LABEL)
 }
 
+// First open house published, from the dashboard. Server leg first, browser
+// leg only if the server actually relayed: the (user, event) ledger behind
+// /api/meta-event makes this at most once per account, whether the agent
+// later deletes and re-creates, reloads, or the create handler re-runs.
+export async function trackFirstOpenHouse(email?: string, userId?: string) {
+  if (typeof window === 'undefined' || !userId || !META_PIXEL_ID || gpcOptOut()) return
+  const eventId =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`
+  try {
+    const res = await fetch('/api/meta-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventName: 'FirstOpenHouse',
+        eventId,
+        email,
+        userId,
+        sourceUrl: window.location.href,
+      }),
+    })
+    const json = await res.json()
+    if (!res.ok || json.skipped) return
+  } catch {
+    return
+  }
+  loadMarketingTags()
+  if (window.fbq && (email || userId)) {
+    window.fbq('init', META_PIXEL_ID, {
+      ...(email ? { em: email.trim().toLowerCase() } : {}),
+      ...(userId ? { external_id: userId } : {}),
+    })
+  }
+  window.fbq?.('trackCustom', 'FirstOpenHouse', { ...META_FIRST_OPEN_HOUSE_CUSTOM_DATA }, { eventID: eventId })
+}
+
 // Contact / partner inquiry form submitted.
 export function trackLead() {
   loadMarketingTags()
@@ -270,6 +317,10 @@ export function trackLead() {
 
 // Paid subscription started. value is in whole currency units (dollars), and
 // transactionId (the Stripe Checkout Session id) lets both platforms de-dupe.
+// Meta also receives this Purchase from the Stripe webhook (lib/meta-capi)
+// with the SAME session id as event_id, so whichever leg arrives second is
+// deduplicated; the server leg is the one that fires even when the buyer
+// never returns to the dashboard.
 export function trackPurchase(p: { value: number; currency: string; transactionId: string; plan?: string }) {
   loadMarketingTags()
   const currency = p.currency.toUpperCase()
@@ -278,7 +329,7 @@ export function trackPurchase(p: { value: number; currency: string; transactionI
     currency,
     content_name: p.plan,
     content_type: 'product',
-  })
+  }, { eventID: p.transactionId })
   window.gtag?.('event', 'purchase', {
     transaction_id: p.transactionId,
     value: p.value,

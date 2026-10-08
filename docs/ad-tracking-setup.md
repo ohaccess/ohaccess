@@ -38,7 +38,8 @@ ID means Meta simply doesn't load.
 | Any marketing page view (incl. clicking between pages) | `PageView` | Ads remarketing hit; GA4 `page_view` |
 | Sign-up form submitted on /login | `CompleteRegistration` — sent twice (browser pixel + server Conversions API) with a shared event id so Meta counts it once; the server copy survives iOS tracking prevention and ad blockers | `sign_up` + Ads conversion (signup label) |
 | Contact or Partners form submitted | `Lead` | `generate_lead` + Ads conversion (lead label) |
-| Stripe checkout completed (back on the dashboard) | `Purchase` with amount + currency | `purchase` with amount, currency, Stripe session id + Ads conversion (purchase label) |
+| First open house published (dashboard) | `FirstOpenHouse` (custom event) — server Conversions API leg first, browser pixel second, one shared event id; at most once per account | — |
+| Stripe checkout completed | `Purchase` with the amount Stripe actually charged — sent from the Stripe webhook (server) the moment payment lands, and again by the browser pixel if the buyer returns to the dashboard; both use the Stripe session id as the event id so Meta counts one purchase | `purchase` with amount, currency, Stripe session id + Ads conversion (purchase label) |
 
 The purchase amount comes from Stripe after any promo code, so what Meta and
 Google see is what was actually charged.
@@ -78,6 +79,18 @@ Google see is what was actually charged.
   conversion is also sent server-side with the email SHA-256-hashed, so iOS
   tracking prevention and ad blockers can't eat it. It obeys the same rules —
   inert until the token is set, skipped for Global Privacy Control browsers.
+  Since 2026-10-07 the same server leg covers `FirstOpenHouse` and `Purchase`
+  (the latter straight from the Stripe webhook; the checkout request carries
+  Meta's `_fbp`/`_fbc` cookies into the Stripe session so the sale still ties
+  back to the ad click). In Events Manager, create a **custom conversion** on
+  the `FirstOpenHouse` event to optimize campaigns for activation.
+- **UTM capture** (added 2026-10-07): any landing URL carrying `utm_source`,
+  `utm_medium`, `utm_campaign`, `utm_content` or `utm_term` is remembered for
+  30 days (first touch wins) and saved on the new account along with the page
+  they landed on. The admin Sources report buckets by `?ref=` first, then by
+  `utm_source / utm_medium / utm_campaign`; the Agents table shows a `utm:`
+  line per account. Use UTMs on ads and posts, keep `?ref=` for printed codes
+  and referral links; both work together.
 - Not done (say the word if you want them later): Google enhanced conversions
   (Google's equivalent of the above), a cookie-consent banner (not required
   for a US-only B2B audience; would be needed before advertising to EU/UK

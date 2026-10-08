@@ -6,6 +6,7 @@ import { notifyAdmins } from '@/lib/notify-admin'
 import { escapeHtml } from '@/lib/escape-html'
 import { buildWelcomeEmail, welcomeFirstName } from '@/lib/welcome-email'
 import { Resend } from 'resend'
+import { attributionLabel, attributionProfileFields, sanitizeAttribution } from '@/lib/attribution'
 
 const resend = new Resend(process.env.RESEND_API_KEY!)
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.ohaccess.com'
@@ -57,7 +58,11 @@ export async function POST(request: Request) {
     // from auth metadata (stashed at signup, survives the confirmation hop).
     const metaRef =
       (user.user_metadata?.referral_source as string | undefined) || null
-    const insertRow: Record<string, unknown> = { id: user.id, email: user.email }
+    const insertRow: Record<string, unknown> = {
+      id: user.id,
+      email: user.email,
+      ...attributionProfileFields(sanitizeAttribution(user.user_metadata)),
+    }
     if (metaRef) {
       insertRow.referral_source = metaRef
       insertRow.referral_source_first_seen_at = new Date().toISOString()
@@ -83,7 +88,7 @@ export async function POST(request: Request) {
     .update({ signup_admin_notified_at: new Date().toISOString() })
     .eq('id', user.id)
     .is('signup_admin_notified_at', null)
-    .select('email, referral_source')
+    .select('email, referral_source, utm_source, utm_medium, utm_campaign, utm_content, utm_term, landing_page')
     .maybeSingle()
 
   if (claimError) {
@@ -91,11 +96,14 @@ export async function POST(request: Request) {
   } else if (claimed) {
     const email = claimed.email || user.email || '(unknown email)'
     const referral = (claimed.referral_source || '').trim()
+    const campaign = attributionLabel(sanitizeAttribution(claimed))
+    const landing = (claimed.landing_page || '').trim()
     adminNotified = await notifyAdmins(
       `🎉 New ohACCESS account: ${email}`,
       `<p>A new account just became active on ohACCESS.</p>
        <p><strong>Email:</strong> ${escapeHtml(email)}<br/>
-       <strong>Heard about us:</strong> ${escapeHtml(referral || '—')}</p>`
+       <strong>Heard about us:</strong> ${escapeHtml(referral || '—')}<br/>
+       <strong>Campaign (utm):</strong> ${escapeHtml(campaign || '—')}${landing ? ` · landed on ${escapeHtml(landing)}` : ''}</p>`
     )
   }
 

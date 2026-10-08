@@ -91,7 +91,9 @@ describe('loadMarketingTags / track*', () => {
     const m = await load('/dashboard')
     m.trackPurchase({ value: 199, currency: 'usd', transactionId: 'cs_test_abc', plan: 'pro_year' })
     expect(gtagCalls().filter((c) => c[0] === 'config')).toEqual([['config', 'AW-111']])
-    expect(fbqCalls()).toContainEqual(['track', 'Purchase', { value: 199, currency: 'USD', content_name: 'pro_year', content_type: 'product' }])
+    // The Stripe session id doubles as Meta's event id so the webhook's
+    // server-side Purchase (lib/meta-capi) and this browser one count once.
+    expect(fbqCalls()).toContainEqual(['track', 'Purchase', { value: 199, currency: 'USD', content_name: 'pro_year', content_type: 'product' }, { eventID: 'cs_test_abc' }])
     expect(gtagCalls()).toContainEqual(['event', 'purchase', {
       transaction_id: 'cs_test_abc', value: 199, currency: 'USD',
       items: [{ item_name: 'pro_year', price: 199, quantity: 1 }],

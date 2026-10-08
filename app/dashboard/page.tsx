@@ -22,7 +22,8 @@ import { normalizeCustomAnswers } from '@/lib/custom-questions'
 import { formatPropertyTime } from '@/lib/property-time'
 import { sanitizeSmsCodeWord } from '@/lib/register-helpers'
 import { normalizeAgreementTemplates } from '@/lib/agreements'
-import { loadMarketingTags, trackPurchase, trackSignupOnce } from '@/lib/marketing-tags'
+import { loadMarketingTags, trackFirstOpenHouse, trackPurchase, trackSignupOnce } from '@/lib/marketing-tags'
+import { REF_COOKIE, attributionProfileFields, parseUtmCookie, readCookie, sanitizeAttribution } from '@/lib/attribution'
 import { regionFor, inferProfileCountry, normalizeCountry, countryFromLocale, countryName } from '@/lib/regions'
 import { phoneError } from '@/lib/phone'
 import { fillEmptyFacts } from '@/lib/property-facts'
@@ -305,24 +306,21 @@ export default function Dashboard() {
         }
       } else {
         // Auto-create profile if it doesn't exist. Pull the referral source
-        // from auth user_metadata first (set at signup, survives email
-        // confirmation across browsers); fall back to the cookie for OAuth
-        // or same-session flows.
+        // and utm_* attribution from auth user_metadata first (set at signup,
+        // survives email confirmation across browsers); fall back to the
+        // cookies for OAuth or same-session flows.
         const { data: userData } = await supabase.auth.getUser()
         const metaRef =
           (userData.user?.user_metadata?.referral_source as string | undefined) ||
           null
-        const refCookie = document.cookie
-          .split('; ')
-          .find((c) => c.startsWith('ohaccess_ref='))
-        const cookieRef = refCookie
-          ? decodeURIComponent(refCookie.split('=')[1] || '')
-          : null
-        const referralSource = metaRef || cookieRef
+        const referralSource = metaRef || readCookie(document.cookie, REF_COOKIE)
+        const attribution =
+          sanitizeAttribution(userData.user?.user_metadata) || parseUtmCookie(document.cookie)
 
         const insertRow: Record<string, unknown> = {
           id: userId,
           email: userData.user?.email,
+          ...attributionProfileFields(attribution),
         }
         if (referralSource) {
           insertRow.referral_source = referralSource
@@ -710,6 +708,9 @@ export default function Dashboard() {
     overlapAcknowledged.current = false
     const hoursText = `${fmtTime12(form.open_house_start_time)} – ${fmtTime12(form.open_house_end_time)}`
     const fullAddress = buildPropertyAddress()
+    // Before the insert so a slow reload can't make the first one look like
+    // the second; the send-once ledger behind the event handles everything else.
+    const isFirstOpenHouse = openHouses.length === 0
     const { data, error } = await supabase.from('open_houses').insert({
       agent_id: user.id,
       property_address: fullAddress,
@@ -746,6 +747,9 @@ export default function Dashboard() {
       return
     }
     if (data) {
+      // Activation conversion for the ad platforms (Meta FirstOpenHouse).
+      // Fire-and-forget; at most once per account.
+      if (isFirstOpenHouse) trackFirstOpenHouse(user.email, user.id).catch(() => {})
       await loadOpenHouses(user.id)
       setView('dashboard')
       resetForm()
