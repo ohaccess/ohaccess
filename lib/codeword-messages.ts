@@ -342,12 +342,14 @@ export async function sendVisitorCodewordMessages(params: {
 
     try {
       const visitorEmail = await resend.emails.send({
-        from: 'ohACCESS <noreply@mail.ohaccess.com>',
+        // hello@ rather than noreply@: "noreply" senders score worse with spam
+        // filters, and this is the one email every visitor must receive.
+        from: 'ohACCESS <hello@mail.ohaccess.com>',
         to: email,
         cc: agentCopy.cc,
         bcc: agentCopy.bcc,
         // Replies go to the host agent (the person a visitor would want to
-        // reach), not the send-only noreply subdomain — which has no inbox and
+        // reach), not the send-only mail. subdomain, which has no inbox and
         // hard-bounces any reply.
         replyTo: agent?.display_email || agent?.email || 'support@ohaccess.com',
         subject,
