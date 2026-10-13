@@ -119,12 +119,43 @@ type Revenue = {
   cancelingMrrCents: number
 }
 
+// Several logins sharing one business email / one licence (lib/admin-quality.ts).
+type DuplicateGroup = {
+  value: string
+  members: { id: string; name: string; email: string; created_at: string }[]
+  sameTeam: boolean
+}
+type Duplicates = { displayEmails: DuplicateGroup[]; licences: DuplicateGroup[] }
+
+type BouncedEmail = {
+  email: string
+  reason: 'bounced' | 'complained'
+  who: string
+  kind: 'agent' | 'visitor' | 'unknown'
+  at: string
+}
+type FakePhone = {
+  visitorId: string
+  phone: string
+  name: string
+  openHouseAddress: string
+  agentName: string
+  reason: 'undeliverable' | 'voip'
+  at: string
+}
+type Quality = {
+  bouncedEmails: { count: number; agents: number; recent: BouncedEmail[] }
+  fakePhones: { count: number; undeliverable: number; voip: number; recent: FakePhone[] }
+}
+
 type Payload = {
   stats: Stats
   funnel?: Funnel
   revenue?: Revenue | null
   // Null when the ratings table isn't there yet (migration 053) or failed.
   ratings?: Ratings | null
+  duplicates?: Duplicates
+  quality?: Quality
   agents: Agent[]
   openHouses: OpenHouse[]
   visitors: Visitor[]
@@ -1813,6 +1844,9 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
   // Stuck signups (agents arrive newest-first from the API, so these are too).
   const neverLoggedIn = data.agents.filter((a) => !a.last_sign_in_at)
   const noOpenHouse = data.agents.filter((a) => a.last_sign_in_at && a.openHouseCount === 0)
+  // Several logins behind one business email / one licence (soft signal only).
+  const sharedEmails = data.duplicates?.displayEmails ?? []
+  const sharedLicences = data.duplicates?.licences ?? []
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, marginTop: 24 }}>
@@ -1863,8 +1897,8 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
       </Panel>
 
       <Panel title="Needs Attention" onMore={() => setTab('agents')}>
-        {neverLoggedIn.length === 0 && noOpenHouse.length === 0 && (
-          <Muted>Everyone who signed up has logged in and created an open house.</Muted>
+        {neverLoggedIn.length === 0 && noOpenHouse.length === 0 && sharedEmails.length === 0 && sharedLicences.length === 0 && (
+          <Muted>Everyone who signed up has logged in and created an open house, and no two accounts share a business email or licence.</Muted>
         )}
         {neverLoggedIn.length > 0 && (
           <>
@@ -1887,6 +1921,110 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
             {noOpenHouse.slice(0, 5).map((a) => (
               <Line key={a.id} left={a.name} sub={a.email} right={`joined ${fmtDate(a.created_at)}`} />
             ))}
+          </>
+        )}
+        {sharedEmails.length > 0 && (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 700, color: AMBER, paddingTop: 4 }}>
+              {`Same business email on several accounts (${sharedEmails.length})`}
+            </div>
+            {sharedEmails.slice(0, 5).map((g) => (
+              <DuplicateLine key={g.value} group={g} />
+            ))}
+            <div style={{ fontSize: 11, color: SUB, padding: '4px 0 8px' }}>
+              Different logins, one Settings email. Often one person on a second trial; a shared office inbox on a team is normal.
+            </div>
+          </>
+        )}
+        {sharedLicences.length > 0 && (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 700, color: AMBER, paddingTop: 4 }}>
+              {`Same licence number and state on several accounts (${sharedLicences.length})`}
+            </div>
+            {sharedLicences.slice(0, 5).map((g) => (
+              <DuplicateLine key={g.value} group={g} />
+            ))}
+          </>
+        )}
+      </Panel>
+
+      {/* Addresses the mailbox provider rejected (Resend webhook → email_suppressions,
+          plus older visitor codeword bounces). We never mail these again. */}
+      <Panel title="Bounced Emails">
+        {!data.quality && <Muted>Not available right now.</Muted>}
+        {data.quality && data.quality.bouncedEmails.count === 0 && (
+          <Muted>No bounced or complained addresses on record.</Muted>
+        )}
+        {data.quality && data.quality.bouncedEmails.count > 0 && (
+          <>
+            <div style={{ display: 'flex', gap: 18, alignItems: 'baseline', paddingBottom: 8 }}>
+              <div>
+                <span style={{ fontSize: 22, fontWeight: 800, color: INK }}>{data.quality.bouncedEmails.count.toLocaleString()}</span>
+                <span style={{ fontSize: 12, color: SUB, marginLeft: 6 }}>{data.quality.bouncedEmails.count === 1 ? 'address' : 'addresses'}</span>
+              </div>
+              <div style={{ fontSize: 12, color: SUB }}>
+                {`${data.quality.bouncedEmails.agents} agent · ${data.quality.bouncedEmails.count - data.quality.bouncedEmails.agents} visitor`}
+              </div>
+            </div>
+            {data.quality.bouncedEmails.recent.map((b) => (
+              <Line
+                key={b.email}
+                left={b.email}
+                sub={b.kind === 'agent' ? `Agent · ${b.who}` : b.kind === 'visitor' ? `Visitor · ${b.who}` : 'Not matched to an account or visitor'}
+                right={
+                  <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                    <Badge
+                      text={b.reason === 'complained' ? 'Spam complaint' : 'Bounced'}
+                      color={b.reason === 'complained' ? '#cc0000' : AMBER}
+                      bg={b.reason === 'complained' ? '#fff0f0' : '#fff6e8'}
+                    />
+                    {fmtDate(b.at || null)}
+                  </span>
+                }
+              />
+            ))}
+          </>
+        )}
+      </Panel>
+
+      {/* Visitor numbers the codeword text couldn't reach, or that Twilio
+          Lookup says are VoIP "burner app" lines. */}
+      <Panel title="Fake Phone Numbers" onMore={data.quality && data.quality.fakePhones.count > 0 ? () => setTab('visitors') : undefined}>
+        {!data.quality && <Muted>Not available right now.</Muted>}
+        {data.quality && data.quality.fakePhones.count === 0 && (
+          <Muted>Every visitor number so far took the codeword text and looks like a real line.</Muted>
+        )}
+        {data.quality && data.quality.fakePhones.count > 0 && (
+          <>
+            <div style={{ display: 'flex', gap: 18, alignItems: 'baseline', paddingBottom: 8 }}>
+              <div>
+                <span style={{ fontSize: 22, fontWeight: 800, color: INK }}>{data.quality.fakePhones.count.toLocaleString()}</span>
+                <span style={{ fontSize: 12, color: SUB, marginLeft: 6 }}>{data.quality.fakePhones.count === 1 ? 'number' : 'numbers'}</span>
+              </div>
+              <div style={{ fontSize: 12, color: SUB }}>
+                {`${data.quality.fakePhones.undeliverable} text undeliverable · ${data.quality.fakePhones.voip} VoIP / internet`}
+              </div>
+            </div>
+            {data.quality.fakePhones.recent.map((f) => (
+              <Line
+                key={f.visitorId}
+                left={`${f.phone} · ${f.name}`}
+                sub={`${f.openHouseAddress} · ${f.agentName}`}
+                right={
+                  <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                    <Badge
+                      text={f.reason === 'undeliverable' ? 'Text undeliverable' : 'VoIP / internet'}
+                      color={f.reason === 'undeliverable' ? '#cc0000' : AMBER}
+                      bg={f.reason === 'undeliverable' ? '#fff0f0' : '#fff6e8'}
+                    />
+                    {fmtDate(f.at || null)}
+                  </span>
+                }
+              />
+            ))}
+            <div style={{ fontSize: 11, color: SUB, paddingTop: 8 }}>
+              Undeliverable = Twilio could not deliver the codeword text (wrong or dead number). VoIP = a real line can still be VoIP, so treat it as a flag, not proof.
+            </div>
           </>
         )}
       </Panel>
@@ -2081,6 +2219,26 @@ function Line({ left, sub, right }: { left: string; sub: string; right: React.Re
         <div style={{ fontSize: 12, color: SUB, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</div>
       </div>
       <div style={{ fontSize: 12, color: SUB, whiteSpace: 'nowrap' }}>{right}</div>
+    </div>
+  )
+}
+
+// One shared value (business email or licence) and the accounts behind it.
+function DuplicateLine({ group }: { group: DuplicateGroup }) {
+  return (
+    <div style={{ padding: '8px 0', borderTop: '1px solid #f0f0f2' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{group.value}</div>
+        <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center', fontSize: 12, color: SUB, whiteSpace: 'nowrap' }}>
+          {group.sameTeam && <Badge text="Same team" color={SUB} bg="#f0f0f2" />}
+          {`${group.members.length} accounts`}
+        </div>
+      </div>
+      {group.members.map((m) => (
+        <div key={m.id} style={{ fontSize: 12, color: SUB, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingTop: 2 }}>
+          {`${m.name} · ${m.email} · joined ${fmtDate(m.created_at)}`}
+        </div>
+      ))}
     </div>
   )
 }

@@ -8,12 +8,16 @@ import { trialLimitFor, isExpiredPrepaidAccess } from '@/lib/billing-plans'
 import { summarizeRatings } from '@/lib/report-rating'
 import { buildSignInMatcher, groupWalkaways, type EventInfo } from '@/lib/scan-walkaways'
 import { attributionLabel, sanitizeAttribution } from '@/lib/attribution'
+import { findAccountDuplicates, listBouncedEmails, listFakePhones, type SuppressionRow } from '@/lib/admin-quality'
 
 type ProfileRow = {
   id: string
   full_name: string | null
   email: string | null
   phone: string | null
+  display_email: string | null
+  license_number: string | null
+  state: string | null
   brokerage: string | null
   brokerage_id: string | null
   tier: string | null
@@ -64,6 +68,10 @@ type VisitorRow = {
   registered_at: string | null
   ip_address: string | null
   user_agent: string | null
+  email_status: string | null
+  sms_status: string | null
+  phone_line_type: string | null
+  delivery_updated_at: string | null
 }
 
 type ScanRow = {
@@ -90,16 +98,20 @@ export async function GET(request: Request) {
 
   // Agent addresses Resend reported as bounced / complained (migration 060).
   const suppressedByEmail = new Map<string, string>()
+  const suppressionRows: SuppressionRow[] = []
   {
-    const { data } = await supabase.from('email_suppressions').select('email, reason')
-    for (const r of data ?? []) suppressedByEmail.set(String(r.email).toLowerCase(), String(r.reason))
+    const { data } = await supabase.from('email_suppressions').select('email, reason, source, created_at')
+    for (const r of (data ?? []) as SuppressionRow[]) {
+      suppressedByEmail.set(String(r.email).toLowerCase(), String(r.reason))
+      suppressionRows.push(r)
+    }
   }
 
   const [profilesRes, openHousesRes, visitorsRes] = await Promise.all([
     supabase
       .from('profiles')
       .select(
-        'id, full_name, email, phone, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, bonus_visitors, sponsor_id, referral_source, utm_source, utm_medium, utm_campaign, utm_content, utm_term, landing_page, created_at'
+        'id, full_name, email, phone, display_email, license_number, state, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, bonus_visitors, sponsor_id, referral_source, utm_source, utm_medium, utm_campaign, utm_content, utm_term, landing_page, created_at'
       )
       .order('created_at', { ascending: false }),
     supabase
@@ -111,7 +123,7 @@ export async function GET(request: Request) {
     supabase
       .from('visitors')
       .select(
-        'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, verified, registered_at, ip_address, user_agent'
+        'id, open_house_id, agent_id, first_name, last_name, email, phone, purchasing_timeline, verified, registered_at, ip_address, user_agent, email_status, sms_status, phone_line_type, delivery_updated_at'
       )
       .order('registered_at', { ascending: false }),
   ])
@@ -577,11 +589,62 @@ export async function GET(request: Request) {
     // Leave ratings null.
   }
 
+  // ---- Account + contact quality (lib/admin-quality.ts) ----
+  // Several logins sharing one business email or one licence (per state) is
+  // the "same person, several trials" tell the phone-uniqueness rule can't
+  // see. Soft signal only: shown in Needs Attention, never blocked.
+  const duplicates = findAccountDuplicates(
+    profiles.map((p) => ({
+      id: p.id,
+      name: agentName.get(p.id) || 'Unknown',
+      email: p.email,
+      display_email: p.display_email,
+      license_number: p.license_number,
+      state: p.state,
+      brokerage_id: p.brokerage_id,
+      created_at: p.created_at,
+    }))
+  )
+  const qualityVisitors = visitors.map((v) => ({
+    id: v.id,
+    name: `${v.first_name || ''} ${v.last_name || ''}`.trim() || 'Unknown',
+    email: v.email,
+    phone: v.phone,
+    email_status: v.email_status,
+    sms_status: v.sms_status,
+    phone_line_type: v.phone_line_type,
+    delivery_updated_at: v.delivery_updated_at,
+    registered_at: v.registered_at,
+    openHouseAddress: v.open_house_id ? ohAddress.get(v.open_house_id) || '—' : '—',
+    agentName: v.agent_id ? agentName.get(v.agent_id) || 'Unknown' : 'Unknown',
+  }))
+  const bouncedAll = listBouncedEmails(
+    suppressionRows,
+    qualityVisitors,
+    profiles.map((p) => ({ name: agentName.get(p.id) || 'Unknown', email: p.email }))
+  )
+  const fakeAll = listFakePhones(qualityVisitors)
+  const quality = {
+    bouncedEmails: {
+      count: bouncedAll.length,
+      agents: bouncedAll.filter((b) => b.kind === 'agent').length,
+      recent: bouncedAll.slice(0, 8),
+    },
+    fakePhones: {
+      count: fakeAll.length,
+      undeliverable: fakeAll.filter((f) => f.reason === 'undeliverable').length,
+      voip: fakeAll.filter((f) => f.reason === 'voip').length,
+      recent: fakeAll.slice(0, 8),
+    },
+  }
+
   return NextResponse.json({
     stats,
     funnel,
     revenue,
     ratings,
+    duplicates,
+    quality,
     agents,
     openHouses: openHouseRows,
     visitors: visitorRows,
