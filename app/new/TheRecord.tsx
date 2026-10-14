@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Footer from '../_components/Footer'
+import Wordmark from '../_components/Wordmark'
 import { getHoliday, getSeason, heroImage, type Season } from '@/lib/season'
 
 const STEPS = [
@@ -270,7 +271,7 @@ export default function TheRecord({ bakedSeason }: { bakedSeason: Season }) {
 
         {/* nav */}
         <div style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '16px clamp(20px,5vw,48px)', background: 'rgba(29,29,31,.82)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,.1)' }}>
-          <div onClick={() => { setMenuOpen(false); window.scrollTo({ top: 0 }) }} style={{ fontWeight: 800, fontSize: '18px', color: '#fff', letterSpacing: '-.02em', cursor: 'pointer' }}>oh<span style={{ color: '#c9963a' }}>ACCESS</span></div>
+          <div onClick={() => { setMenuOpen(false); window.scrollTo({ top: 0 }) }} style={{ cursor: 'pointer', display: 'flex' }}><Wordmark /></div>
           <div className="rec-nav-links">
             {NAV_LINKS.map(l => <a key={l.href} href={l.href} style={{ padding: '8px 0' }}>{l.label}</a>)}
             <Link href="/login" style={{ padding: '8px 0' }}>Sign-In</Link>

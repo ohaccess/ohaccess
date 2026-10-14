@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import Footer from '../_components/Footer'
+import Wordmark from '../_components/Wordmark'
 import Planner from './Planner'
 import { normalizeStateCode } from '@/lib/hardware-offer'
 import { normalizeZip } from '@/lib/planner/zip'
@@ -31,9 +32,7 @@ export default async function PlannerPage({ searchParams }: { searchParams: Prom
       {/* NAV */}
       <nav style={{ background: '#1d1d1f', padding: '0 24px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ fontSize: '22px', fontWeight: 200, color: 'white', letterSpacing: '-0.5px' }}>
-            oh<span style={{ fontWeight: 700 }}>ACCESS</span>
-          </div>
+          <Wordmark />
         </Link>
         <Link href="/login?signup=true" style={{ background: '#c9963a', color: '#1d1d1f', padding: '8px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: 700, textDecoration: 'none' }}>
           Start Free

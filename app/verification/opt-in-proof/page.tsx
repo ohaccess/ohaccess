@@ -1,3 +1,5 @@
+import Wordmark from '../../_components/Wordmark'
+
 export const metadata = {
   title: 'SMS Opt-In Consent Proof · ohACCESS',
   description:
@@ -12,9 +14,7 @@ export default function OptInProof() {
       {/* NAV */}
       <nav style={{ background: '#1d1d1f', padding: '0 40px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <a href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ fontSize: '22px', fontWeight: '200', color: 'white', letterSpacing: '-0.5px' }}>
-            oh<span style={{ fontWeight: '700' }}>ACCESS</span>
-          </div>
+          <Wordmark />
         </a>
         <div style={{ fontSize: '12px', fontWeight: '600', color: '#c9963a', textTransform: 'uppercase', letterSpacing: '1px' }}>
           Verified Open House Check-In

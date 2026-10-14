@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import Footer from '../../_components/Footer'
+import Wordmark from '../../_components/Wordmark'
 
 // Posts only change when GrandRanker publishes, so serve a cached copy and
 // rebuild it at most hourly. The publish webhook also revalidates these
@@ -139,9 +140,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
       {/* NAV */}
       <nav style={{ background: '#1d1d1f', padding: '0 24px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ fontSize: '22px', fontWeight: 200, color: 'white', letterSpacing: '-0.5px' }}>
-            oh<span style={{ fontWeight: 700 }}>ACCESS</span>
-          </div>
+          <Wordmark />
         </Link>
         <Link href="/login?signup=true" style={{ background: '#c9963a', color: '#1d1d1f', padding: '8px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: 700, textDecoration: 'none' }}>
           Start Free
