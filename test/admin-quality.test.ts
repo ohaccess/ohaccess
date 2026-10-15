@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  buildMailingList,
   findAccountDuplicates,
   listBouncedEmails,
   listFakePhones,
@@ -124,5 +125,38 @@ describe('listFakePhones', () => {
       visitor({ id: 'landline', phone: '(512) 555-0104', phone_line_type: 'landline' }),
     ])
     expect(rows.map((r) => `${r.visitorId}:${r.reason}`)).toEqual(['both:undeliverable', 'dead:undeliverable', 'voip:voip'])
+  })
+})
+
+describe('buildMailingList', () => {
+  it('lists every login address once, A to Z, minus unsubscribed and bounced addresses', () => {
+    const list = buildMailingList(
+      [
+        { email: 'Zed@Agent.com ' },
+        { email: 'amy@agent.com' },
+        { email: 'amy@agent.com' },
+        { email: 'gone@agent.com' },
+        { email: 'angry@agent.com' },
+        { email: 'tips-off@agent.com', unsubscribed: true },
+        { email: null },
+        { email: 'not an email' },
+      ],
+      ['GONE@agent.com', 'stranger@elsewhere.com'],
+      ['angry@agent.com', 'gone@agent.com']
+    )
+    expect(list.emails).toEqual(['amy@agent.com', 'zed@agent.com'])
+    // gone@ is on both lists and counts once, as unsubscribed; stranger@ is
+    // not an account and is not counted at all.
+    expect(list.excluded).toEqual({ unsubscribed: 2, bounced: 1 })
+  })
+
+  it('excludes an address when any account carrying it opted out', () => {
+    const list = buildMailingList(
+      [{ email: 'shared@agent.com', unsubscribed: true }, { email: 'shared@agent.com' }],
+      [],
+      []
+    )
+    expect(list.emails).toEqual([])
+    expect(list.excluded).toEqual({ unsubscribed: 1, bounced: 0 })
   })
 })

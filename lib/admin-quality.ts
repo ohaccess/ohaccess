@@ -1,6 +1,6 @@
 // Pure helpers behind the admin Overview's "Needs Attention", "Bounced
-// Emails" and "Fake Phone Numbers" panels (app/api/admin/overview). Kept
-// free of Supabase so they can be unit-tested.
+// Emails", "Fake Phone Numbers" and "Email all account holders" panels
+// (app/api/admin/overview). Kept free of Supabase so they can be unit-tested.
 
 export type QualityProfile = {
   id: string
@@ -203,4 +203,67 @@ export function listFakePhones(visitors: QualityVisitor[]): FakePhone[] {
     })
   }
   return out.sort((a, b) => b.at.localeCompare(a.at))
+}
+
+// ---- Email all account holders ---------------------------------------------
+
+export type MailingListAccount = {
+  // The login email (profiles.email, copied from auth.users at sign-up), not
+  // the business email shown to visitors.
+  email: string | null
+  // Agents who unsubscribed from the tips / weekend emails
+  // (profiles.drip_opt_out_at) asked not to hear from us; honour that too.
+  unsubscribed?: boolean
+}
+
+export type MailingList = {
+  // Every mailable login address, de-duplicated and lowercased, A to Z.
+  emails: string[]
+  excluded: { unsubscribed: number; bounced: number }
+}
+
+// The BCC list behind the admin "Email all account holders" panel: every
+// account holder's login email minus anyone who asked to be unsubscribed
+// (email_opt_outs, drip opt-out) and every address Resend reported as
+// bounced or complained (email_suppressions). An address is counted once
+// however many lists it sits on; unsubscribed wins over bounced.
+export function buildMailingList(
+  accounts: MailingListAccount[],
+  optOutEmails: Iterable<string>,
+  suppressedEmails: Iterable<string>
+): MailingList {
+  const optedOut = new Set<string>()
+  for (const e of optOutEmails) {
+    const key = normalizeEmailKey(e)
+    if (key) optedOut.add(key)
+  }
+  const suppressed = new Set<string>()
+  for (const e of suppressedEmails) {
+    const key = normalizeEmailKey(e)
+    if (key) suppressed.add(key)
+  }
+
+  const keep = new Set<string>()
+  const unsubscribed = new Set<string>()
+  const bounced = new Set<string>()
+  for (const a of accounts) {
+    const key = normalizeEmailKey(a.email)
+    if (!key) continue
+    if (a.unsubscribed || optedOut.has(key)) unsubscribed.add(key)
+    else if (suppressed.has(key)) bounced.add(key)
+    else keep.add(key)
+  }
+  // One account unsubscribed and another with the same login address is
+  // impossible (logins are unique), but a drip opt-out flag on one row and a
+  // clean duplicate elsewhere should still exclude the address.
+  for (const key of unsubscribed) {
+    keep.delete(key)
+    bounced.delete(key)
+  }
+  for (const key of bounced) keep.delete(key)
+
+  return {
+    emails: [...keep].sort(),
+    excluded: { unsubscribed: unsubscribed.size, bounced: bounced.size },
+  }
 }

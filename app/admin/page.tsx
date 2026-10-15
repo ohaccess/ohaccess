@@ -147,6 +147,12 @@ type Quality = {
   bouncedEmails: { count: number; agents: number; recent: BouncedEmail[] }
   fakePhones: { count: number; undeliverable: number; voip: number; recent: FakePhone[] }
 }
+// Every mailable login address for the "Email all account holders" panel
+// (lib/admin-quality.ts buildMailingList). Null when the opt-out lookup failed.
+type MailingList = {
+  emails: string[]
+  excluded: { unsubscribed: number; bounced: number }
+}
 
 type Payload = {
   stats: Stats
@@ -156,6 +162,7 @@ type Payload = {
   ratings?: Ratings | null
   duplicates?: Duplicates
   quality?: Quality
+  mailingList?: MailingList | null
   agents: Agent[]
   openHouses: OpenHouse[]
   visitors: Visitor[]
@@ -2029,6 +2036,11 @@ function Overview({ data, setTab }: { data: Payload; setTab: (t: Tab) => void })
         )}
       </Panel>
 
+      {/* Every account holder's login email, ready to paste into the BCC field
+          of Dave's own email client. Unsubscribed and bounced addresses are
+          already left out (lib/admin-quality.ts buildMailingList). */}
+      <MailingListPanel list={data.mailingList ?? null} />
+
       {/* Stars agents tap in each post-event report email. */}
       <Panel title="Agent Ratings">
         {!data.ratings && <Muted>Ratings aren&apos;t available right now.</Muted>}
@@ -2240,6 +2252,110 @@ function DuplicateLine({ group }: { group: DuplicateGroup }) {
         </div>
       ))}
     </div>
+  )
+}
+
+// Read-only BCC list with a one-click copy. Comma-separated for Gmail and
+// Apple Mail; the Outlook toggle switches to semicolons.
+function MailingListPanel({ list }: { list: MailingList | null }) {
+  const [separator, setSeparator] = useState<', ' | '; '>(', ')
+  const [copied, setCopied] = useState(false)
+  const text = useMemo(() => (list ? list.emails.join(separator) : ''), [list, separator])
+
+  useEffect(() => {
+    if (!copied) return
+    const t = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(t)
+  }, [copied])
+
+  const copyAll = async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+    } catch {
+      // Clipboard blocked (older browser or a non-secure page): the box
+      // below is still selectable, so the list can be copied by hand.
+    }
+  }
+
+  const excluded = list ? list.excluded.unsubscribed + list.excluded.bounced : 0
+  const sepStyle = (active: boolean) => ({
+    background: active ? INK : 'white',
+    color: active ? 'white' : SUB,
+    border: `1px solid ${active ? INK : BORDER}`,
+    borderRadius: 20,
+    padding: '3px 10px',
+    fontSize: 11,
+    fontWeight: 700 as const,
+    cursor: 'pointer',
+  })
+
+  return (
+    <Panel title="Email all account holders">
+      {!list && <Muted>Not available right now: the unsubscribe list could not be loaded, so no addresses are shown.</Muted>}
+      {list && list.emails.length === 0 && <Muted>No mailable addresses yet.</Muted>}
+      {list && list.emails.length > 0 && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingBottom: 8, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 12, color: SUB }}>
+              <span style={{ fontSize: 22, fontWeight: 800, color: INK }}>{list.emails.length.toLocaleString()}</span>
+              <span style={{ marginLeft: 6 }}>{list.emails.length === 1 ? 'address' : 'addresses'}</span>
+              {excluded > 0 && <span>{` (${excluded.toLocaleString()} excluded: unsubscribed or bounced)`}</span>}
+            </div>
+            <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+              <button type="button" onClick={() => setSeparator(', ')} style={sepStyle(separator === ', ')} title="Comma-separated: Gmail, Apple Mail">
+                Gmail / Apple Mail
+              </button>
+              <button type="button" onClick={() => setSeparator('; ')} style={sepStyle(separator === '; ')} title="Semicolon-separated: Outlook">
+                Outlook
+              </button>
+            </div>
+          </div>
+          <textarea
+            readOnly
+            value={text}
+            onFocus={(e) => e.currentTarget.select()}
+            aria-label="Every account holder's email address"
+            style={{
+              width: '100%',
+              minHeight: 110,
+              resize: 'vertical',
+              boxSizing: 'border-box',
+              fontSize: 12,
+              lineHeight: 1.5,
+              color: INK,
+              background: '#f7f7f8',
+              border: `1px solid ${BORDER}`,
+              borderRadius: 10,
+              padding: '10px 12px',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+            }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingTop: 10, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={copyAll}
+              style={{
+                background: copied ? GREEN : INK,
+                color: 'white',
+                border: 'none',
+                borderRadius: 10,
+                padding: '8px 14px',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: 'pointer',
+                minWidth: 110,
+              }}
+            >
+              {copied ? 'Copied' : 'Copy all'}
+            </button>
+            <div style={{ fontSize: 11, color: SUB }}>
+              Paste into the BCC field of a new email from your own account, so nobody sees the other addresses.
+            </div>
+          </div>
+        </>
+      )}
+    </Panel>
   )
 }
 

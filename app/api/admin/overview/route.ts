@@ -8,7 +8,7 @@ import { trialLimitFor, isExpiredPrepaidAccess } from '@/lib/billing-plans'
 import { summarizeRatings } from '@/lib/report-rating'
 import { buildSignInMatcher, groupWalkaways, type EventInfo } from '@/lib/scan-walkaways'
 import { attributionLabel, sanitizeAttribution } from '@/lib/attribution'
-import { findAccountDuplicates, listBouncedEmails, listFakePhones, type SuppressionRow } from '@/lib/admin-quality'
+import { buildMailingList, findAccountDuplicates, listBouncedEmails, listFakePhones, type SuppressionRow } from '@/lib/admin-quality'
 
 type ProfileRow = {
   id: string
@@ -36,6 +36,7 @@ type ProfileRow = {
   utm_content?: string | null
   utm_term?: string | null
   landing_page?: string | null
+  drip_opt_out_at?: string | null
   created_at: string
 }
 
@@ -111,7 +112,7 @@ export async function GET(request: Request) {
     supabase
       .from('profiles')
       .select(
-        'id, full_name, email, phone, display_email, license_number, state, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, bonus_visitors, sponsor_id, referral_source, utm_source, utm_medium, utm_campaign, utm_content, utm_term, landing_page, created_at'
+        'id, full_name, email, phone, display_email, license_number, state, brokerage, brokerage_id, tier, role, subscription_status, stripe_subscription_id, subscription_canceled_at, billing_interval, current_period_end, bonus_visitors, sponsor_id, referral_source, utm_source, utm_medium, utm_campaign, utm_content, utm_term, landing_page, drip_opt_out_at, created_at'
       )
       .order('created_at', { ascending: false }),
     supabase
@@ -137,12 +138,18 @@ export async function GET(request: Request) {
   const openHouses = (openHousesRes.data || []) as OpenHouseRow[]
   const visitors = (visitorsRes.data || []) as VisitorRow[]
 
-  // Last-login times live on the auth records, not in profiles.
+  // Last-login times live on the auth records, not in profiles. The login
+  // email is kept too, for the mailing list below (a sponsor owner without a
+  // profiles row still has one).
   const lastSignIn = new Map<string, string | null>()
+  const authEmail = new Map<string, string | null>()
   for (let page = 1; ; page++) {
     const { data: list, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 })
     if (error || !list?.users?.length) break
-    for (const u of list.users) lastSignIn.set(u.id, u.last_sign_in_at || null)
+    for (const u of list.users) {
+      lastSignIn.set(u.id, u.last_sign_in_at || null)
+      authEmail.set(u.id, u.email || null)
+    }
     if (list.users.length < 1000) break
   }
 
@@ -624,6 +631,35 @@ export async function GET(request: Request) {
     profiles.map((p) => ({ name: agentName.get(p.id) || 'Unknown', email: p.email }))
   )
   const fakeAll = listFakePhones(qualityVisitors)
+
+  // ---- Email all account holders (BCC list for Dave's own email client) ----
+  // Every login address (agents and sponsor owners), minus anyone who asked to
+  // be unsubscribed (email_opt_outs, drip opt-out) and every bounced or
+  // complained address. Null if the opt-out lookup fails, so the panel says
+  // so rather than offering a list that ignores unsubscribes.
+  let mailingList: ReturnType<typeof buildMailingList> | null = null
+  {
+    const optOutEmails: string[] = []
+    let ok = true
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase.from('email_opt_outs').select('email').order('email').range(from, from + 999)
+      if (error) {
+        ok = false
+        break
+      }
+      for (const r of data || []) optOutEmails.push(String(r.email))
+      if (!data || data.length < 1000) break
+    }
+    if (ok) {
+      const accounts = profiles.map((p) => ({ email: p.email, unsubscribed: !!p.drip_opt_out_at }))
+      const profileIds = new Set(profiles.map((p) => p.id))
+      for (const s of (ownedSponsorRows || []) as { owner_id: string }[]) {
+        if (!profileIds.has(s.owner_id)) accounts.push({ email: authEmail.get(s.owner_id) || null, unsubscribed: false })
+      }
+      mailingList = buildMailingList(accounts, optOutEmails, suppressionRows.map((r) => r.email))
+    }
+  }
+
   const quality = {
     bouncedEmails: {
       count: bouncedAll.length,
@@ -645,6 +681,7 @@ export async function GET(request: Request) {
     ratings,
     duplicates,
     quality,
+    mailingList,
     agents,
     openHouses: openHouseRows,
     visitors: visitorRows,
