@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #ffffff; }
+  body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #1d1d1f; }
+  #canvas { width: 1200px; background: #f5f5f7; }
+
+  /* ---------- top band ---------- */
+  .band { background: #1d1d1f; color: #fff; padding: 30px 40px 26px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+  .wordmark { font-size: 30px; font-weight: 200; letter-spacing: -1px; line-height: 1; }
+  .wordmark b { font-weight: 800; }
+  .pill { display: inline-block; background: rgba(201,150,58,0.25); border: 1px solid rgba(201,150,58,0.6); color: #e8c479; font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; border-radius: 999px; padding: 3px 10px; vertical-align: middle; margin-left: 10px; position: relative; top: -4px; }
+  .band h1 { margin: 14px 0 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; }
+  .band p { margin: 6px 0 0; font-size: 14px; color: rgba(255,255,255,0.7); }
+  .band .right { text-align: right; font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.5; }
+  .band .right b { color: #e8c479; font-weight: 700; }
+
+  /* ---------- panels ---------- */
+  .row { display: flex; gap: 24px; padding: 28px 40px 0; align-items: flex-start; }
+  .panel-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #8a6a1f; margin-bottom: 6px; }
+  .panel-sub { font-size: 13px; color: #6e6e73; margin-bottom: 14px; line-height: 1.5; }
+  .col-email { width: 464px; flex: none; }
+  .col-dash { flex: 1; min-width: 0; }
+  .frame { border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.08); }
+
+  /* ---------- email mock (real 600px email, zoomed) ---------- */
+  .email-wrap { zoom: 0.74; width: 600px; background: #ffffff; }
+  .email-head { text-align: center; padding: 28px 20px; }
+  .email-head .wm { font-size: 30px; font-weight: 200; letter-spacing: -1px; }
+  .email-head .wm b { font-weight: 800; }
+  .email-head .sub { font-size: 13px; opacity: 0.75; margin-top: 3px; }
+  .email-body { padding: 28px 26px; color: #1d1d1f; }
+  .code-box { background: #f6f7f9; border: 1px dashed #d1d1d6; border-radius: 12px; padding: 16px; text-align: center; }
+  .code-box .lbl { font-size: 11px; color: #6e6e73; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .code-box .code { font-size: 28px; font-weight: 700; letter-spacing: 4px; }
+  .code-box .hint { font-size: 12px; color: #6e6e73; margin-top: 8px; }
+  .section { background: #f6f7f9; border-radius: 12px; padding: 16px 18px; margin: 18px 0; font-size: 13px; color: #6e6e73; line-height: 1.8; }
+  .btn { display: inline-block; text-decoration: none; font-weight: 700; font-size: 14px; padding: 9px 16px; border-radius: 8px; margin-top: 12px; }
+  table.card { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; }
+  table.card td { vertical-align: middle; }
+  .avatar { width: 64px; height: 64px; border-radius: 50%; text-align: center; line-height: 60px; font-weight: 800; font-size: 22px; border: 2px solid #d1d1d6; }
+  .d-name { font-size: 15px; font-weight: 700; color: #1d1d1f; }
+  .d-org { font-size: 13px; color: #6e6e73; }
+  .d-line { font-size: 13px; margin-top: 3px; }
+  .d-lic { font-size: 12px; color: #6e6e73; }
+  .d-link { font-size: 13px; margin-top: 3px; font-weight: 600; }
+  .brandmark { text-align: center; margin: 12px 0 0; font-size: 19px; font-weight: 800; letter-spacing: -0.3px; }
+  .sp-logo { text-align: center; margin: 12px 0 0; font-size: 15px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #8a6a1f; }
+  .sp-logo span { display: inline-block; border: 2px solid #8a6a1f; border-radius: 6px; padding: 5px 12px; }
+  .email-foot { border-top: 1px solid #ececf0; margin-top: 24px; padding-top: 14px; font-size: 11px; color: #9a9aa0; line-height: 1.5; text-align: center; }
+  .email-foot mark { background: #fff3d6; color: #6b4e0f; padding: 0 3px; border-radius: 3px; }
+
+  .callout { position: relative; margin-top: 14px; background: #fdfaf3; border: 1px solid #ead9ad; border-radius: 12px; padding: 12px 14px; font-size: 12.5px; color: #1d1d1f; line-height: 1.55; }
+  .callout b { color: #8a6a1f; }
+
+  /* ---------- dashboard mock (real 1100px dashboard, zoomed) ---------- */
+  .dash-wrap { zoom: 0.605; width: 1040px; background: #f5f5f7; }
+  .topbar { background: #1d1d1f; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 52px; }
+  .topbar .wm { font-size: 20px; font-weight: 200; color: #fff; letter-spacing: -0.5px; }
+  .topbar .wm b { font-weight: 700; }
+  .topbar .sp { background: rgba(201,150,58,0.25); border: 1px solid rgba(201,150,58,0.6); color: #e8c479; font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; border-radius: 999px; padding: 3px 10px; margin-left: 10px; }
+  .topbar nav { display: flex; gap: 4px; }
+  .topbar nav span { color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 13px; }
+  .topbar nav span.on { background: rgba(255,255,255,0.18); font-weight: 600; }
+  .topbar nav span.out { border: 1px solid rgba(255,255,255,0.3); }
+  .dash-body { padding: 24px 28px 28px; }
+  .h2 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 3px; }
+  .h2sub { font-size: 13px; color: #6e6e73; margin-bottom: 16px; }
+  .totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat { background: #fff; border-radius: 18px; border: 1px solid #d1d1d6; padding: 16px 18px; }
+  .stat .l { font-size: 11px; font-weight: 500; color: #6e6e73; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat .v { font-size: 28px; font-weight: 600; letter-spacing: -1px; }
+  .stat .v.acc { color: #0071e3; }
+  .card { background: #fff; border-radius: 18px; border: 1px solid #d1d1d6; padding: 20px 22px; margin-bottom: 16px; }
+  .cardhead { font-size: 13px; font-weight: 600; margin-bottom: 4px; padding-bottom: 12px; border-bottom: 1px solid #d1d1d6; }
+  table.t { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.t th { text-align: left; padding: 8px; font-size: 10px; font-weight: 600; color: #6e6e73; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #d1d1d6; white-space: nowrap; }
+  table.t td { padding: 8px; border-bottom: 1px solid #f2f2f7; color: #6e6e73; white-space: nowrap; }
+  table.t td.n { color: #1d1d1f; font-weight: 500; }
+  table.t tr:nth-child(even) td { background: #fafafa; }
+  .minibtn { display: inline-block; background: #f5f5f7; color: #1d1d1f; border: 1px solid #d1d1d6; border-radius: 7px; padding: 5px 10px; font-size: 11px; font-weight: 600; }
+  .minibtn.on { background: #0071e3; color: #fff; }
+  .split { display: flex; gap: 16px; align-items: flex-start; }
+  .ohlist { flex: 1 1 40%; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .oh { background: #fff; border: 1px solid #d1d1d6; border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+  .oh.sel { background: #f5f9ff; border-color: #0071e3; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #aeaeb2; flex: none; }
+  .dot.live { background: #0071e3; }
+  .oh .a { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .oh .m { font-size: 12px; color: #6e6e73; margin-top: 2px; }
+  .oh .c { font-size: 12px; color: #6e6e73; white-space: nowrap; flex: none; }
+  .oh .c b { color: #1d1d1f; }
+  .log { flex: 1 1 60%; min-width: 0; }
+  .loghead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #d1d1d6; font-size: 13px; font-weight: 600; }
+  .loghead span { color: #6e6e73; font-weight: 400; }
+  .csv { background: #1d1d1f; color: #fff; padding: 6px 13px; border-radius: 7px; font-size: 12px; font-weight: 600; }
+  .ok { color: #30d158; font-weight: 700; }
+  .lognote { font-size: 11px; color: #aeaeb2; margin-top: 10px; line-height: 1.5; }
+  .h3 { font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+
+  /* ---------- how-it-works strip ---------- */
+  .how { margin: 28px 40px 0; background: #fff; border: 1px solid #d1d1d6; border-radius: 18px; padding: 24px 28px 22px; }
+  .how .t { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .how .s { font-size: 13px; color: #6e6e73; margin-bottom: 18px; }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .step { background: #f6f7f9; border-radius: 12px; padding: 14px 16px 16px; font-size: 12.5px; line-height: 1.5; color: #3a3a3c; }
+  .step .n { display: inline-block; width: 24px; height: 24px; border-radius: 50%; background: #c9963a; color: #1d1d1f; font-weight: 800; font-size: 12px; text-align: center; line-height: 24px; margin-bottom: 8px; }
+  .step b { display: block; color: #1d1d1f; font-size: 13.5px; margin-bottom: 4px; }
+  .fields { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; align-items: center; }
+  .fields .lab { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #8a6a1f; margin-right: 4px; }
+  .chip { background: #fdfaf3; border: 1px solid #ead9ad; color: #1d1d1f; border-radius: 999px; padding: 4px 11px; font-size: 12px; font-weight: 600; }
+  .priv { margin-top: 16px; font-size: 12px; color: #6e6e73; line-height: 1.55; border-top: 1px solid #ececf0; padding-top: 12px; }
+  .priv b { color: #1d1d1f; }
+
+  .foot { padding: 20px 40px 26px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #6e6e73; }
+  .foot .wm { font-size: 16px; font-weight: 200; letter-spacing: -0.5px; color: #1d1d1f; }
+  .foot .wm b { font-weight: 800; }
+</style></head>
+<body>
+<div id="canvas">
+
+  <div class="band">
+    <div>
+      <div class="wordmark">oh<b>ACCESS</b><span class="pill">Sponsorship</span></div>
+      <h1>Your name in front of every verified open-house visitor</h1>
+      <p>Co-brand the open houses of the agents you work with. Visitors agree, by name, to hear from you. Their details land in your own dashboard.</p>
+    </div>
+    <div class="right">Lender shown as the example.<br>Title, insurance, inspection, moving<br>and home-warranty providers work <b>the same way</b>.</div>
+  </div>
+
+  <div class="row">
+
+    <!-- ============ EMAIL ============ -->
+    <div class="col-email">
+      <div class="panel-title">1 · What the visitor receives</div>
+      <div class="panel-sub">Every visitor gets this email (and a text) the moment they sign in. The agent's card, then yours, in the agent's own branding.</div>
+      <div class="frame">
+      <div class="email-wrap">
+        <div class="email-head" style="background:#1c3d5a;color:#ffffff;">
+          <div class="wm">oh<b>ACCESS</b></div>
+          <div class="sub">Your codeword is ready</div>
+        </div>
+        <div class="email-body">
+          <div class="code-box">
+            <div class="lbl">Your Email Codeword</div>
+            <div class="code">“MAPLE”</div>
+            <div class="hint">Share this codeword with the host at the door to gain access.</div>
+          </div>
+          <div class="section">
+            <strong style="color:#1d1d1f;">4821 Bluebonnet Ln, Fort Worth, TX 76107</strong><br>
+            📅 Saturday, October 18<br>
+            🕒 1:00 PM – 3:00 PM<br>
+            🛏 4 bed · 🛁 3 bath · 📐 2,640 sq ft<br>
+            💰 $689,000
+            <br><a class="btn" style="background:#0f7c8c;color:#ffffff;">View the listing →</a>
+          </div>
+
+          <!-- agent card -->
+          <div style="margin:18px 0;">
+            <table class="card" style="background:#f6f7f9;border:1px solid #f6f7f9;">
+              <tr><td colspan="2" style="padding:16px 16px 0;">
+                <div style="font-size:17px;font-weight:800;color:#1d1d1f;">Want a private tour?</div>
+                <div style="font-size:14px;color:#444;line-height:1.6;margin-top:4px;">I'm happy to show you this home, or any other, on your schedule. Call me or just reply to this email.</div>
+              </td></tr>
+              <tr>
+                <td style="width:68px;padding:12px 0 16px 16px;"><div class="avatar" style="background:#1c3d5a;color:#ffffff;">JR</div></td>
+                <td style="padding:12px 16px 16px 14px;">
+                  <div class="d-name">Jordan Reyes</div>
+                  <div class="d-org">Summit Realty Group</div>
+                  <div class="d-line" style="color:#0f7c8c;">jordan@summitrealtygroup.com</div>
+                  <div class="d-line" style="color:#0f7c8c;font-weight:600;margin-top:0;">(817) 555-0142</div>
+                  <div class="d-lic">0712345 · TX</div>
+                  <div class="d-link" style="color:#0f7c8c;">Agent information</div>
+                </td>
+              </tr>
+            </table>
+            <div class="brandmark" style="color:#1c3d5a;">Summit Realty Group</div>
+          </div>
+
+          <!-- sponsor card -->
+          <div style="margin:18px 0;">
+            <table class="card" style="background:#fdfaf3;border:1px solid #ead9ad;">
+              <tr><td colspan="2" style="padding:16px 16px 0;">
+                <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8a6a1f;text-transform:uppercase;">Sponsored by</div>
+              </td></tr>
+              <tr>
+                <td style="width:68px;padding:12px 0 12px 16px;"><div class="avatar" style="background:#8a6a1f;color:#fdfaf3;border-color:#ead9ad;">TN</div></td>
+                <td style="padding:12px 16px 12px 14px;">
+                  <div class="d-name">Taylor Nguyen</div>
+                  <div class="d-org">Lone Star Home Lending</div>
+                  <div class="d-line" style="color:#0f7c8c;">taylor@lonestarhomelending.com</div>
+                  <div class="d-line" style="color:#0f7c8c;font-weight:600;margin-top:0;">(214) 555-0188</div>
+                  <div class="d-lic">NMLS 1234567</div>
+                  <div class="d-link" style="color:#0f7c8c;">Sponsor information</div>
+                </td>
+              </tr>
+              <tr><td colspan="2" style="padding:0 16px 14px;">
+                <div style="border-top:1px solid #ead9ad;padding-top:10px;font-size:11px;color:#8a6a1f;line-height:1.5;text-align:center;">You are not required to use Lone Star Home Lending for any service. You are free to shop around.</div>
+              </td></tr>
+            </table>
+            <div class="sp-logo"><span>Lone Star Home Lending</span></div>
+          </div>
+
+          <div class="email-foot">
+            By registering you agreed to the ohACCESS Terms of Service.<br>
+            <mark>You consent to be contacted by the host agent and today's sponsor, Taylor Nguyen (Lone Star Home Lending).</mark><br>
+            Reply STOP to any text to opt out · Privacy Policy<br>
+            Powered by <span style="font-weight:300;">oh</span><b>ACCESS</b>.com · Patent Pending
+          </div>
+        </div>
+      </div>
+      </div>
+      <div class="callout"><b>Named consent, on the sign-in page itself.</b> Before a visitor can register, the consent line reads: “…consent to be contacted by the host agent and today's sponsor, Taylor Nguyen (Lone Star Home Lending), via phone, text, and email about this and other properties.” Your logo, headshot and the “Sponsor information” link appear the same way in the next-morning thank-you email too.</div>
+    </div>
+
+    <!-- ============ DASHBOARD ============ -->
+    <div class="col-dash">
+      <div class="panel-title">2 · What you see</div>
+      <div class="panel-sub">Your own Sponsor Portal. Every agent you sponsor, every open house, every visitor who agreed to hear from you, in one place.</div>
+      <div class="frame">
+      <div class="dash-wrap">
+        <div class="topbar">
+          <div style="display:flex;align-items:center;"><span class="wm">oh<b>ACCESS</b></span><span class="sp">Sponsor</span></div>
+          <nav><span class="on">Dashboard</span><span>Agents</span><span>Settings</span><span class="out">Sign out</span></nav>
+        </div>
+        <div class="dash-body">
+          <div class="h2">Sponsorship activity</div>
+          <div class="h2sub">Sign-ins across the agents you sponsor. You only see visitors whose sign-in consent named you. Nothing from before a sponsorship began.</div>
+          <div class="totals">
+            <div class="stat"><div class="l">Agents</div><div class="v">6</div></div>
+            <div class="stat"><div class="l">Open Houses</div><div class="v">23</div></div>
+            <div class="stat"><div class="l">Sign-ins</div><div class="v acc">184</div></div>
+            <div class="stat"><div class="l">Verified at Door</div><div class="v">151</div></div>
+          </div>
+          <div class="card">
+            <div class="cardhead">By agent</div>
+            <table class="t">
+              <tr><th>Agent ▾</th><th>Open Houses</th><th>Sign-ins</th><th>Verified</th><th></th></tr>
+              <tr><td class="n">Jordan Reyes</td><td>7</td><td>58</td><td>49</td><td style="text-align:right"><span class="minibtn">View open houses</span></td></tr>
+              <tr><td class="n">Priya Patel</td><td>5</td><td>41</td><td>36</td><td style="text-align:right"><span class="minibtn">View open houses</span></td></tr>
+              <tr><td class="n">Marcus Bell</td><td>4</td><td>33</td><td>27</td><td style="text-align:right"><span class="minibtn">View open houses</span></td></tr>
+              <tr><td class="n">Elena Costa</td><td>4</td><td>29</td><td>22</td><td style="text-align:right"><span class="minibtn">View open houses</span></td></tr>
+              <tr><td class="n">Sam Okafor</td><td>2</td><td>15</td><td>11</td><td style="text-align:right"><span class="minibtn">View open houses</span></td></tr>
+              <tr><td class="n">Dana Whitfield</td><td>1</td><td>8</td><td>6</td><td style="text-align:right"><span class="minibtn">View open houses</span></td></tr>
+            </table>
+          </div>
+          <div class="h3">Open houses</div>
+          <div class="split">
+            <div class="ohlist">
+              <div class="oh"><div class="dot live"></div><div style="flex:1;min-width:0"><div class="a">4821 Bluebonnet Ln, Fort Worth</div><div class="m">👤 Jordan Reyes · Sat Oct 18 · 1–3 PM</div></div><div class="c"><b>14</b> sign-ins · 12 verified</div></div>
+              <div class="oh"><div class="dot live"></div><div style="flex:1;min-width:0"><div class="a">2207 Rivercrest Dr, Fort Worth</div><div class="m">👤 Priya Patel · Sat Oct 18 · 12–2 PM</div></div><div class="c"><b>11</b> sign-ins · 9 verified</div></div>
+              <div class="oh"><div class="dot"></div><div style="flex:1;min-width:0"><div class="a">918 Westover Ct, Benbrook</div><div class="m">👤 Marcus Bell · Sun Oct 12 · 2–4 PM</div></div><div class="c"><b>9</b> sign-ins · 7 verified</div></div>
+              <div class="oh"><div class="dot"></div><div style="flex:1;min-width:0"><div class="a">3315 Hulen Park Pl, Fort Worth</div><div class="m">👤 Elena Costa · Sat Oct 11 · 1–3 PM</div></div><div class="c"><b>12</b> sign-ins · 10 verified</div></div>
+              <div class="oh"><div class="dot"></div><div style="flex:1;min-width:0"><div class="a">640 Lakeside Dr, Aledo</div><div class="m">👤 Jordan Reyes · Sat Oct 11 · 11–1 PM</div></div><div class="c"><b>8</b> sign-ins · 7 verified</div></div>
+            </div>
+            <div class="log">
+              <div class="card" style="margin-bottom:0">
+                <div class="loghead"><div>Recent sign-ins: all sponsored open houses</div><span class="csv">Export CSV</span></div>
+                <table class="t">
+                  <tr><th>Name</th><th>Phone</th><th>Email</th><th>Timeline</th><th>Registered ▾</th><th>✓</th></tr>
+                  <tr><td>Hannah Brooks</td><td>(817) 555-0163</td><td>hannah.b@example.com</td><td>0–3 Months</td><td>Oct 18, 2:41 PM</td><td class="ok">✓</td></tr>
+                  <tr><td>Luis Herrera</td><td>(682) 555-0117</td><td>lherrera@example.com</td><td>3–6 Months</td><td>Oct 18, 2:26 PM</td><td class="ok">✓</td></tr>
+                  <tr><td>Amara Johnson</td><td>(214) 555-0194</td><td>amara.j@example.com</td><td>0–3 Months</td><td>Oct 18, 1:58 PM</td><td class="ok">✓</td></tr>
+                  <tr><td>Ben &amp; Kate Olsen</td><td>(817) 555-0121</td><td>olsens@example.com</td><td>6–12 Months</td><td>Oct 18, 1:40 PM</td><td>—</td></tr>
+                  <tr><td>Grace Lin</td><td>(469) 555-0152</td><td>grace.lin@example.com</td><td>0–3 Months</td><td>Oct 18, 1:22 PM</td><td class="ok">✓</td></tr>
+                  <tr><td>Derek Walsh</td><td>(817) 555-0138</td><td>dwalsh@example.com</td><td>3–6 Months</td><td>Oct 18, 1:09 PM</td><td class="ok">✓</td></tr>
+                  <tr><td>Sofia Martinez</td><td>(682) 555-0175</td><td>sofia.m@example.com</td><td>12+ Months</td><td>Oct 18, 12:47 PM</td><td class="ok">✓</td></tr>
+                </table>
+                <div class="lognote">Every visitor listed here agreed, at sign-in, to be contacted by you by name (phone, text, and email).</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:16px;align-items:stretch;">
+        <div style="flex:0 0 272px;min-width:0;">
+          <div class="panel-title" style="margin-top:2px;">Agents tab · invite in seconds</div>
+          <div class="frame" style="background:#f5f5f7;">
+            <div class="dash-wrap" style="width:450px;zoom:0.605;padding:18px 20px 14px;">
+              <div class="h2" style="font-size:20px;">Agents you sponsor</div>
+              <div class="h2sub" style="margin-bottom:12px;">Nothing appears on their open houses until they accept, and they keep full control of their own name, logo, and colors.</div>
+              <div class="card" style="padding:16px 18px;">
+                <div class="cardhead" style="display:flex;justify-content:space-between;"><span>Invite an agent</span><span style="font-weight:400;color:#6e6e73;font-size:12px;">7 of 10 seats used</span></div>
+                <div style="display:flex;gap:8px;margin-top:14px;">
+                  <div style="flex:1;background:#f5f5f7;border:1px solid #d1d1d6;border-radius:9px;padding:10px 12px;font-size:14px;color:#1d1d1f;">priya@northstarhomes.com</div>
+                  <div style="background:#1d1d1f;color:#fff;border-radius:9px;padding:10px 18px;font-size:13px;font-weight:600;white-space:nowrap;">Send invite</div>
+                </div>
+                <div style="margin-top:14px;font-size:11px;font-weight:600;color:#6e6e73;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">Pending invites</div>
+                <div style="display:flex;justify-content:space-between;background:#f5f5f7;border:1px solid #e5e5ea;border-radius:9px;padding:9px 12px;font-size:13px;"><span>chris@westfork-realty.com</span><span style="color:#cc0000;font-size:12px;font-weight:600;">Revoke</span></div>
+              </div>
+              <div class="card" style="padding:16px 18px;margin-bottom:0;">
+                <div class="cardhead">Active sponsorships</div>
+                <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;background:#f5f5f7;border:1px solid #e5e5ea;border-radius:9px;padding:9px 12px;"><div><div style="font-size:13px;font-weight:600;">Jordan Reyes</div><div style="font-size:11px;color:#6e6e73;">Summit Realty Group · jordan@summitrealtygroup.com</div></div><span style="color:#cc0000;font-size:12px;font-weight:600;">Remove</span></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;background:#f5f5f7;border:1px solid #e5e5ea;border-radius:9px;padding:9px 12px;"><div><div style="font-size:13px;font-weight:600;">Priya Patel</div><div style="font-size:11px;color:#6e6e73;">Northstar Homes · priya@northstarhomes.com</div></div><span style="color:#cc0000;font-size:12px;font-weight:600;">Remove</span></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;background:#f5f5f7;border:1px solid #e5e5ea;border-radius:9px;padding:9px 12px;"><div><div style="font-size:13px;font-weight:600;">Marcus Bell</div><div style="font-size:11px;color:#6e6e73;">Bell &amp; Co. Realty · marcus@bellcorealty.com</div></div><span style="color:#cc0000;font-size:12px;font-weight:600;">Remove</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="flex:1 1 50%;min-width:0;display:flex;flex-direction:column;">
+          <div class="panel-title" style="margin-top:2px;">Export CSV · straight into your CRM</div>
+          <div class="frame" style="background:#1d1d1f;flex:1;padding:16px 18px;color:#e8e8ed;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:8.2px;line-height:1.8;white-space:nowrap;overflow:hidden;">
+            <div style="color:#8a8a8e;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">sponsored-sign-ins.csv</div>
+            <div style="position:relative;"><div style="position:absolute;top:0;right:-18px;bottom:0;width:90px;background:linear-gradient(to right,rgba(29,29,31,0),#1d1d1f 70%);"></div><div style="color:#e8c479;">First Name,Last Name,Email,Phone,Timeline,Registered,Verified</div>
+            <div>Hannah,Brooks,hannah.b@example.com,(817) 555-0163,0–3 Months,10/18/2026 2:41 PM,Yes</div>
+            <div>Luis,Herrera,lherrera@example.com,(682) 555-0117,3–6 Months,10/18/2026 2:26 PM,Yes</div>
+            <div>Amara,Johnson,amara.j@example.com,(214) 555-0194,0–3 Months,10/18/2026 1:58 PM,Yes</div>
+            <div>Ben,Olsen,olsens@example.com,(817) 555-0121,6–12 Months,10/18/2026 1:40 PM,No</div>
+            <div>Grace,Lin,grace.lin@example.com,(469) 555-0152,0–3 Months,10/18/2026 1:22 PM,Yes</div>
+            <div>Derek,Walsh,dwalsh@example.com,(817) 555-0138,3–6 Months,10/18/2026 1:09 PM,Yes</div>
+            <div style="color:#8a8a8e;">…</div></div>
+            <div style="margin-top:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;line-height:1.55;color:#c7c7cc;white-space:normal;">One click on <b style="color:#fff;">Export CSV</b> downloads every sponsored sign-in, or just the ones for a single open house. Open it in Excel or import it into any CRM.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ HOW ============ -->
+  <div class="how">
+    <div class="t">3 · How the visitor data reaches you</div>
+    <div class="s">Nothing to install, nothing for the agent to export or forward. One sponsor account covers up to 10 agents.</div>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><b>Invite your agents</b>Create your Sponsor Portal account, add your headshot, logo and contact details, then invite each agent by email. They accept with one click and keep their own branding.</div>
+      <div class="step"><span class="n">2</span><b>Visitors sign in and consent</b>At the door, visitors scan the agent's QR code. The sign-in page names you as today's sponsor, and the visitor agrees to be contacted by the agent and by you.</div>
+      <div class="step"><span class="n">3</span><b>Your card goes out instantly</b>The visitor's codeword email carries your “Sponsored by” card. Their phone is verified by text, and the agent confirms the codeword at the door.</div>
+      <div class="step"><span class="n">4</span><b>Leads land in your dashboard</b>Every sign-in appears in your portal as it happens, grouped by agent and by open house. Export a CSV any time and load it into your own CRM.</div>
+    </div>
+    <div class="fields">
+      <span class="lab">Each lead includes</span>
+      <span class="chip">Name</span><span class="chip">Mobile number (text-verified)</span><span class="chip">Email</span><span class="chip">Buying timeline</span><span class="chip">Date and time</span><span class="chip">Verified at the door ✓</span><span class="chip">Open house and agent</span>
+    </div>
+    <div class="priv"><b>Built to keep you compliant.</b> You only ever see visitors whose consent named you, and nothing from before a sponsorship began. Every email shows the “not required to use, free to shop around” notice. The consent language and labeling have been reviewed by counsel for RESPA and TCPA.</div>
+  </div>
+
+  <div class="foot">
+    <div class="wm">oh<b>ACCESS</b>.com · Patent Pending</div>
+    <div>Verified open-house sign-ins · Reply to this email to set up your Sponsor Portal</div>
+  </div>
+</div>
+<div id="h" style="display:none"></div>
+<script>document.getElementById('h').textContent = document.getElementById('canvas').getBoundingClientRect().height;</script>
+</body></html>
