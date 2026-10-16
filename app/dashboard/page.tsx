@@ -61,6 +61,13 @@ export default function Dashboard() {
   // rows and which handler to re-run if the agent chooses "Save anyway".
   const [overlapWarn, setOverlapWarn] = useState<{ conflicts: any[]; mode: 'create' | 'update' } | null>(null)
   const overlapAcknowledged = useRef(false)
+  // True while a create/update is in flight. The form stays on screen until
+  // the insert and the list reload finish, so without this a second click on
+  // Save re-ran the handler and the overlap check flagged the open house that
+  // had just been saved as "overlapping" itself (seen in prod 2026-10-15).
+  // The ref blocks a double-click within one render; the state greys the button.
+  const [saving, setSaving] = useState(false)
+  const saveInFlight = useRef(false)
   const [savedSettings, setSavedSettings] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [qrModal, setQrModal] = useState<any>(null)
@@ -673,7 +680,20 @@ export default function Dashboard() {
     return null
   }
 
-  const createOpenHouse = async () => {
+  // Runs one save at a time; a click while one is in flight is ignored.
+  const runSave = async (fn: () => Promise<void>) => {
+    if (saveInFlight.current) return
+    saveInFlight.current = true
+    setSaving(true)
+    try { await fn() } finally {
+      saveInFlight.current = false
+      setSaving(false)
+    }
+  }
+  const createOpenHouse = () => runSave(doCreateOpenHouse)
+  const updateOpenHouse = () => runSave(doUpdateOpenHouse)
+
+  const doCreateOpenHouse = async () => {
     if (guardLocked()) return
     const missing = missingListingFields()
     if (missing) {
@@ -848,7 +868,7 @@ export default function Dashboard() {
     setView('new')
   }
 
-  const updateOpenHouse = async () => {
+  const doUpdateOpenHouse = async () => {
     if (guardLocked()) return
     // The form can sit open past the lock time; checked against the STORED end
     // so typing a later end time into the form can't unlock a finished event.
@@ -1401,6 +1421,7 @@ export default function Dashboard() {
             generateEmailWord={generateEmailWord}
             createOpenHouse={createOpenHouse}
             updateOpenHouse={updateOpenHouse}
+            saving={saving}
             resetForm={resetForm}
             setView={setView}
             setEditingOH={setEditingOH}

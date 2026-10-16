@@ -33,6 +33,7 @@ export default function NewOpenHouseForm({
   generateEmailWord,
   createOpenHouse,
   updateOpenHouse,
+  saving,
   resetForm,
   setView,
   setEditingOH,
@@ -64,6 +65,9 @@ export default function NewOpenHouseForm({
   generateEmailWord: () => string
   createOpenHouse: () => void
   updateOpenHouse: () => void
+  // A save is in flight: the button is disabled so a double-click can't
+  // re-run the save against the row that was just written.
+  saving: boolean
   resetForm: () => void
   setView: (v: 'dashboard' | 'new' | 'settings' | 'team' | 'activity') => void
   setEditingOH: (oh: any) => void
@@ -340,8 +344,8 @@ export default function NewOpenHouseForm({
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
         <button onClick={() => { setView('dashboard'); setEditingOH(null); resetForm() }} style={{ padding: '9px 18px', background: '#e8e8ed', color: '#1d1d1f', border: 'none', borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cancel</button>
-        <button disabled={locked} onClick={editingOH ? updateOpenHouse : createOpenHouse} style={{ padding: '9px 18px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.4 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          {editingOH ? '✓ Update open house' : '✓ Save open house'}
+        <button disabled={locked || saving} onClick={editingOH ? updateOpenHouse : createOpenHouse} style={{ padding: '9px 18px', background: primaryColor, color: onPrimary, border: primaryBtnBorder, borderRadius: '9px', fontSize: '13px', fontWeight: '600', cursor: locked ? 'not-allowed' : saving ? 'wait' : 'pointer', opacity: locked ? 0.4 : saving ? 0.7 : 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          {saving ? 'Saving…' : editingOH ? '✓ Update open house' : '✓ Save open house'}
         </button>
       </div>
     </>
